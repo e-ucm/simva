@@ -1,0 +1,966 @@
+openapi: 3.0.0
+# Added by API Auto Mocking Plugin
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/Synpheros/Simva/1.0.0
+info:
+  description: Simva, AKA Simple Validator, AKA SurveyManager is the evolution
+    of a tool created to integrate and ease the task of validating serious games
+    using pre-post surveys as a control point. This version allows to create more
+    complex studies with more variety of activities and different allocations.
+  version: "1.0.0"
+  title: Simva API
+  contact:
+    email: ivanjper@ucm.es
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: admins
+    description: Secured Admin-only calls
+  - name: teachers
+    description: Operations available to teachers
+  - name: students
+    description: Operations available to students
+paths:
+  /groups:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of classes for the current teacher
+      operationId: getGroups
+      description: |
+        Obtains the list of groups owned by current user.
+      responses:
+        '200':
+          description: the list of groups for this uer
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a group for the current user as owner.
+      operationId: addGroup
+      description: |
+        Creates a new group for the current user as owner.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/add_group_body'
+        required: true
+  /groups/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the group with the given ID
+      operationId: getGroup
+      description: |
+        Obtains the requested group
+      responses:
+        '200':
+          description: group object
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The group ID
+    put:
+      tags:
+        - teachers
+      summary: updates the group
+      operationId: updateGroup
+      description: Updates an existing group
+      responses:
+        '200':
+          description: item created
+        '401':
+          description: 'Teacher does not own the group'
+        '400':
+          description: 'invalid input'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The group ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/group'
+        description: Group to be modified
+  /groups/{id}/studies:
+    get:
+      tags:
+        - teachers
+      summary: gets the assigned studies to the group
+      operationId: getGroupStudies
+      description: |
+        Obtains the list of studies assigned to the group
+      responses:
+        '200':
+          description: list of studies assigned
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Group not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The group ID
+    post:
+      tags:
+        - teachers
+      summary: adds a study for the current group
+      operationId: addStudyToGroup
+      description: |
+        Adds a study for the current group
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The group ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/add_study_to_group_body'
+        required: true
+  /groups/{id}/printable:
+    get:
+      tags:
+        - teachers
+      summary: gets the printable PDF version of the group
+      operationId: getGroupPrintable
+      description: |
+        Usefull for assistance in the classroom, the printable
+        version of the class allows the teacher to cut and
+        give the codes to the students easily to anonymize them.
+      responses:
+        '200':
+          description: printable version in PDF
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Group not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The class ID
+  /studies:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of studies for the current teacher
+      operationId: getStudies
+      description: |
+        Obtains the list of studies for the current teacher.
+      responses:
+        '200':
+          description: the list of studies for this teacher
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds an study for the current teacher
+      operationId: addStudy
+      description: |
+        Creates a new study for the current teacher.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/study'
+        description: Study to be created
+  /studies/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the study with the given ID
+      operationId: getStudy
+      description: |
+        Obtains the requested study
+      responses:
+        '200':
+          description: study object
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+    put:
+      tags:
+        - teachers
+      summary: updates the study
+      operationId: updateStudy
+      description: Updates an existing stidy
+      responses:
+        '200':
+          description: item created
+        '401':
+          description: 'Teacher does not own the class'
+        '400':
+          description: 'invalid input'
+        '404':
+          description: 'Requested study does not exist'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/study'
+        description: study to be modified
+  /studies/{id}/schedule:
+    get:
+      tags:
+        - students
+      summary: gets the list of scheduled activities for the student
+      operationId: getSchedule
+      description: |
+        Obtains the list of scheduled activities for the current
+        student and study, and its completion status. Hides the
+        current used test to the user.
+      responses:
+        '200':
+          description: The list of scheduled activities in order.
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+  /studies/{id}/groups:
+    get:
+      tags:
+        - teachers
+      summary: gets the assigned groups to the study
+      operationId: getStudyGroups
+      description: |
+        Obtains the list of groups assigned to the study
+      responses:
+        '200':
+          description: list of groups assigned
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+    post:
+      tags:
+        - teachers
+      summary: adds a group to the study
+      operationId: addGroupToStudy
+      description: |
+        Adds a study for the current group
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/add_group_to_study_body'
+        required: true
+  /studies/{id}/tests:
+    get:
+      tags:
+        - teachers
+      summary: gets the tests from a study
+      operationId: getStudyTests
+      description: |
+        Obtains the list of tests assigned to the study
+      responses:
+        '200':
+          description: list of tests assigned
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+    post:
+      tags:
+        - teachers
+      summary: adds a test to the study
+      operationId: addTestToStudy
+      description: |
+        Adds a test for the current group
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/add_test_to_study_body'
+        required: true
+  /studies/{id}/allocator:
+    get:
+      tags:
+        - teachers
+      summary: gets the allocator from a study
+      operationId: getStudyAllocator
+      description: |
+        Obtains the allocator used by the study
+      responses:
+        '200':
+          description: the allocator object
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+    put:
+      tags:
+        - teachers
+      summary: set the allocator to the study
+      operationId: setStudyAllocator
+      description: |
+        Updates the allocator from the study
+      responses:
+        '200':
+          description: updated correctly
+        '400':
+          description: 'invalid input, object invalid'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/allocator'
+        description: study to be modified
+  /tests:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of tests for the current teacher
+      operationId: getTests
+      description: |
+        Obtains the list of tests for the current teacher.
+      responses:
+        '200':
+          description: the list of tests for this teacher
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a test
+      operationId: addTest
+      description: |
+        Creates a new test for the current teacher.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/test'
+        description: Test to be created
+  /tests/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the test with the given ID
+      operationId: getTest
+      description: |
+        Obtains the requested test
+      responses:
+        '200':
+          description: test object
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+    put:
+      tags:
+        - teachers
+      summary: updates the test
+      operationId: updateTest
+      description: Updates an existing test
+      responses:
+        '200':
+          description: item updated
+        '401':
+          description: 'Teacher does not own the class'
+        '400':
+          description: 'invalid input'
+        '404':
+          description: 'Requested study does not exist'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/test'
+        description: test to be modified
+  /activities:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of activities for the current teacher
+      operationId: getActivities
+      description: |
+        Obtains the list of activities for the current teacher.
+      responses:
+        '200':
+          description: the list of activities for this teacher
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a Activity
+      operationId: addActivity
+      description: |
+        Creates a new activity for the current teacher.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activity'
+        description: Activity to be created
+  /activities/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the activity with the given ID
+      operationId: getActivity
+      description: |
+        Obtains the requested activity
+      responses:
+        '200':
+          description: Activity object
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+    put:
+      tags:
+        - teachers
+      summary: updates the test
+      operationId: updateActivity
+      description: Updates an existing test
+      responses:
+        '200':
+          description: item updated
+        '401':
+          description: 'Teacher does not own the class'
+        '400':
+          description: 'invalid input'
+        '404':
+          description: 'Requested study does not exist'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activity'
+        description: activity to be modified
+  /activities/{id}/openable:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: returns if the activity can be opened or not
+      operationId: getOpenable
+      description: |
+        If the activity can be opened, e.g. is hosted in a web,
+        the activity will be openable as can be opened.
+      responses:
+        '200':
+          description: if it is openable or not
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+  /activities/{id}/open:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: redirects the user to the activity landing
+      operationId: openActivity
+      description: |
+        If the activity is openable, redirects the user to
+        the activity landing.
+      responses:
+        '307':
+          description: redirects to the valid landing
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+  /activities/{id}/completion:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the completion status of the activity
+      operationId: getCompletion
+      description: |
+        Obtains the completion status of the activity
+      responses:
+        '200':
+          description: if it is openable or not
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+    post:
+      tags:
+        - teachers
+      summary: sets the completion status of the activity
+      operationId: setCompletion
+      description: |
+        Set the completion status of the activity for a student
+      responses:
+        '200':
+          description: if it is openable or not
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+        - in: query
+          name: user
+          description: the user to check its completion status
+          schema:
+            type: string
+            format: 'user1'
+components:
+  schemas:
+    user:
+      type: object
+      required:
+        - username
+        - email
+        - external_entity
+      properties:
+        usename:
+          type: string
+          example: "username_unique"
+        name:
+          type: string
+          example: "Test Class for School"
+        external_entity:
+          type: string
+    group:
+      type: object
+      required:
+        - name
+        - owners
+        - participants
+        - created
+      properties:
+        name:
+          type: string
+          example: "Test group for School"
+        owners:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+        participants:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+        created:
+          type: string
+          format: date-time
+          example: "2017-07-21T17:32:28Z"
+    study:
+      type: object
+      required:
+        - name
+        - tests
+        - allocator
+        - owners
+        - created
+      properties:
+        name:
+          type: string
+          example: "Survey for SG validation"
+        tests:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+        allocator:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
+        owners:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+        created:
+          type: string
+          format: date-time
+          example: "2017-07-21T17:32:28Z"
+    test:
+      type: object
+      required:
+        - study
+        - name
+        - activities
+      properties:
+        study:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
+        name:
+          type: string
+          example: "Test A for my study"
+        activities:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+    activity:
+      type: object
+      required:
+        - name
+        - type
+        - owners
+        - extra_data
+      properties:
+        name:
+          type: string
+          example: "Survey for validation"
+        type:
+          type: string
+          example: "survey, gameplay, etc..."
+        owners:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+        extra_data:
+          type: object
+    allocator:
+      type: object
+      required:
+        - type
+        - extra_data
+      properties:
+        type:
+          type: string
+          example: "manual, random, ponderated..."
+        extra_data:
+          type: object
+    add_group_body:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: Name of the group
+        random_participants:
+          type: integer
+          description: |
+            The amount of codes to be created
+            randomly when the group is created
+          example: 30
+      x-swagger-mongoose:
+        exclude-schema: true
+    add_study_to_group_body:
+      required:
+      - study
+      type: object
+      properties:
+        study:
+          type: string
+          example: 5d07a0767c1405004bc702af
+      x-swagger-mongoose:
+        exclude-schema: true
+    add_group_to_study_body:
+      required:
+      - group
+      type: object
+      properties:
+        group:
+          type: string
+          example: 5d07a0767c1405004bc702af
+      x-swagger-mongoose:
+        exclude-schema: true
+    add_test_to_study_body:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: Test A for my study
+        activities:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+      x-swagger-mongoose:
+        exclude-schema: true

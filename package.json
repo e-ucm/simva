@@ -1,0 +1,20 @@
+{
+  "name": "simva-api",
+  "description": "Simva, AKA Simple Validator, AKA SurveyManager is the evolution of a tool created to integrate and ease the task of validating serious games using pre-post surveys as a control point. This version allows to create more complex studies with more variety of activities and different allocations.",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node src/bin/www",
+    "dev": "node src/bin/www | bunyan"
+  },
+  "dependencies": {
+    "body-parser": "1.13.2",
+    "bunyan": "1.5.1",
+    "cookie-parser": "1.3.5",
+    "express": "4.13.1",
+    "express-body-schema": "*",
+    "mongoose": "*",
+    "node-yaml-config": "0.0.3",
+    "swagger-mongoose": "github:Synpheros/swagger-mongoose#master",
+    "yaml": "*"
+  }
+}
