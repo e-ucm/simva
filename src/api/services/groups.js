@@ -1,6 +1,8 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
 
+var GroupsController = require('../../lib/groupscontroller');
+
 
 /**
  * @param {Object} options
@@ -11,14 +13,14 @@ var mongoose = require('mongoose');
  * @return {Promise}
  */
 module.exports.getGroups = async (options) => {
-  var res = await mongoose.model('group').find({}, function(error, result){
-    return {
-      status: 200,
-      data: result
-    };
-  });
-
-  return res;
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await GroupsController.getGroups({});
+  }catch(e){
+    result = { status: 500, data: e };
+  }
+  
+  return result
 };
 
 /**
@@ -27,28 +29,18 @@ module.exports.getGroups = async (options) => {
  * @return {Promise}
  */
 module.exports.addGroup = async (options) => {
-  var Group = mongoose.model('group');
-
-  var group = new Group({
-    name: options.body.name,
-    owners: ['me'],
-    participants: [],
-    created: Date.now()
-  });
-
   try {
-    await group.save();
+    group = await GroupsController.addGroup({
+      name: options.body.name,
+      owners: ['me'],
+      participants: [],
+      created: Date.now()
+    });
   }catch(e){
-    return {
-      status: 500,
-      data: e
-    };
+    return {status: 500, data: e };
   }
 
-  return {
-    status: 200,
-    data: group
-  };
+  return { status: 200, data: group };
 };
 
 /**
@@ -58,27 +50,22 @@ module.exports.addGroup = async (options) => {
  * @return {Promise}
  */
 module.exports.getGroup = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 404, data: {message: 'Not found'} };
 
-  return {
-    status: 200,
-    data: 'getGroup ok!'
-  };
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var group = await GroupsController.getGroup(options.id);
+      if(group !== null){
+        result = { status: 200, data: group };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
 };
 
 /**
@@ -88,27 +75,19 @@ module.exports.getGroup = async (options) => {
  * @return {Promise}
  */
 module.exports.updateGroup = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 200, data: {message: 'Group updated'} };
 
-  return {
-    status: 200,
-    data: 'updateGroup ok!'
-  };
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      await GroupsController.updateGroup(options.id, options.body);
+    }catch(e){
+      result = { status: 500, data: e };
+    }
+  }else{
+    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+  }
+  
+  return result;
 };
 
 /**
