@@ -252,7 +252,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/study'
+              $ref: '#/components/schemas/add_study_body'
         description: Study to be created
   /studies/{id}:
     get:
@@ -306,6 +306,28 @@ paths:
             schema:
               $ref: '#/components/schemas/study'
         description: study to be modified
+    delete:
+      tags:
+        - teachers
+      summary: gets the study with the given ID
+      operationId: deleteStudy
+      description: |
+        Deleted the designed study
+      responses:
+        '200':
+          description: Study deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
   /studies/{id}/schedule:
     get:
       tags:
@@ -380,6 +402,33 @@ paths:
             schema:
               $ref: '#/components/schemas/add_group_to_study_body'
         required: true
+    delete:
+      tags:
+        - teachers
+      summary: removes group from study
+      operationId: removeGroupFromStudy
+      description: |
+        Removes a group from a study
+      responses:
+        '200':
+          description: The updated group
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Study or study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/add_group_to_study_body'
   /studies/{id}/tests:
     get:
       tags:
@@ -427,7 +476,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/add_test_to_study_body'
+              $ref: '#/components/schemas/test'
         required: true
   /studies/{id}/allocator:
     get:
@@ -584,6 +633,67 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         description: test to be modified
+    delete:
+      tags:
+        - teachers
+      summary: deletes the test with the given ID
+      operationId: getTest
+      description: |
+        Deleted the selected test
+      responses:
+        '200':
+          description: success
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+  /tests/{id}/activities:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of activities for the selected test
+      operationId: getTestActivities
+      description: |
+        Obtains the list of activities for the selected test
+      responses:
+        '200':
+          description: the list of activities for this test
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
+    post:
+      tags:
+        - teachers
+      summary: adds a Activity to a test
+      operationId: addActivityToTest
+      description: |
+        Creates a new activity for the current teacher.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activity'
   /activities:
     get:
       tags:
@@ -690,6 +800,28 @@ paths:
             schema:
               $ref: '#/components/schemas/activity'
         description: activity to be modified
+    delete:
+      tags:
+        - teachers
+      summary: deletes the activity with the given ID
+      operationId: deleteActivity
+      description: |
+        Deleted the specified activity
+      responses:
+        '200':
+          description: activity deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
   /activities/{id}/openable:
     get:
       tags:
@@ -854,6 +986,11 @@ components:
         allocator:
           type: string
           example: ObjectId("5d07a0767c1405004bc702af")
+        groups:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
         owners:
           type: array
           items:
@@ -866,13 +1003,8 @@ components:
     test:
       type: object
       required:
-        - study
         - name
-        - activities
       properties:
-        study:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
           example: "Test A for my study"
@@ -887,7 +1019,6 @@ components:
         - name
         - type
         - owners
-        - extra_data
       properties:
         name:
           type: string
@@ -895,6 +1026,9 @@ components:
         type:
           type: string
           example: "survey, gameplay, etc..."
+        test:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
         owners:
           type: array
           items:
@@ -929,6 +1063,16 @@ components:
           example: 30
       x-swagger-mongoose:
         exclude-schema: true
+    add_study_body:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: Name of the Study
+      x-swagger-mongoose:
+        exclude-schema: true
     add_study_to_group_body:
       required:
       - study
@@ -947,20 +1091,5 @@ components:
         group:
           type: string
           example: 5d07a0767c1405004bc702af
-      x-swagger-mongoose:
-        exclude-schema: true
-    add_test_to_study_body:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          example: Test A for my study
-        activities:
-          type: array
-          items:
-            type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
       x-swagger-mongoose:
         exclude-schema: true
