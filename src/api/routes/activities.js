@@ -4,7 +4,7 @@ const activities = require('../services/activities');
 const router = new express.Router();
 
 // Validators
-const validator = require('../../lib/validator');
+const validator = require('../../lib/utils/validator');
 validator.addValidations('/activities', router);
 
 /**
@@ -35,7 +35,8 @@ router.get('/', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
   const options = {
-    body: req.body
+    body: req.body,
+    files: req.files
   };
 
   try {
@@ -74,6 +75,23 @@ router.put('/:id', async (req, res, next) => {
 
   try {
     const result = await activities.updateActivity(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Deletes the specified activity
+ * 
+ */
+router.delete('/:id', async (req, res, next) => {
+  const options = {
+    id: req.params['id']
+  };
+
+  try {
+    const result = await activities.deleteActivity(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);
