@@ -4,7 +4,7 @@ const studies = require('../services/studies');
 const router = new express.Router();
 
 // Validators
-const validator = require('../../lib/validator');
+const validator = require('../../lib/utils/validator');
 validator.addValidations('/studies', router);
 
 /**
@@ -81,6 +81,23 @@ router.put('/:id', async (req, res, next) => {
 });
 
 /**
+ * Deleted designed study
+ * 
+ */
+router.delete('/:id', async (req, res, next) => {
+  const options = {
+    id: req.params['id']
+  };
+
+  try {
+    const result = await studies.deleteStudy(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Obtains the list of scheduled activities for the current
  * 
  * student and study, and its completion status. Hides the
@@ -119,10 +136,28 @@ router.get('/:id/groups', async (req, res, next) => {
 });
 
 /**
- * Adds a study for the current group
+ * Adds a group for the current study
  * 
  */
 router.post('/:id/groups', async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id']
+  };
+
+  try {
+    const result = await studies.addGroupToStudy(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * removes a group from the study
+ * 
+ */
+router.delete('/:id/groups', async (req, res, next) => {
   const options = {
     body: req.body,
     id: req.params['id']
