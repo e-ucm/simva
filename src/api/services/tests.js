@@ -1,64 +1,9 @@
 const ServerError = require('../../lib/error');
-/**
- * @param {Object} options
- * @param {String} options.searchString pass an optional search string for result filtering
- * @param {Integer} options.skip number of records to skip for pagination
- * @param {Integer} options.limit maximum number of records to return
- * @throws {Error}
- * @return {Promise}
- */
-module.exports.getTests = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+var mongoose = require('mongoose');
 
-  return {
-    status: 200,
-    data: 'getTests ok!'
-  };
-};
-
-/**
- * @param {Object} options
- * @throws {Error}
- * @return {Promise}
- */
-module.exports.addTest = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
-
-  return {
-    status: 200,
-    data: 'addTest ok!'
-  };
-};
+var TestsController = require('../../lib/testscontroller');
+var ActivitiesController = require('../../lib/activitiescontroller');
+var StudiesController = require('../../lib/studiescontroller');
 
 /**
  * @param {Object} options
@@ -67,27 +12,22 @@ module.exports.addTest = async (options) => {
  * @return {Promise}
  */
 module.exports.getTest = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 404, data: {message: 'Not found'} };
 
-  return {
-    status: 200,
-    data: 'getTest ok!'
-  };
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var test = await TestsController.getTest(options.id);
+      if(test !== null){
+        result = { status: 200, data: test };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
 };
 
 /**
@@ -97,26 +37,82 @@ module.exports.getTest = async (options) => {
  * @return {Promise}
  */
 module.exports.updateTest = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 200, data: {message: 'Test updated'} };
 
-  return {
-    status: 200,
-    data: 'updateTest ok!'
-  };
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      await TestsController.updateTest(options.id, options.body);
+    }catch(e){
+      result = { status: 500, data: e };
+    }
+  }else{
+    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+  }
+  
+  return result;
 };
 
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.addActivityToTest = async (options) => {
+  try {
+    options.body.test = options.id;
+
+    let test = await TestsController.getTest(options.id);
+    if(!test){
+      return { status: 404, data: { message: 'Test not found' } };
+    }
+
+    let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(options.body));
+
+    test.activities.push(activity.id);
+    await TestsController.updateTest(options.id, test);
+
+    let studies = await StudiesController.getStudies({tests: options.id});
+    if(studies.length !== 1){
+      return {status: 500, data: { message: 'Unable to find the study of the test.' } };
+    }
+    let study = studies[0];
+    let participants = await StudiesController.getParticipants(study);
+
+    await activity.addParticipants(participants);
+
+    return {status: 500, data: activity };
+  }catch(e){
+    console.log(e);
+    return {status: 500, data: e };
+  }
+
+  return { status: 200, data: group };
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getTestActivities = async (options) => {
+  var result = { status: 404, data: {message: 'Not found'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var test = await TestsController.getTest(options.id);
+      if(test !== null){
+        var activities = await ActivitiesController.getActivities({"_id" : {"$in" : test.activities}});
+        result = { status: 200, data: activities };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
+};
