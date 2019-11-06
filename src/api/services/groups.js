@@ -20,7 +20,7 @@ module.exports.getGroups = async (options) => {
     result = { status: 500, data: e };
   }
   
-  return result
+  return result;
 };
 
 /**

@@ -4,7 +4,7 @@ const groups = require('../services/groups');
 const router = new express.Router();
 
 // Validators
-const validator = require('../../lib/validator');
+const validator = require('../../lib/utils/validator');
 validator.addValidations('/groups', router);
 
 /**
