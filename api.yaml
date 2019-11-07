@@ -23,6 +23,76 @@ tags:
   - name: students
     description: Operations available to students
 paths:
+  /users:
+    get:
+      tags:
+        - admins
+      summary: gets the list of classes for the current teacher
+      operationId: getGroups
+      description: |
+        Obtains the list of groups owned by current user.
+      responses:
+        '200':
+          description: the list of groups for this uer
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a group for the current user as owner.
+      operationId: addGroup
+      description: |
+        Creates a new group for the current user as owner.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+        required: true
+  /users/login:
+    post:
+      summary: logs in the user obtaining an auth token
+      operationId: addGroup
+      description: |
+        Creates a new group for the current user as owner.
+      responses:
+        '200':
+          description: Success including the auth token to be used
+        '400':
+          description: 'invalid input'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login_body'
+        required: true
   /groups:
     get:
       tags:
@@ -931,16 +1001,32 @@ components:
       required:
         - username
         - email
-        - external_entity
+        - password
+        - role
       properties:
-        usename:
+        username:
           type: string
           example: "username_unique"
-        name:
+        email:
           type: string
-          example: "Test Class for School"
+          example: "email"
+        password:
+          type: string
+          example: "Pass12345"
+        role:
+          type: string
+          example: "teacher"
         external_entity:
-          type: string
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+                example: keycloak
+              id:
+                type: string
+                example: whateveruuidusedthere_12321
     group:
       type: object
       required:
@@ -1091,5 +1177,19 @@ components:
         group:
           type: string
           example: 5d07a0767c1405004bc702af
+      x-swagger-mongoose:
+        exclude-schema: true
+    login_body:
+      required:
+      - username
+      - password
+      type: object
+      properties:
+        username:
+          type: string
+          example: pepito
+        password:
+          type: string
+          example: Pass12345
       x-swagger-mongoose:
         exclude-schema: true

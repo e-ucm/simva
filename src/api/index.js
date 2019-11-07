@@ -29,6 +29,7 @@ app.use(cookieParser());
 /*
  * Routes
  */
+app.use('/users', require('./routes/users'));
 app.use('/groups', require('./routes/groups'));
 app.use('/studies', require('./routes/studies'));
 app.use('/tests', require('./routes/tests'));
