@@ -27,13 +27,13 @@ paths:
     get:
       tags:
         - admins
-      summary: gets the list of classes for the current teacher
-      operationId: getGroups
+      summary: gets the list of users.
+      operationId: getUsers
       description: |
         Obtains the list of groups owned by current user.
       responses:
         '200':
-          description: the list of groups for this uer
+          description: the list of users
       parameters:
         - in: query
           name: searchString
@@ -57,10 +57,8 @@ paths:
             minimum: 0
             maximum: 50
     post:
-      tags:
-        - teachers
-      summary: adds a group for the current user as owner.
-      operationId: addGroup
+      summary: adds a user.
+      operationId: addUser
       description: |
         Creates a new group for the current user as owner.
       responses:
@@ -79,7 +77,7 @@ paths:
   /users/login:
     post:
       summary: logs in the user obtaining an auth token
-      operationId: addGroup
+      operationId: loginUser
       description: |
         Creates a new group for the current user as owner.
       responses:
@@ -93,10 +91,23 @@ paths:
             schema:
               $ref: '#/components/schemas/login_body'
         required: true
+  /users/me:
+    get:
+      summary: Obtains your own user.
+      operationId: getMe
+      description: |
+        Based on the current auth header obtains the user
+      responses:
+        '200':
+          description: The user
+        '400':
+          description: 'invalid input'
   /groups:
     get:
       tags:
+        - admins
         - teachers
+        - students
       summary: gets the list of classes for the current teacher
       operationId: getGroups
       description: |
@@ -149,6 +160,7 @@ paths:
   /groups/{id}:
     get:
       tags:
+        - students
         - teachers
       summary: gets the group with the given ID
       operationId: getGroup
@@ -494,11 +506,6 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The study ID
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/add_group_to_study_body'
   /studies/{id}/tests:
     get:
       tags:
@@ -707,7 +714,7 @@ paths:
       tags:
         - teachers
       summary: deletes the test with the given ID
-      operationId: getTest
+      operationId: deleteTest
       description: |
         Deleted the selected test
       responses:
@@ -758,6 +765,14 @@ paths:
           description: 'invalid input, object invalid'
         '409':
           description: an existing item already exists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
       requestBody:
         required: true
         content:
