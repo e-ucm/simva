@@ -26,6 +26,7 @@ services:
       LIMESURVEY_HOST: limesurvey-dev.external.test
       LIMESURVEY_ADMIN_USER: admin
       LIMESURVEY_ADMIN_PASSWORD: password
+      NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
     volumes:
       - ./:/app     
     depends_on:
