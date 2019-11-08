@@ -17,6 +17,8 @@ Authenticator.auth = async (req, res, next) => {
 		}catch(e){
 			console.log(res.status(403).send({message: e}));
 		}
+
+		req.user = res;
 		
 		return next();
 	}
