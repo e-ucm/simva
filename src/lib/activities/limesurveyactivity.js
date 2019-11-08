@@ -4,22 +4,22 @@ var async = require('async');
 
 var Activity = require('./activity');
 
-var baseconfig = require('../../../config');
+var config = require('..//config');
 
 var limeconfig = {
 	options: {
-		url: 'https://' + baseconfig.limesurveyUrl + '/index.php/admin/remotecontrol',
+		url: config.limesurvey.url + '/index.php/admin/remotecontrol',
 		method: "POST",
 		headers: {
 			'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
-	    	'host': baseconfig.limesurveyUrl,
+	    	'host': config.limesurvey.host,
 	    	'path': '/index.php/admin/remotecontrol',
 	    	'connection': 'keep-alive',
 	    	'content-type': 'application/json'
 	  	}
 	},
-  	user: 'admin',
-  	password: '123456'
+  	user: config.limesurvey.adminUser,
+  	password: config.limesurvey.adminPassword
 }
 
 

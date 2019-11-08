@@ -5,7 +5,7 @@ const config = require('../lib/config');
 const logger = require('../lib/logger');
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/test', {useNewUrlParser: true});
+mongoose.connect(config.mongo.url, {useNewUrlParser: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
