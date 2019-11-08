@@ -5,6 +5,8 @@ config.api = {}
 config.api.port  = process.env.PORT || 3000
 
 config.logger = {}
+config.logger.levels = {}
+config.logger.name = 'SIMVA'
 
 config.mongo = {}
 config.mongo.host = process.env.MONGO_HOST || 3000
@@ -20,6 +22,4 @@ config.limesurvey.url =  config.limesurvey.protocol + '://' + config.limesurvey.
 config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
 
-
-config.levels = {}
 module.exports = config;

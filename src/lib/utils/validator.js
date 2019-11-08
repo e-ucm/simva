@@ -1,8 +1,8 @@
 const fs = require('fs');
-const YAML = require('YAML');
+const yaml = require('yaml');
 const validate = require("express-body-schema");
 
-const descriptor = YAML.parse(fs.readFileSync('./api.yaml', 'utf8'));
+const descriptor = yaml.parse(fs.readFileSync('./api.yaml', 'utf8'));
 
 var validator = {};
 

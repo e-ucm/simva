@@ -12,10 +12,10 @@ db.once('open', function() {
   console.log('connected');
 
   	const fs = require('fs');
-	const YAML = require('YAML');
+	const yaml = require('yaml');
 	const swaggerMongoose = require('swagger-mongoose');
 
-	const descriptor = YAML.parse(fs.readFileSync('./api.yaml', 'utf8'));
+	const descriptor = yaml.parse(fs.readFileSync('./api.yaml', 'utf8'));
 	swaggerMongoose.compile(JSON.stringify(descriptor))
 });
 
@@ -38,7 +38,8 @@ app.use('/activities', require('./routes/activities'));
 // catch 404
 app.use((req, res, next) => {
   log.error(`Error 404 on ${req.url}.`);
-  res.status(404).send({ status: 404, error: 'Not found' });
+  console.log(req.url);
+  res.status(404).send({ status: 404, error: 'Not found XXXX' });
 });
 
 // catch errors
