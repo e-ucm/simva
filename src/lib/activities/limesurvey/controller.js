@@ -1,7 +1,7 @@
 /*
  * Copyright 2016 e-UCM (http://www.e-ucm.es/)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
  * This project has received funding from the European Union’s Horizon
  * 2020 research and innovation programme under grant agreement No 644187.
@@ -10,7 +10,7 @@
  *     http://www.apache.org/licenses/LICENSE-2.0 (link is external)
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -19,9 +19,10 @@
 var request = require('request');
 var async = require('async');
 var session_timestamp;
-var SESSIONKEY = "";
+var SESSIONKEY = '';
 var options = {};
 var user, pass;
+var debug = true;
 
 function setOptions(_options){
 	options = _options;
@@ -32,21 +33,51 @@ function setUser(_user,_pass){
 	pass = _pass;
 }
 
+function setDebug(_debug){
+	debug = _debug;
+}
+
+function Log(line){
+	if(debug){
+		console.log(line);
+	}
+}
+
+function LogMultiple(lines){
+	var keys = Object.keys(lines);
+	for (var i = 0; i < keys.length; i++) {
+		Log('--> ' + keys[i] + ':\n' + lines[keys[i]]);
+	}
+}
+
+function LogBigError(name, error, callback){
+	Log('LimesurveyController.' + name + ' -> ERROR:');
+	Log(e);
+	callback(e);
+}
+
 /**
  * Create survey
  * @param survey
  */
 function create(survey) {
+	Log('LimesurveyController.create -> Started');
+	
 	return function (callback) {
-		if(survey){
-			async.waterfall([
-				auth,
-				insert(survey),
-				start,
-				startTokensSurvey
-			], function (err, result) {
-				callback(null, result);
-			});
+		try{
+			if(survey){
+				async.waterfall([
+					auth,
+					insert(survey),
+					start,
+					startTokensSurvey
+				], function (err, result) {
+					Log('LimesurveyController.create -> Completed');
+					callback(null, result);
+				});
+			}
+		}catch(e){
+			LogBigError('create', e, callback);
 		}
 	}
 }
@@ -57,82 +88,133 @@ function create(survey) {
  */
 function clone(surveyId) {
 	return function (callback) {
-		async.waterfall([
-			auth,
-			copy(surveyId),
-			start,
-			startTokensSurvey
-		], function (err, result) {
-			callback(null, result);
-		});
+		Log('LimesurveyController.clone -> Started');
+		try{
+			async.waterfall([
+				auth,
+				copy(surveyId),
+				start,
+				startTokensSurvey
+			], function (err, result) {
+				Log('LimesurveyController.clone -> Completed');
+				callback(null, result);
+			});
+		}catch(e){
+			LogBigError('clone', e, callback);
+		}
 	}
 }
 
 function online(callback){
+	Log('LimesurveyController.online -> Started');
 	options.body = JSON.stringify({});
 
 	request(options, function(error, response, body){
-		if (!error && response.statusCode == 200) {
-			console.log("Limesurvey ONLINE")
-			callback(null);
-		}
-		else {
-			console.log("ONLINE ERROR -->"+error+"\n"+response+"\n"+body);
-			callback(true, "LimeSurvey service unreachable.")
+		try{
+			if (!error && response.statusCode == 200) {
+				console.log('Limesurvey ONLINE')
+				callback(null);
+			}
+			else {
+				Log('LimesurveyController.online -> Unable to reach service')
+				LogMultiple({error: error, response: response, body: body});
+				callback({ message: 'LimeSurvey service unreachable.', error: error});
+			}
+		}catch(e){
+			LogBigError('online', e, callback);
 		}
 	});
 }
 
 function auth(callback) {
+	Log('LimesurveyController.auth -> Started');
 	if(!SESSIONKEY){
-		console.log("No session key");
+		Log('LimesurveyController.auth -> No session key, updating auth token.');
 		update_auth_token(callback);
 	}else if(Math.round(new Date().getTime()/1000) - session_timestamp > 300){
 		//TODO: check if the session is still active
-		console.log("Updating token");
+		Log('LimesurveyController.online -> Auth token expired, requesting new.');
 		reauth(callback);
 	}else{
+		Log('LimesurveyController.clone -> Completed');
 		callback(null);
 	}
 }
 
 function reauth(callback) {
-	async.waterfall([
-		release_session_token,
-		update_auth_token
-	], function (err, result) {
-		callback(null);
-	});
+	Log('LimesurveyController.reauth -> Started');
+	try{
+		async.waterfall([
+			release_session_token,
+			update_auth_token
+		], function (err, result) {
+			Log('LimesurveyController.reauth -> Completed');
+			callback(null);
+		});
+	}catch(e){
+		LogBigError('reauth', e, callback);
+	}
 }
 
 function release_session_token(callback){
+	Log('LimesurveyController.release_session_token -> Started');
 	options.body = JSON.stringify({method:'release_session_key',params:[SESSIONKEY],id:1});
-
-	request(options, function(error, response, body){
-	  if (!error && response.statusCode == 200) {
-			body = JSON.parse(body);
-			console.log("KEY RELEASED -->"+body.result);
+	try{
+		request(options, function(error, response, body){
+		  if (!error && response.statusCode == 200) {
+		  	try{
+				body = JSON.parse(body);
+			}catch(e){
+				Log('LimesurveyController.release_session_token -> Error parsing body');
+				LogMultiple({error: error, response: response, body: body});
+				return callback({message: 'Error on parsing body'});
+			}
+			Log('LimesurveyController.release_session_token -> Key released:');
+			LogMultiple({result: body.result});
 			callback(null);
-	  }
-	  else console.log("ERROR RELEASE AUTH -->"+error+"\n"+response+"\n"+body);  
-	});
+		  }else{
+		  	Log('LimesurveyController.release_session_token -> ERROR:');
+		  	LogMultiple({error: error, response: response, body: body});
+		  	callback({ message: 'Error releasing session token', error: error });
+		  }
+		});
+	}catch(e){
+		LogBigError('release_session_token', e, callback);
+	}
 }
 
 
 function update_auth_token(callback){
+	Log('LimesurveyController.update_auth_token -> Started');
 	options.body = JSON.stringify({method:'get_session_key',params:[user,pass],id:1});
 
-	request(options, function(error, response, body){
-	  if (!error && response.statusCode == 200) {
-			body = JSON.parse(body);
-			console.log("NEW KEY -->"+body.result);
-			SESSIONKEY=body.result;
-			session_timestamp = Math.round(new Date().getTime()/1000);
+	try{
+		request(options, function(error, response, body){
+			if (!error && response.statusCode == 200) {
+				try{
+					body = JSON.parse(body);
+				}catch(e){
+					Log('LimesurveyController.update_auth_token -> Error parsing body');
+					LogMultiple({error: error, response: response, body: body});
+					return callback({message: 'Error on parsing body'});
+				}
 
-			callback(null);
-	  }
-	  else console.log("ERROR AUTH -->"+error+"\n"+response+"\n"+body);  
-	});
+				Log('LimesurveyController.update_auth_token -> New key: ' + body.result);
+
+				SESSIONKEY = body.result;
+				session_timestamp = Math.round(new Date().getTime()/1000);
+
+				Log('LimesurveyController.update_auth_token -> Completed');
+				callback(null);
+			}else{
+				Log('LimesurveyController.update_auth_token -> error on auth');
+				LogMultiple({error: error, response: response, body: body});
+				callback({ message: 'Error trying to auth', error: error });
+			}
+		});
+	}catch(e){
+		LogBigError('update_auth_token', e, callback);
+	}
 }
 
 /**
@@ -147,11 +229,11 @@ function insert(survey) {
 		request(options, function(error, response, body){
 			if (!error && response.statusCode == 200) {
 				body = JSON.parse(body);
-				console.log("SURVEY ID -->"+body.result);
+				console.log('SURVEY ID -->'+body.result);
 			
 				callback(null,body.result);
 			}
-			else console.log("ERROR INSERT SURVEY -->"+body);  
+			else console.log('ERROR INSERT SURVEY -->'+body);  
 		});
 	}
 }
@@ -168,11 +250,11 @@ function copy(surveyId) {
 		request(options, function(error, response, body){
 			if (!error && response.statusCode == 200) {
 				body = JSON.parse(body);
-				console.log("SURVEY ID -->"+body.result);
+				console.log('SURVEY ID -->'+body.result);
 			
 				callback(null,body.result.newsid);
 			}
-			else console.log("ERROR CLONING SURVEY -->"+body);  
+			else console.log('ERROR CLONING SURVEY -->'+body);  
 		});
 	}
 }
@@ -196,11 +278,11 @@ function get(sid,survey) {
 					}
 				}
 				if(!survey[0])
-					callback(true, "Survey not found");
+					callback(true, 'Survey not found');
 				else
 					callback(null);
 			}
-			else console.log("ERROR GET SURVEY -->"+body);  
+			else console.log('ERROR GET SURVEY -->'+body);  
 		});
 	}
 }
@@ -211,15 +293,15 @@ function get(sid,survey) {
  */
 function start(surveyId,callback) {
 	options.body = JSON.stringify({method:'activate_survey',params:[SESSIONKEY,surveyId],id:1});
-	console.log("STARTING -->" + surveyId);
+	console.log('STARTING -->' + surveyId);
 
 	request(options, function(error, response, body){
 		if (!error && response.statusCode == 200) {
 			body = JSON.parse(body);
-			console.log("SURVEY STARTED -->"+body.result);
+			console.log('SURVEY STARTED -->'+body.result);
 			callback(null,surveyId);
 		}
-		else console.log("ERROR START -->"+body);  
+		else console.log('ERROR START -->'+body);  
 	});
 }
 
@@ -230,16 +312,16 @@ function start(surveyId,callback) {
 function remove(surveyId) {
 	return function(callback){
 		options.body = JSON.stringify({method:'delete_survey',params:[SESSIONKEY,surveyId],id:1});
-		console.log("DELETING -->" + surveyId);
+		console.log('DELETING -->' + surveyId);
 
 		request(options, function(error, response, body){
 			if (!error && response.statusCode == 200) {
 				body = JSON.parse(body);
-				console.log("SURVEY DELETED -->");
+				console.log('SURVEY DELETED -->');
 				console.log(body.result);
 				callback(null);
 			}
-			else console.log("ERROR DELETE -->"+body);  
+			else console.log('ERROR DELETE -->'+body);  
 		});
 	}
 }
@@ -250,8 +332,8 @@ function remove(surveyId) {
  */
 function started(survey){
 	return function(callback){
-		if(survey[0].active === "N")
-			callback(true,"Survey is not active");
+		if(survey[0].active === 'N')
+			callback(true,'Survey is not active');
 		else
 			callback(null);
 	}
@@ -306,7 +388,7 @@ function hasToken(survey,token){
 				if(found)
 					callback(null);
 				else
-					callback(true,"Token not found for this survey");
+					callback(true,'Token not found for this survey');
 			}
 			else callback(true,error);  
 		});
@@ -329,7 +411,7 @@ function getResponseId(sid,token,rid){
 				body = JSON.parse(body);
 				if(!body.error){
 					if(body.result.length == 0)
-						callback(true,"Not responses");
+						callback(true,'Not responses');
 					else{
 						for(var i=0; i<body.result.length; i++)
 							rid.push(body.result[i]);
@@ -340,7 +422,7 @@ function getResponseId(sid,token,rid){
 					callback(true,body.error);
 			}
 			else{
-				callback(true,"table not initialized");
+				callback(true,'table not initialized');
 			}
 		});
 	}
@@ -353,7 +435,7 @@ function getResponseId(sid,token,rid){
  */
 function getResponses(sid,r){
 	return function(callback){
-		options.body = JSON.stringify({method:'export_responses',params:[SESSIONKEY,sid,"json","es","all","code","short"],id:1});
+		options.body = JSON.stringify({method:'export_responses',params:[SESSIONKEY,sid,'json','es','all','code','short'],id:1});
 		request(options, function(error, response, body){
 			if (!error && response.statusCode == 200) {
 				body = JSON.parse(body);
@@ -383,21 +465,21 @@ function getResponses(sid,r){
  */
 function getClassResponses(sid,classroom, r){
 	return function(callback){
-		r["content"] = "";
-		options.body = JSON.stringify({method:'export_responses',params:[SESSIONKEY,sid,"csv","es","complete","code","short"],id:1});
+		r['content'] = '';
+		options.body = JSON.stringify({method:'export_responses',params:[SESSIONKEY,sid,'csv','es','complete','code','short'],id:1});
 		request(options, function(error, response, body){
 			if (!error && response.statusCode == 200) {
 				body = JSON.parse(body);
 				if(body.result.length > 0){
-					var csv = Buffer.from(body.result, 'base64').toString().split(/"\r?\n"|\r"/);
+					var csv = Buffer.from(body.result, 'base64').toString().split(/'\r?\n'|\r'/);
 
 					for (var i = 1; i < csv.length; i++){
 						var line = csv[i].split(',');
 						if(line.length > 1){
-							var token = line[4].replace(new RegExp('"', 'g'),'');
+							var token = line[4].replace(new RegExp('\'', 'g'),'');
 
 							if(classroom.codes.indexOf(token) > -1)
-								r["content"] += csv[i] + "\n";
+								r['content'] += csv[i] + '\n';
 						}
 					}
 				}
@@ -417,7 +499,7 @@ function getClassResponses(sid,classroom, r){
  */
 function tokenHasCompleted(survey, token, rid){
 	return function(callback){
-		options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,"json",token,"es","all","code","short"],id:1});
+		options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token,'es','all','code','short'],id:1});
 
 		request(options, function(error, response, body){
 			if (!error && response.statusCode == 200) {
@@ -436,9 +518,9 @@ function tokenHasCompleted(survey, token, rid){
 					if(completed)
 						callback(null);
 					else
-						callback(true, "Survey not completed yet");
+						callback(true, 'Survey not completed yet');
 
-				}else callback(true, "Not response found");
+				}else callback(true, 'Not response found');
 			}
 			else callback(true,error);  
 		});
@@ -455,10 +537,10 @@ function startTokensSurvey(surveyId,callback) {
 	request(options, function(error, response, body){
 		if (!error && response.statusCode == 200) {
 			body = JSON.parse(body);
-			console.log("SURVEY TOKENS STARTED -->"+body.result);
+			console.log('SURVEY TOKENS STARTED -->'+body.result);
 			callback(null,surveyId);
 		}
-		else console.log("ERROR TOKEN -->"+body);  
+		else console.log('ERROR TOKEN -->'+body);  
 	});
 }
 
@@ -472,7 +554,7 @@ function addParticipants(participants, survey){
 		console.log('ADDING PARTICIPANTS TO SURVEY -->' + survey);
 		var tokens = [];
 		for(var i in participants)
-			tokens.push({email: participants[i] + "@dummy.dum",firstname: participants[i] ,lastname:"dummy",token: participants[i]});
+			tokens.push({email: participants[i] + '@dummy.dum',firstname: participants[i] ,lastname:'dummy',token: participants[i]});
 
 		
 		options.body = JSON.stringify({method:'add_participants',params:[SESSIONKEY,survey,tokens,false],id:1});
@@ -482,7 +564,7 @@ function addParticipants(participants, survey){
 				console.log('PARTICIPANTS ADDED TO SURVEY -->' + survey);
 				callback(null,body.result);
 			}
-			else console.log("ERROR ADDING PARTICIPANTS SURVEY -->" + body); 
+			else console.log('ERROR ADDING PARTICIPANTS SURVEY -->' + body); 
 		});
 					
 	}
@@ -497,7 +579,7 @@ function addParticipantsToMultipleSurveys(participants, surveys){
 	return function(callback){
 		var alumnos = [];
 		for(var i in participants)
-			alumnos.push({email: participants[i] + "@dummy.dum",firstname: participants[i] ,lastname:"dummy",token: participants[i]});
+			alumnos.push({email: participants[i] + '@dummy.dum',firstname: participants[i] ,lastname:'dummy',token: participants[i]});
 
 		options.body = JSON.stringify({method:'add_participants',params:[SESSIONKEY,survey.pre,alumnos,false],id:1});
 		
@@ -511,13 +593,13 @@ function addParticipantsToMultipleSurveys(participants, surveys){
 							if (!error && response.statusCode == 200) {
 								callback(null,body.result);
 							}
-							else console.log("ERROR PARTICIPANTS SURVEY TEACHER -->"+body); 
+							else console.log('ERROR PARTICIPANTS SURVEY TEACHER -->'+body); 
 						});
 					}
-					else console.log("ERROR PARTICIPANTS SURVEY POST -->"+body);  
+					else console.log('ERROR PARTICIPANTS SURVEY POST -->'+body);  
 				});
 			}
-			else console.log("ERROR PARTICIPANTS SURVEY PRE -->"+body);  
+			else console.log('ERROR PARTICIPANTS SURVEY PRE -->'+body);  
 		});
 	}
 }
@@ -538,7 +620,7 @@ function delParticipants(participants, survey){
 				console.log(response.body);
 				callback(null,response.body);
 			}
-			else console.log("ERROR REMOVING PARTICIPANTS FROM SURVEY -->"+body);  
+			else console.log('ERROR REMOVING PARTICIPANTS FROM SURVEY -->'+body);  
 		});
 	}
 }
@@ -565,13 +647,13 @@ function delParticipantsFromMultipleSurveys(classroom, survey){
 							if (!error && response.statusCode == 200) {
 								callback(null,body.result);
 							}
-							else console.log("ERROR PARTICIPANTS SURVEY TEACHER -->"+body);  
+							else console.log('ERROR PARTICIPANTS SURVEY TEACHER -->'+body);  
 						});
 					}
-					else console.log("ERROR PARTICIPANTS SURVEY POST -->"+body);  
+					else console.log('ERROR PARTICIPANTS SURVEY POST -->'+body);  
 				});
 			}
-			else console.log("ERROR PARTICIPANTS SURVEY PRE -->"+body);  
+			else console.log('ERROR PARTICIPANTS SURVEY PRE -->'+body);  
 		});
 	}
 }
