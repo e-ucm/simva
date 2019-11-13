@@ -275,7 +275,7 @@ function insertOrCopy(name, options, callback){
 				callback(null, body.result);
 			}else{
 				Log('LimesurveyController.' + name + ' -> error creating the survey');
-				LogMultiple({error: error});
+				LogMultiple({error: error, response: response, body: body});
 				callback({ message: 'Error trying to ' + name + ' the survey into LS', error: error });
 			}  
 		});
