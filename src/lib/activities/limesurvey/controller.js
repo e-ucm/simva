@@ -153,10 +153,10 @@ function auth(callback) {
 		update_auth_token(callback);
 	}else if(Math.round(new Date().getTime()/1000) - session_timestamp > 300){
 		//TODO: check if the session is still active
-		Log('LimesurveyController.online -> Auth token expired, requesting new.');
+		Log('LimesurveyController.auth -> Auth token expired, requesting new.');
 		reauth(callback);
 	}else{
-		Log('LimesurveyController.clone -> Completed');
+		Log('LimesurveyController.auth -> Completed');
 		callback(null);
 	}
 }
