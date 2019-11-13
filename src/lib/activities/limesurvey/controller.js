@@ -168,7 +168,10 @@ function release_session_token(callback){
 			}catch(e){
 				Log('LimesurveyController.release_session_token -> Error parsing body');
 				LogMultiple({error: error, response: response, body: body});
-				return callback({message: 'Error on parsing body'});
+				Log('LimesurveyController.release_session_token -> Probably RemoteControl'
+					+ ' API is not configured, check '
+					+ 'https://manual.limesurvey.org/RemoteControl_2_API#How_to_configure_LSRC2');
+				return callback({message: 'Error on parsing body. Is LSRC2 configured?'});
 			}
 			Log('LimesurveyController.release_session_token -> Key released:');
 			LogMultiple({result: body.result});
@@ -197,7 +200,11 @@ function update_auth_token(callback){
 				}catch(e){
 					Log('LimesurveyController.update_auth_token -> Error parsing body');
 					LogMultiple({error: error, response: response, body: body});
-					return callback({message: 'Error on parsing body'});
+					
+					Log('LimesurveyController.release_session_token -> Probably RemoteControl'
+						+ ' API is not configured, check '
+						+ 'https://manual.limesurvey.org/RemoteControl_2_API#How_to_configure_LSRC2');
+					return callback({message: 'Error on parsing body. Is LSRC2 configured?'});
 				}
 
 				Log('LimesurveyController.update_auth_token -> New key: ' + body.result);
