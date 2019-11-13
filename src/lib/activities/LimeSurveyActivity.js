@@ -95,7 +95,7 @@ class LimeSurveyActivity extends Activity {
 					async.waterfall([
 						controller.online,
 						controller.auth,
-						controller.clone(this.copysurvey),
+						controller.clone(this.copysurvey, this.name),
 					], function (err, result) {
 						
 						if(err){

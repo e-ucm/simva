@@ -240,7 +240,7 @@ function update_auth_token(callback){
 function insert(survey) {
 	return function(callback) {
 		Log('LimesurveyController.insert -> Started');
-		options.body = JSON.stringify({method:'import_survey',params:[SESSIONKEY,survey,'lss'],id:1});
+		options.body = JSON.stringify({method:'import_survey',params:[SESSIONKEY, survey, 'lss'],id:1});
 
 		insertOrCopy('insert', options, callback);
 	}
@@ -250,10 +250,10 @@ function insert(survey) {
  * Copy survey
  * @param survey
  */
-function copy(surveyId) {
+function copy(surveyId, name) {
 	return function(callback) {
 		Log('LimesurveyController.copy -> Started');
-		options.body = JSON.stringify({method:'copy_survey',params:[SESSIONKEY,surveyId],id:1});
+		options.body = JSON.stringify({method:'copy_survey',params:[SESSIONKEY, surveyId, name],id:1});
 
 		insertOrCopy('copy', options, callback);
 	}
