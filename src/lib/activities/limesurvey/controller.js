@@ -57,6 +57,15 @@ function LogBigError(name, error, callback){
 	callback(e);
 }
 
+function NotifyRCError(name, error, response, body, callback){
+	Log('LimesurveyController.' + name + ' -> Error parsing body');
+	LogMultiple({error: error, response: response, body: body});
+	Log('LimesurveyController.' + name + ' -> Probably RemoteControl'
+		+ ' API is not configured, check '
+		+ 'https://manual.limesurvey.org/RemoteControl_2_API#How_to_configure_LSRC2');
+	callback({message: 'Error on parsing body. Is LSRC2 configured?'});
+}
+
 /**
  * Create survey
  * @param survey
@@ -73,8 +82,13 @@ function create(survey) {
 					start,
 					startTokensSurvey
 				], function (err, result) {
-					Log('LimesurveyController.create -> Completed');
-					callback(null, result);
+					if(err){
+						Log('LimesurveyController.create -> ERROR');
+						return callback({ message: 'Error creating the survey', error: err})
+					}else{
+						Log('LimesurveyController.create -> Completed');
+						callback(null, result);
+					}
 				});
 			}
 		}catch(e){
@@ -97,8 +111,13 @@ function clone(surveyId) {
 				start,
 				startTokensSurvey
 			], function (err, result) {
-				Log('LimesurveyController.clone -> Completed');
-				callback(null, result);
+				if(err){
+					Log('LimesurveyController.clone -> ERROR');
+					return callback({ message: 'Error cloning the survey', error: err})
+				}else{
+					Log('LimesurveyController.clone -> Completed');
+					callback(null, result);
+				}
 			});
 		}catch(e){
 			LogBigError('clone', e, callback);
@@ -166,12 +185,7 @@ function release_session_token(callback){
 		  	try{
 				body = JSON.parse(body);
 			}catch(e){
-				Log('LimesurveyController.release_session_token -> Error parsing body');
-				LogMultiple({error: error, response: response, body: body});
-				Log('LimesurveyController.release_session_token -> Probably RemoteControl'
-					+ ' API is not configured, check '
-					+ 'https://manual.limesurvey.org/RemoteControl_2_API#How_to_configure_LSRC2');
-				return callback({message: 'Error on parsing body. Is LSRC2 configured?'});
+				return NotifyRCError('release_session_token', error, response, body, callback);
 			}
 			Log('LimesurveyController.release_session_token -> Key released:');
 			LogMultiple({result: body.result});
@@ -198,13 +212,7 @@ function update_auth_token(callback){
 				try{
 					body = JSON.parse(body);
 				}catch(e){
-					Log('LimesurveyController.update_auth_token -> Error parsing body');
-					LogMultiple({error: error, response: response, body: body});
-					
-					Log('LimesurveyController.release_session_token -> Probably RemoteControl'
-						+ ' API is not configured, check '
-						+ 'https://manual.limesurvey.org/RemoteControl_2_API#How_to_configure_LSRC2');
-					return callback({message: 'Error on parsing body. Is LSRC2 configured?'});
+					return NotifyRCError('update_auth_token', error, response, body, callback);
 				}
 
 				Log('LimesurveyController.update_auth_token -> New key: ' + body.result);
@@ -226,44 +234,53 @@ function update_auth_token(callback){
 }
 
 /**
- * Copy survey
+ * Insert survey
  * @param survey
  */
 function insert(survey) {
 	return function(callback) {
+		Log('LimesurveyController.insert -> Started');
 		options.body = JSON.stringify({method:'import_survey',params:[SESSIONKEY,survey,'lss'],id:1});
 
-
-		request(options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
-				body = JSON.parse(body);
-				console.log('SURVEY ID -->'+body.result);
-			
-				callback(null,body.result);
-			}
-			else console.log('ERROR INSERT SURVEY -->'+body);  
-		});
+		insertOrCopy('insert', options, callback);
 	}
 }
 
 /**
- * Insert survey
+ * Copy survey
  * @param survey
  */
 function copy(surveyId) {
 	return function(callback) {
+		Log('LimesurveyController.copy -> Started');
 		options.body = JSON.stringify({method:'copy_survey',params:[SESSIONKEY,surveyId],id:1});
 
+		insertOrCopy('copy', options, callback);
+	}
+}
 
+function insertOrCopy(name, options, callback){
+	try{
 		request(options, function(error, response, body){
 			if (!error && response.statusCode == 200) {
-				body = JSON.parse(body);
-				console.log('SURVEY ID -->'+body.result);
+				try{
+					body = JSON.parse(body);
+				}catch(e){
+					return NotifyRCError(name, error, response, body, callback);
+				}
+
+				Log('LimesurveyController.' + name + ' -> New Survey ID: ' + body.result);
+				Log('LimesurveyController.' + name + ' -> Completed');
 			
-				callback(null,body.result.newsid);
-			}
-			else console.log('ERROR CLONING SURVEY -->'+body);  
+				callback(null, body.result);
+			}else{
+				Log('LimesurveyController.' + name + ' -> error creating the survey');
+				LogMultiple({error: error});
+				callback({ message: 'Error trying to ' + name + ' the survey into LS', error: error });
+			}  
 		});
+	}catch(e){
+		LogBigError(name, e, callback);
 	}
 }
 
