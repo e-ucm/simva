@@ -17,7 +17,7 @@ services:
 
   simva-api:
     image: node:8
-    command: /bin/bash
+    command: bash -c "cd /app && chmod +x docker-startup.sh && ./docker-startup.sh"
     stdin_open: true
     tty: true
     environment:
