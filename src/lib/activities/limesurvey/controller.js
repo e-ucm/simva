@@ -39,14 +39,15 @@ function setDebug(_debug){
 
 function Log(line){
 	if(debug){
-		console.log(line);
+		console.info(line);
 	}
 }
 
 function LogMultiple(lines){
 	var keys = Object.keys(lines);
 	for (var i = 0; i < keys.length; i++) {
-		Log('--> ' + keys[i] + ':\n' + lines[keys[i]]);
+		Log('--> ' + keys[i] + ':');
+		Log(lines[keys[i]]);
 	}
 }
 
