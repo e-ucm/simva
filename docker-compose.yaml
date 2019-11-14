@@ -1,0 +1,43 @@
+version: '3'
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  system_traefik:
+    external: true
+
+services:
+  mongodb:
+    image: mongo:4.0
+    volumes:
+      - mongo_data:/data/db
+    hostname: mongo.simva.dev.test
+
+  simva-api:
+    image: node:8
+    command: bash -c "cd /app && chmod +x docker-startup.sh && ./docker-startup.sh"
+    stdin_open: true
+    tty: true
+    environment:
+      MONGO_HOST: mongo.simva.dev.test
+      MONGO_DB: /simva
+      LIMESURVEY_HOST: limesurvey-dev.external.test
+      LIMESURVEY_ADMIN_USER: admin
+      LIMESURVEY_ADMIN_PASSWORD: password
+      NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
+    volumes:
+      - ./:/app     
+    depends_on:
+      - mongodb
+    hostname: simva-api.dev.test
+    dns:
+      - 172.31.0.53
+    networks:
+      - default
+      - system_traefik
+    labels:
+      traefik.enable: true
+      traefik.port: 3000
+      traefik.frontend.rule: "Host:simva-api.external.test"
