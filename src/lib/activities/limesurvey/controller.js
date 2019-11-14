@@ -269,10 +269,18 @@ function insertOrCopy(name, options, callback){
 					return NotifyRCError(name, error, response, body, callback);
 				}
 
-				Log('LimesurveyController.' + name + ' -> New Survey ID: ' + body.result);
+				let surveyid = null;
+				if(body && body.result && body.result.newsid){
+					surveyid = body.result.newsid;
+				}else{
+					Log('LimesurveyController.getClassResponses -> Error');
+					return callback({ message: 'Malformed body received from LimeSurvey'});
+				}
+
+				Log('LimesurveyController.' + name + ' -> New Survey ID: ' + surveyid);
 				Log('LimesurveyController.' + name + ' -> Completed');
 			
-				callback(null, body.result);
+				callback(null, surveyid);
 			}else{
 				Log('LimesurveyController.' + name + ' -> error creating the survey');
 				LogMultiple({error: error, response: response, body: body});
@@ -376,7 +384,7 @@ function start(surveyId, callback) {
 					return NotifyRCError('start', error, response, body, callback);
 				}
 
-				Log('LimesurveyController.start -> Survey started: ' + body.result);
+				Log('LimesurveyController.start -> Survey started: ' + surveyId);
 				callback(null, surveyId);
 			}else{
 				Log('LimesurveyController.start -> error starting the survey');
@@ -791,7 +799,7 @@ function startTokensSurvey(surveyId, callback) {
 					return NotifyRCError('startTokensSurvey', error, response, body, callback);
 				}
 
-				Log('LimesurveyController.startTokensSurvey -> Completed: ' + body.result);
+				Log('LimesurveyController.startTokensSurvey -> Completed: ' + surveyId);
 				callback(null,surveyId);
 			}else{
 				Log('LimesurveyController.startTokensSurvey -> error activating the tokens');
@@ -822,9 +830,15 @@ function addParticipants(participants, survey){
 			options.body = JSON.stringify({ method:'add_participants', params: [SESSIONKEY, survey, tokens, false], id:1 });
 			request(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
+					try{
+						body = JSON.parse(body);
+					}catch(e){
+						return NotifyRCError('startTokensSurvey', error, response, body, callback);
+					}
+
 					Log('LimesurveyController.addParticipants -> Participants added:');
-					LogMultiple({ body: body });
 					Log('LimesurveyController.addParticipants -> Completed: ' + survey);
+
 					callback(null, body.result);
 				}else{
 					Log('LimesurveyController.addParticipants -> error adding the participants');
