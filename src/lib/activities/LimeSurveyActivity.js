@@ -4,22 +4,22 @@ var async = require('async');
 
 var Activity = require('./activity');
 
-var baseconfig = require('../../../config');
+var config = require('..//config');
 
 var limeconfig = {
 	options: {
-		url: 'https://' + baseconfig.limesurveyUrl + '/index.php/admin/remotecontrol',
+		url: config.limesurvey.url + '/index.php/admin/remotecontrol',
 		method: "POST",
 		headers: {
 			'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
-	    	'host': baseconfig.limesurveyUrl,
+	    	'host': config.limesurvey.host,
 	    	'path': '/index.php/admin/remotecontrol',
 	    	'connection': 'keep-alive',
 	    	'content-type': 'application/json'
 	  	}
 	},
-  	user: 'admin',
-  	password: '123456'
+  	user: config.limesurvey.adminUser,
+  	password: config.limesurvey.adminPassword
 }
 
 
@@ -57,7 +57,7 @@ class LimeSurveyActivity extends Activity {
 		super.params = params;
 
 		if(!this.extra_data.participants){
-			this.extra_data.participants = [];
+			this.extra_data.participants = {};
 		}
 	}
 
@@ -95,7 +95,7 @@ class LimeSurveyActivity extends Activity {
 					async.waterfall([
 						controller.online,
 						controller.auth,
-						controller.clone(this.copysurvey),
+						controller.clone(this.copysurvey, this.name),
 					], function (err, result) {
 						
 						if(err){
@@ -175,9 +175,18 @@ class LimeSurveyActivity extends Activity {
 	}
 
 	async addParticipants(participants){
-		this.extra_data.participants = this.extra_data.participants.concat(participants);
+		for(let p in participants){
+			if(!this.extra_data.participants[participants[p]]){
+				this.extra_data.participants[participants[p]] = null;
+			}
+		}
 
-		await this.addParticipantsToSurvey(participants);
+		var lsparticipants = await this.addParticipantsToSurvey(participants);
+
+		for(let p in lsparticipants){
+			this.extra_data.participants[lsparticipants[p].token] = lsparticipants[p];
+		}
+
 		return await this.save();
 	}
 
@@ -190,11 +199,11 @@ class LimeSurveyActivity extends Activity {
 						controller.auth,
 						controller.addParticipants(participants, this.extra_data.surveyId)
 					], function (err, result) {
-						if(!err){
-							resolve();
+						if(err){
+							return reject(err);
 						}
 
-						reject(err);
+						resolve(result);
 					});
 				}catch(e){
 					reject(e);
@@ -206,15 +215,13 @@ class LimeSurveyActivity extends Activity {
 	}
 
 	async removeParticipants(participants){
+		let toremove = [];
 		for (var i = 0; i < participants.length; i++) {
-			var index = this.extra_data.participants.indexOf(participants);
- 
-			if (index > -1) {
-				this.extra_data.participants.splice(index, 1);
-			}
+			toremove.push(this.extra_data.participants[participants[i]].tid);
+			delete this.extra_data.participants[participants[i]];
 		}
 
-		await this.removeParticipantsFromSurvey(participants);
+		await this.removeParticipantsFromSurvey(toremove);
 		return await this.save();
 	}
 
