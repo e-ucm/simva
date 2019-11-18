@@ -32,6 +32,26 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Obtains the list of groups owned by current user.
+ * 
+ */
+router.get('/me', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.user.data.id
+  };
+
+  try {
+    const result = await users.getUser(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
+/**
  * Creates a new group for the current user as owner.
  * 
  */

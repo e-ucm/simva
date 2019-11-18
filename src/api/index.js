@@ -4,8 +4,12 @@ const bodyParser = require('body-parser');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 
+var isTest = (process.env.NODE_ENV === 'test');
+
+console.log(isTest);
+
 var mongoose = require('mongoose');
-mongoose.connect(config.mongo.url, {useNewUrlParser: true});
+mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -32,7 +36,6 @@ app.use(cookieParser());
 app.use('/users', require('./routes/users'));
 app.use('/groups', require('./routes/groups'));
 app.use('/studies', require('./routes/studies'));
-app.use('/tests', require('./routes/tests'));
 app.use('/activities', require('./routes/activities'));
 
 // catch 404

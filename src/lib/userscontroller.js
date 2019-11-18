@@ -26,7 +26,6 @@ UsersController.getUsers = async (params) => {
 UsersController.addUser = async (params) => {
 	var User = mongoose.model('user');
 
-	console.log('pregen');
 	try{
 		params.password = await cryptPassword(params.password);
 	}catch(e){
@@ -65,7 +64,6 @@ UsersController.authUser = async (username, plainPass) => {
 
 var cryptPassword = async (password) => {
 	return new Promise((resolve, reject) => {
-		console.log(bcrypt);
 		try{
 		bcrypt.genSalt(10, function(err, salt) {
 			if (err) 

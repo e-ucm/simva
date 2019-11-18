@@ -12,6 +12,25 @@ var UsersController = require('../../lib/userscontroller');
  * @throws {Error}
  * @return {Promise}
  */
+module.exports.getUser = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.getUser(options.id);
+  }catch(e){
+    result = { status: 500, data: e };
+  }
+  
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.searchString pass an optional search string for result filtering
+ * @param {Integer} options.skip number of records to skip for pagination
+ * @param {Integer} options.limit maximum number of records to return
+ * @throws {Error}
+ * @return {Promise}
+ */
 module.exports.getUsers = async (options) => {
   var result = { status: 200, data: {} };
   try{
