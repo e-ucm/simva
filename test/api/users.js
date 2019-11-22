@@ -127,6 +127,82 @@ module.exports = function (request) {
                 });
         });
 
+        it('should not allow to add a user without username', function (done) {
+            let user = {
+                password: 'testing',
+                email: 'test@testerino.com',
+                role: 'teacher'
+            }
+
+            request.post('/users')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).be.String();
+                    done();
+                });
+        });
+
+        it('should not allow to add a user without password', function (done) {
+            let user = {
+                username: "testing",
+                email: 'test@testerino.com',
+                role: 'teacher'
+            }
+
+            request.post('/users')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).be.String();
+                    done();
+                });
+        });
+
+        it('should not allow to add a user without email', function (done) {
+            let user = {
+                username: "testing",
+                password: 'testing',
+                role: 'teacher'
+            }
+
+            request.post('/users')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).be.String();
+                    done();
+                });
+        });
+
+        it('should not allow to add a user without role', function (done) {
+            let user = {
+                username: "testing",
+                password: 'testing',
+                email: 'test@testerino.com'
+            }
+
+            request.post('/users')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).be.String();
+                    done();
+                });
+        });
+
         it('should login the user', function (done) {
             let user = {
                 username: 'test',
@@ -167,6 +243,56 @@ module.exports = function (request) {
                         should(result).equals(true);
                         done();
                     });
+                });
+        });
+
+        it('should not be able to obtain detais if not authorized', function (done) {
+            request.get('/users/me')
+                .expect(401)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('No authorization header');
+
+                    done();
+                });
+        });
+
+        it('should not be able to obtain detais if auth is not bearer', function (done) {
+            request.get('/users/me')
+                .expect(401)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'whatever auth')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('Auth header is not a valid Bearer.');
+
+                    done();
+                });
+        });
+
+        it('should not be able to obtain detais if auth is wrong', function (done) {
+            request.get('/users/me')
+                .expect(401)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer wrong')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('JWT token is not valid.');
+
+                    done();
                 });
         });
     });
