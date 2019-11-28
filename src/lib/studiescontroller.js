@@ -110,7 +110,7 @@ StudiesController.updateStudy = async (id, study) => {
 		premoved = premoved.filter((p,i) => premoved.indexOf(p) === i && !pnew.includes(p));
 
 		for (var i = 0; i < study.tests.length; i++) {
-			console.log('modifying participants for test: ' + study.tests[i])
+			//console.log('modifying participants for test: ' + study.tests[i])
 			if(padded.length > 0){
 				await TestsController.addParticipants(study.tests[i], padded);
 			}
@@ -121,7 +121,6 @@ StudiesController.updateStudy = async (id, study) => {
 		}
 	}
 
-	console.log('updating');
 	var result = await Study.updateOne({ _id: id }, study);
 
 	if(result.ok !== result.n){
@@ -175,7 +174,7 @@ StudiesController.addTestToStudy = async (id, params) => {
 
 	let test = await TestsController.addTest(params);
 
-	let result = await Study.findOneAndUpdate({ _id: id }, { "$push": { tests: test._id} });
+	let result = await Study.updateOne({ _id: id }, { "$push": { tests: test._id} });
 
 	if(result.ok !== result.n){
 		throw {message: 'There was an error in the study.'};

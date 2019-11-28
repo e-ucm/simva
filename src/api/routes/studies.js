@@ -6,16 +6,18 @@ const router = new express.Router();
 // Validators
 const validator = require('../../lib/utils/validator');
 validator.addValidations('/studies', router);
+const Authenticator = require('../../lib/utils/authenticator');
 
 /**
  * Obtains the list of studies for the current teacher.
  * 
  */
-router.get('/', async (req, res, next) => {
+router.get('/', Authenticator.auth, async (req, res, next) => {
   const options = {
     searchString: req.query['searchString'],
     skip: req.query['skip'],
-    limit: req.query['limit']
+    limit: req.query['limit'],
+    user: req.user
   };
 
   try {
@@ -33,9 +35,10 @@ router.get('/', async (req, res, next) => {
  * Creates a new study for the current teacher.
  * 
  */
-router.post('/', async (req, res, next) => {
+router.post('/', Authenticator.auth, async (req, res, next) => {
   const options = {
-    body: req.body
+    body: req.body,
+    user: req.user
   };
 
   try {
@@ -50,9 +53,10 @@ router.post('/', async (req, res, next) => {
  * Obtains the requested study
  * 
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -66,10 +70,11 @@ router.get('/:id', async (req, res, next) => {
 /**
  * Updates an existing stidy
  */
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -84,9 +89,10 @@ router.put('/:id', async (req, res, next) => {
  * Deleted designed study
  * 
  */
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -105,9 +111,10 @@ router.delete('/:id', async (req, res, next) => {
  * current used test to the user.
  * 
  */
-router.get('/:id/schedule', async (req, res, next) => {
+router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -122,9 +129,10 @@ router.get('/:id/schedule', async (req, res, next) => {
  * Obtains the list of groups assigned to the study
  * 
  */
-router.get('/:id/groups', async (req, res, next) => {
+router.get('/:id/groups', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -136,48 +144,13 @@ router.get('/:id/groups', async (req, res, next) => {
 });
 
 /**
- * Adds a group for the current study
- * 
- */
-router.post('/:id/groups', async (req, res, next) => {
-  const options = {
-    body: req.body,
-    id: req.params['id']
-  };
-
-  try {
-    const result = await studies.addGroupToStudy(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * removes a group from the study
- * 
- */
-router.delete('/:id/groups', async (req, res, next) => {
-  const options = {
-    body: req.body,
-    id: req.params['id']
-  };
-
-  try {
-    const result = await studies.addGroupToStudy(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
  * Obtains the list of tests assigned to the study
  * 
  */
-router.get('/:id/tests', async (req, res, next) => {
+router.get('/:id/tests', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -192,10 +165,11 @@ router.get('/:id/tests', async (req, res, next) => {
  * Adds a test for the current group
  * 
  */
-router.post('/:id/tests', async (req, res, next) => {
+router.post('/:id/tests', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -206,13 +180,112 @@ router.post('/:id/tests', async (req, res, next) => {
   }
 });
 
+
+/**
+ * Obtains the requested test
+ * 
+ */
+router.get('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    testid: req.params['testid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getTest(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Updates an existing test
+ */
+router.put('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id'],
+    testid: req.params['testid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.updateTest(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Deletes an existing test and its references
+ */
+router.delete('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id'],
+    testid: req.params['testid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.deleteTest(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Creates a new test for the current teacher.
+ * 
+ */
+router.get('/:id/tests/:testid/activities', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    testid: req.params['testid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getTestActivities(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Creates a new test for the current teacher.
+ * 
+ */
+router.post('/:id/tests/:testid/activities', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id'],
+    testid: req.params['testid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.addActivityToTest(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 /**
  * Obtains the allocator used by the study
  * 
  */
-router.get('/:id/allocator', async (req, res, next) => {
+router.get('/:id/allocator', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -227,10 +300,11 @@ router.get('/:id/allocator', async (req, res, next) => {
  * Updates the allocator from the study
  * 
  */
-router.put('/:id/allocator', async (req, res, next) => {
+router.put('/:id/allocator', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {

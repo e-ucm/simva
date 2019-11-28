@@ -42,11 +42,8 @@ TestsController.deleteTest = async (id) => {
 	var test = await TestsController.getTest(id);
 
 	for (var i = 0; i < test.activities.length; i++) {
-		console.log('nextone');
 		let activity = await ActivitiesController.loadActivity(test.activities[i]);
-		console.log('loaded');
 		if(!await activity.delete()){
-			console.log('!deleted')
 			throw { message: 'Unable to delete activity: ' . activity.id };
 		}
 	}
