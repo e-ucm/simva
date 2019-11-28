@@ -28,8 +28,6 @@ const log = logger(config.logger);
 const app = express();
 
 app.use(bodyParser.json({limit: '1mb'}));
-app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }));
-app.use(cookieParser());
 
 /*
  * Routes

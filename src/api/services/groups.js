@@ -2,7 +2,15 @@ const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
 
 var GroupsController = require('../../lib/groupscontroller');
+var UsersController = require('../../lib/userscontroller');
 
+Object.defineProperty(Array.prototype, 'flat', {
+    value: function(depth = 1) {
+      return this.reduce(function (flat, toFlatten) {
+        return flat.concat((Array.isArray(toFlatten) && (depth>1)) ? toFlatten.flat(depth-1) : toFlatten);
+      }, []);
+    }
+});
 
 /**
  * @param {Object} options
@@ -15,7 +23,7 @@ var GroupsController = require('../../lib/groupscontroller');
 module.exports.getGroups = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    result.data = await GroupsController.getGroups({});
+    result.data = await GroupsController.getGroups({owners: options.user.data.username});
   }catch(e){
     result = { status: 500, data: e };
   }
@@ -32,7 +40,7 @@ module.exports.addGroup = async (options) => {
   try {
     group = await GroupsController.addGroup({
       name: options.body.name,
-      owners: ['me'],
+      owners: [options.user.data.username],
       participants: [],
       created: Date.now()
     });
@@ -56,12 +64,17 @@ module.exports.getGroup = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var group = await GroupsController.getGroup(options.id);
       if(group !== null){
-        result = { status: 200, data: group };
+        if(group.owners.indexOf(options.user.data.username) !== -1 || group.participants.indexOf(options.user.data.username) !== -1){
+          result = { status: 200, data: group };
+        }else{
+          result = { status: 401, data: {message: 'User is not authorized to obtain group data.'} };
+        }
       }
     }else{
-      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+      result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
+    console.log(e);
     result =  { status: 500, data: e };
   }
 
@@ -79,8 +92,40 @@ module.exports.updateGroup = async (options) => {
 
   if(mongoose.Types.ObjectId.isValid(options.id)){
     try{
-      await GroupsController.updateGroup(options.id, options.body);
+      var group = await GroupsController.getGroup(options.id);
+      if(group !== null){
+        if(group.owners.indexOf(options.user.data.username) !== -1){
+          if(options.body.owners.indexOf(options.user.data.username) !== -1){
+
+            let ownersadded = options.body.owners.filter(x => !group.owners.includes(x));
+            let participantsadded = options.body.participants.filter(x => !group.participants.includes(x));
+
+            let allusers = [ownersadded, participantsadded].flat();
+            allusers = allusers.filter((g,i) => allusers.indexOf(g) === i);
+            var loadedusers = await UsersController.getUsers({"username" : {"$in" : allusers}});
+
+            // Filtering loadedgroups to obtain the old groups
+            var loadedownersadded = loadedusers.filter(x => ownersadded.includes(x._id.toString()));
+
+            // Getting the new groups added.
+            var loadedparticipantsadded = loadedusers.filter(x => participantsadded.includes(x._id.toString()) );
+
+            if(loadedownersadded.length !== ownersadded.length){
+              result = { status: 404, data: {message: 'An owner added does not exist'} };
+            }else if(loadedparticipantsadded.length !== participantsadded.length){
+              result = { status: 404, data: {message: 'A participant added does not exist'} };
+            }else{
+              result.data = await GroupsController.updateGroup(options.id, options.body);
+            }
+          }else{
+            result = { status: 400, data: {message: 'Teacher cannot remove itself from the group'} };
+          }
+        }else{
+          result = { status: 401, data: {message: 'User is not authorized to update this group.'} };
+        }
+      }
     }catch(e){
+      console.log(e);
       result = { status: 500, data: e };
     }
   }else{

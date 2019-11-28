@@ -65,21 +65,22 @@ UsersController.authUser = async (username, plainPass) => {
 var cryptPassword = async (password) => {
 	return new Promise((resolve, reject) => {
 		try{
-		bcrypt.genSalt(10, function(err, salt) {
-			if (err) 
-				return reject(err);
-
-			bcrypt.hash(password, salt, function(err, hash) {
-				if(err){
-					reject(err);
-				}else{
-					resolve(hash);
+			bcrypt.genSalt(10, function(err, salt) {
+				if (err) {
+					return reject(err);
 				}
+
+				bcrypt.hash(password, salt, function(err, hash) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(hash);
+					}
+				});
 			});
-		});
-	}catch(e){
-		console.log(e);
-	}
+		}catch(e){
+			console.log(e);
+		}
 	});
 };
 
@@ -98,7 +99,6 @@ var comparePassword = async (plainPass, hashword) => {
 
 
 UsersController.generateJWT = async (user) => {
-	console.log(user);
 	return jwt.sign(
 		{
 			data: {
@@ -134,10 +134,6 @@ UsersController.validateJWT = async (token) => {
 		}else{
 			reject('Unable to decode token.');
 		}
-
-		/*jwt.verify(token, cert, function(err, decoded) {
-			console.log(decoded.foo) // bar
-		});*/
 	});
 	
 }

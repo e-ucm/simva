@@ -6,16 +6,18 @@ const router = new express.Router();
 // Validators
 const validator = require('../../lib/utils/validator');
 validator.addValidations('/groups', router);
+const Authenticator = require('../../lib/utils/authenticator');
 
 /**
  * Obtains the list of groups owned by current user.
  * 
  */
-router.get('/', async (req, res, next) => {
+router.get('/', Authenticator.auth, async (req, res, next) => {
   const options = {
     searchString: req.query['searchString'],
     skip: req.query['skip'],
-    limit: req.query['limit']
+    limit: req.query['limit'],
+    user: req.user
   };
 
   try {
@@ -33,9 +35,10 @@ router.get('/', async (req, res, next) => {
  * Creates a new group for the current user as owner.
  * 
  */
-router.post('/', async (req, res, next) => {
+router.post('/', Authenticator.auth, async (req, res, next) => {
   const options = {
-    body: req.body
+    body: req.body,
+    user: req.user
   };
 
   try {
@@ -50,9 +53,10 @@ router.post('/', async (req, res, next) => {
  * Obtains the requested group
  * 
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -66,10 +70,11 @@ router.get('/:id', async (req, res, next) => {
 /**
  * Updates an existing group
  */
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -84,7 +89,7 @@ router.put('/:id', async (req, res, next) => {
  * Obtains the list of studies assigned to the group
  * 
  */
-router.get('/:id/studies', async (req, res, next) => {
+router.get('/:id/studies', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id']
   };
@@ -101,7 +106,7 @@ router.get('/:id/studies', async (req, res, next) => {
  * Adds a study for the current group
  * 
  */
-router.post('/:id/studies', async (req, res, next) => {
+router.post('/:id/studies', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
     id: req.params['id']
@@ -123,7 +128,7 @@ router.post('/:id/studies', async (req, res, next) => {
  * give the codes to the students easily to anonymize them.
  * 
  */
-router.get('/:id/printable', async (req, res, next) => {
+router.get('/:id/printable', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id']
   };

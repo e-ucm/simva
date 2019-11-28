@@ -93,6 +93,10 @@ paths:
         required: true
   /users/me:
     get:
+      tags:
+        - admins
+        - teachers
+        - students
       summary: Obtains your own user.
       operationId: getMe
       description: |
@@ -108,7 +112,7 @@ paths:
         - admins
         - teachers
         - students
-      summary: gets the list of classes for the current teacher
+      summary: gets the list of groups where this student pl
       operationId: getGroups
       description: |
         Obtains the list of groups owned by current user.
@@ -231,32 +235,6 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The group ID
-    post:
-      tags:
-        - teachers
-      summary: adds a study for the current group
-      operationId: addStudyToGroup
-      description: |
-        Adds a study for the current group
-      responses:
-        '200':
-          description: item created
-        '400':
-          description: 'invalid input, object invalid'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/add_study_to_group_body'
-        required: true
   /groups/{id}/printable:
     get:
       tags:
@@ -391,7 +369,7 @@ paths:
     delete:
       tags:
         - teachers
-      summary: gets the study with the given ID
+      summary: Deletes the study with the given ID
       operationId: deleteStudy
       description: |
         Deleted the designed study
@@ -458,54 +436,6 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The study ID
-    post:
-      tags:
-        - teachers
-      summary: adds a group to the study
-      operationId: addGroupToStudy
-      description: |
-        Adds a study for the current group
-      responses:
-        '200':
-          description: item created
-        '400':
-          description: 'invalid input, object invalid'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/add_group_to_study_body'
-        required: true
-    delete:
-      tags:
-        - teachers
-      summary: removes group from study
-      operationId: removeGroupFromStudy
-      description: |
-        Removes a group from a study
-      responses:
-        '200':
-          description: The updated group
-        '400':
-          description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Study or study not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
   /studies/{id}/tests:
     get:
       tags:
@@ -555,6 +485,163 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         required: true
+  /studies/{studyid}/tests/{testid}:
+    get:
+      tags:
+        - teachers
+      summary: gets the test with the given ID
+      operationId: getTest
+      description: |
+        Obtains the requested test
+      responses:
+        '200':
+          description: test object
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: studyid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702as"
+          description: The Study ID
+        - in: path
+          name: testid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702at"
+          description: The test ID
+    put:
+      tags:
+        - teachers
+      summary: updates the test
+      operationId: updateTest
+      description: Updates an existing test
+      responses:
+        '200':
+          description: item updated
+        '401':
+          description: 'Teacher does not own the class'
+        '400':
+          description: 'invalid input'
+        '404':
+          description: 'Requested study does not exist'
+      parameters:
+        - in: path
+          name: studyid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702as"
+          description: The Study ID
+        - in: path
+          name: testid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702at"
+          description: The test ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/test'
+        description: test to be modified
+    delete:
+      tags:
+        - teachers
+      summary: deletes the test with the given ID
+      operationId: deleteTest
+      description: |
+        Deleted the selected test
+      responses:
+        '200':
+          description: success
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: studyid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702as"
+          description: The Study ID
+        - in: path
+          name: testid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702at"
+          description: The test ID
+  /studies/{studyid}/tests/{testid}/activities:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of activities for the selected test
+      operationId: getTestActivities
+      description: |
+        Obtains the list of activities for the selected test
+      responses:
+        '200':
+          description: the list of activities for this test
+      parameters:
+        - in: path
+          name: studyid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702as"
+          description: The Study ID
+        - in: path
+          name: testid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702at"
+          description: The test ID
+    post:
+      tags:
+        - teachers
+      summary: adds a Activity to a test
+      operationId: addActivityToTest
+      description: |
+        Creates a new activity for the current teacher.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      parameters:
+        - in: path
+          name: studyid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702as"
+          description: The Study ID
+        - in: path
+          name: testid
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702at"
+          description: The test ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activity'
+  
   /studies/{id}/allocator:
     get:
       tags:
@@ -604,181 +691,6 @@ paths:
             schema:
               $ref: '#/components/schemas/allocator'
         description: study to be modified
-  /tests:
-    get:
-      tags:
-        - teachers
-      summary: gets the list of tests for the current teacher
-      operationId: getTests
-      description: |
-        Obtains the list of tests for the current teacher.
-      responses:
-        '200':
-          description: the list of tests for this teacher
-      parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for result filtering
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
-    post:
-      tags:
-        - teachers
-      summary: adds a test
-      operationId: addTest
-      description: |
-        Creates a new test for the current teacher.
-      responses:
-        '200':
-          description: item created
-        '400':
-          description: 'invalid input, object invalid'
-        '409':
-          description: an existing item already exists
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/test'
-        description: Test to be created
-  /tests/{id}:
-    get:
-      tags:
-        - teachers
-      summary: gets the test with the given ID
-      operationId: getTest
-      description: |
-        Obtains the requested test
-      responses:
-        '200':
-          description: test object
-        '400':
-          description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
-    put:
-      tags:
-        - teachers
-      summary: updates the test
-      operationId: updateTest
-      description: Updates an existing test
-      responses:
-        '200':
-          description: item updated
-        '401':
-          description: 'Teacher does not own the class'
-        '400':
-          description: 'invalid input'
-        '404':
-          description: 'Requested study does not exist'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/test'
-        description: test to be modified
-    delete:
-      tags:
-        - teachers
-      summary: deletes the test with the given ID
-      operationId: deleteTest
-      description: |
-        Deleted the selected test
-      responses:
-        '200':
-          description: success
-        '400':
-          description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
-  /tests/{id}/activities:
-    get:
-      tags:
-        - teachers
-      summary: gets the list of activities for the selected test
-      operationId: getTestActivities
-      description: |
-        Obtains the list of activities for the selected test
-      responses:
-        '200':
-          description: the list of activities for this test
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-    post:
-      tags:
-        - teachers
-      summary: adds a Activity to a test
-      operationId: addActivityToTest
-      description: |
-        Creates a new activity for the current teacher.
-      responses:
-        '200':
-          description: item created
-        '400':
-          description: 'invalid input, object invalid'
-        '409':
-          description: an existing item already exists
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/activity'
   /activities:
     get:
       tags:

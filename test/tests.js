@@ -46,6 +46,7 @@ describe('API Test', function (done) {
 
     it('Start tests', function (done) {
         require('./api/users')(request);
+        require('./api/groups')(request);
         done();
     });
 

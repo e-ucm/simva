@@ -35,7 +35,7 @@ module.exports.addStudy = async (options) => {
     var allocator = await AllocatorsController.createAllocator(AllocatorsController.getTypes()[0].getType());
     var study = await StudiesController.addStudy({
       name: options.body.name,
-      owners: ['me'],
+      owners: [options.user.data.username],
       tests: [],
       participants: [],
       allocator: allocator.id,
