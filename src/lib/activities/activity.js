@@ -116,11 +116,29 @@ class Activity {
 	}
 
 	async addParticipants(participants){
-		// Nothing to do by default
+		if(!this.extra_data){
+			this.extra_data = { participants: {} };
+		}
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
+		}
+		
+		for(let p in participants){
+
+			if(!this.extra_data.participants[participants[p]]){
+				this.extra_data.participants[participants[p]] = { completion: false };
+			}
+		}
+
+		return await this.save();
 	}
 
 	async removeParticipants(participants){
-		// Nothing to do by default
+		for (var i = 0; i < participants.length; i++) {
+			delete this.extra_data.participants[participants[i]];
+		}
+
+		return await this.save();
 	}
 
 	async getResults(participants){
@@ -131,8 +149,8 @@ class Activity {
 		results = {};
 		if(this.extra_data && this.extra_data.completion){
 			for(var p in participants){
-				if(this.extra_data.completion[participants[p].id]){
-					results[participants[p].id] = this.extra_data.completion[participants[p].id];
+				if(this.extra_data.participants[participants[p].id]){
+					results[participants[p].id] = this.extra_data.participants[participants[p].id].completion;
 				}else{
 					results[participants[p].id] = false;
 				}
@@ -160,6 +178,8 @@ class Activity {
 		}
 
 		this.extra_data.completion[participant] = status;
+
+		return await this.save();
 	}
 
 	async getCompletion(participant){

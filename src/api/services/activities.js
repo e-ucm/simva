@@ -2,6 +2,7 @@ const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
 
 var ActivitiesController = require('../../lib/activitiescontroller');
+var StudiesController = require('../../lib/StudiesController')
 
 /**
  * @param {Object} options
@@ -106,27 +107,34 @@ module.exports.deleteActivity = async (options) => {
  * @return {Promise}
  */
 module.exports.getOpenable = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
-
-  return {
+  let body = {
     status: 200,
-    data: 'getOpenable ok!'
-  };
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data.openable = activity.canBeOpened();
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        body.status = 401;
+        body.data.message = 'You are owner but not participant.';
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return body;
 };
 
 /**
@@ -166,22 +174,32 @@ module.exports.openActivity = async (options) => {
  * @return {Promise}
  */
 module.exports.getCompletion = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data.completion = activity.getCompletion(options.user.data.username);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        body.status = 401;
+        body.data.message = 'You are owner but not participant.';
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
 
   return {
     status: 200,
@@ -197,26 +215,37 @@ module.exports.getCompletion = async (options) => {
  * @return {Promise}
  */
 module.exports.setCompletion = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data.result = await activity.setCompletion(options.user.data.username, options.body.status);
+      console.log(activity);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        body.data.result = await activity.setCompletion(options.postuser, options.body.status);
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    console.log(e);
+    return {status: 500, data: e };
+  }
 
   return {
     status: 200,
-    data: 'setCompletion ok!'
+    data: 'getCompletion ok!'
   };
 };
 

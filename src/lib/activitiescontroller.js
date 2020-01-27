@@ -7,6 +7,20 @@ var LimeSurveyActivity = require('./activities/LimeSurveyActivity');
 
 var types = [Activity, LimeSurveyActivity];
 
+ActivitiesController.getStudy = async (id) => {
+	let res = null;
+
+	let tests = await mongoose.model('test').find({ activities:  id });
+
+
+	if(tests.length > 0){
+		let studies = await mongoose.model('study').find({ tests:  tests[0]._id });
+
+		res = studies[0];
+	}
+
+	return res;
+}
 
 ActivitiesController.getActivities = async (params) => {
 	var res = await mongoose.model('activity').find(params);
@@ -35,7 +49,6 @@ ActivitiesController.loadActivity = async (id) => {
 
 ActivitiesController.addActivity = async (params, files) => {
 	for (var i = 0; i < types.length; i++) {
-		console.log(types[i].getType());
 		if(types[i].getType() == params.type){
 			if(files){
 				params.rawsurvey = new Buffer(files.survey, '7bit').toString('base64');

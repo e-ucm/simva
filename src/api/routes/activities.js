@@ -6,12 +6,13 @@ const router = new express.Router();
 // Validators
 const validator = require('../../lib/utils/validator');
 validator.addValidations('/activities', router);
+const Authenticator = require('../../lib/utils/authenticator');
 
 /**
  * Obtains the list of activities for the current teacher.
  * 
  */
-router.get('/', async (req, res, next) => {
+router.get('/', Authenticator.auth, async (req, res, next) => {
   const options = {
     searchString: req.query['searchString'],
     skip: req.query['skip'],
@@ -33,7 +34,7 @@ router.get('/', async (req, res, next) => {
  * Creates a new activity for the current teacher.
  * 
  */
-router.post('/', async (req, res, next) => {
+router.post('/', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
     files: req.files
@@ -51,7 +52,7 @@ router.post('/', async (req, res, next) => {
  * Obtains the requested activity
  * 
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id']
   };
@@ -67,7 +68,7 @@ router.get('/:id', async (req, res, next) => {
 /**
  * Updates an existing test
  */
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
     id: req.params['id']
@@ -85,7 +86,7 @@ router.put('/:id', async (req, res, next) => {
  * Deletes the specified activity
  * 
  */
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id']
   };
@@ -104,9 +105,10 @@ router.delete('/:id', async (req, res, next) => {
  * the activity will be openable as can be opened.
  * 
  */
-router.get('/:id/openable', async (req, res, next) => {
+router.get('/:id/openable', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -123,7 +125,7 @@ router.get('/:id/openable', async (req, res, next) => {
  * the activity landing.
  * 
  */
-router.get('/:id/open', async (req, res, next) => {
+router.get('/:id/open', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id']
   };
@@ -140,9 +142,10 @@ router.get('/:id/open', async (req, res, next) => {
  * Obtains the completion status of the activity
  * 
  */
-router.get('/:id/completion', async (req, res, next) => {
+router.get('/:id/completion', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
@@ -157,10 +160,12 @@ router.get('/:id/completion', async (req, res, next) => {
  * Set the completion status of the activity for a student
  * 
  */
-router.post('/:id/completion', async (req, res, next) => {
+router.post('/:id/completion', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id'],
-    user: req.query['user']
+    postuser: req.query['user'],
+    user: req.user,
+    body: req.body
   };
 
   try {
