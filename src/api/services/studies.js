@@ -6,6 +6,7 @@ var UsersController = require('../../lib/userscontroller');
 var GroupsController = require('../../lib/groupscontroller');
 var AllocatorsController = require('../../lib/allocatorscontroller');
 var TestsController = require('../../lib/testscontroller');
+var ActivitiesController = require('../../lib/ActivitiesController');
 
 /**
  * @param {Object} options
@@ -386,13 +387,21 @@ module.exports.addActivityToTest = async (options) => {
     options.body.test = options.id;
 
     let study = await StudiesController.getStudy(options.id);
-    if(!test){
+    if(!study){
       return { status: 404, data: { message: 'Study not found' } };
     }
 
     let test = await TestsController.getTest(options.testid);
     if(!test){
       return { status: 404, data: { message: 'Test not found' } };
+    }
+
+    if(!options.body.owners){
+      options.body.owners = [options.user.data.username]
+    }else{
+      if(options.body.owners.indexOf(options.user.data.username) === -1){
+        return { status: 400, data: { message: 'You have not included yourself as owner of the activity' } };
+      }
     }
 
     let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(options.body));
@@ -403,7 +412,7 @@ module.exports.addActivityToTest = async (options) => {
     let participants = await StudiesController.getParticipants(study);
     await activity.addParticipants(participants);
 
-    return {status: 500, data: activity };
+    return {status: 200, data: activity.toObject() };
   }catch(e){
     console.log(e);
     return {status: 500, data: e };

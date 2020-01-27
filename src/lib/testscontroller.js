@@ -71,7 +71,7 @@ TestsController.addParticipants = async (id, participants) => {
 	for (var i = 0; i < test.activities.length; i++) {
 		let activity = await ActivitiesController.loadActivity(test.activities[i]);
 		if(!await activity.addParticipants(participants)){
-			throw { message: 'Error adding participants to activity: ' . test.activities[i] };
+			throw { message: 'Error adding participants to activity: ' + test.activities[i] };
 		}
 	}
 }
@@ -79,13 +79,11 @@ TestsController.addParticipants = async (id, participants) => {
 TestsController.removeParticipants = async (id, participants) => {
 	var test = await TestsController.getTest(id);
 
-	console.log('removing');
-
 	try{
 		for (var i = 0; i < test.activities.length; i++) {
 			let activity = await ActivitiesController.loadActivity(test.activities[i]);
 			if(!await activity.removeParticipants(participants)){
-				throw { message: 'Error adding participants to activity: ' . test.activities[i] };
+				throw { message: 'Error removing participants from activity: ' + test.activities[i] };
 			}
 		}
 	}catch(e){

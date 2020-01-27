@@ -205,7 +205,9 @@ module.exports = function (request) {
             mongoose.connection.collection('groups').drop(function(){
                 mongoose.connection.collection('users').drop(function(){
                     mongoose.connection.collection('studies').drop(function(){
-                        done();
+                        mongoose.connection.collection('tests').drop(function(){
+                            done();
+                        });
                     });
                 });
             });
