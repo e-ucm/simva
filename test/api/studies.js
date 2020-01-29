@@ -446,6 +446,22 @@ module.exports = function (request) {
                 });
         });
 
+        it('should not contain the test after deleting a test through delete test route', function (done) {
+            request.get('/studies/' + studyid)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    let study = res.body;
+                    should(study.tests.length).equals(0);
+
+                    done();
+                });
+        });
+
         it('should be able to add a test to an existing study updating it correctly', function (done) {
             let test = {
                 name: 'testtest'
