@@ -899,7 +899,7 @@ module.exports = function (request) {
                 });
         });
 
-        it('should NOT be able to obtain the study schedule if you are a teacher', function (done) {
+        it('should NOT be able to obtain the study schedule if you are a teacher but you dont participate', function (done) {
             request.get('/studies/' + studyid + '/schedule')
                 .expect(400)
                 .set('Accept', 'application/json')
@@ -927,20 +927,6 @@ module.exports = function (request) {
                             should.not.exist(res.body.allocations['s1']);
                         }
                     }
-
-                    done();
-                });
-        });
-
-        it('should NOT be able to obtain the study schedule if you are a teacher', function (done) {
-            request.get('/studies/' + studyid + '/schedule')
-                .expect(400)
-                .set('Accept', 'application/json')
-                .set('Authorization', 'Bearer ' + authToken)
-                .end(function (err, res) {
-                    should.not.exist(err);
-                    should(res.body).be.Object();
-                    should(res.body.message).equals('You are owner of the study but not participant');
 
                     done();
                 });

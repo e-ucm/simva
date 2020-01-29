@@ -391,6 +391,7 @@ paths:
   /studies/{id}/schedule:
     get:
       tags:
+        - teachers
         - students
       summary: gets the list of scheduled activities for the student
       operationId: getSchedule
