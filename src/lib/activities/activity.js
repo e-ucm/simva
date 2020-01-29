@@ -141,23 +141,41 @@ class Activity {
 		return await this.save();
 	}
 
+	async setResult(participant, result){
+		if(!this.extra_data){
+			this.extra_data = {}
+		}
+
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
+		}
+
+		if(!this.extra_data.participants[participant]){
+			this.extra_data.participants[participant] = {}
+		}
+
+		this.extra_data.participants[participant].result = result;
+
+		return await this.save();
+	}
+
 	async getResults(participants){
-		// by default, if there is extra data and some completion data,
-		// this will return an array of completion statuses for the
-		// participants.
-		
-		results = {};
-		if(this.extra_data && this.extra_data.completion){
+		if(!participants || participants.length == 0){
+			participants = Object.keys(this.extra_data.participants);
+		}
+
+		let results = {};
+		if(this.extra_data && this.extra_data.participants){
 			for(var p in participants){
-				if(this.extra_data.participants[participants[p].id]){
-					results[participants[p].id] = this.extra_data.participants[participants[p].id].completion;
+				if(this.extra_data.participants[participants[p]] && this.extra_data.participants[participants[p]].result){
+					results[participants[p]] = this.extra_data.participants[participants[p]].result;
 				}else{
-					results[participants[p].id] = false;
+					results[participants[p]] = 'No results';
 				}
 			}
 		}else{
 			for(var p in participants){
-				results[participants[p].id] = false;
+				results[participants[p]] = 'No results';
 			}
 		}
 
@@ -165,31 +183,44 @@ class Activity {
 	}
 
 	async setCompletion(participant, status){
-		if(!ObjectId.isValid(participant)){
-			return false;
-		}
-
 		if(!this.extra_data){
 			this.extra_data = {}
 		}
 
-		if(!this.extra_data.completion){
-			this.extra_data.completion = {};
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
 		}
 
-		this.extra_data.completion[participant] = status;
+		if(!this.extra_data.participants[participant]){
+			this.extra_data.participants[participant] = {}
+		}
+
+		this.extra_data.participants[participant].completion = status;
 
 		return await this.save();
 	}
 
-	async getCompletion(participant){
-		if(this.extra_data
-			&& this.extra_data.completion
-			&& this.extra_data.completion[participant]){
-			return this.extra_data.completion[participant];
-		}else{
-			return false;
+	async getCompletion(participants){
+		if(!participants || participants.length == 0){
+			participants = Object.keys(this.extra_data.participants);
 		}
+
+		let results = {};
+		if(this.extra_data && this.extra_data.participants){
+			for(var p in participants){
+				if(this.extra_data.participants[participants[p]] && this.extra_data.participants[participants[p]].completion){
+					results[participants[p]] = this.extra_data.participants[participants[p]].completion;
+				}else{
+					results[participants[p]] = false;
+				}
+			}
+		}else{
+			for(var p in participants){
+				results[participants[p]] = false;
+			}
+		}
+
+		return results;
 	}
 
 	open(res, participant){

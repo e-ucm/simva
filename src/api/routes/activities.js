@@ -145,7 +145,8 @@ router.get('/:id/open', Authenticator.auth, async (req, res, next) => {
 router.get('/:id/completion', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id'],
-    user: req.user
+    user: req.user,
+    users: req.query['users']
   };
 
   try {
@@ -163,13 +164,52 @@ router.get('/:id/completion', Authenticator.auth, async (req, res, next) => {
 router.post('/:id/completion', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id'],
-    postuser: req.query['user'],
     user: req.user,
+    postuser: req.query['user'],
     body: req.body
   };
 
   try {
     const result = await activities.setCompletion(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Obtains the completion status of the activity
+ * 
+ */
+router.get('/:id/result', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+  };
+
+  try {
+    const result = await activities.getResult(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Set the completion status of the activity for a student
+ * 
+ */
+router.post('/:id/result', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.setResult(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);

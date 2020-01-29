@@ -186,11 +186,15 @@ module.exports.getCompletion = async (options) => {
     let participants = await StudiesController.getParticipants(study);
 
     if(participants.indexOf(options.user.data.username) !== -1){
-      body.data.completion = activity.getCompletion(options.user.data.username);
+      body.data = await activity.getCompletion([options.user.data.username]);
     }else{
       if(study.owners.indexOf(options.user.data.username) !== -1){
-        body.status = 401;
-        body.data.message = 'You are owner but not participant.';
+        let users = [];
+        if(options.users && options.users !== ''){
+          users = options.users.split(',');
+        }
+
+        body.data = await activity.getCompletion(users);
       }else{
         body.status = 401;
         body.data.message = 'You do not participate in the activity either as owner or user';
@@ -201,10 +205,7 @@ module.exports.getCompletion = async (options) => {
     return {status: 500, data: e };
   }
 
-  return {
-    status: 200,
-    data: 'getCompletion ok!'
-  };
+  return body;
 };
 
 /**
@@ -228,10 +229,14 @@ module.exports.setCompletion = async (options) => {
 
     if(participants.indexOf(options.user.data.username) !== -1){
       body.data.result = await activity.setCompletion(options.user.data.username, options.body.status);
-      console.log(activity);
     }else{
       if(study.owners.indexOf(options.user.data.username) !== -1){
-        body.data.result = await activity.setCompletion(options.postuser, options.body.status);
+        if(participants.indexOf(options.postuser) !== -1){
+          body.data.result = await activity.setCompletion(options.postuser, options.body.status);
+        }else{
+          body.status = 400;
+          body.data.message = 'The user you are trying to set completion to is not a participant';
+        }
       }else{
         body.status = 401;
         body.data.message = 'You do not participate in the activity either as owner or user';
@@ -239,13 +244,91 @@ module.exports.setCompletion = async (options) => {
     }
 
   }catch(e){
-    console.log(e);
     return {status: 500, data: e };
   }
 
-  return {
-    status: 200,
-    data: 'getCompletion ok!'
-  };
+  return body;
 };
 
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getResult = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data = await activity.getResults([options.user.data.username]);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        let users = [];
+        if(options.users && options.users !== ''){
+          users = options.users.split(',');
+        }
+
+        body.data = await activity.getResults(users);
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @param {String} options.user the user to check its completion status
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.setResult = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data.result = await activity.setResult(options.user.data.username, options.body.result);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(participants.indexOf(options.postuser) !== -1){
+          body.data.result = await activity.setResult(options.postuser, options.body.result);
+        }else{
+          body.status = 400;
+          body.data.message = 'The user you are trying to set result to is not a participant';
+        }
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return body;
+};

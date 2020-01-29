@@ -249,6 +249,10 @@ class LimeSurveyActivity extends Activity {
 		})
 	}
 
+	async setResult(participant, result){
+		return false;
+	}
+
 	async getResults(participants){
 		// by default, if there is extra data and some completion data,
 		// this will return an array of completion statuses for the

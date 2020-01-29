@@ -219,7 +219,9 @@ module.exports = function (request) {
             mongoose.connection.collection('groups').drop(function(){
                 mongoose.connection.collection('users').drop(function(){
                     mongoose.connection.collection('studies').drop(function(){
-                        done();
+                        mongoose.connection.collection('activities').drop(function(){
+                            done();
+                        });
                     });
                 });
             });
@@ -549,7 +551,100 @@ module.exports = function (request) {
                 });
         });
 
-        it('should be able to set its completion status', function (done) {
+        it('should be able to get its completion status', function (done) {
+
+            request.post('/users/login')
+                .expect(200)
+                .send({username: 's1', password: 'pass1'})
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should(res.body).be.Object();
+                    should.exist(res.body.token);
+                    let tmptoken = res.body.token;
+
+                    request.get('/activities/' + activityid + '/completion')
+                        .expect(200)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + tmptoken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            should(res.body['s1']).equals(false);
+                            done();
+                        });
+                });
+        });
+
+        it('should NOT be able to set s5 completion status as a teacher because s5 is not participant', function (done) {
+
+            request.post('/activities/' + activityid + '/completion?user=s5')
+                .expect(400)
+                .send({ status: true })
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('The user you are trying to set completion to is not a participant');
+
+                    done();
+                });
+        });
+
+        it('should be able to set s2 completion status as a teacher and obtain his changed completion', function (done) {
+
+            request.post('/activities/' + activityid + '/completion?user=s2')
+                .expect(200)
+                .send({ status: true })
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.result).equals(true);
+
+                    request.get('/activities/' + activityid + '/completion')
+                        .expect(200)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+
+                            should(Object.keys(res.body).length).equals(3);
+
+                            should(res.body).be.Object();
+                            should(res.body['s1']).equals(false);
+                            should(res.body['s2']).equals(true);
+                            should(res.body['s3']).equals(false);
+                            done();
+                        });
+                });
+        });
+
+        it('should be able to get the results as a teacher but filtered', function (done) {
+            request.get('/activities/' + activityid + '/completion?users=s2,s3')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    should(Object.keys(res.body).length).equals(2);
+
+                    should(res.body['s1']).not.be.Object();
+
+                    should(res.body['s2']).equals(true);
+                    should(res.body['s3']).equals(false);
+
+                    done();
+                });
+        });
+
+        it('should be able to set its completion status and obtain it changed', function (done) {
 
             request.post('/users/login')
                 .expect(200)
@@ -570,15 +665,24 @@ module.exports = function (request) {
                         .end(function (err, res) {
                             should.not.exist(err);
                             should(res.body).be.Object();
+                            should(res.body.result).equals(true);
 
-                            console.log(res.body);
+                            request.get('/activities/' + activityid + '/completion')
+                                .expect(200)
+                                .set('Accept', 'application/json')
+                                .set('Authorization', 'Bearer ' + tmptoken)
+                                .end(function (err, res) {
+                                    should.not.exist(err);
+                                    should(res.body).be.Object();
+                                    should(res.body['s1']).equals(true);
 
-                            done();
+                                    done();
+                                });
                         });
                 });
         });
 
-        it('should be able to get its completion status', function (done) {
+        it('should be able to get its result', function (done) {
 
             request.post('/users/login')
                 .expect(200)
@@ -591,21 +695,206 @@ module.exports = function (request) {
                     should.exist(res.body.token);
                     let tmptoken = res.body.token;
 
-                    request.get('/activities/' + activityid + '/completion')
+                    request.get('/activities/' + activityid + '/result')
                         .expect(200)
-                        .send({ status: true })
                         .set('Accept', 'application/json')
                         .set('Authorization', 'Bearer ' + tmptoken)
                         .end(function (err, res) {
                             should.not.exist(err);
                             should(res.body).be.Object();
-
-                            console.log(res.body);
+                            should(res.body['s1']).not.equals(null);
+                            should(res.body['s1']).equals('No results');
 
                             done();
                         });
                 });
         });
 
+        it('should be able to set its result and obtain it changed', function (done) {
+
+            request.post('/users/login')
+                .expect(200)
+                .send({username: 's1', password: 'pass1'})
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should(res.body).be.Object();
+                    should.exist(res.body.token);
+                    let tmptoken = res.body.token;
+
+                    request.post('/activities/' + activityid + '/result')
+                        .expect(200)
+                        .send({ result: { final_score: 10, avg_score: 7, attempts: 5, failures: 2, success: 3 } })
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + tmptoken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            should(res.body.result).equals(true);
+
+                            request.get('/activities/' + activityid + '/result')
+                                .expect(200)
+                                .set('Accept', 'application/json')
+                                .set('Authorization', 'Bearer ' + tmptoken)
+                                .end(function (err, res) {
+                                    should.not.exist(err);
+
+                                    should(res.body).be.Object();
+                                    should(res.body['s1']).be.Object();
+                                    should(Object.keys(res.body['s1']).length).equals(5);
+                                    should(res.body['s1'].final_score).equals(10);
+                                    should(res.body['s1'].avg_score).equals(7);
+                                    should(res.body['s1'].attempts).equals(5);
+                                    should(res.body['s1'].failures).equals(2);
+                                    should(res.body['s1'].success).equals(3);
+
+                                    done();
+                                });
+                        });
+                });
+        });
+
+        it('should be able to get all results as a teacher', function (done) {
+            request.get('/activities/' + activityid + '/result')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    should(Object.keys(res.body).length).equals(3);
+
+                    should(res.body['s1']).be.Object();
+                    should(Object.keys(res.body['s1']).length).equals(5);
+                    should(res.body['s1'].final_score).equals(10);
+                    should(res.body['s1'].avg_score).equals(7);
+                    should(res.body['s1'].attempts).equals(5);
+                    should(res.body['s1'].failures).equals(2);
+
+                    should(res.body['s2']).equals('No results');
+                    should(res.body['s3']).equals('No results');
+
+                    done();
+                });
+        });
+
+        it('should NOT be able to set s5 results as a teacher because s5 is not participant', function (done) {
+
+            request.post('/activities/' + activityid + '/result?user=s5')
+                .expect(400)
+                .send({ result: { final_score: 9, avg_score: 8, attempts: 7, failures: 6, success: 5 } })
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('The user you are trying to set result to is not a participant');
+
+                    done();
+                });
+        });
+
+        it('should be able to set s2 results as a teacher and obtain all the changed results', function (done) {
+
+            request.post('/activities/' + activityid + '/result?user=s2')
+                .expect(200)
+                .send({ result: { final_score: 9, avg_score: 8, attempts: 7, failures: 6, success: 5 } })
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.result).equals(true);
+
+                    request.get('/activities/' + activityid + '/result')
+                        .expect(200)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+
+                            should(res.body).be.Object();
+                            should(res.body['s1']).be.Object();
+                            should(Object.keys(res.body['s1']).length).equals(5);
+                            should(res.body['s1'].final_score).equals(10);
+                            should(res.body['s1'].avg_score).equals(7);
+                            should(res.body['s1'].attempts).equals(5);
+                            should(res.body['s1'].failures).equals(2);
+                            should(res.body['s1'].success).equals(3);
+
+                            should(res.body).be.Object();
+                            should(res.body['s2']).be.Object();
+                            should(Object.keys(res.body['s2']).length).equals(5);
+                            should(res.body['s2'].final_score).equals(9);
+                            should(res.body['s2'].avg_score).equals(8);
+                            should(res.body['s2'].attempts).equals(7);
+                            should(res.body['s2'].failures).equals(6);
+                            should(res.body['s2'].success).equals(5);
+
+                            done();
+                        });
+                });
+        });
+
+        it('should be able to get all results as a teacher', function (done) {
+            request.get('/activities/' + activityid + '/result?user=s2')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    should(Object.keys(res.body).length).equals(3);
+
+                    should(res.body['s1']).be.Object();
+                    should(Object.keys(res.body['s1']).length).equals(5);
+                    should(res.body['s1'].final_score).equals(10);
+                    should(res.body['s1'].avg_score).equals(7);
+                    should(res.body['s1'].attempts).equals(5);
+                    should(res.body['s1'].failures).equals(2);
+
+                    should(res.body['s2']).be.Object();
+                    should(Object.keys(res.body['s2']).length).equals(5);
+                    should(res.body['s2'].final_score).equals(9);
+                    should(res.body['s2'].avg_score).equals(8);
+                    should(res.body['s2'].attempts).equals(7);
+                    should(res.body['s2'].failures).equals(6);
+                    should(res.body['s2'].success).equals(5);
+
+                    should(res.body['s3']).equals('No results');
+
+                    done();
+                });
+        });
+
+        it('should be able to get the results as a teacher but filtered', function (done) {
+            request.get('/activities/' + activityid + '/result?users=s2,s3')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    should(Object.keys(res.body).length).equals(2);
+
+                    should(res.body['s1']).not.be.Object();
+
+                    should(res.body['s2']).be.Object();
+                    should(Object.keys(res.body['s2']).length).equals(5);
+                    should(res.body['s2'].final_score).equals(9);
+                    should(res.body['s2'].avg_score).equals(8);
+                    should(res.body['s2'].attempts).equals(7);
+                    should(res.body['s2'].failures).equals(6);
+                    should(res.body['s2'].success).equals(5);
+
+                    should(res.body['s3']).equals('No results');
+
+                    done();
+                });
+        });
     });
 };
