@@ -23,6 +23,15 @@ AllocatorsController.getAllocator = async (id) => {
 	}
 };
 
+AllocatorsController.loadAllocator = async (id) => {
+	let allocator = await AllocatorsController.getAllocator(id);
+	
+	if(!allocator){
+		throw {message: 'Unable to load allocator.'}; 
+	}
+	return AllocatorsController.castToClass(allocator);
+}
+
 AllocatorsController.getTypes = function(){
 	return types;
 };
@@ -48,5 +57,16 @@ AllocatorsController.deleteAllocator = async (id) => {
 
 	return res;
 }
+
+AllocatorsController.castToClass = function(allocator){
+	for (var i = 0; i < types.length; i++) {
+		if(types[i].getType() == allocator.type){
+			allocator = new types[i](allocator);
+			return allocator;
+		}
+	}
+	return null;
+}
+
 
 module.exports = AllocatorsController;

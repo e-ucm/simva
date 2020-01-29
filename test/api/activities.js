@@ -220,7 +220,9 @@ module.exports = function (request) {
                 mongoose.connection.collection('users').drop(function(){
                     mongoose.connection.collection('studies').drop(function(){
                         mongoose.connection.collection('activities').drop(function(){
-                            done();
+                            mongoose.connection.collection('allocators').drop(function(){
+                                done();
+                            });
                         });
                     });
                 });
@@ -895,6 +897,150 @@ module.exports = function (request) {
 
                     done();
                 });
+        });
+
+        it('should NOT be able to obtain the study schedule if you are a teacher', function (done) {
+            request.get('/studies/' + studyid + '/schedule')
+                .expect(400)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('You are owner of the study but not participant');
+
+                    done();
+                });
+        });
+
+        it('should NOT have allocated the student before he tries to get its schedule', function (done) {
+            request.get('/studies/' + studyid + '/allocator')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    if(res.body.extra_data){
+                        if(res.body.allocations){
+                            should.not.exist(res.body.allocations['s1']);
+                        }
+                    }
+
+                    done();
+                });
+        });
+
+        it('should NOT be able to obtain the study schedule if you are a teacher', function (done) {
+            request.get('/studies/' + studyid + '/schedule')
+                .expect(400)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('You are owner of the study but not participant');
+
+                    done();
+                });
+        });
+
+        it('should be able to obtain the study schedule if user is a student', function (done) {
+            request.post('/users/login')
+                .expect(200)
+                .send({username: 's1', password: 'pass1'})
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should(res.body).be.Object();
+                    should.exist(res.body.token);
+                    let tmptoken = res.body.token;
+
+                    request.get('/studies/' + studyid + '/schedule')
+                        .expect(200)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + tmptoken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            
+                            should(res.body).be.Object();
+                                
+                            should(res.body.activities).be.Object();
+                            should(Object.keys(res.body.activities).length).equals(1);
+                            should(res.body.activities[activityid].name).equals('testactivity');
+                            should(res.body.activities[activityid].completion_status).equals(true);
+                            should(res.body.activities[activityid].completed).equals(true);
+                            should(res.body.activities[activityid].result).is.Object();
+                            should(res.body.activities[activityid].result.final_score).equals(10);
+                            should(res.body.next).equals(null);
+
+                            done();
+                        });
+                });
+        });
+
+        it('should have allocated the student after he tries to get its schedule', function (done) {
+            request.get('/studies/' + studyid + '/allocator')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    if(res.body.extra_data){
+                        if(res.body.allocations){
+                            should.exist(res.body.allocations['s1']);
+                        }
+                    }
+
+                    done();
+                });
+        });
+
+        it('should be able to obtain a new schedule after teacher adding another activity', function (done) {
+
+            let activity = {
+                name: 'secondactivity',
+                type: 'activity',
+                owners: ['teacher']
+            }
+            
+            addActivity(studyid, testid, activity, 200, function (err, res) {
+                should.not.exist(err);
+                activity = res.body;
+
+                request.post('/users/login')
+                    .expect(200)
+                    .send({username: 's1', password: 'pass1'})
+                    .end(function (err, res) {
+                        if(err){
+                            console.log(err, res);
+                        }
+                        should(res.body).be.Object();
+                        should.exist(res.body.token);
+                        let tmptoken = res.body.token;
+
+                        request.get('/studies/' + studyid + '/schedule')
+                            .expect(200)
+                            .set('Accept', 'application/json')
+                            .set('Authorization', 'Bearer ' + tmptoken)
+                            .end(function (err, res) {
+                                should.not.exist(err);
+                                should(res.body).be.Object();
+                                
+                                should(res.body.activities).be.Object();
+                                should(Object.keys(res.body.activities).length).equals(2);
+                                should(res.body.activities[activity._id].name).equals(activity.name);
+                                should(res.body.next).equals(activity._id);
+
+                                done();
+                            });
+                    });
+            });
         });
     });
 };

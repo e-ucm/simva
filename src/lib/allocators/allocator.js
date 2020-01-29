@@ -43,7 +43,7 @@ class Allocator {
 	}
 
 	static getDescription(){
-		return 'This allocator allows you to manually assign the participants to the tests one by one.';
+		return 'This allocator allows you to manually assign the participants to the tests one by one. (If not assigned, it will get the first one)';
 	}
 
 	set params(params){
@@ -92,11 +92,16 @@ class Allocator {
 			params['_id'] = this.id;
 		}
 
-		var allocator = new mongoose.model('allocator')(params);
-
-		await allocator.save();
-
-		this.id = allocator._id;
+		if(params._id){
+			var result = await mongoose.model('allocator').updateOne({ _id: this.id }, params);
+			if(result.ok !== result.n){
+				throw { message: 'Error saving the allocator' };
+			}
+		}else{
+			var allocator = new mongoose.model('allocator')(params);
+			await allocator.save();
+			this.id = allocator._id;
+		}
 
 		return true;
 	}
@@ -107,7 +112,12 @@ class Allocator {
 	
 	async getStudy(){
 		if(this.id !== null){
-			return await StudiesController.getStudies({allocator: this.id});
+			let docs = await mongoose.model('study').find({allocator: this.id});
+			if(docs.length === 1){
+				return docs[0];
+			}else{
+				return null;
+			}
 		}else{
 			return null;
 		}
@@ -122,16 +132,19 @@ class Allocator {
 			this.extra_data.allocations = {};
 		}
 
-		if(!this.extra_data.allocation[participant]){
-			this.study = await StudiesController.getStudy();
+		if(!this.extra_data.allocations[participant]){
+			if(!this.study){
+				this.study = await this.getStudy();
+			}
+			
 			if(this.study && this.study.tests){
-				this.extra_data.allocation[participant] = this.study.tests[0];
+				this.extra_data.allocations[participant] = this.study.tests[0];
 			}else{
 				return false;
 			}
 		}
 
-		return this.extra_data.allocation[participant];
+		return this.extra_data.allocations[participant];
 	}
 
 	allocate(participant, test){

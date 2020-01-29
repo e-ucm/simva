@@ -162,27 +162,72 @@ module.exports.deleteStudy = async (options) => {
  * @return {Promise}
  */
 module.exports.getSchedule = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var study = await StudiesController.getStudy(options.id);
+      if(study !== null){
+        let participants = await StudiesController.getParticipants(study);
+        let currentuser = options.user.data.username;
 
-  return {
-    status: 200,
-    data: 'getSchedule ok!'
-  };
+        if(participants.indexOf(currentuser) !== -1){
+          let allocator = await AllocatorsController.loadAllocator(study.allocator);
+          let testid = await allocator.getAllocation(currentuser);
+
+          await allocator.save();
+          let test = await TestsController.getTest(testid);
+
+          let schedule = {
+            activities: {},
+            next: null
+          };
+
+          for (var i = 0; i < test.activities.length; i++) {
+            let activity = await ActivitiesController.loadActivity(test.activities[i]);
+
+            let iscompleted = await activity.hasCompleted(currentuser);
+
+            schedule.activities[activity._id] = {
+              name: activity.name,
+              completed: iscompleted,
+              completion_status: (await activity.getCompletion([currentuser]))[currentuser],
+              result: (await activity.getResults([currentuser]))[currentuser]
+            }
+
+            if(schedule.next == null && !iscompleted){
+              schedule.next = activity._id;
+            }
+          }
+
+          result =  { 
+            status: 200,
+            data: schedule
+          };
+        }else{
+          if(study.owners.indexOf(options.user.data.username) !== -1){
+            result =  {
+              status: 400,
+              data: { message: 'You are owner of the study but not participant' }
+            };
+          }else{
+            result =  { 
+              status: 401,
+              data: { message: 'You do not participate in the activity either as owner or user' }
+            };
+          }
+        }
+
+      }else{
+        result = { status: 404, data: { message: 'Study not found' } };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    console.log(e);
+    result =  { status: 500, data: e };
+  }
+
+  return result;
 };
 
 /**
@@ -296,7 +341,7 @@ module.exports.getTest = async (options) => {
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
         if(study.owners.indexOf(options.user.data.username) !== -1){
-          var test = await TestsController.getTest(options.id);
+          var test = await TestsController.getTest(options.testid);
           if(test !== null){
             result = { status: 200, data: test };
           }
@@ -327,7 +372,7 @@ module.exports.updateTest = async (options) => {
 
   if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
     try{
-      await TestsController.updateTest(options.id, options.body);
+      await TestsController.updateTest(options.testid, options.body);
     }catch(e){
       result = { status: 500, data: e };
     }
