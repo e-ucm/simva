@@ -1,0 +1,1602 @@
+{
+  "openapi" : "3.0.0",
+  "info" : {
+    "title" : "Simva API",
+    "description" : "Simva, AKA Simple Validator, AKA SurveyManager is the evolution of a tool created to integrate and ease the task of validating serious games using pre-post surveys as a control point. This version allows to create more complex studies with more variety of activities and different allocations.",
+    "contact" : {
+      "email" : "ivanjper@ucm.es"
+    },
+    "license" : {
+      "name" : "Apache 2.0",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "https://virtserver.swaggerhub.com/Synpheros/Simva/1.0.0",
+    "description" : "SwaggerHub API Auto Mocking"
+  } ],
+  "tags" : [ {
+    "name" : "admins",
+    "description" : "Secured Admin-only calls"
+  }, {
+    "name" : "teachers",
+    "description" : "Operations available to teachers"
+  }, {
+    "name" : "students",
+    "description" : "Operations available to students"
+  } ],
+  "paths" : {
+    "/users" : {
+      "get" : {
+        "tags" : [ "admins" ],
+        "summary" : "gets the list of users.",
+        "description" : "Obtains the list of groups owned by current user.\n",
+        "operationId" : "getUsers",
+        "parameters" : [ {
+          "name" : "searchString",
+          "in" : "query",
+          "description" : "pass an optional search string for result filtering",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "skip",
+          "in" : "query",
+          "description" : "number of records to skip for pagination",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "maximum number of records to return",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 50,
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the list of users"
+          }
+        }
+      },
+      "post" : {
+        "summary" : "adds a user.",
+        "description" : "Creates a new group for the current user as owner.\n",
+        "operationId" : "addUser",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/user"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing item already exists"
+          }
+        }
+      }
+    },
+    "/users/login" : {
+      "post" : {
+        "summary" : "logs in the user obtaining an auth token",
+        "description" : "Creates a new group for the current user as owner.\n",
+        "operationId" : "loginUser",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/login_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Success including the auth token to be used"
+          },
+          "400" : {
+            "description" : "invalid input"
+          }
+        }
+      }
+    },
+    "/users/me" : {
+      "get" : {
+        "tags" : [ "admins", "teachers", "students" ],
+        "summary" : "Obtains your own user.",
+        "description" : "Based on the current auth header obtains the user\n",
+        "operationId" : "getMe",
+        "responses" : {
+          "200" : {
+            "description" : "The user"
+          },
+          "400" : {
+            "description" : "invalid input"
+          }
+        }
+      }
+    },
+    "/groups" : {
+      "get" : {
+        "tags" : [ "admins", "teachers", "students" ],
+        "summary" : "gets the list of groups where this student pl",
+        "description" : "Obtains the list of groups owned by current user.\n",
+        "operationId" : "getGroups",
+        "parameters" : [ {
+          "name" : "searchString",
+          "in" : "query",
+          "description" : "pass an optional search string for result filtering",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "skip",
+          "in" : "query",
+          "description" : "number of records to skip for pagination",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "maximum number of records to return",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 50,
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the list of groups for this uer"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "teachers" ],
+        "summary" : "adds a group for the current user as owner.",
+        "description" : "Creates a new group for the current user as owner.\n",
+        "operationId" : "addGroup",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/add_group_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing item already exists"
+          }
+        }
+      }
+    },
+    "/groups/{id}" : {
+      "get" : {
+        "tags" : [ "students", "teachers" ],
+        "summary" : "gets the group with the given ID",
+        "description" : "Obtains the requested group\n",
+        "operationId" : "getGroup",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The group ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "group object"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "teachers" ],
+        "summary" : "updates the group",
+        "description" : "Updates an existing group",
+        "operationId" : "updateGroup",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The group ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "Group to be modified",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/group"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input"
+          },
+          "401" : {
+            "description" : "Teacher does not own the group"
+          }
+        }
+      }
+    },
+    "/groups/{id}/studies" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the assigned studies to the group",
+        "description" : "Obtains the list of studies assigned to the group\n",
+        "operationId" : "getGroupStudies",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The group ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of studies assigned"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Group not found"
+          }
+        }
+      }
+    },
+    "/groups/{id}/printable" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the printable PDF version of the group",
+        "description" : "Usefull for assistance in the classroom, the printable\nversion of the class allows the teacher to cut and\ngive the codes to the students easily to anonymize them.\n",
+        "operationId" : "getGroupPrintable",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The class ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "printable version in PDF"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Group not found"
+          }
+        }
+      }
+    },
+    "/studies" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the list of studies for the current teacher",
+        "description" : "Obtains the list of studies for the current teacher.\n",
+        "operationId" : "getStudies",
+        "parameters" : [ {
+          "name" : "searchString",
+          "in" : "query",
+          "description" : "pass an optional search string for result filtering",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "skip",
+          "in" : "query",
+          "description" : "number of records to skip for pagination",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "maximum number of records to return",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 50,
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the list of studies for this teacher"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "teachers" ],
+        "summary" : "adds an study for the current teacher",
+        "description" : "Creates a new study for the current teacher.\n",
+        "operationId" : "addStudy",
+        "requestBody" : {
+          "description" : "Study to be created",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/add_study_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing item already exists"
+          }
+        }
+      }
+    },
+    "/studies/{id}" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the study with the given ID",
+        "description" : "Obtains the requested study\n",
+        "operationId" : "getStudy",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "study object"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "teachers" ],
+        "summary" : "updates the study",
+        "description" : "Updates an existing stidy",
+        "operationId" : "updateStudy",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "study to be modified",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/study"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input"
+          },
+          "401" : {
+            "description" : "Teacher does not own the class"
+          },
+          "404" : {
+            "description" : "Requested study does not exist"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "teachers" ],
+        "summary" : "Deletes the study with the given ID",
+        "description" : "Deleted the designed study\n",
+        "operationId" : "deleteStudy",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Study deleted"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    },
+    "/studies/{id}/schedule" : {
+      "get" : {
+        "tags" : [ "students" ],
+        "summary" : "gets the list of scheduled activities for the student",
+        "description" : "Obtains the list of scheduled activities for the current\nstudent and study, and its completion status. Hides the\ncurrent used test to the user.\n",
+        "operationId" : "getSchedule",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The list of scheduled activities in order."
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    },
+    "/studies/{id}/groups" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the assigned groups to the study",
+        "description" : "Obtains the list of groups assigned to the study\n",
+        "operationId" : "getStudyGroups",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of groups assigned"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Study not found"
+          }
+        }
+      }
+    },
+    "/studies/{id}/tests" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the tests from a study",
+        "description" : "Obtains the list of tests assigned to the study\n",
+        "operationId" : "getStudyTests",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of tests assigned"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Study not found"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "teachers" ],
+        "summary" : "adds a test to the study",
+        "description" : "Adds a test for the current group\n",
+        "operationId" : "addTestToStudy",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/test"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          }
+        }
+      }
+    },
+    "/studies/{studyid}/tests/{testid}" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the test with the given ID",
+        "description" : "Obtains the requested test\n",
+        "operationId" : "getTest",
+        "parameters" : [ {
+          "name" : "studyid",
+          "in" : "path",
+          "description" : "The Study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702as"
+          }
+        }, {
+          "name" : "testid",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702at"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "test object"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "teachers" ],
+        "summary" : "updates the test",
+        "description" : "Updates an existing test",
+        "operationId" : "updateTest",
+        "parameters" : [ {
+          "name" : "studyid",
+          "in" : "path",
+          "description" : "The Study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702as"
+          }
+        }, {
+          "name" : "testid",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702at"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "test to be modified",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/test"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item updated"
+          },
+          "400" : {
+            "description" : "invalid input"
+          },
+          "401" : {
+            "description" : "Teacher does not own the class"
+          },
+          "404" : {
+            "description" : "Requested study does not exist"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "teachers" ],
+        "summary" : "deletes the test with the given ID",
+        "description" : "Deleted the selected test\n",
+        "operationId" : "deleteTest",
+        "parameters" : [ {
+          "name" : "studyid",
+          "in" : "path",
+          "description" : "The Study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702as"
+          }
+        }, {
+          "name" : "testid",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702at"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "success"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    },
+    "/studies/{studyid}/tests/{testid}/activities" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the list of activities for the selected test",
+        "description" : "Obtains the list of activities for the selected test\n",
+        "operationId" : "getTestActivities",
+        "parameters" : [ {
+          "name" : "studyid",
+          "in" : "path",
+          "description" : "The Study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702as"
+          }
+        }, {
+          "name" : "testid",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702at"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the list of activities for this test"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "teachers" ],
+        "summary" : "adds a Activity to a test",
+        "description" : "Creates a new activity for the current teacher.\n",
+        "operationId" : "addActivityToTest",
+        "parameters" : [ {
+          "name" : "studyid",
+          "in" : "path",
+          "description" : "The Study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702as"
+          }
+        }, {
+          "name" : "testid",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702at"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/activity"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing item already exists"
+          }
+        }
+      }
+    },
+    "/studies/{id}/allocator" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the allocator from a study",
+        "description" : "Obtains the allocator used by the study\n",
+        "operationId" : "getStudyAllocator",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the allocator object"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Study not found"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "teachers" ],
+        "summary" : "set the allocator to the study",
+        "description" : "Updates the allocator from the study\n",
+        "operationId" : "setStudyAllocator",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "study to be modified",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/allocator"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "updated correctly"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          }
+        }
+      }
+    },
+    "/activities" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the list of activities for the current teacher",
+        "description" : "Obtains the list of activities for the current teacher.\n",
+        "operationId" : "getActivities",
+        "parameters" : [ {
+          "name" : "searchString",
+          "in" : "query",
+          "description" : "pass an optional search string for result filtering",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "skip",
+          "in" : "query",
+          "description" : "number of records to skip for pagination",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "limit",
+          "in" : "query",
+          "description" : "maximum number of records to return",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "maximum" : 50,
+            "minimum" : 0,
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the list of activities for this teacher"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "teachers" ],
+        "summary" : "adds a Activity",
+        "description" : "Creates a new activity for the current teacher.\n",
+        "operationId" : "addActivity",
+        "requestBody" : {
+          "description" : "Activity to be created",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/activity"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item created"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          },
+          "409" : {
+            "description" : "an existing item already exists"
+          }
+        }
+      }
+    },
+    "/activities/{id}" : {
+      "get" : {
+        "tags" : [ "teachers" ],
+        "summary" : "gets the activity with the given ID",
+        "description" : "Obtains the requested activity\n",
+        "operationId" : "getActivity",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Activity object"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "teachers" ],
+        "summary" : "updates the test",
+        "description" : "Updates an existing test",
+        "operationId" : "updateActivity",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The study ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "activity to be modified",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/activity"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "item updated"
+          },
+          "400" : {
+            "description" : "invalid input"
+          },
+          "401" : {
+            "description" : "Teacher does not own the class"
+          },
+          "404" : {
+            "description" : "Requested study does not exist"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "teachers" ],
+        "summary" : "deletes the activity with the given ID",
+        "description" : "Deleted the specified activity\n",
+        "operationId" : "deleteActivity",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "activity deleted"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    },
+    "/activities/{id}/openable" : {
+      "get" : {
+        "tags" : [ "teachers", "students" ],
+        "summary" : "returns if the activity can be opened or not",
+        "description" : "If the activity can be opened, e.g. is hosted in a web,\nthe activity will be openable as can be opened.\n",
+        "operationId" : "getOpenable",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "if it is openable or not"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    },
+    "/activities/{id}/open" : {
+      "get" : {
+        "tags" : [ "teachers", "students" ],
+        "summary" : "redirects the user to the activity landing",
+        "description" : "If the activity is openable, redirects the user to\nthe activity landing.\n",
+        "operationId" : "openActivity",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        } ],
+        "responses" : {
+          "307" : {
+            "description" : "redirects to the valid landing"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    },
+    "/activities/{id}/completion" : {
+      "get" : {
+        "tags" : [ "teachers", "students" ],
+        "summary" : "gets the completion status of the activity",
+        "description" : "Obtains the completion status of the activity\n",
+        "operationId" : "getCompletion",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        }, {
+          "name" : "users",
+          "in" : "query",
+          "description" : "the list of users comma separated or none for all\n(if logged in student , user is not needed)\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "user1,user2,user3"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "if it is openable or not"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "teachers", "students" ],
+        "summary" : "sets the completion status of the activity",
+        "description" : "Set the completion status of the activity for a student\n",
+        "operationId" : "setCompletion",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        }, {
+          "name" : "user",
+          "in" : "query",
+          "description" : "the user to get its completion status\n(if logged in student , user is not needed)\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "user1"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "if it is openable or not"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    },
+    "/activities/{id}/result" : {
+      "get" : {
+        "tags" : [ "teachers", "students" ],
+        "summary" : "gets the results of the activity",
+        "description" : "Obtains the completion status of the activity\n",
+        "operationId" : "getResult",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        }, {
+          "name" : "users",
+          "in" : "query",
+          "description" : "the list of users comma separated or none for all\n(if logged in student , user is not needed)\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "user1,user2,user3"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the result of the students required"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "teachers", "students" ],
+        "summary" : "sets the result for the activity",
+        "description" : "Set the result of the activity for a student\n",
+        "operationId" : "setResult",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The test ID",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        }, {
+          "name" : "user",
+          "in" : "query",
+          "description" : "the user to set its result\n(if logged in student , user is not needed)\n",
+          "required" : false,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "user1"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "if it is openable or not"
+          },
+          "400" : {
+            "description" : "ID is not a valid ObjectId"
+          },
+          "404" : {
+            "description" : "Not found"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "user" : {
+        "required" : [ "email", "password", "role", "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "example" : "username_unique"
+          },
+          "email" : {
+            "type" : "string",
+            "example" : "email"
+          },
+          "password" : {
+            "type" : "string",
+            "example" : "Pass12345"
+          },
+          "role" : {
+            "type" : "string",
+            "example" : "teacher"
+          },
+          "external_entity" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/user_external_entity"
+            }
+          }
+        }
+      },
+      "group" : {
+        "required" : [ "created", "name", "owners", "participants" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "example" : "Test group for School"
+          },
+          "owners" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+            }
+          },
+          "participants" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+            }
+          },
+          "created" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2017-07-21T17:32:28Z"
+          }
+        }
+      },
+      "study" : {
+        "required" : [ "allocator", "created", "name", "owners", "tests" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "example" : "Survey for SG validation"
+          },
+          "tests" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+            }
+          },
+          "allocator" : {
+            "type" : "string",
+            "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+          },
+          "groups" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+            }
+          },
+          "owners" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+            }
+          },
+          "created" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2017-07-21T17:32:28Z"
+          }
+        }
+      },
+      "test" : {
+        "required" : [ "name" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "example" : "Test A for my study"
+          },
+          "activities" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+            }
+          }
+        }
+      },
+      "activity" : {
+        "required" : [ "name", "type" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "example" : "Survey for validation"
+          },
+          "type" : {
+            "type" : "string",
+            "example" : "survey, gameplay, etc..."
+          },
+          "test" : {
+            "type" : "string",
+            "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+          },
+          "owners" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "example" : "ObjectId(\"5d07a0767c1405004bc702af\")"
+            }
+          },
+          "extra_data" : {
+            "type" : "object"
+          }
+        }
+      },
+      "allocator" : {
+        "required" : [ "extra_data", "type" ],
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "example" : "manual, random, ponderated..."
+          },
+          "extra_data" : {
+            "type" : "object"
+          }
+        }
+      },
+      "add_group_body" : {
+        "required" : [ "name" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "example" : "Name of the group"
+          },
+          "random_participants" : {
+            "type" : "integer",
+            "description" : "The amount of codes to be created\nrandomly when the group is created\n",
+            "example" : 30
+          }
+        },
+        "x-swagger-mongoose" : {
+          "exclude-schema" : true
+        }
+      },
+      "add_study_body" : {
+        "required" : [ "name" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "example" : "Name of the Study"
+          }
+        },
+        "x-swagger-mongoose" : {
+          "exclude-schema" : true
+        }
+      },
+      "add_study_to_group_body" : {
+        "required" : [ "study" ],
+        "type" : "object",
+        "properties" : {
+          "study" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        },
+        "x-swagger-mongoose" : {
+          "exclude-schema" : true
+        }
+      },
+      "add_group_to_study_body" : {
+        "required" : [ "group" ],
+        "type" : "object",
+        "properties" : {
+          "group" : {
+            "type" : "string",
+            "example" : "5d07a0767c1405004bc702af"
+          }
+        },
+        "x-swagger-mongoose" : {
+          "exclude-schema" : true
+        }
+      },
+      "login_body" : {
+        "required" : [ "password", "username" ],
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "example" : "pepito"
+          },
+          "password" : {
+            "type" : "string",
+            "example" : "Pass12345"
+          }
+        },
+        "x-swagger-mongoose" : {
+          "exclude-schema" : true
+        }
+      },
+      "user_external_entity" : {
+        "type" : "object",
+        "properties" : {
+          "domain" : {
+            "type" : "string",
+            "example" : "keycloak"
+          },
+          "id" : {
+            "type" : "string",
+            "example" : "whateveruuidusedthere_12321"
+          }
+        }
+      }
+    }
+  }
+}
