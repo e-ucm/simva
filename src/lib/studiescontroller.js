@@ -6,13 +6,15 @@ var AllocatorsController = require('./allocatorscontroller');
 var GroupsController = require('./groupscontroller');
 var TestsController = require('./testscontroller');
 
-Object.defineProperty(Array.prototype, 'flat', {
-    value: function(depth = 1) {
-      return this.reduce(function (flat, toFlatten) {
-        return flat.concat((Array.isArray(toFlatten) && (depth>1)) ? toFlatten.flat(depth-1) : toFlatten);
-      }, []);
-    }
-});
+if(!Array.prototype.flat){
+	Object.defineProperty(Array.prototype, 'flat', {
+	    value: function(depth = 1) {
+	      return this.reduce(function (flat, toFlatten) {
+	        return flat.concat((Array.isArray(toFlatten) && (depth>1)) ? toFlatten.flat(depth-1) : toFlatten);
+	      }, []);
+	    }
+	});
+}
 
 StudiesController.getStudies = async (params) => {
 	var res = await mongoose.model('study').find(params);

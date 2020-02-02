@@ -6,7 +6,7 @@ var UsersController = require('../../lib/userscontroller');
 var GroupsController = require('../../lib/groupscontroller');
 var AllocatorsController = require('../../lib/allocatorscontroller');
 var TestsController = require('../../lib/testscontroller');
-var ActivitiesController = require('../../lib/ActivitiesController');
+var ActivitiesController = require('../../lib/activitiescontroller');
 
 /**
  * @param {Object} options

@@ -2,7 +2,7 @@ const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
 
 var ActivitiesController = require('../../lib/activitiescontroller');
-var StudiesController = require('../../lib/StudiesController')
+var StudiesController = require('../../lib/studiescontroller')
 
 /**
  * @param {Object} options
