@@ -29,6 +29,15 @@ const app = express();
 
 app.use(bodyParser.json({limit: '1mb'}));
 
+// ALLOW CORS
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
+    next();
+});
+
 /*
  * Routes
  */
@@ -36,6 +45,7 @@ app.use('/users', require('./routes/users'));
 app.use('/groups', require('./routes/groups'));
 app.use('/studies', require('./routes/studies'));
 app.use('/activities', require('./routes/activities'));
+
 
 // catch 404
 app.use((req, res, next) => {
