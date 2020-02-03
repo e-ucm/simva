@@ -57,9 +57,19 @@ module.exports.addUser = async (options) => {
       params.external_entity = [];
     }
 
-    let user = await UsersController.addUser(params);
+    let users = await UsersController.getUsers({username: options.body.username});
+    if(users.length > 0){
+      result = { status: 400, data: { message: 'Username already exists.' } };
+    }else{
+      users = await UsersController.getUsers({email: options.body.email});
+      if(users.length > 0){
+        result = { status: 400, data: { message: 'Email already exists.' } };
+      }else{
+        let user = await UsersController.addUser(params);
 
-    result = { status: 200, data: user };
+        result = { status: 200, data: user };
+      }
+    }
   }catch(e){
     result = {status: 500, data: e };
   }

@@ -127,6 +127,54 @@ module.exports = function (request) {
                 });
         });
 
+        it('should NOT add an user with an existing username', function (done) {
+            let user = {
+                username: 'test',
+                password: 'testing',
+                email: 'test@testerino.com',
+                role: 'teacher'
+            }
+
+            request.post('/users')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('Username already exists.');
+                    done();
+                });
+        });
+
+        it('should NOT add an user with an existing email', function (done) {
+            let user = {
+                username: 'testwhatever',
+                password: 'testing',
+                email: 'test@testerino.com',
+                role: 'teacher'
+            }
+
+            request.post('/users')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('Email already exists.');
+                    done();
+                });
+        });
+
         it('should not allow to add a user without username', function (done) {
             let user = {
                 password: 'testing',
