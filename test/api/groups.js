@@ -330,6 +330,27 @@ module.exports = function (request) {
                 });
         });
 
+        it('should allow to update a group and add an existing participant', function (done) {
+            request.get('/groups/' + groupid)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    let group = res.body;
+                    group.participants.push('s3');
+                    request.put('/groups/' + groupid)
+                        .expect(200)
+                        .send(group)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            done();
+                        });
+                });
+        });
+
         it('should not allow to update a group and add a participant that doesnt exist', function (done) {
             request.get('/groups/' + groupid)
                 .expect(200)
@@ -349,6 +370,20 @@ module.exports = function (request) {
                             should(res.body.message).be.String();
                             done();
                         });
+                });
+        });
+
+        it('should allow to get the group participants in detail', function (done) {
+            request.get('/groups/' + groupid + '/participants')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.length).equals(1);
+                    should(res.body[0].username).equals('s3');
+                    done();
                 });
         });
     });

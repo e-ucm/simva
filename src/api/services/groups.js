@@ -107,17 +107,21 @@ module.exports.updateGroup = async (options) => {
             var loadedusers = await UsersController.getUsers({"username" : {"$in" : allusers}});
 
             // Filtering loadedgroups to obtain the old groups
-            var loadedownersadded = loadedusers.filter(x => ownersadded.includes(x._id.toString()));
+            var loadedownersadded = loadedusers.filter(x => ownersadded.includes(x.username.toString()));
 
             // Getting the new groups added.
-            var loadedparticipantsadded = loadedusers.filter(x => participantsadded.includes(x._id.toString()) );
+            var loadedparticipantsadded = loadedusers.filter(x => participantsadded.includes(x.username.toString()) );
 
             if(loadedownersadded.length !== ownersadded.length){
               result = { status: 404, data: {message: 'An owner added does not exist'} };
             }else if(loadedparticipantsadded.length !== participantsadded.length){
               result = { status: 404, data: {message: 'A participant added does not exist'} };
             }else{
-              result.data = await GroupsController.updateGroup(options.id, options.body);
+              if(await GroupsController.updateGroup(options.id, options.body)){
+                result.data = { message: 'Group updated' };
+              }else{
+                result = { status: 500, data: {message: 'Error updating the group.'} };
+              }
             }
           }else{
             result = { status: 400, data: {message: 'Teacher cannot remove itself from the group'} };
@@ -195,6 +199,36 @@ module.exports.addStudyToGroup = async (options) => {
     status: 200,
     data: 'addStudyToGroup ok!'
   };
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The group ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getGroupParticipants = async (options) => {
+  var result = { status: 200, data: {message: 'Group updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var group = await GroupsController.getGroup(options.id);
+      if(group !== null){
+        if(group.owners.indexOf(options.user.data.username) !== -1){
+          result.data = await UsersController.getUsers({"username" : {"$in" : group.participants}});
+        }else{
+          result = { status: 401, data: {message: 'User is not authorized to access this group.'} };
+        }
+      }
+    }catch(e){
+      console.log(e);
+      result = { status: 500, data: e };
+    }
+  }else{
+    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+  }
+  
+  return result;
 };
 
 /**

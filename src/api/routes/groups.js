@@ -121,6 +121,24 @@ router.post('/:id/studies', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Obtains the list of participants of the group
+ * 
+ */
+router.get('/:id/participants', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user
+  };
+
+  try {
+    const result = await groups.getGroupParticipants(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Usefull for assistance in the classroom, the printable
  * 
  * version of the class allows the teacher to cut and

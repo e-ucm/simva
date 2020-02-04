@@ -235,6 +235,29 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The group ID
+  /groups/{id}/participants:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of participants for this group
+      operationId: getGroupParticipants
+      description: |
+        Obtains the list of participants of the group
+      responses:
+        '200':
+          description: list of participants
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Group not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The group ID
   /groups/{id}/printable:
     get:
       tags:
