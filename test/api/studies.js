@@ -553,6 +553,20 @@ module.exports = function (request) {
                                 });
                         });
                 });
+        });
+
+        it('should be able to obtain the studies where the group participates', function (done) {
+            request.get('/groups/' + groupid1 + '/studies')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.length).equals(1);
+                    should(res.body[0]._id).equals(studyid);
+                    done();
+                });
 
         });
     });

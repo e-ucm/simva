@@ -148,27 +148,30 @@ module.exports.updateGroup = async (options) => {
  * @return {Promise}
  */
 module.exports.getGroupStudies = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 404, data: {message: 'Not found'} };
 
-  return {
-    status: 200,
-    data: 'getGroupStudies ok!'
-  };
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var group = await GroupsController.getGroup(options.id);
+      if(group !== null){
+        if(group.owners.indexOf(options.user.data.username) !== -1){
+          var res = await mongoose.model('study').find({"groups": group._id});
+          result = { status: 200, data: res };
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the group' } };
+        }
+      }else{
+        result = { status: 404, data: { message: 'Group not found' } };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    console.log(e);
+    result =  { status: 500, data: e };
+  }
+
+  return result;
 };
 
 /**

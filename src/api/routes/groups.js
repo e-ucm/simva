@@ -91,7 +91,8 @@ router.put('/:id', Authenticator.auth, async (req, res, next) => {
  */
 router.get('/:id/studies', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
