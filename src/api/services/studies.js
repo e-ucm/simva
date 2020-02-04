@@ -561,3 +561,32 @@ module.exports.setStudyAllocator = async (options) => {
   };
 };
 
+/**
+ * @param {Object} options
+ * @param {String} options.id The group ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getStudyParticipants = async (options) => {
+  var result = { status: 200, data: {message: 'Group updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var study = await StudiesController.getStudy(options.id);
+      if(study !== null){
+        if(study.owners.indexOf(options.user.data.username) !== -1){
+          result.data = await UsersController.getUsers({"username" : {"$in" : await StudiesController.getParticipants(study)}});
+        }else{
+          result = { status: 401, data: {message: 'User is not authorized to access this study.'} };
+        }
+      }
+    }catch(e){
+      console.log(e);
+      result = { status: 500, data: e };
+    }
+  }else{
+    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+  }
+  
+  return result;
+};

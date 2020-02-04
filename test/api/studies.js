@@ -521,5 +521,39 @@ module.exports = function (request) {
                         });
                 });
         });
+
+        it('should be able to obtain study participants', function (done) {
+            request.get('/studies/' + studyid)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    let study = res.body;
+
+                    study.groups.push(groupid1);
+
+                    request.put('/studies/' + studyid)
+                        .expect(200)
+                        .send(study)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            request.get('/studies/' + studyid + '/participants')
+                                .expect(200)
+                                .set('Accept', 'application/json')
+                                .set('Authorization', 'Bearer ' + authToken)
+                                .end(function (err, res) {
+                                    should.not.exist(err);
+                                    should(res.body).be.Object();
+                                    should(res.body.length).equals(3);
+                                    should(res.body[0].username).equals('s1');
+                                    done();
+                                });
+                        });
+                });
+
+        });
     });
 };

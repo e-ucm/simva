@@ -509,6 +509,29 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         required: true
+  /studies/{id}/participants:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of participants for this study
+      operationId: getStudyParticipants
+      description: |
+        Obtains the list of participants of the study
+      responses:
+        '200':
+          description: list of participants
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The study ID
   /studies/{studyid}/tests/{testid}:
     get:
       tags:

@@ -180,6 +180,23 @@ router.post('/:id/tests', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+/**
+ * Obtains the list of participants of the group
+ * 
+ */
+router.get('/:id/participants', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getStudyParticipants(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * Obtains the requested test
