@@ -1098,5 +1098,38 @@ module.exports = function (request) {
                         });
                 });
         });
+
+        it('should be able to delete an activity through activity delete api', function (done) {
+            request.get('/studies/' + studyid + '/tests/' + testid)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    let test = res.body;
+                    let tmpactivityid = test.activities[0];
+
+                    request.delete('/activities/' + tmpactivityid)
+                        .expect(200)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            should(res.body.message).be.String();
+
+                            request.get('/studies/' + studyid + '/tests/' + testid)
+                                .expect(200)
+                                .set('Accept', 'application/json')
+                                .set('Authorization', 'Bearer ' + authToken)
+                                .end(function (err, res) {
+                                    should.not.exist(err);
+                                    should(res.body).be.Object();
+                                    should(res.body.activities).be.Object();
+                                    should(res.body.activities.indexOf(tmpactivityid)).equals(-1);
+                                    done();
+                                });
+                        });
+                });
+        });
     });
 };

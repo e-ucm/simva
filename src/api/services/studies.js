@@ -376,7 +376,7 @@ module.exports.updateTest = async (options) => {
       if(test !== null){
         result = { status: 200, data: test };
       }else{
-         result = { status: 404, data: { message: 'Unable to load test.' } };
+         return result = { status: 404, data: { message: 'Unable to load test.' } };
       }
 
       let activitiesdeleted = test.activities.filter(x => !options.body.activities.includes(x));

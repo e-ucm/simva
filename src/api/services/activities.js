@@ -2,7 +2,8 @@ const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
 
 var ActivitiesController = require('../../lib/activitiescontroller');
-var StudiesController = require('../../lib/studiescontroller')
+var StudiesController = require('../../lib/studiescontroller');
+var TestsController = require('../../lib/testscontroller');
 
 /**
  * @param {Object} options
@@ -46,12 +47,12 @@ module.exports.addActivity = async (options) => {
  */
 module.exports.getActivity = async (options) => {
   try {
-    group = await ActivitiesController.getActivity(options.id);
+    activity = await ActivitiesController.getActivity(options.id);
   }catch(e){
     return {status: 500, data: e };
   }
 
-  return { status: 200, data: group };
+  return { status: 200, data: activity };
 };
 
 /**
@@ -92,12 +93,42 @@ module.exports.updateActivity = async (options) => {
  */
 module.exports.deleteActivity = async (options) => {
   try {
-    await ActivitiesController.deleteActivity(options.id);
+    let activity = await ActivitiesController.getActivity(options.id);
+
+    if(activity){
+      if(activity.test){
+        var test = await TestsController.getTest(activity.test);
+
+        if(test !== null){
+          let toremove = -1;
+          for (var i = 0; i < test.activities.length; i++) {
+            let activityid = activity._id.toString();
+            if(test.activities[i] === activityid){
+              toremove = i;
+              break;
+            }
+          }
+
+          if(toremove > -1){
+            test.activities.splice(toremove, 1);
+            await TestsController.updateTest(activity.test, test);
+          }
+        }else{
+           return { status: 404, data: { message: 'Unable to load test.' } };
+        }
+      }
+
+      await ActivitiesController.deleteActivity(options.id);
+
+      result = { status: 200, data: { message: 'Activity deleted' } }
+    }else{
+      result = { status: 404, data: { message: 'Activity not found.' } };
+    }
   }catch(e){
     return {status: 500, data: e };
   }
 
-  return { status: 200, data: { message: 'Activity deleted' } };
+  return result;
 };
 
 /**
