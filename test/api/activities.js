@@ -294,7 +294,7 @@ module.exports = function (request) {
                     });
         });
 
-        it('should be able to add an activity to a test', function (done) {
+        it('should be able to add an activity to a test and its testid should be correct', function (done) {
             let activity = {
                 name: 'testactivity',
                 type: 'activity'
@@ -310,6 +310,7 @@ module.exports = function (request) {
                     should(res.body).be.Object();
                     should(res.body.name).equals(activity.name);
                     should(res.body.type).equals(activity.type);
+                    should(res.body.test).equals(testid);
 
                     activityid = res.body._id;
 

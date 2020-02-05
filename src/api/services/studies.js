@@ -429,7 +429,7 @@ module.exports.deleteTest = async (options) => {
  */
 module.exports.addActivityToTest = async (options) => {
   try {
-    options.body.test = options.id;
+    options.body.test = options.testid;
 
     let study = await StudiesController.getStudy(options.id);
     if(!study){
