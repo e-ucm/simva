@@ -1073,5 +1073,30 @@ module.exports = function (request) {
                         });
                 });
         });
+
+        it('should NOT be able to add an activity by updating the test', function (done) {
+            request.get('/studies/' + studyid + '/tests/' + testid)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    let test = res.body;
+                    let tmpactivityid = test.activities[0];
+                    test.activities.push('whatever')
+
+                    request.put('/studies/' + studyid + '/tests/' + testid)
+                        .expect(400)
+                        .send(test)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            should(res.body.message).be.String();
+                            should(res.body.message).equals('Activities cannot be added through put interface.');
+                            done();
+                        });
+                });
+        });
     });
 };

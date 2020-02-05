@@ -383,7 +383,7 @@ module.exports.updateTest = async (options) => {
       let activitiesadded = options.body.activities.filter(x => !test.activities.includes(x));
 
       if(activitiesadded.length > 0){
-        result = { status: 404, data: {message: 'Activities cannot be added through put interface.'} };
+        result = { status: 400, data: {message: 'Activities cannot be added through put interface.'} };
       }else{
         for (var i = 0; i < activitiesdeleted.length; i++) {
           await ActivitiesController.deleteActivity(activitiesdeleted[i]);
