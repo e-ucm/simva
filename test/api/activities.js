@@ -347,6 +347,20 @@ module.exports = function (request) {
             });
         });
 
+        it('should be able to get the list of activities of the test', function (done) {
+            request.get('/studies/' + studyid + '/tests/' + testid + '/activities')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.length).equals(1);
+                    should(res.body[0]._id).equals(activityid);
+                    done();
+                });
+        });
+
         it('should be able to add a group to the study and update the activity participants', function (done) {
             request.get('/studies/' + studyid)
                 .expect(200)

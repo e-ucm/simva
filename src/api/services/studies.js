@@ -480,7 +480,7 @@ module.exports.getTestActivities = async (options) => {
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
         if(study.owners.indexOf(options.user.data.username) !== -1){
-          var test = await TestsController.getTest(options.id);
+          var test = await TestsController.getTest(options.testid);
           if(test !== null){
             var activities = await ActivitiesController.getActivities({"_id" : {"$in" : test.activities}});
             result = { status: 200, data: activities };
