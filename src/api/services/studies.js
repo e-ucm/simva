@@ -372,8 +372,27 @@ module.exports.updateTest = async (options) => {
 
   if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
     try{
-      await TestsController.updateTest(options.testid, options.body);
+      var test = await TestsController.getTest(options.testid);
+      if(test !== null){
+        result = { status: 200, data: test };
+      }else{
+         result = { status: 404, data: { message: 'Unable to load test.' } };
+      }
+
+      let activitiesdeleted = test.activities.filter(x => !options.body.activities.includes(x));
+      let activitiesadded = options.body.activities.filter(x => !test.activities.includes(x));
+
+      if(activitiesadded.length > 0){
+        result = { status: 404, data: {message: 'Activities cannot be added through put interface.'} };
+      }else{
+        for (var i = 0; i < activitiesdeleted.length; i++) {
+          await ActivitiesController.deleteActivity(activitiesdeleted[i]);
+        }
+        await TestsController.updateTest(options.testid, options.body);
+        result = { status: 200, data: { message: 'Test updated.'} };
+      }
     }catch(e){
+      console.log(e);
       result = { status: 500, data: e };
     }
   }else{

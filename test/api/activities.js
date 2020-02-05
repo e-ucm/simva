@@ -1043,5 +1043,35 @@ module.exports = function (request) {
                     });
             });
         });
+
+        it('should be able to delete an activity by updating the test', function (done) {
+            request.get('/studies/' + studyid + '/tests/' + testid)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    let test = res.body;
+                    let tmpactivityid = test.activities[0];
+                    test.activities.splice(0, 1);
+
+                    request.put('/studies/' + studyid + '/tests/' + testid)
+                        .expect(200)
+                        .send(test)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            should(res.body.message).be.String();
+
+                            Activity.find({_id: tmpactivityid}, function(error, docs){
+                                should.not.exist(error);
+
+                                should(docs.length).equals(0);
+                                done();
+                            });
+                        });
+                });
+        });
     });
 };
