@@ -89,7 +89,6 @@ class LimeSurveyActivity extends Activity {
 
 	async createSurveyById(){
 		return new Promise((resolve, reject) => {
-			console.log(this.copysurvey);
 			if(this.copysurvey){
 				try{
 					async.waterfall([
@@ -141,7 +140,6 @@ class LimeSurveyActivity extends Activity {
 	async deleteSurvey(){
 		return new Promise((resolve, reject) => {
 			if(this.extra_data && this.extra_data.surveyId){
-				console.log('asd');
 				try{
 					async.waterfall([
 						controller.online,
@@ -286,7 +284,6 @@ class LimeSurveyActivity extends Activity {
 								result[participants[i]] = null;
 							}
 						}
-						console.log(result);
 						resolve(result);
 					}
 				});
@@ -301,7 +298,6 @@ class LimeSurveyActivity extends Activity {
 					}else{
 						result = {};
 						result[participants[0]] = response;
-						console.log(result);
 						resolve(result)
 					}
 				});
