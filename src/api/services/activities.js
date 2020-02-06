@@ -233,6 +233,8 @@ module.exports.getCompletion = async (options) => {
     }
 
   }catch(e){
+    console.log('GetCompletion exploded:');
+    console.log(e);
     return {status: 500, data: e };
   }
 
@@ -316,6 +318,8 @@ module.exports.getResult = async (options) => {
     }
 
   }catch(e){
+    console.log('GetResult exploded:');
+    console.log(e);
     return {status: 500, data: e };
   }
 

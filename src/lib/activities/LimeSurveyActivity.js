@@ -254,25 +254,83 @@ class LimeSurveyActivity extends Activity {
 	}
 
 	async getResults(participants){
-		// by default, if there is extra data and some completion data,
-		// this will return an array of completion statuses for the
-		// participants.
-		
-		for(var p in participants){
-			results[participants[p].id] = false;
-		}
+		return new Promise((resolve, reject) => {
+			let list = {};
+			let s = this;
 
-		return results;
+			if(participants.length === 0){
+				if(this.extra_data && this.extra_data.participants){
+					participants = Object.keys(this.extra_data.participants);
+				}
+
+				if(participants.length === 0){
+					resolve({});
+					return;
+				}
+			}
+
+			if(participants.length > 1){
+				async.waterfall([
+					controller.online,
+					controller.auth,
+					controller.getResponses(s.extra_data.surveyId, participants),
+				], function (err, responses) {
+					if(err){
+						reject(err);
+					}else{
+						let result = {};
+						for (var i = 0; i < participants.length; i++) {
+							if(responses[participants[i]]){
+								result[participants[i]] = responses[participants[i]];
+							}else{
+								result[participants[i]] = null;
+							}
+						}
+						console.log(result);
+						resolve(result);
+					}
+				});
+			}else{
+				async.waterfall([
+					lsController.online,
+					lsController.auth,
+					lsController.getResponseByToken(s.extra_data.surveyId,participants[0],rid)
+				], function (err, response) {
+					if(err){
+						reject(err);
+					}else{
+						result = {};
+						result[participants[0]] = response;
+						console.log(result);
+						resolve(result)
+					}
+				});
+			}
+		});
 	}
 
 	async setCompletion(participant, status){
-		// Limesurvey completion is managed externally
 		return false;
 	}
 
-	async getCompletion(participant){
-		// TODO
-		return false;
+	async getCompletion(participants){
+		let results = await this.getResults(participants);
+
+		if(participants.length === 0){
+			if(this.extra_data && this.extra_data.participants){
+				participants = Object.keys(this.extra_data.participants);
+			}
+
+			if(participants.length === 0){
+				return {};
+			}
+		}
+
+		for (var i = 0; i < participants.length; i++) {
+			results[participants[i]] = (results[participants[i]] !== null && results[participants[i]].submitdate !== null);
+		}
+
+		return results;
 	}
 
 	open(res, participant){

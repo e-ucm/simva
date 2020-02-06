@@ -607,7 +607,7 @@ function getResponseId(sid, token, rid){
  * @param sid
  * @param r 
  */
-function getResponses(sid, r){
+function getResponses(sid, participants){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponses -> Started');
@@ -621,6 +621,8 @@ function getResponses(sid, r){
 						return NotifyRCError('getResponses', error, response, body, callback);
 					}
 
+					let responses = {};
+
 					if(body && body.result){
 						if(body.result.length > 0){
 							var raw = null;
@@ -633,16 +635,29 @@ function getResponses(sid, r){
 								return callback({ message: 'Error transforming LimeSurvey result' });
 							}
 
-							for (var rid in raw){
-								for (var res in raw[rid]){
-									if(!r[raw[rid][res].token] || (r[raw[rid][res].token] && !r[raw[rid][res].token].submitdate))
-										r[raw[rid][res].token] = raw[rid][res];
+							if(participants){
+								for (var rid in raw){
+									for (var res in raw[rid]){
+										if(participants.indexOf(raw[rid][res].token) > -1){
+											if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+												responses[raw[rid][res].token] = raw[rid][res];
+											}
+										}
+									}
+								}
+							}else{
+								for (var rid in raw){
+									for (var res in raw[rid]){
+										if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+											responses[raw[rid][res].token] = raw[rid][res];
+										}
+									}
 								}
 							}
 						}
 
 						Log('LimesurveyController.getResponses -> Completed');
-						callback(null);
+						callback(null, responses);
 					}else{
 						Log('LimesurveyController.getResponses -> Error');
 						callback({ message: 'Malformed body received from LimeSurvey'});
@@ -791,6 +806,76 @@ function tokenHasCompleted(survey, token, rid){
 }
 
 /**
+ * Check if token has completed survey
+ * @param survey
+ * @param token
+ * @param rid 
+ */
+function getResponseByToken(survey, token){
+	return function(callback){
+		try{
+			Log('LimesurveyController.getResponseByToken -> Started');
+			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token,'es','all','code','short'],id:1});
+
+			request(options, function(error, response, body){
+				if (!error && response.statusCode == 200) {
+					try{
+						body = JSON.parse(body);
+					}catch(e){
+						return NotifyRCError('getResponseByToken', error, response, body, callback);
+					}
+
+					var responses = null;
+
+					if(body && body.result){
+						try{
+							responses = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+						}catch(e){
+							Log('LimesurveyController.getResponseByToken -> Error');
+							Log(e);
+							return callback({ message: 'Error transforming LimeSurvey result' });
+						}
+
+						let rid = Object.keys(responses[i]);
+
+						if(rid.length >0){
+							var completed = false;
+							for(var i = 0; i < rid.length; i++){
+								if(responses[i][rid[i]].submitdate){
+									completed = true;
+									break;
+								}
+							}
+
+							if(completed){
+								Log('LimesurveyController.getResponseByToken -> Completed');
+								callback(null);
+							}else{
+								Log('LimesurveyController.getResponseByToken -> Completed: Survey not completed');
+								callback({message: 'Survey not completed yet'});
+							}
+
+						}else{
+							Log('LimesurveyController.getResponseByToken -> Completed: Not found');
+							callback({message: 'Not response found'});
+						}
+					}else{
+						Log('LimesurveyController.getResponseByToken -> Error');
+						callback({ message: 'Malformed body received from LimeSurvey'});
+					}
+				}else{
+					Log('LimesurveyController.getResponseByToken -> error exporting the responses by token');
+					LogMultiple({ error: error, response: response, body: body });
+					callback({ message: 'Error obtaining the participants from LimeSurvey', error: error });
+				}
+			});
+		}catch(e){
+			LogBigError('getResponseByToken', e, callback);
+		}
+	}
+}
+
+/**
  * Start tokens for survey by identifier 
  * @param surveyId
  */
@@ -908,6 +993,7 @@ module.exports = {
 	getResponses: getResponses,
 	getClassResponses: getClassResponses,
 	tokenHasCompleted: tokenHasCompleted,
+	getResponseByToken: getResponseByToken,
 	startTokensSurvey: startTokensSurvey,
 	addParticipants: addParticipants,
 	delParticipants: delParticipants
