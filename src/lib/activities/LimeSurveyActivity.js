@@ -124,7 +124,7 @@ class LimeSurveyActivity extends Activity {
 					], function (err, result) {
 						
 						if(err){
-							reject(error);
+							reject(err);
 						}else{
 							resolve(result);
 						}
@@ -149,7 +149,7 @@ class LimeSurveyActivity extends Activity {
 						controller.remove(this.extra_data.surveyId),
 					], function (err, result) {
 						if(err){
-							reject(error);
+							reject(err);
 						}else{
 							resolve(result);
 						}

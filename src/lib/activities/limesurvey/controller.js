@@ -270,10 +270,18 @@ function insertOrCopy(name, options, callback){
 				}
 
 				let surveyid = null;
-				if(body && body.result && body.result.newsid){
-					surveyid = body.result.newsid;
+				if(body && body.result){
+					if(Number.isInteger(body.result)){
+						surveyid = body.result;
+					}else if(body.result.newsid){
+						surveyid = body.result.newsid;
+					}else{
+						Log('LimesurveyController.' + name + ' -> Error');
+						return callback({ message: 'Unable to obtain the new survey id from body.'});
+					}
 				}else{
-					Log('LimesurveyController.getClassResponses -> Error');
+					console.log(body);
+					Log('LimesurveyController.' + name + ' -> Error');
 					return callback({ message: 'Malformed body received from LimeSurvey'});
 				}
 
