@@ -13,7 +13,9 @@ const Authenticator = require('../../lib/utils/authenticator');
  * 
  */
 router.get('/', Authenticator.auth, async (req, res, next) => {
-  const options = {};
+  const options = {
+    user: req.user
+  };
 
   try {
     const result = await activities.getActivityTypes(options);

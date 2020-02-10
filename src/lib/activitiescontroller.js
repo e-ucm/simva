@@ -103,7 +103,7 @@ ActivitiesController.castToClass = function(activity){
 	return null;
 }
 
-ActivitiesController.getActivityTypes = async () => {
+ActivitiesController.getActivityTypes = async (user) => {
 	let activitytypes = [];
 
 	for (var i = 0; i < types.length; i++) {
@@ -111,7 +111,7 @@ ActivitiesController.getActivityTypes = async () => {
 		activitytype.type = types[i].getType();
 		activitytype.name = types[i].getName();
 		activitytype.description = types[i].getDescription();
-		activitytype.utils = await types[i].getUtils();
+		activitytype.utils = await types[i].getUtils(user);
 
 		activitytypes.push(activitytype);
 	}

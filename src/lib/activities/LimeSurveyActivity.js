@@ -61,9 +61,25 @@ class LimeSurveyActivity extends Activity {
 		return 'A survey-based activity that uses LimeSurvey as service.';
 	}
 
-	static async getUtils(){
-		// TODO
-		return {};
+	static async getUtils(username){
+		return new Promise((resolve, reject) => {
+			async.waterfall([
+				lsController.online,
+				lsController.auth,
+				lsController.getSurveysFromUser(username)
+			], function (err, surveys) {
+				if(err){
+					reject(err);
+				}else{
+					let utils = {
+						url: config.limesurvey.url,
+						surveys: surveys
+					};
+
+					resolve(utils);
+				}
+			});
+		});
 	}
 
 	set params(params){

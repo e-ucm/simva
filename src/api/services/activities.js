@@ -389,7 +389,7 @@ module.exports.setResult = async (options) => {
 module.exports.getActivityTypes = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    result.data = await ActivitiesController.getActivityTypes({});
+    result.data = await ActivitiesController.getActivityTypes(options.user.data.username);
   }catch(e){
     console.log(e);
     result = { status: 500, data: e };

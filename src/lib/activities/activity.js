@@ -45,7 +45,7 @@ class Activity {
 		return 'A basic activity with completion state and a place to save results.';
 	}
 
-	static async getUtils(){
+	static async getUtils(username){
 		return {};
 	}
 

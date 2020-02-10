@@ -375,6 +375,36 @@ function getSurveyList(callback) {
 }
 
 /**
+ * Get survey list
+ * @param sid
+ * @param survey 
+ */
+function getSurveysFromUser(username, callback) {
+	try{
+		Log('LimesurveyController.getSurveyList -> Started');
+		options.body = JSON.stringify({method:'list_surveys',params:[SESSIONKEY, username],id:1});
+
+		request(options, function(error, response, body){
+			if (!error && response.statusCode == 200) {
+				try{
+					body = JSON.parse(body);
+				}catch(e){
+					return NotifyRCError('getSurveysFromUser', error, response, body, callback);
+				}
+
+				callback(body.result);
+			}else{
+				Log('LimesurveyController.getSurveysFromUser -> error obtaining the list of surveys');
+				LogMultiple({error: error, response: response, body: body});
+				callback({ message: 'Error obtaining survey list from Limesurvey', error: error });
+			}  
+		});
+	}catch(e){
+		LogBigError('getSurveysFromUser', e, callback);
+	}
+}
+
+/**
  * Start survery by identifier
  * @param surveyId 
  */
@@ -984,6 +1014,7 @@ module.exports = {
 	copy: copy,
 	getSurvey: getSurvey,
 	getSurveyList: getSurveyList,
+	getSurveysFromUser: getSurveysFromUser,
 	start: start,
 	remove: remove,
 	started: started,
