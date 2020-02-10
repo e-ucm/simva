@@ -64,9 +64,9 @@ class LimeSurveyActivity extends Activity {
 	static async getUtils(username){
 		return new Promise((resolve, reject) => {
 			async.waterfall([
-				lsController.online,
-				lsController.auth,
-				lsController.getSurveysFromUser(username)
+				controller.online,
+				controller.auth,
+				controller.getSurveysFromUser(username)
 			], function (err, surveys) {
 				if(err){
 					reject(err);
@@ -318,9 +318,9 @@ class LimeSurveyActivity extends Activity {
 				});
 			}else{
 				async.waterfall([
-					lsController.online,
-					lsController.auth,
-					lsController.getResponseByToken(s.extra_data.surveyId,participants[0],rid)
+					controller.online,
+					controller.auth,
+					controller.getResponseByToken(s.extra_data.surveyId,participants[0],rid)
 				], function (err, response) {
 					if(err){
 						reject(err);
