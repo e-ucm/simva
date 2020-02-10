@@ -915,6 +915,31 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The test ID
+  /activities/{id}/target:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: returns if the activity can be opened or not
+      operationId: getActivityTarget
+      description: |
+        If the activity can be opened, e.g. is hosted in a web,
+        this endpoint will return the target URI
+      responses:
+        '200':
+          description: the target URI of the activity
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
   /activities/{id}/completion:
     get:
       tags:

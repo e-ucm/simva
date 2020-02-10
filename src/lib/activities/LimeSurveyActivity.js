@@ -322,15 +322,35 @@ class LimeSurveyActivity extends Activity {
 			}
 		}
 
-		for (var i = 0; i < participants.length; i++) {
+		for (let i = 0; i < participants.length; i++) {
 			results[participants[i]] = (results[participants[i]] !== null && results[participants[i]].submitdate !== null);
 		}
 
 		return results;
 	}
 
-	open(res, participant){
-		// should we send also res?
+	target(participants){
+		let targets = {};
+
+		if(participants.length === 0){
+			if(this.extra_data && this.extra_data.participants){
+				participants = Object.keys(this.extra_data.participants);
+			}
+
+			if(participants.length === 0){
+				return {};
+			}
+		}
+
+		if(this.extra_data && this.extra_data.surveyId){
+			for (let i = 0; i < participants.length; i++) {
+				targets[participants[i]] = config.limesurvey.url + '/' + this.extra_data.surveyId + '?token=' + participants[i];
+			}
+		}else{
+			return false;
+		}
+
+		return targets
 	}
 };
 

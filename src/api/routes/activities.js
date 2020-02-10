@@ -120,6 +120,27 @@ router.get('/:id/openable', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * If the activity is openable, gets the target URI
+ * 
+ * the activity landing.
+ * 
+ */
+router.get('/:id/target', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users']
+  };
+
+  try {
+    const result = await activities.getTarget(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * If the activity is openable, redirects the user to
  * 
  * the activity landing.
@@ -127,12 +148,18 @@ router.get('/:id/openable', Authenticator.auth, async (req, res, next) => {
  */
 router.get('/:id/open', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
-    const result = await activities.openActivity(options);
-    res.status(200).send(result.data);
+     const result = await activities.getTarget(options);
+
+    if(result && result.data && result.data[req.user.data.username]){
+      res.redirect(result.data[req.user.data.username]);
+    }else{
+      res.status(200).send({ message: 'Cannot be opened' });
+    }
   } catch (err) {
     next(err);
   }

@@ -174,28 +174,41 @@ module.exports.getOpenable = async (options) => {
  * @throws {Error}
  * @return {Promise}
  */
-module.exports.openActivity = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
-
-  return {
+module.exports.getTarget = async (options) => {
+  let body = {
     status: 200,
-    data: 'openActivity ok!'
-  };
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data = await activity.target([options.user.data.username]);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        let users = [];
+        if(options.users && options.users !== ''){
+          users = options.users.split(',');
+        }
+
+        body.data = await activity.target(users);
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    console.log('GetResult exploded:');
+    console.log(e);
+    return {status: 500, data: e };
+  }
+
+  return body;
 };
 
 /**

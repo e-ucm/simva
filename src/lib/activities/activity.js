@@ -236,8 +236,12 @@ class Activity {
 		return completed;
 	}
 
+	target(participant){
+		return false;
+	}
+
 	open(res, participant){
-		//nothing to do here
+		return false;
 	}
 };
 
