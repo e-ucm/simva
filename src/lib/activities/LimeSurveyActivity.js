@@ -53,6 +53,19 @@ class LimeSurveyActivity extends Activity {
 		return 'limesurvey';
 	}
 
+	static getName(){
+		return 'LimeSurvey Activity';
+	}
+
+	static getDescription(){
+		return 'A survey-based activity that uses LimeSurvey as service.';
+	}
+
+	static async getUtils(){
+		// TODO
+		return {};
+	}
+
 	set params(params){
 		super.params = params;
 

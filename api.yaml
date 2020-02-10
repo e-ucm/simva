@@ -1066,6 +1066,22 @@ paths:
           schema:
             type: string
             format: 'user1'
+  /activitytypes:
+    get:
+      tags:
+        - teachers
+      summary: gets the types of activities available
+      operationId: getActivityTypes
+      description: |
+        Obtains the list of activity types available to
+        be created with some additional data
+      responses:
+        '200':
+          description: the available activity types
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
 components:
   schemas:
     user:

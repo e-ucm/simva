@@ -45,6 +45,7 @@ app.use('/users', require('./routes/users'));
 app.use('/groups', require('./routes/groups'));
 app.use('/studies', require('./routes/studies'));
 app.use('/activities', require('./routes/activities'));
+app.use('/activitytypes', require('./routes/activitytypes'));
 
 
 // catch 404

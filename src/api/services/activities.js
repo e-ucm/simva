@@ -380,3 +380,20 @@ module.exports.setResult = async (options) => {
 
   return body;
 };
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getActivityTypes = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await ActivitiesController.getActivityTypes({});
+  }catch(e){
+    console.log(e);
+    result = { status: 500, data: e };
+  }
+  
+  return result;
+};

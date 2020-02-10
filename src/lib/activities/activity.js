@@ -37,6 +37,18 @@ class Activity {
 		return 'activity';
 	}
 
+	static getName(){
+		return 'Default Activity';
+	}
+
+	static getDescription(){
+		return 'A basic activity with completion state and a place to save results.';
+	}
+
+	static async getUtils(){
+		return {};
+	}
+
 	set params(params){
 		for(var p in activityschema.properties){
 			if(params[p]){
