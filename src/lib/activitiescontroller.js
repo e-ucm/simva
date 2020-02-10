@@ -116,6 +116,8 @@ ActivitiesController.getActivityTypes = async (user) => {
 		activitytypes.push(activitytype);
 	}
 
+	console.log(activitytypes);
+
 	return activitytypes;
 }
 

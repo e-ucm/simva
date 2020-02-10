@@ -379,28 +379,30 @@ function getSurveyList(callback) {
  * @param sid
  * @param survey 
  */
-function getSurveysFromUser(username, callback) {
-	try{
-		Log('LimesurveyController.getSurveyList -> Started');
-		options.body = JSON.stringify({method:'list_surveys',params:[SESSIONKEY, username],id:1});
+function getSurveysFromUser(username) {
+	return function(callback) {
+		try{
+			Log('LimesurveyController.getSurveyList -> Started');
+			options.body = JSON.stringify({method:'list_surveys',params:[SESSIONKEY, username],id:1});
 
-		request(options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
-				try{
-					body = JSON.parse(body);
-				}catch(e){
-					return NotifyRCError('getSurveysFromUser', error, response, body, callback);
-				}
+			request(options, function(error, response, body){
+				if (!error && response.statusCode == 200) {
+					try{
+						body = JSON.parse(body);
+					}catch(e){
+						return NotifyRCError('getSurveysFromUser', error, response, body, callback);
+					}
 
-				callback(body.result);
-			}else{
-				Log('LimesurveyController.getSurveysFromUser -> error obtaining the list of surveys');
-				LogMultiple({error: error, response: response, body: body});
-				callback({ message: 'Error obtaining survey list from Limesurvey', error: error });
-			}  
-		});
-	}catch(e){
-		LogBigError('getSurveysFromUser', e, callback);
+					callback(null, body.result);
+				}else{
+					Log('LimesurveyController.getSurveysFromUser -> error obtaining the list of surveys');
+					LogMultiple({error: error, response: response, body: body});
+					callback({ message: 'Error obtaining survey list from Limesurvey', error: error });
+				}  
+			});
+		}catch(e){
+			LogBigError('getSurveysFromUser', e, callback);
+		}
 	}
 }
 
