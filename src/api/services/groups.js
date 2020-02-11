@@ -241,26 +241,60 @@ module.exports.getGroupParticipants = async (options) => {
  * @return {Promise}
  */
 module.exports.getGroupPrintable = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 404, data: {message: 'Not found'} };
 
-  return {
-    status: 200,
-    data: 'getGroupPrintable ok!'
-  };
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var group = await GroupsController.getGroup(options.id);
+      if(group !== null){
+        if(group.owners.indexOf(options.user.data.username) !== -1 || group.participants.indexOf(options.user.data.username) !== -1){
+          let buffer = await toPDF(group.name, group.participants);
+          result = { status: 200, data: buffer };
+        }else{
+          result = { status: 401, data: {message: 'User is not authorized to obtain group data.'} };
+        }
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid.'} };
+    }
+  }catch(e){
+    console.log(e);
+    result =  { status: 500, data: e };
+  }
+
+  return result;
 };
 
+
+let toPDF = async (title, participants) => {
+  return new Promise((resolve, reject) => {
+    var pdf = require('html-pdf');
+
+    var colspan = 6;
+    var html = '<!DOCTYPE html><html><head><title></title><style type="text/css">body{padding:10px} table{font-size: 18px;font-family: "DejaVu Sans Mono"; border: solid 2px black;border-collapse: collapse;}table td{border: solid 2px black;text-align: center;}</style></head>';
+    html += '<body><table width="100%" style=""><tr><th colspan="' + colspan + '" style="text-align:left">Group: ' + title + ':</th></tr><tr><td width="5%">No.</td><td width="45%">Nombre</td>';
+
+    html += '<td width="40%" colspan="4">Código</td></tr>';
+    html += '<tr><td>'+ (1) + '</td><td></td>';
+
+    html += '<td>'+participants[0]+'</td><td>'+participants[0]+'</td><td>'+participants[0]+'</td><td>'+participants[0]+'</td></tr>';
+
+    for(var i = 1; i < participants.length; i++){
+      if((i%30)==0){
+        html += '</table><br><br><table width="100%" style=""><tr><th colspan="6" style="text-align:left">Group: ' + title + ':</th></tr><tr><td width="5%">No.</td><td width="45%">Nombre</td><td width="40%" colspan="4">Código</td></tr>';
+      }
+      html += '<tr><td>'+ (i+1) + '</td><td></td>';
+      html += '<td>'+participants[i]+'</td><td>'+participants[i]+'</td><td>'+participants[i]+'</td><td>'+participants[i]+'</td></tr>';
+    }
+
+    html += '</table></body></html>';
+
+    pdf.create(html, { format: 'A4' }).toBuffer(function(err, buffer){
+      if(err){
+        reject(err);
+      }else{
+        resolve(buffer);
+      }
+    });
+  });
+}

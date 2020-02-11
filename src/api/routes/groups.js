@@ -149,12 +149,19 @@ router.get('/:id/participants', Authenticator.auth, async (req, res, next) => {
  */
 router.get('/:id/printable', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
     const result = await groups.getGroupPrintable(options);
-    res.status(result.status || 200).send(result.data);
+
+    if(result.status === 200){
+      res.writeHead(200, [['Content-Type', 'application/pdf']]);
+      res.end(new Buffer(result.data, 'base64'));
+    }else{
+      res.status(result.status).send(result.data);
+    }
   } catch (err) {
     next(err);
   }
