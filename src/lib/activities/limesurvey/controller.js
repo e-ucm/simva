@@ -877,7 +877,24 @@ function getResponseByToken(survey, token){
 						}
 
 						if(!response.status){
-							callback(null, response.responses);
+							if(response.responses){
+								if(response.responses.length > 0){
+									for (var i = 0; i < response.responses.length; i++) {
+										let keys = Object.keys(response.responses[i]);
+										if(response.responses[i][keys[0]].submitdate !== null){
+											return callback(null, response.responses[i][keys[0]]);
+										}
+									}
+
+									let keys = Object.keys(response.responses[response.responses.length -1]);
+									callback(null, response.responses[response.responses.length -1][keys[0]]);
+								}else{
+									let keys = Object.keys(response.responses[0]);
+									callback(null, response.responses[0][keys[0]]);
+								}
+							}else{
+								callback(null, false);
+							}
 						}else{
 							Log('LimesurveyController.getResponseByToken -> Completed: Not found');
 							callback(null, false);
