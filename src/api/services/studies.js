@@ -184,13 +184,12 @@ module.exports.getSchedule = async (options) => {
           for (var i = 0; i < test.activities.length; i++) {
             let activity = await ActivitiesController.loadActivity(test.activities[i]);
 
-            let iscompleted = await activity.hasCompleted(currentuser);
+            let iscompleted = (await activity.getCompletion([currentuser]))[currentuser];
 
             schedule.activities[activity._id] = {
               name: activity.name,
               type: activity.type,
               completed: iscompleted,
-              completion_status: (await activity.getCompletion([currentuser]))[currentuser],
               result: (await activity.getResults([currentuser]))[currentuser]
             }
 

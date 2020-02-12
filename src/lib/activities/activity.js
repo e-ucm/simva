@@ -235,19 +235,6 @@ class Activity {
 		return results;
 	}
 
-	async hasCompleted(participant){
-		let completed = false;
-
-		if(this.extra_data
-			&& this.extra_data.participants
-			&& this.extra_data.participants[participant]
-			){
-			completed = this.extra_data.participants[participant].completion == true;
-		}
-
-		return completed;
-	}
-
 	target(participant){
 		return false;
 	}

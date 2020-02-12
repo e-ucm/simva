@@ -972,7 +972,6 @@ module.exports = function (request) {
                             should(res.body.activities).be.Object();
                             should(Object.keys(res.body.activities).length).equals(1);
                             should(res.body.activities[activityid].name).equals('testactivity');
-                            should(res.body.activities[activityid].completion_status).equals(true);
                             should(res.body.activities[activityid].completed).equals(true);
                             should(res.body.activities[activityid].result).is.Object();
                             should(res.body.activities[activityid].result.final_score).equals(10);
