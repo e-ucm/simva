@@ -857,39 +857,30 @@ function getResponseByToken(survey, token){
 						return NotifyRCError('getResponseByToken', error, response, body, callback);
 					}
 
-					var responses = null;
+					var response = null;
 
 					if(body && body.result){
-						try{
-							responses = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
-						}catch(e){
-							Log('LimesurveyController.getResponseByToken -> Error');
-							Log(e);
-							return callback({ message: 'Error transforming LimeSurvey result' });
-						}
-
-						let rid = Object.keys(responses[i]);
-
-						if(rid.length >0){
-							var completed = false;
-							for(var i = 0; i < rid.length; i++){
-								if(responses[i][rid[i]].submitdate){
-									completed = true;
-									break;
+						if(typeof body.result === "object" ){
+							response = body.result;
+						}else{
+							try{
+								response = JSON.parse(Buffer.from(body.result, 'base64').toString());
+							}catch(e){
+								try{
+									response = JSON.parse(body.result);
+								}catch(e){
+									Log('LimesurveyController.getResponseByToken -> Error');
+									Log(e);
+									return callback({ message: 'Error transforming LimeSurvey result' });
 								}
 							}
+						}
 
-							if(completed){
-								Log('LimesurveyController.getResponseByToken -> Completed');
-								callback(null);
-							}else{
-								Log('LimesurveyController.getResponseByToken -> Completed: Survey not completed');
-								callback({message: 'Survey not completed yet'});
-							}
-
+						if(!response.status){
+							callback(null, response);
 						}else{
 							Log('LimesurveyController.getResponseByToken -> Completed: Not found');
-							callback({message: 'Not response found'});
+							callback(null, false);
 						}
 					}else{
 						Log('LimesurveyController.getResponseByToken -> Error');
