@@ -351,9 +351,12 @@ class LimeSurveyActivity extends Activity {
 			}
 		}
 
+		console.log(results);
+
 		for (let i = 0; i < participants.length; i++) {
 			results[participants[i]] = (results[participants[i]] !== null && results[participants[i]].submitdate !== null);
 		}
+		console.log(results);
 
 		return results;
 	}

@@ -877,7 +877,7 @@ function getResponseByToken(survey, token){
 						}
 
 						if(!response.status){
-							callback(null, response);
+							callback(null, response.responses);
 						}else{
 							Log('LimesurveyController.getResponseByToken -> Completed: Not found');
 							callback(null, false);

@@ -188,6 +188,7 @@ module.exports.getSchedule = async (options) => {
 
             schedule.activities[activity._id] = {
               name: activity.name,
+              type: activity.type,
               completed: iscompleted,
               completion_status: (await activity.getCompletion([currentuser]))[currentuser],
               result: (await activity.getResults([currentuser]))[currentuser]
