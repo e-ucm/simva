@@ -557,27 +557,40 @@ module.exports.getStudyAllocator = async (options) => {
  * @return {Promise}
  */
 module.exports.setStudyAllocator = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 404, data: {message: 'Not found'} };
 
-  return {
-    status: 200,
-    data: 'setStudyAllocator ok!'
-  };
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var study = await StudiesController.getStudy(options.id);
+      if(study !== null){
+        var allocator = await AllocatorsController.loadAllocator(study.allocator);
+
+        if(allocator){
+          if(options.body.type !== allocator.type){
+            allocator = AllocatorsController.castToClass(options.body);
+          }else{
+            allocator.params = options.body;
+          }
+
+          if(await allocator.save()){
+            return { status: 200, data: {message: 'Allocator updated'} };
+          }else{
+            return { status: 500, data: {message: 'Error updating the allocator'} };
+          }
+        }else{
+          result = { status: 400, data: {message: 'Unable to load the allocator'} };
+        }
+      }else{
+        result = { status: 404, data: {message: 'Unable to find the study'} };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
 };
 
 /**

@@ -1043,6 +1043,63 @@ module.exports = function (request) {
             });
         });
 
+        it('should be able to allocate the student to another test updating the allocator', function (done) {
+            request.get('/studies/' + studyid)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    request.post('/studies/' + studyid + '/tests')
+                        .expect(200)
+                        .send({name: 'test b'})
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            let tmpid = res.body._id;
+
+
+                            request.get('/studies/' + studyid + '/allocator')
+                                .expect(200)
+                                .set('Accept', 'application/json')
+                                .set('Authorization', 'Bearer ' + authToken)
+                                .end(function (err, res) {
+                                    should.not.exist(err);
+                                    should(res.body).be.Object();
+
+                                    let allocator = res.body;
+
+                                    allocator.extra_data.allocations['s2'] = tmpid;
+
+                                    request.put('/studies/' + studyid + '/allocator')
+                                        .expect(200)
+                                        .send(allocator)
+                                        .set('Accept', 'application/json')
+                                        .set('Authorization', 'Bearer ' + authToken)
+                                        .end(function (err, res) {
+                                            should.not.exist(err);
+                                            should(res.body).be.Object();
+
+                                            request.get('/studies/' + studyid + '/allocator')
+                                                .expect(200)
+                                                .set('Accept', 'application/json')
+                                                .set('Authorization', 'Bearer ' + authToken)
+                                                .end(function (err, res) {
+                                                    should.not.exist(err);
+                                                    should(res.body).be.Object();
+                                                    should(res.body.extra_data.allocations["s2"]).equals(tmpid);
+                                                    done();
+                                                });
+                                        });
+                                });
+                        });
+                });
+        });
+
         it('should be able to delete an activity by updating the test', function (done) {
             request.get('/studies/' + studyid + '/tests/' + testid)
                 .expect(200)
