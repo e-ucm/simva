@@ -182,12 +182,12 @@ class Activity {
 				if(this.extra_data.participants[participants[p]] && this.extra_data.participants[participants[p]].result){
 					results[participants[p]] = this.extra_data.participants[participants[p]].result;
 				}else{
-					results[participants[p]] = 'No results';
+					results[participants[p]] = null;
 				}
 			}
 		}else{
 			for(var p in participants){
-				results[participants[p]] = 'No results';
+				results[participants[p]] = null;
 			}
 		}
 

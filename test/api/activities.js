@@ -719,8 +719,7 @@ module.exports = function (request) {
                         .end(function (err, res) {
                             should.not.exist(err);
                             should(res.body).be.Object();
-                            should(res.body['s1']).not.equals(null);
-                            should(res.body['s1']).equals('No results');
+                            should(res.body['s1']).equals(null);
 
                             done();
                         });
@@ -790,8 +789,8 @@ module.exports = function (request) {
                     should(res.body['s1'].attempts).equals(5);
                     should(res.body['s1'].failures).equals(2);
 
-                    should(res.body['s2']).equals('No results');
-                    should(res.body['s3']).equals('No results');
+                    should(res.body['s2']).equals(null);
+                    should(res.body['s3']).equals(null);
 
                     done();
                 });
@@ -881,7 +880,7 @@ module.exports = function (request) {
                     should(res.body['s2'].failures).equals(6);
                     should(res.body['s2'].success).equals(5);
 
-                    should(res.body['s3']).equals('No results');
+                    should(res.body['s3']).equals(null);
 
                     done();
                 });
@@ -908,7 +907,7 @@ module.exports = function (request) {
                     should(res.body['s2'].failures).equals(6);
                     should(res.body['s2'].success).equals(5);
 
-                    should(res.body['s3']).equals('No results');
+                    should(res.body['s3']).equals(null);
 
                     done();
                 });
