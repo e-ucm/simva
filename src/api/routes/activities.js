@@ -243,4 +243,23 @@ router.post('/:id/result', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+/**
+ * Obtains if has result or not
+ * 
+ */
+router.get('/:id/hasresult', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+  };
+
+  try {
+    const result = await activities.hasResult(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
