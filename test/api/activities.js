@@ -913,6 +913,25 @@ module.exports = function (request) {
                 });
         });
 
+        it('should be able know if hasresults as a teacher', function (done) {
+            request.get('/activities/' + activityid + '/hasresult')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+
+                    should(Object.keys(res.body).length).equals(3);
+                    
+                    should(res.body['s1']).equals(true);
+                    should(res.body['s2']).equals(true);
+                    should(res.body['s3']).equals(false);
+
+                    done();
+                });
+        });
+
         it('should NOT be able to obtain the study schedule if you are a teacher but you dont participate', function (done) {
             request.get('/studies/' + studyid + '/schedule')
                 .expect(400)
