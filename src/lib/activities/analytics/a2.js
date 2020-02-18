@@ -136,6 +136,35 @@ function update_auth_token(callback){
  * Sign up multiple users
  * @param codes 
  */
+function signup(user) {
+	return function (callback) {
+		Log('A2Controller.signup -> Started');
+		try{
+			this.options = cloneOptions();
+			this.options.url += "/signup";
+			this.options.body = JSON.stringify(user);
+			this.options.method = "POST";
+
+			request.post(this.options, function(error, response, body){
+				if(error){
+					Log('A2Controller.signup -> Error');
+					Log(error);
+					callback({ message: 'Error creating the user', error: error });
+				}else{
+					Log('A2Controller.signup -> Completed');
+					callback(null);
+				}
+			});
+		}catch(e){
+			LogBigError('signup', e, callback);
+		}
+	}
+}
+
+/**
+ * Sign up multiple users
+ * @param codes 
+ */
 function signupMassive(participants) {
 	return function (callback) {
 		Log('A2Controller.signupMassive -> Started');
@@ -212,6 +241,7 @@ module.exports = {
 	setOptions: setOptions,
 	setUser: setUser,
 	auth: auth,
+	signup: signup,
 	signupMassive: signupMassive,
 	getUsers: getUsers
 }

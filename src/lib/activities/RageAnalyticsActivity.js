@@ -71,6 +71,18 @@ class RageAnalyticsActivity extends Activity {
 			this.extra_data = {};
 		}
 
+		if(!this.id){
+			let user = {
+				username: this.owners[0],
+				password: this.owners[0],
+				email: this.owners[0] + '@simva.test',
+				role: ['teacher', 'developer'],
+				prefix: "gleaner"
+			};
+
+			this.extra_data.manager = await this.createManager(user);
+		}
+
 		return await super.save();
 	}
 
@@ -102,8 +114,6 @@ class RageAnalyticsActivity extends Activity {
 
 		let a2participants = await this.addParticipantsToA2(participants);
 
-		console.log(JSON.stringify(a2participants));
-
 		if(a2participants.data){
 			if(a2participants.data.length !== participants.length){
 				throw { message: 'The number of participants added is different form the ones created.'};
@@ -115,6 +125,26 @@ class RageAnalyticsActivity extends Activity {
 		}
 
 		return await this.save();
+	}
+
+	async createManager(user){
+		return new Promise((resolve, reject) => {
+			async.waterfall([
+				a2controller.auth,
+				a2controller.signup(user),
+				a2controller.getUsers(this.owners[0])
+			], function (error, result) {
+				if(error){
+					reject(error);
+				}else{
+					if(result && result.data && result.data.length >0){
+						resolve(result.data[0]);
+					}else{
+						reject({ message: 'Unable to create or find the manager user'});
+					}
+				}
+			});
+		});
 	}
 
 	async addParticipantsToA2(participants){
