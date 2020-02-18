@@ -53,8 +53,8 @@ function LogMultiple(lines){
 
 function LogBigError(name, error, callback){
 	Log('LimesurveyController.' + name + ' -> ERROR:');
-	Log(e);
-	callback(e);
+	Log(error);
+	callback(error);
 }
 
 function NotifyRCError(name, error, response, body, callback){

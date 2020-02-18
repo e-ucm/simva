@@ -28,6 +28,9 @@ services:
       LIMESURVEY_HOST: limesurvey-dev.external.test
       LIMESURVEY_ADMIN_USER: admin
       LIMESURVEY_ADMIN_PASSWORD: password
+      A2_HOST: analytics.e-ucm.es
+      A2_ADMIN_USER: root
+      A2_ADMIN_PASSWORD: EiK4iSWyFqzHjG42Dn8ifVDSGd83PRIe
       NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
     volumes:
       - ./:/app     

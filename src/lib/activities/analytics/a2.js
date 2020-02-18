@@ -40,7 +40,11 @@ function setDebug(_debug){
 
 function Log(line){
 	if(debug){
-		console.info('\x1b[45m%s\x1b[0m', line);
+		let log = line;
+		if(typeof line === 'object'){
+			log = JSON.stringify(line, null, 2);
+		}
+		console.info('\x1b[35m%s\x1b[0m', log);
 	}
 }
 
@@ -50,6 +54,12 @@ function LogMultiple(lines){
 		Log('--> ' + keys[i] + ':');
 		Log(lines[keys[i]]);
 	}
+}
+
+function LogBigError(name, error, callback){
+	Log('A2Controller.' + name + ' -> ERROR:');
+	Log(error);
+	callback(error);
 }
 
 function auth(callback) {
@@ -94,7 +104,7 @@ function update_auth_token(callback){
 	Log('A2Controller.update_auth_token -> Started');
 	try{
 		this.options = cloneOptions();
-		this.options.url += "login";
+		this.options.url += "/login";
 		this.options.body = JSON.stringify({ username: user, password: pass});
 		this.options.method = "POST";
 
@@ -132,11 +142,11 @@ function signupMassive(participants) {
 		try{
 			var users = [];
 			for (let i = 0; i < participants.length; i++){
-				users.push({username: participants[code], password: participants[code], email: participants[code] + "@simva.test", role: "student", prefix: "gleaner"});
+				users.push({username: participants[i], password: participants[i], email: participants[i] + "@simva.test", role: "student", prefix: "gleaner"});
 			}
 
 			this.options = cloneOptions();
-			this.options.url += "signup/massive";
+			this.options.url += "/signup/massive";
 			this.options.body = JSON.stringify({users: users});
 			this.options.method = "POST";
 

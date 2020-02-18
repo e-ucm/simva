@@ -8,7 +8,7 @@ var config = require('..//config');
 
 var a2config = {
 	options: {
-		url: config.a2.url,
+		url: config.a2.url + '/api',
 		headers: {
 			'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
 			'host': config.a2.host,
@@ -99,7 +99,7 @@ class RageAnalyticsActivity extends Activity {
 			}
 		}
 
-		var a2participants = await this.addParticipantsToSurvey(participants);
+		var a2participants = await this.addParticipantsToA2(participants);
 
 		for(let p in a2participants){
 			this.extra_data.participants[a2participants[p].username] = a2participants[p];
@@ -110,23 +110,23 @@ class RageAnalyticsActivity extends Activity {
 
 	async addParticipantsToA2(participants){
 		return new Promise((resolve, reject) => {
-			if(this.extra_data && this.extra_data.surveyId){
-				try{
-					async.waterfall([
-						a2controller.auth,
-						a2controller.signupMassive(codes),
-					], function (err, result) {
-						if(result.errorCount > 0){
+			try{
+				async.waterfall([
+					a2controller.auth,
+					a2controller.signupMassive(participants),
+				], function (error, result) {
+					if(error){
+						reject(error);
+					}else{
+						if(result.errorCount && result.errorCount > 0){
 							console.log(result);
 						}
-
-						callback(err, codes);
-					});
-				}catch(e){
-					reject(e);
-				}
-			}else{
-				resolve();
+					
+						resolve(result);
+					}
+				});
+			}catch(e){
+				reject(e);
 			}
 		})
 	}
