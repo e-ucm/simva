@@ -4,8 +4,9 @@ var mongoose = require('mongoose');
 var ActivitiesController = {};
 var Activity = require('./activities/activity');
 var LimeSurveyActivity = require('./activities/LimeSurveyActivity');
+var RageAnalyticsActivity = require('./activities/RageAnalyticsActivity');
 
-var types = [Activity, LimeSurveyActivity];
+var types = [Activity, LimeSurveyActivity, RageAnalyticsActivity];
 
 ActivitiesController.getStudy = async (id) => {
 	let res = null;
