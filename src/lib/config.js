@@ -24,4 +24,12 @@ config.limesurvey.url =  config.limesurvey.protocol + '://' + config.limesurvey.
 config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
 
+config.a2 = {}
+config.a2.host = process.env.A2_HOST || 'a2.external.test'
+config.a2.protocol = process.env.A2_PROTOCOL || 'https'
+config.a2.port = process.env.A2_PORT || '443'
+config.a2.url =  config.a2.protocol + '://' + config.a2.host + ':' + config.a2.port
+config.a2.adminUser =  process.env.A2_ADMIN_USER || 'root'
+config.a2.adminPassword =  process.env.A2_ADMIN_PASSWORD || 'password'
+
 module.exports = config;
