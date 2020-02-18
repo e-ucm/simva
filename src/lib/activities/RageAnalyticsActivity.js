@@ -13,7 +13,8 @@ var a2config = {
 			'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
 			'host': config.a2.host,
 			'connection': 'keep-alive',
-			'content-type': 'application/json'
+			'content-type': 'application/json',
+			'accept': 'application/json'
 		}
 	},
 	user: config.a2.adminUser,
@@ -99,10 +100,18 @@ class RageAnalyticsActivity extends Activity {
 			}
 		}
 
-		var a2participants = await this.addParticipantsToA2(participants);
+		let a2participants = await this.addParticipantsToA2(participants);
 
-		for(let p in a2participants){
-			this.extra_data.participants[a2participants[p].username] = a2participants[p];
+		console.log(JSON.stringify(a2participants));
+
+		if(a2participants.data){
+			if(a2participants.data.length !== participants.length){
+				throw { message: 'The number of participants added is different form the ones created.'};
+			}else{
+				for (var i = 0; i < a2participants.data.length; i++) {
+					this.extra_data.participants[a2participants.data[i].username] = a2participants.data[i];
+				}
+			}
 		}
 
 		return await this.save();
@@ -114,14 +123,11 @@ class RageAnalyticsActivity extends Activity {
 				async.waterfall([
 					a2controller.auth,
 					a2controller.signupMassive(participants),
+					a2controller.getUsers(participants)
 				], function (error, result) {
 					if(error){
 						reject(error);
 					}else{
-						if(result.errorCount && result.errorCount > 0){
-							console.log(result);
-						}
-					
 						resolve(result);
 					}
 				});

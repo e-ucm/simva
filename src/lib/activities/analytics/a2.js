@@ -157,7 +157,7 @@ function signupMassive(participants) {
 					callback({ message: 'Error adding the participants', error: error });
 				}else{
 					Log('A2Controller.signupMassive -> Completed');
-					callback(null, JSON.parse(body));
+					callback(null);
 				}
 			});
 		}catch(e){
@@ -166,6 +166,43 @@ function signupMassive(participants) {
 	}
 }
 
+/**
+ * Sign up multiple users
+ * @param codes 
+ */
+function getUsers(participants) {
+	return function (callback) {
+		Log('A2Controller.getUsers -> Started');
+		try{
+			let query = JSON.stringify({
+				username: participants
+			});
+
+			this.options = cloneOptions();
+			this.options.url += "/users?limit=" + participants.length + '&query=' + encodeURI(query);
+			this.options.method = "GET";
+
+			request.get(this.options, function(error, response, body){
+				if(error){
+					Log('A2Controller.getUsers -> Error');
+					Log(error);
+					callback({ message: 'Error obtaining the users', error: error });
+				}else{
+					try{
+						Log('A2Controller.getUsers -> Completed');
+						let parsedbody = JSON.parse(body);
+						callback(null, parsedbody);
+					}catch(e){
+						LogMultiple({error: error, response: response, body: body});
+						callback({ message: 'Malformed body received from A2.' });
+					}
+				}
+			});
+		}catch(e){
+			LogBigError('getUsers', e, callback);
+		}
+	}
+}
 
 function cloneOptions(){
 	return JSON.parse(JSON.stringify(options));
@@ -175,5 +212,6 @@ module.exports = {
 	setOptions: setOptions,
 	setUser: setUser,
 	auth: auth,
-	signupMassive: signupMassive
+	signupMassive: signupMassive,
+	getUsers: getUsers
 }
