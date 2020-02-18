@@ -39,7 +39,7 @@ function setDebug(_debug){
 
 function Log(line){
 	if(debug){
-		console.info(line);
+		console.info('\x1b[32m%s\x1b[0m', line);
 	}
 }
 
