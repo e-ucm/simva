@@ -73,7 +73,11 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	static async getUtils(username){
-		return {}
+		return {
+			dashboard_url: config.a2.url + '/api/proxy/kibana/app/kibana#/dashboard/dashboard_',
+			dashboard_query: '?embed=true_g=(refreshInterval:(display:\'5%20seconds\',' +
+                   'pause:!f,section:1,value:5000),time:(from:now-1h,mode:quick,to:now))'
+		};
 	}
 
 	set params(params){
