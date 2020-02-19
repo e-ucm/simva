@@ -26,6 +26,14 @@ class AnalyticsBackendController {
 	// ############# LOG GENERATION UTIL #############
 	// ###############################################
 	
+	constructor(_debug){
+		if(_debug == null || _debug == undefined){
+			this.setDebug(true);
+		}else{
+			this.setDebug(false);
+		}
+	}
+
 	setDebug(_debug){
 		this.debug = _debug;
 	}
