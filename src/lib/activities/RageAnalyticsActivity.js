@@ -27,6 +27,8 @@ let a2controller = require('./analytics/a2');
 a2controller.setOptions(a2config.options);
 a2controller.setUser(a2config.user, a2config.password);
 
+let AnalyticsBackendController = require('./analytics/backend');
+
 
 class RageAnalyticsActivity extends Activity {
 
@@ -36,6 +38,8 @@ class RageAnalyticsActivity extends Activity {
 
 	constructor(params){
 		super(params);
+
+		this.backendController = new AnalyticsBackendController();
 
 		if(!this.extra_data.participants){
 			this.extra_data.participants = [];
@@ -81,6 +85,12 @@ class RageAnalyticsActivity extends Activity {
 			};
 
 			this.extra_data.manager = await this.createManager(user);
+
+			let loggeduser = await this.login(user.username, user.password);
+
+			this.backendController.AuthToken = loggeduser.token;
+			this.extra_data.game = await this.backendController.addGame(this.name);
+			this.extra_data.game.versions = await this.backendController.getVersions(this.extra_data.game._id);
 		}
 
 		return await super.save();
@@ -144,6 +154,18 @@ class RageAnalyticsActivity extends Activity {
 					}
 				}
 			});
+		});
+	}
+
+	async login(user, password){
+		return new Promise((resolve, reject) => {
+			a2controller.login(user, password, function(error, result){
+				if(error){
+					reject(error);
+				}else{
+					resolve(result);
+				}
+			})
 		});
 	}
 

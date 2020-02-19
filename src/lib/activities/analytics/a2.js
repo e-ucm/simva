@@ -258,6 +258,7 @@ module.exports = {
 	setOptions: setOptions,
 	setUser: setUser,
 	auth: auth,
+	login: login,
 	signup: signup,
 	signupMassive: signupMassive,
 	getUsers: getUsers
