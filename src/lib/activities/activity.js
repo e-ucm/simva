@@ -113,7 +113,7 @@ class Activity {
 		return true;
 	}
 
-	async delete(){
+	async remove(){
 		var res = await mongoose.model('activity').deleteOne({_id: this.id});
 
 		return true;

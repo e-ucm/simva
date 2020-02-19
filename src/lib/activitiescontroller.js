@@ -24,13 +24,13 @@ ActivitiesController.getStudy = async (id) => {
 }
 
 ActivitiesController.getActivities = async (params) => {
-	var res = await mongoose.model('activity').find(params);
+	let res = await mongoose.model('activity').find(params);
 
 	return res;
 };
 
 ActivitiesController.getActivity = async (id) => {
-	var res = await mongoose.model('activity').find({_id: id});
+	let res = await mongoose.model('activity').find({_id: id});
 
 	if(res.length > 0) {
 		return res[0];
@@ -73,10 +73,10 @@ ActivitiesController.updateActivity = async (id, activity) => {
 }
 
 ActivitiesController.deleteActivity = async (id) => {
-	var activity = await ActivitiesController.loadActivity(id);
+	let activity = await ActivitiesController.loadActivity(id);
 
 	if(activity) {
-		return await activity.delete();
+		return await activity.remove();
 	}else{
 		return null;
 	}
@@ -95,10 +95,10 @@ ActivitiesController.addParticipants = async (id, participant) => {
 }
 
 ActivitiesController.castToClass = function(activity){
-	for (var i = 0; i < types.length; i++) {
+	for (let i = 0; i < types.length; i++) {
 		if(types[i].getType() == activity.type){
-			activity = new types[i](activity);
-			return activity;
+			let castedActivity = new types[i](activity);
+			return castedActivity;
 		}
 	}
 	return null;
@@ -107,7 +107,7 @@ ActivitiesController.castToClass = function(activity){
 ActivitiesController.getActivityTypes = async (user) => {
 	let activitytypes = [];
 
-	for (var i = 0; i < types.length; i++) {
+	for (let i = 0; i < types.length; i++) {
 		let activitytype = {};
 		activitytype.type = types[i].getType();
 		activitytype.name = types[i].getName();
@@ -116,8 +116,6 @@ ActivitiesController.getActivityTypes = async (user) => {
 
 		activitytypes.push(activitytype);
 	}
-
-	console.log(activitytypes);
 
 	return activitytypes;
 }

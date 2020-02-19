@@ -106,11 +106,11 @@ class LimeSurveyActivity extends Activity {
 		return await super.save();
 	}
 
-	async delete(){
+	async remove(){
 		try{
 
 			await this.deleteSurvey();
-			return await super.delete();
+			return await super.remove();
 		}catch(e){
 			return false;
 		}

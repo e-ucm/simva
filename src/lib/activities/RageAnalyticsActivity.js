@@ -110,15 +110,14 @@ class RageAnalyticsActivity extends Activity {
 		return await super.save();
 	}
 
-	async delete(){
-		try{
-			// TODO:
-			// check if the participants can be deleted from A2
+	async remove(){
+		// TODO:
+		// check if the participants can be deleted from A2
+		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
+		this.backendController.AuthToken = loggeduser.token;
+		await this.backendController.deleteGame(this.extra_data.game._id);
 
-			return await super.delete();
-		}catch(e){
-			return false;
-		}
+		return await super.remove();
 	}
 
 	// ##########################################

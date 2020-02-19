@@ -149,6 +149,37 @@ class AnalyticsBackendController {
 	}
 
 	/**
+	 * Delete class by identifier
+	 * @param classid 
+	 */
+	deleteGame(gameId) {
+		return new Promise((resolve, reject) => {
+			let self = this;
+			this.Log("AnalyticsBackendController.deleteGame -> Started");
+
+			let options = cloneOptions();
+			options.url += '/games/' + gameId;
+			options.method = 'DELETE';
+
+			request(options, function(error, response, body){
+				if(!error && response.statusCode == 200){
+					try{
+						let parsedbody = JSON.parse(body);
+						self.Log('AnalyticsBackendController.deleteGame -> Completed');
+						resolve(parsedbody);
+					}catch(e){
+						reject({ message: 'Malformed body received from Backend'})
+					}
+				}else{
+					self.Log('AnalyticsBackendController.deleteGame -> Error deleting the game');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error deleting the game', error: error });  
+				}
+			});
+		});
+	}
+
+	/**
 	 * Get game versions
 	 * @param game 
 	 */
