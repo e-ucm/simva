@@ -90,12 +90,12 @@ class AnalyticsBackendController {
 			let self = this;
 			this.Log("AnalyticsBackendController.loadGames -> Started");
 
-			this.options = this.cloneOptions();
-			this.options.url += url;
-			this.options.method = 'GET';
-			this.options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+			let options = this.cloneOptions();
+			options.url += url;
+			options.method = 'GET';
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
-			request.get(this.options, function(error, response, body){
+			request.get(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
 					try{
 						body = JSON.parse(body);
@@ -123,12 +123,12 @@ class AnalyticsBackendController {
 			let self = this;
 			this.Log("AnalyticsBackendController.addGame -> Started");
 
-			this.options = this.cloneOptions();
-			this.options.body = JSON.stringify({title: name});
-			this.options.url += '/games/bundle';
-			this.options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+			let options = this.cloneOptions();
+			options.body = JSON.stringify({title: name});
+			options.url += '/games/bundle';
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
-			request.post(this.options, function(error, response, body){
+			request.post(options, function(error, response, body){
 				if(!error && response.statusCode == 200){
 					try{
 						let parsedbody = JSON.parse(body);
@@ -157,12 +157,12 @@ class AnalyticsBackendController {
 			let self = this;
 			this.Log("AnalyticsBackendController.getVersions -> Started");
 
-			this.options = this.cloneOptions();
-			this.options.url += '/games/' + gameId + "/versions";
-			this.options.method = "GET";
-			this.options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+			let options = this.cloneOptions();
+			options.url += '/games/' + gameId + "/versions";
+			options.method = "GET";
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
-			request(this.options, function(error, response, body){
+			request(options, function(error, response, body){
 				if(!error && response.statusCode == 200){
 					try{
 						let parsedbody = JSON.parse(body);
@@ -174,7 +174,7 @@ class AnalyticsBackendController {
 						reject({ message: 'Malformed body received from Analytics Backend' });
 					}
 				}else{
-					self.Log('AnalyticsBackendController.getVersions -> Error creating the class');
+					self.Log('AnalyticsBackendController.getVersions -> Error obtaining the versions');
 					self.LogMultiple({error: error, response: response, body: body});
 					reject({ message: 'Error error obtaining the versions of the game', error: error });  
 				}
@@ -191,12 +191,12 @@ class AnalyticsBackendController {
 			let self = this;
 			this.Log("AnalyticsBackendController.createClass -> Started");
 
-			this.options = this.cloneOptions();
-			this.options.body = JSON.stringify({name: name});
-			this.options.url += '/classes';
-			this.options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+			let options = this.cloneOptions();
+			options.body = JSON.stringify({name: name});
+			options.url += '/classes';
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
-			request.post(this.options, function(error, response, body){
+			request.post(options, function(error, response, body){
 				if(!error && response.statusCode == 200){
 					try{
 						let parsedbody = JSON.parse(body);
@@ -224,11 +224,11 @@ class AnalyticsBackendController {
 			let self = this;
 			this.Log("AnalyticsBackendController.deleteClass -> Started");
 
-			this.options = cloneOptions();
-			this.options.url += '/classes/' + classId;
-			this.options.method = 'DELETE';
+			let options = cloneOptions();
+			options.url += '/classes/' + classId;
+			options.method = 'DELETE';
 
-			request(this.options, function(error, response, body){
+			request(options, function(error, response, body){
 				if(!error && response.statusCode == 200){
 					try{
 						let parsedbody = JSON.parse(body);
@@ -254,12 +254,13 @@ class AnalyticsBackendController {
 		return new Promise((classroom, callback) => {
 			let self = this;
 			this.Log("AnalyticsBackendController.addUsers -> Started");
-			this.options = cloneOptions();
-			this.options.url += "/classes/" + classroom._id;
-			this.options.method = 'PUT';
-			this.options.body = JSON.stringify({students: this.arrayToLower(users)});
 
-			request(this.options, function(error, response, body){
+			let options = cloneOptions();
+			options.url += "/classes/" + classroom._id;
+			options.method = 'PUT';
+			options.body = JSON.stringify({students: this.arrayToLower(users)});
+
+			request(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
 					try{
 						let parsedbody = JSON.parse(body);
