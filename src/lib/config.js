@@ -32,4 +32,12 @@ config.a2.url =  config.a2.protocol + '://' + config.a2.host + ':' + config.a2.p
 config.a2.adminUser =  process.env.A2_ADMIN_USER || 'root'
 config.a2.adminPassword =  process.env.A2_ADMIN_PASSWORD || 'password'
 
+config.analyticsbackend = {}
+config.analyticsbackend.host = process.env.ANALYTICSBACKEND_HOST || config.a2.host
+config.analyticsbackend.protocol = process.env.ANALYTICSBACKEND_PROTOCOL || config.a2.protocol
+config.analyticsbackend.port = process.env.ANALYTICSBACKEND_PORT || config.a2.port
+config.analyticsbackend.apiPath = process.env.ANALYTICSBACKEND_API || '/api/proxy/gleaner'
+config.analyticsbackend.url =  config.analyticsbackend.protocol + '://' + config.analyticsbackend.host
+							+ ':' + config.analyticsbackend.port + config.analyticsbackend.apiPath
+
 module.exports = config;

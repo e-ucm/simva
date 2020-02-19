@@ -29,6 +29,19 @@ a2controller.setUser(a2config.user, a2config.password);
 
 let AnalyticsBackendController = require('./analytics/backend');
 
+var analyticsBackendConfig = {
+	options: {
+		url: config.analyticsbackend.url,
+		headers: {
+			'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
+			'host': config.analyticsbackend.host,
+			'connection': 'keep-alive',
+			'content-type': 'application/json',
+			'accept': 'application/json'
+		}
+	}
+}
+
 
 class RageAnalyticsActivity extends Activity {
 
@@ -40,6 +53,7 @@ class RageAnalyticsActivity extends Activity {
 		super(params);
 
 		this.backendController = new AnalyticsBackendController();
+		this.backendController.Options = analyticsBackendConfig.options;
 
 		if(!this.extra_data.participants){
 			this.extra_data.participants = [];

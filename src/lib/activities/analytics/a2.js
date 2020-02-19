@@ -129,7 +129,7 @@ function login(username, password, callback){
 	try{
 		this.options = cloneOptions();
 		this.options.url += "/login";
-		this.options.body = JSON.stringify({ username: user, password: pass});
+		this.options.body = JSON.stringify({ username: username, password: password});
 		this.options.method = "POST";
 
 		request(this.options, function(error, response, body){

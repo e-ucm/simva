@@ -66,7 +66,7 @@ class AnalyticsBackendController {
 
 	set Options(_options){
 		this.options = _options;
-		this.options = cloneOptions();
+		this.options = this.cloneOptions();
 	}
 
 	set AuthToken(_auth_token){
@@ -285,7 +285,7 @@ class AnalyticsBackendController {
 
 
 	cloneOptions(){
-		return JSON.parse(JSON.stringify(options));
+		return JSON.parse(JSON.stringify(this.options));
 	}
 }
 
