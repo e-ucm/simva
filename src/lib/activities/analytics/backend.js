@@ -157,9 +157,10 @@ class AnalyticsBackendController {
 			let self = this;
 			this.Log("AnalyticsBackendController.deleteGame -> Started");
 
-			let options = cloneOptions();
+			let options = this.cloneOptions();
 			options.url += '/games/' + gameId;
 			options.method = 'DELETE';
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
 			request(options, function(error, response, body){
 				if(!error && response.statusCode == 200){

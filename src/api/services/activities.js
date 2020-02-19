@@ -96,6 +96,9 @@ module.exports.deleteActivity = async (options) => {
     let activity = await ActivitiesController.getActivity(options.id);
 
     if(activity){
+
+      await ActivitiesController.deleteActivity(options.id);
+
       if(activity.test){
         var test = await TestsController.getTest(activity.test);
 
@@ -118,13 +121,12 @@ module.exports.deleteActivity = async (options) => {
         }
       }
 
-      await ActivitiesController.deleteActivity(options.id);
-
       result = { status: 200, data: { message: 'Activity deleted' } }
     }else{
       result = { status: 404, data: { message: 'Activity not found.' } };
     }
   }catch(e){
+    console.log(e);
     return {status: 500, data: e };
   }
 
