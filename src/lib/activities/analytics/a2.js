@@ -103,32 +103,49 @@ function release_session_token(callback){
 function update_auth_token(callback){
 	Log('A2Controller.update_auth_token -> Started');
 	try{
+		login(user, pass, function(error, user){
+			if(error){
+				Log('A2Controller.update_auth_token -> Error');
+				LogMultiple({error: error, response: response, body: body});
+				callback({ message: 'Error trying to auth'});
+			}else{
+				Log('A2Controller.update_auth_token -> New key: ' + user.token);
+
+				AUTH_TOKEN = user.token;
+				options.headers['Authorization'] = 'Bearer ' + user.token;
+				session_timestamp = Math.round(new Date().getTime()/1000);
+
+				Log('A2Controller.update_auth_token -> Completed');
+				callback(null);
+			}
+		});
+	}catch(e){
+		LogBigError('update_auth_token', e, callback);
+	}
+}
+
+function login(username, password, callback){
+	Log('A2Controller.login -> Started');
+	try{
 		this.options = cloneOptions();
 		this.options.url += "/login";
 		this.options.body = JSON.stringify({ username: user, password: pass});
 		this.options.method = "POST";
 
 		request(this.options, function(error, response, body){
-		  if (!error && response.statusCode == 200) {
+			if (!error && response.statusCode == 200) {
 				body = JSON.parse(body);
 
-				Log('A2Controller.update_auth_token -> New key: ' + body.user.token);
-
-				AUTH_TOKEN = body.user.token;
-				options.headers['Authorization'] = 'Bearer ' + body.user.token;
-				session_timestamp = Math.round(new Date().getTime()/1000);
-
-				Log('A2Controller.update_auth_token -> Completed');
-				callback(null);
-		  }
-		  else {
-		  	Log('A2Controller.update_auth_token -> error on auth');
-			LogMultiple({error: error, response: response, body: body});
-			callback({ message: 'Error trying to auth', error: error });  
-		  }
+				Log('A2Controller.login -> Completed');
+				callback(null, body.user);
+			}else{
+				Log('A2Controller.login -> error on auth');
+				LogMultiple({error: error, response: response, body: body});
+				callback({ message: 'Error trying to auth', error: error });  
+			}
 		});
 	}catch(e){
-		LogBigError('update_auth_token', e, callback);
+		LogBigError('login', e, callback);
 	}
 }
 
