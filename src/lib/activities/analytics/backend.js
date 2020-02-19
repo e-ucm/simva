@@ -286,7 +286,7 @@ class AnalyticsBackendController {
 	async addUsersToClass(classId, users) {
 		return new Promise((resolve, reject) => {
 			let self = this;
-			this.Log("AnalyticsBackendController.addUsers -> Started");
+			this.Log("AnalyticsBackendController.addUsersToClass -> Started");
 
 			let options = this.cloneOptions();
 			options.url += "/classes/" + classId;
@@ -298,15 +298,48 @@ class AnalyticsBackendController {
 				if (!error && response.statusCode == 200) {
 					try{
 						let parsedbody = JSON.parse(body);
-						self.Log('AnalyticsBackendController.addUsers -> Completed');
+						self.Log('AnalyticsBackendController.addUsersToClass -> Completed');
 						resolve(parsedbody);
 					}catch(e){
 						reject({ message: 'Malformed body received from Backend'})
 					}
 				} else {
-					self.Log('AnalyticsBackendController.addUsers -> error adding users to class');
+					self.Log('AnalyticsBackendController.addUsersToClass -> error adding users to class');
 					self.LogMultiple({error: error, response: response, body: body});
 					reject({ message: 'Error trying to add users to the class', error: error });  
+				}
+			});
+		});
+	}
+
+	/**
+	 * Add users
+	 * @param users 
+	 */
+	async removeUsersFromClass(classId, users) {
+		return new Promise((resolve, reject) => {
+			let self = this;
+			this.Log("AnalyticsBackendController.removeUsersFromClass -> Started");
+
+			let options = this.cloneOptions();
+			options.url += "/classes/" + classId + '/remove';
+			options.method = 'PUT';
+			options.body = JSON.stringify({students: this.arrayToLower(users)});
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+
+			request(options, function(error, response, body){
+				if (!error && response.statusCode == 200) {
+					try{
+						let parsedbody = JSON.parse(body);
+						self.Log('AnalyticsBackendController.removeUsersFromClass -> Completed');
+						resolve(parsedbody);
+					}catch(e){
+						reject({ message: 'Malformed body received from Backend'})
+					}
+				} else {
+					self.Log('AnalyticsBackendController.removeUsersFromClass -> error removing users from class');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error trying to remove users from the class', error: error });  
 				}
 			});
 		});
@@ -390,6 +423,38 @@ class AnalyticsBackendController {
 	        });
 	    });
     };
+
+    /**
+	 * Delete class by identifier
+	 * @param classid 
+	 */
+	async deleteActivity(activityId) {
+		return new Promise((resolve, reject) => {
+			let self = this;
+			this.Log("AnalyticsBackendController.deleteGame -> Started");
+
+			let options = this.cloneOptions();
+			options.url += '/activities/' + activityId;
+			options.method = 'DELETE';
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+
+			request(options, function(error, response, body){
+				if(!error && response.statusCode == 200){
+					try{
+						let parsedbody = JSON.parse(body);
+						self.Log('AnalyticsBackendController.deleteGame -> Completed');
+						resolve(parsedbody);
+					}catch(e){
+						reject({ message: 'Malformed body received from Backend'})
+					}
+				}else{
+					self.Log('AnalyticsBackendController.deleteGame -> Error deleting the game');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error deleting the game', error: error });  
+				}
+			});
+		});
+	}
 
 	arrayToLower(a){
 		var r = [];

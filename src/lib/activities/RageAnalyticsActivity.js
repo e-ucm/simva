@@ -128,6 +128,9 @@ class RageAnalyticsActivity extends Activity {
 		// check if the participants can be deleted from A2
 		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
 		this.backendController.AuthToken = loggeduser.token;
+
+		await this.backendController.deleteActivity(this.extra_data.activity._id);
+		await this.backendController.deleteClass(this.extra_data.class._id);
 		await this.backendController.deleteGame(this.extra_data.game._id);
 
 		return await super.remove();
@@ -220,14 +223,16 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async removeParticipants(participants){
-		let toremove = [];
 		for (var i = 0; i < participants.length; i++) {
-			toremove.push(this.extra_data.participants[participants[i]].tid);
 			delete this.extra_data.participants[participants[i]];
 		}
 
 		// TODO:
 		// check if the participants can be deleted from A2
+		
+		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
+		this.backendController.AuthToken = loggeduser.token;
+		await this.backendController.removeUsersFromClass(this.extra_data.class._id, participants);
 		
 		return await this.save();
 	}
