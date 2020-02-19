@@ -163,18 +163,20 @@ class AnalyticsBackendController {
 			this.options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
 			request(this.options, function(error, response, body){
-				if(error){
-					reject(error, body)
-				}else{
+				if(!error && response.statusCode == 200){
 					try{
 						let parsedbody = JSON.parse(body);
 
-						self.Log("AnalyticsBackendController.createClass -> Started");
+						self.Log("AnalyticsBackendController.getVersions -> Completed");
 						resolve(parsedbody);
 					}catch(e){
-						self.Log("AnalyticsBackendController.createClass -> Error");
+						self.Log("AnalyticsBackendController.getVersions -> Error");
 						reject({ message: 'Malformed body received from Analytics Backend' });
 					}
+				}else{
+					self.Log('AnalyticsBackendController.getVersions -> Error creating the class');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error error obtaining the versions of the game', error: error });  
 				}
 			});
 		});
