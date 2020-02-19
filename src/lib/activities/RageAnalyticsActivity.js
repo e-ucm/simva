@@ -129,6 +129,7 @@ class RageAnalyticsActivity extends Activity {
 		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
 		this.backendController.AuthToken = loggeduser.token;
 
+		await this.backendController.endActivity(this.extra_data.activity._id);
 		await this.backendController.deleteActivity(this.extra_data.activity._id);
 		await this.backendController.deleteClass(this.extra_data.class._id);
 		await this.backendController.deleteGame(this.extra_data.game._id);

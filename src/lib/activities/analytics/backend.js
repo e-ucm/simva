@@ -425,13 +425,47 @@ class AnalyticsBackendController {
     };
 
     /**
+     * Starts an activity. By default all activities are stopped and this is needed to start collecting data
+     * @param  {string}   activityId The ID of the activity to be started.
+     * @return {object}              Null or error if so.
+     */
+    async endActivity(activityId){
+    	return new Promise((resolve, reject) => {
+    		let self = this;
+			this.Log("AnalyticsBackendController.startActivity -> Started");
+
+			let options = this.cloneOptions();
+			options.url += '/activities/' + activityId + '/event/end';
+			options.method = 'POST';
+			options.body = JSON.stringify({});
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+
+			request(options, function (error, response, body) {
+				if (!error && response.statusCode == 200) {
+					try{
+						let parsedbody = JSON.parse(body);
+						self.Log('AnalyticsBackendController.startActivity -> Completed');
+						resolve(parsedbody);
+					}catch(e){
+						reject({ message: 'Malformed body received from Backend'})
+					}
+				} else {
+					self.Log('AnalyticsBackendController.startActivity -> error');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error trying to start the activity', error: error });  
+				}
+	        });
+	    });
+    };
+
+    /**
 	 * Delete class by identifier
 	 * @param classid 
 	 */
 	async deleteActivity(activityId) {
 		return new Promise((resolve, reject) => {
 			let self = this;
-			this.Log("AnalyticsBackendController.deleteGame -> Started");
+			this.Log("AnalyticsBackendController.deleteActivity -> Started");
 
 			let options = this.cloneOptions();
 			options.url += '/activities/' + activityId;
@@ -442,13 +476,13 @@ class AnalyticsBackendController {
 				if(!error && response.statusCode == 200){
 					try{
 						let parsedbody = JSON.parse(body);
-						self.Log('AnalyticsBackendController.deleteGame -> Completed');
+						self.Log('AnalyticsBackendController.deleteActivity -> Completed');
 						resolve(parsedbody);
 					}catch(e){
 						reject({ message: 'Malformed body received from Backend'})
 					}
 				}else{
-					self.Log('AnalyticsBackendController.deleteGame -> Error deleting the game');
+					self.Log('AnalyticsBackendController.deleteActivity -> Error deleting the activity');
 					self.LogMultiple({error: error, response: response, body: body});
 					reject({ message: 'Error deleting the game', error: error });  
 				}
