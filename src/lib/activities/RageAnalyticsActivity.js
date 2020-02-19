@@ -105,6 +105,15 @@ class RageAnalyticsActivity extends Activity {
 			this.backendController.AuthToken = loggeduser.token;
 			this.extra_data.game = await this.backendController.addGame(this.name);
 			this.extra_data.game.versions = await this.backendController.getVersions(this.extra_data.game._id);
+
+			this.extra_data.class = await this.backendController.addClass(this.name);
+
+			let gameId = this.extra_data.game._id;
+			let versionId = this.extra_data.game.versions[0]._id;
+			let classId = this.extra_data.class._id;
+
+			this.extra_data.activity = await this.backendController.addActivity(this.name, gameId, versionId, classId);
+			await this.backendController.startActivity(this.extra_data.activity._id);
 		}
 
 		return await super.save();
@@ -146,6 +155,10 @@ class RageAnalyticsActivity extends Activity {
 				}
 			}
 		}
+
+		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
+		this.backendController.AuthToken = loggeduser.token;
+		await this.backendController.addUsersToClass(this.extra_data.class._id, participants);
 
 		return await this.save();
 	}

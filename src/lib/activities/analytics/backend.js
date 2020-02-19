@@ -152,7 +152,7 @@ class AnalyticsBackendController {
 	 * Delete class by identifier
 	 * @param classid 
 	 */
-	deleteGame(gameId) {
+	async deleteGame(gameId) {
 		return new Promise((resolve, reject) => {
 			let self = this;
 			this.Log("AnalyticsBackendController.deleteGame -> Started");
@@ -251,14 +251,15 @@ class AnalyticsBackendController {
 	 * Delete class by identifier
 	 * @param classid 
 	 */
-	deleteClass(classId) {
+	async deleteClass(classId) {
 		return new Promise((resolve, reject) => {
 			let self = this;
 			this.Log("AnalyticsBackendController.deleteClass -> Started");
 
-			let options = cloneOptions();
+			let options = this.cloneOptions();
 			options.url += '/classes/' + classId;
 			options.method = 'DELETE';
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
 			request(options, function(error, response, body){
 				if(!error && response.statusCode == 200){
@@ -282,15 +283,16 @@ class AnalyticsBackendController {
 	 * Add users
 	 * @param users 
 	 */
-	addUsers(classId, users) {
-		return new Promise((classroom, callback) => {
+	async addUsersToClass(classId, users) {
+		return new Promise((resolve, reject) => {
 			let self = this;
 			this.Log("AnalyticsBackendController.addUsers -> Started");
 
-			let options = cloneOptions();
-			options.url += "/classes/" + classroom._id;
+			let options = this.cloneOptions();
+			options.url += "/classes/" + classId;
 			options.method = 'PUT';
 			options.body = JSON.stringify({students: this.arrayToLower(users)});
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
 
 			request(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
@@ -302,13 +304,92 @@ class AnalyticsBackendController {
 						reject({ message: 'Malformed body received from Backend'})
 					}
 				} else {
-					self.Log('AnalyticsBackendController.addUsers -> error on auth');
+					self.Log('AnalyticsBackendController.addUsers -> error adding users to class');
 					self.LogMultiple({error: error, response: response, body: body});
 					reject({ message: 'Error trying to add users to the class', error: error });  
 				}
 			});
 		});
 	}
+
+	/**
+	 * Creates an Activity in backend
+	 * @param  {string}   name          Name for the activity to be created
+	 * @param  {string}   gameId        ID of the game that will be assigned to the class when creating the activity
+	 * @param  {string}   versionId     ID of the version of the game
+	 * @param  {string}   classId       ID of the class to be assigned
+	 * @return {object}                 Activity created or error if so.
+	 */
+	async addActivity(name, gameId, versionId, classId){
+    	return new Promise((resolve, reject) => {
+    		let self = this;
+			this.Log("AnalyticsBackendController.createActivity -> Started");
+
+			let activitybody = {
+				name: name,
+				gameId: gameId,
+				versionId: versionId,
+				classId: classId,
+                offline: false
+			} 
+
+			let options = this.cloneOptions();
+			options.url += "/activities/bundle";
+			options.method = 'POST';
+			options.body = JSON.stringify(activitybody);
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+
+			request(options, function (error, response, body) {
+				if (!error && response.statusCode == 200) {
+					try{
+						let parsedbody = JSON.parse(body);
+						self.Log('AnalyticsBackendController.createActivity -> Completed');
+						resolve(parsedbody);
+					}catch(e){
+						reject({ message: 'Malformed body received from Backend'})
+					}
+				} else {
+					self.Log('AnalyticsBackendController.createActivity -> error');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error trying to create the activity', error: error });  
+				}
+	        });
+	    });
+    };
+
+    /**
+     * Starts an activity. By default all activities are stopped and this is needed to start collecting data
+     * @param  {string}   activityId The ID of the activity to be started.
+     * @return {object}              Null or error if so.
+     */
+    async startActivity(activityId){
+    	return new Promise((resolve, reject) => {
+    		let self = this;
+			this.Log("AnalyticsBackendController.startActivity -> Started");
+
+			let options = this.cloneOptions();
+			options.url += '/activities/' + activityId + '/event/start';
+			options.method = 'POST';
+			options.body = JSON.stringify({});
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+
+			request(options, function (error, response, body) {
+				if (!error && response.statusCode == 200) {
+					try{
+						let parsedbody = JSON.parse(body);
+						self.Log('AnalyticsBackendController.startActivity -> Completed');
+						resolve(parsedbody);
+					}catch(e){
+						reject({ message: 'Malformed body received from Backend'})
+					}
+				} else {
+					self.Log('AnalyticsBackendController.startActivity -> error');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error trying to start the activity', error: error });  
+				}
+	        });
+	    });
+    };
 
 	arrayToLower(a){
 		var r = [];
