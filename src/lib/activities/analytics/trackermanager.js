@@ -46,8 +46,8 @@ class TrackerManager {
 	}
 
 	constructor(){
-		setInterval(this.FlushTrackers, 5000);
-		setInterval(this.CleanUnusedTrackers, 300000);
+		setInterval(this.FlushTrackers(this), 5000);
+		setInterval(this.CleanUnusedTrackers(this), 300000);
 	}
 
 	setTracker(activityId, user, tracker){
@@ -115,7 +115,6 @@ class TrackerManager {
 				if(!this.hasTracker(activityId, user)){
 					reject({ message: 'Tracker not initialized for user ' + user + ' and activity ' + activityId });
 				}else{
-					console.log(traces);
 					let tracker = this.trackers[activityId][user].tracker;
 					for (var i = traces.length - 1; i >= 0; i--) {
 						traces[i].actor = tracker.actor;
@@ -132,19 +131,19 @@ class TrackerManager {
 		});
 	}
 
-	async FlushTrackers(){
-		return new Promise((resolve, reject) => {
-			if(!this.trackers){
-				resolve()
+	FlushTrackers(self){
+		return function(){
+			if(!self.trackers){
+				return;
 			}else{
-				let activities = Object.keys(this.trackers);
+				let activities = Object.keys(self.trackers);
 
 				let alldone = 0;
 				let allcompleted = function(){
 					alldone++;
 
 					if(alldone >= activities.length){
-						resolve();
+						return;
 					}
 				}
 
@@ -159,34 +158,34 @@ class TrackerManager {
 					}
 
 					for (let j = users.length - 1; j >= 0; j--) {
-						users[j].tracker.Flush(function(result, error){
+						self.trackers[activityId][users[j]].tracker.Flush(function(result, error){
 							userscompleted();
 						});
 					}
 				}
 
 				for (let i = activities.length - 1; i >= 0; i--) {
-					let users = Object.keys(this.trackers[activities[i]]);
+					let users = Object.keys(self.trackers[activities[i]]);
 					flushUsers(activities[i], users);
 				}
 			}
-		});
+		}
 	}
 
-	CleanUnusedTrackers(){
-		console.log('Cleaning Unused Trackers');
-		if(!this.trackers){
-			return;
-		}
+	CleanUnusedTrackers(self){
+		return function(){
+			if(!self.trackers){
+				return;
+			}
 
-		let activities = Object.keys(this.trackers);
-		
-		for (let i = activities.length - 1; i >= 0; i--) {
-			let users = Object.keys(this.trackers[activities[i]]);
-			for (let j = users.length - 1; j >= 0; j--) {
-				if((users[j].timeused + ONE_HOUR) < Date.now()){
-					console.log('Cleaned: ' + activities[i] + '-' + users[j]);
-					RemoveTracker(activities[i], users[j]);
+			let activities = Object.keys(self.trackers);
+			
+			for (let i = activities.length - 1; i >= 0; i--) {
+				let users = Object.keys(self.trackers[activities[i]]);
+				for (let j = users.length - 1; j >= 0; j--) {
+					if((users[j].timeused + ONE_HOUR) < Date.now()){
+						RemoveTracker(activities[i], users[j]);
+					}
 				}
 			}
 		}
