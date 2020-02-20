@@ -242,8 +242,13 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async setResult(participant, result){
-		//Add tracker control
-		return false;
+		if(!trackerManager.hasTracker(this.extra_data.activity._id, participant)){
+			await trackerManager.InitTracker(this.extra_data.activity, participant, participant);
+		}
+
+		trackerManager.AddTrace(this.extra_data.activity._id, participant, result);
+		
+		return true;
 	}
 
 	async getResults(participants){

@@ -108,15 +108,15 @@ class TrackerManager {
 		}
 	}
 
-	async AddTrace(activity, user, trace){
+	async AddTrace(activityId, user, trace){
 		return new Promise((resolve, reject) => {
-			if(hasTracker(activity._id, user)){
+			if(hasTracker(activityId, user)){
 				reject({ message: 'Tracker not initialized for user ' + user + ' and activity ' + activityId });
 			}else{
-				trace.actor = this.trackers[activity._id][user].tracker.actor;
+				trace.actor = this.trackers[activityId][user].tracker.actor;
 
 				tracker.tracesPending.push(JSON.stringify([trace]));
-				this.trackers[activity._id][user].timeused = Date.now();
+				this.trackers[activityId][user].timeused = Date.now();
 				resolve();
 			}
 		});
