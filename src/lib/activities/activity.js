@@ -165,7 +165,7 @@ class Activity {
 			this.extra_data.participants[participant] = {}
 		}
 
-		this.extra_data.participants[participant].result = result;
+		this.extra_data.participants[participant].result = result.result;
 
 		return await this.save();
 	}

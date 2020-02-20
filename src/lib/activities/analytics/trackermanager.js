@@ -66,7 +66,7 @@ class TrackerManager {
 	}
 
 	hasTracker(activityId, user){
-		if(this.trackers && this.trackers[activity._id] && this.trackers[activity._id][user]){
+		if(this.trackers && this.trackers[activityId] && this.trackers[activityId][user]){
 			return true;
 		}else{
 			return false;
@@ -75,6 +75,7 @@ class TrackerManager {
 
 	async InitTracker(activity, user, password){
 		return new Promise((resolve, reject) => {
+			let self = this;
 			let tracker = new TrackerAsset();
 
 			tracker.settings.host = this.URL;
@@ -85,7 +86,7 @@ class TrackerManager {
 				if(!error){
 					tracker.Start(function(result, error){
 						if(!error){
-							setTracker(activity._id, user, tracker);
+							self.setTracker(activity._id, user, tracker);
 							resolve(tracker);
 						}else{
 							reject({ message: 'Unable to start the tracker.', error: error});
@@ -108,16 +109,24 @@ class TrackerManager {
 		}
 	}
 
-	async AddTrace(activityId, user, trace){
+	async AddTrace(activityId, user, traces){
 		return new Promise((resolve, reject) => {
-			if(hasTracker(activityId, user)){
-				reject({ message: 'Tracker not initialized for user ' + user + ' and activity ' + activityId });
-			}else{
-				trace.actor = this.trackers[activityId][user].tracker.actor;
+			try{
+				if(!this.hasTracker(activityId, user)){
+					reject({ message: 'Tracker not initialized for user ' + user + ' and activity ' + activityId });
+				}else{
+					let tracker = this.trackers[activityId][user].tracker;
+					for (var i = traces.length - 1; i >= 0; i--) {
+						traces[i].actor = tracker.actor;
+					}
 
-				tracker.tracesPending.push(JSON.stringify([trace]));
-				this.trackers[activityId][user].timeused = Date.now();
-				resolve();
+					tracker.tracesPending.push(JSON.stringify(traces));
+					this.trackers[activityId][user].timeused = Date.now();
+					resolve();
+				}
+			}catch(e){
+				console.log(e);
+				reject({ message: 'Malformed Traces' });
 			}
 		});
 	}

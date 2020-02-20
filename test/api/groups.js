@@ -234,7 +234,7 @@ module.exports = function (request) {
 
                     should.not.exist(err);
                     should(res.body).be.instanceof(Array).and.have.lengthOf(1);
-                    for(let i in res.body){
+                    for(let i = 0; i < res.body.length; i++){
                         should(res.body[i].owners.indexOf('teacher')).equals(0);
                     }
 
