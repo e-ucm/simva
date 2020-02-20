@@ -253,9 +253,11 @@ class RageAnalyticsActivity extends Activity {
 
 	async getResults(participants){
 		return new Promise((resolve, reject) => {
-			// TODO:
-			// Obtain result traces and results file
-			// from backend filtered by user
+			let results = {}
+			for (var i = participants.length - 1; i >= 0; i--) {
+				results[participants[i]] = null;
+			}
+			resolve(results);
 		});
 	}
 
@@ -267,7 +269,13 @@ class RageAnalyticsActivity extends Activity {
 		// TODO
 		// Calculate the completion based on the traces
 
-		return results;
+		let completion = {}
+
+		for (var i = participants.length - 1; i >= 0; i--) {
+			completion[participants[i]] = false;
+		}
+
+		return completion;
 	}
 
 	target(participants){
