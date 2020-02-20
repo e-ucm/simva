@@ -135,10 +135,9 @@ class Activity {
 			this.extra_data.participants = {};
 		}
 		
-		for(let p in participants){
-
-			if(!this.extra_data.participants[participants[p]]){
-				this.extra_data.participants[participants[p]] = { completion: false };
+		for(let i = 0; i < participants.length; i++){
+			if(!this.extra_data.participants[participants[i]]){
+				this.extra_data.participants[participants[i]] = { completion: false };
 			}
 		}
 
@@ -178,16 +177,16 @@ class Activity {
 
 		let results = {};
 		if(this.extra_data && this.extra_data.participants){
-			for(var p in participants){
-				if(this.extra_data.participants[participants[p]] && this.extra_data.participants[participants[p]].result){
-					results[participants[p]] = this.extra_data.participants[participants[p]].result;
+			for(let i = 0; i < participants.length; i++){
+				if(this.extra_data.participants[participants[i]] && this.extra_data.participants[participants[i]].result){
+					results[participants[i]] = this.extra_data.participants[participants[i]].result;
 				}else{
-					results[participants[p]] = null;
+					results[participants[i]] = null;
 				}
 			}
 		}else{
-			for(var p in participants){
-				results[participants[p]] = null;
+			for(let i = 0; i < participants.length; i++){
+				results[participants[i]] = null;
 			}
 		}
 
@@ -219,16 +218,16 @@ class Activity {
 
 		let results = {};
 		if(this.extra_data && this.extra_data.participants){
-			for(var p in participants){
-				if(this.extra_data.participants[participants[p]] && this.extra_data.participants[participants[p]].completion){
-					results[participants[p]] = this.extra_data.participants[participants[p]].completion;
+			for(let i = 0; i < participants.length; i++){
+				if(this.extra_data.participants[participants[i]] && this.extra_data.participants[participants[i]].completion){
+					results[participants[i]] = this.extra_data.participants[participants[i]].completion;
 				}else{
-					results[participants[p]] = false;
+					results[participants[i]] = false;
 				}
 			}
 		}else{
-			for(var p in participants){
-				results[participants[p]] = false;
+			for(let i = 0; i < participants.length; i++){
+				results[participants[i]] = false;
 			}
 		}
 

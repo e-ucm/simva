@@ -149,9 +149,9 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async addParticipants(participants){
-		for(let p in participants){
-			if(!this.extra_data.participants[participants[p]]){
-				this.extra_data.participants[participants[p]] = null;
+		for(let i = 0; i < participants.length; i++){
+			if(!this.extra_data.participants[participants[i]]){
+				this.extra_data.participants[participants[i]] = null;
 			}
 		}
 

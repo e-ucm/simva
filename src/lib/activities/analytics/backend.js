@@ -492,7 +492,7 @@ class AnalyticsBackendController {
 
 	arrayToLower(a){
 		var r = [];
-		for(var i in a){
+		for(let i = 0; i < a.length; i++){
 			r.push(a[i].toLowerCase());
 		}
 		return r;
