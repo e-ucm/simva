@@ -42,6 +42,9 @@ var analyticsBackendConfig = {
 	}
 }
 
+let TrackerManager = require('./analytics/trackermanager');
+let trackerManager = new TrackerManager();
+
 
 class RageAnalyticsActivity extends Activity {
 
