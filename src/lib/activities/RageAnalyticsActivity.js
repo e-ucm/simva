@@ -242,17 +242,32 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async setResult(participant, result){
+		let toret = 0;
 		try{
 			if(!trackerManager.hasTracker(this.extra_data.activity._id, participant)){
 				await trackerManager.InitTracker(this.extra_data.activity, participant, participant);
 			}
 
-			trackerManager.AddTrace(this.extra_data.activity._id, participant, result);
+			if(Array.isArray(result)){
+				// If we're receiving an array, we're receiving traces
+				trackerManager.AddTrace(this.extra_data.activity._id, participant, result);
+				toret = { message: 'Traces Added' };
+			}else if(!result || typeof result === 'object'){
+				// If these conditions are satisfied, we're receiving an start
+				toret = { 
+					actor: {
+						account: { homePage: 'https://simva.test/', username: 'dhwe' },
+						name: 'dhwe'
+					},
+					playerId: 'dhwe',
+					objectId: 'https://simva.test/activities/' + this.id,
+				}
+			}
 		}catch(e){
 			throw e;
 		}
-		
-		return true;
+
+		return toret;
 	}
 
 	async getResults(participants){

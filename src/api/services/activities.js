@@ -361,11 +361,11 @@ module.exports.setResult = async (options) => {
     let participants = await StudiesController.getParticipants(study);
 
     if(participants.indexOf(options.user.data.username) !== -1){
-      body.data.result = await activity.setResult(options.user.data.username, options.body);
+      body.data = await activity.setResult(options.user.data.username, options.body);
     }else{
       if(study.owners.indexOf(options.user.data.username) !== -1){
         if(participants.indexOf(options.postuser) !== -1){
-          body.data.result = await activity.setResult(options.postuser, options.body);
+          body.data = await activity.setResult(options.postuser, options.body);
         }else{
           body.status = 400;
           body.data.message = 'The user you are trying to set result to is not a participant';

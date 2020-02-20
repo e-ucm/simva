@@ -115,6 +115,7 @@ class TrackerManager {
 				if(!this.hasTracker(activityId, user)){
 					reject({ message: 'Tracker not initialized for user ' + user + ' and activity ' + activityId });
 				}else{
+					console.log(traces);
 					let tracker = this.trackers[activityId][user].tracker;
 					for (var i = traces.length - 1; i >= 0; i--) {
 						traces[i].actor = tracker.actor;
