@@ -72,7 +72,7 @@ class LimeSurveyActivity extends Activity {
 					reject(err);
 				}else{
 					let utils = {
-						url: config.limesurvey.url,
+						url: config.limesurvey.external_url,
 						surveys: surveys
 					};
 

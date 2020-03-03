@@ -21,6 +21,7 @@ config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey-dev.external
 config.limesurvey.protocol = process.env.LIMESURVEY_PROTOCOL || 'https'
 config.limesurvey.port = process.env.LIMESURVEY_PORT || '443'
 config.limesurvey.url =  config.limesurvey.protocol + '://' + config.limesurvey.host + ':' + config.limesurvey.port
+config.limesurvey.external_url = process.env.LIMESURVEY_EXTERNAL || config.limesurvey.url
 config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
 
