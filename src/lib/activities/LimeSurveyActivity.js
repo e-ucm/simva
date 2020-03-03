@@ -374,7 +374,7 @@ class LimeSurveyActivity extends Activity {
 
 		if(this.extra_data && this.extra_data.surveyId){
 			for (let i = 0; i < participants.length; i++) {
-				targets[participants[i]] = config.limesurvey.url + '/' + this.extra_data.surveyId + '?token=' + participants[i];
+				targets[participants[i]] = config.limesurvey.external_url + this.extra_data.surveyId + '?token=' + participants[i];
 			}
 		}else{
 			return false;
