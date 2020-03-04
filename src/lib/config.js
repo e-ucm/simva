@@ -14,7 +14,7 @@ config.mongo = {}
 config.mongo.host = process.env.MONGO_HOST || 3000
 config.mongo.db = process.env.MONGO_DB || '/simva'
 config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
-config.mongo.test = 'mongodb://localhost:27017/tests'
+config.mongo.test = 'mongodb://localhost:1234/tests'
 
 config.kafka = {}
 config.kafka.host = process.env.KAFKA_HOST || 'kafka'

@@ -170,10 +170,8 @@ class Activity {
 		
 		if(result.tofile === true){
 			await this.saveToFile(participant + '.result', result.result);
-			return await this.save();
-		}else{
-			return await this.save();
 		}
+		return { result: await this.save() };
 	}
 
 	async saveToFile(filename, content){
