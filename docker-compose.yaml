@@ -13,7 +13,9 @@ services:
     image: mongo:4.0
     volumes:
       - mongo_data:/data/db
-    hostname: mongo.simva.dev.test
+    networks:
+      - default
+    hostname: mongodb
     ports:
       - 27017:27017
 
@@ -23,9 +25,12 @@ services:
     stdin_open: true
     tty: true
     environment:
-      MONGO_HOST: mongo.simva.dev.test
+      MONGO_HOST: mongodb
       MONGO_DB: /simva
-      LIMESURVEY_HOST: limesurvey-dev.external.test
+      LIMESURVEY_PROTOCOL: http
+      LIMESURVEY_HOST: limesurvey-dev
+      LIMESURVEY_PORT: 80
+      LIMESURVEY_EXTERNAL: https://limesurvey.simva.e-ucm.es/
       LIMESURVEY_ADMIN_USER: admin
       LIMESURVEY_ADMIN_PASSWORD: password
       A2_HOST: analytics.e-ucm.es
@@ -33,16 +38,14 @@ services:
       A2_ADMIN_PASSWORD: EiK4iSWyFqzHjG42Dn8ifVDSGd83PRIe
       NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
     volumes:
-      - ./:/app     
+      - ./:/app
     depends_on:
       - mongodb
     hostname: simva-api.dev.test
-    dns:
-      - 172.31.0.53
     networks:
       - default
       - system_traefik
     labels:
       traefik.enable: true
       traefik.port: 3000
-      traefik.frontend.rule: "Host:simva-api.external.test"
+      traefik.frontend.rule: "Host:api.simva.e-ucm.es"
