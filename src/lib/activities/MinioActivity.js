@@ -94,10 +94,6 @@ class MinioActivity extends Activity {
 	async setResult(participant, result){
 		let toret = 0;
 		try{
-			if(!trackerManager.hasTracker(this.extra_data.activity._id, participant)){
-				await trackerManager.InitTracker(this.extra_data.activity, participant, participant);
-			}
-
 			if(Array.isArray(result)){
 				// If we're receiving an array, we're receiving traces
 				await this.sendTracesToKafka(result);
@@ -119,7 +115,8 @@ class MinioActivity extends Activity {
 				}
 			}
 		}catch(e){
-			throw e;
+			console.log(e);
+			throw { message: 'Error while setting the result' };
 		}
 
 		return toret;
@@ -127,12 +124,12 @@ class MinioActivity extends Activity {
 
 	async sendTracesToKafka(traces){
 		return new Promise((resolve, reject) => {
-				payloads = [];
+				let payloads = [];
 
 				for (var i = traces.length - 1; i >= 0; i--) {
-					trace = traces[i];
+					let trace = traces[i];
 					trace._id = this.id;
-					payloads.push({ topic: config.kafka.topic, key: { _id: this.id }, messages: JSON.stringify(trace), partition: 0 });
+					payloads.push({ topic: config.kafka.topic, key: JSON.stringify({ _id: this.id }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
 				producer.send(payloads, function (err, data) {
@@ -150,11 +147,11 @@ class MinioActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
-		return super.setCompletion();
+		return super.setCompletion(participant, status);
 	}
 
 	async getCompletion(participants){
-		return super.getCompletion();
+		return super.getCompletion(participants);
 	}
 
 	target(participants){

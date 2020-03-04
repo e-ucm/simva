@@ -27,7 +27,7 @@ services:
     stdin_open: true
     tty: true
     environment:
-      EXTERNAL_URL: https://simva.e-ucm.es/
+      EXTERNAL_URL: https://simva.e-ucm.es
       MONGO_HOST: mongodb
       MONGO_DB: /simva
       KAFKA_HOST: kafka1
