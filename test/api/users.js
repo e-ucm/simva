@@ -274,6 +274,42 @@ module.exports = function (request) {
                 });
         });
 
+        it('should NOT login the user if User exists but pass is wrong', function (done) {
+            let user = {
+                username: 'test',
+                password: 'badpass'
+            }
+
+            request.post('/users/login')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should.exist(res.body.message);
+                    done();
+                });
+        });
+
+        it('should NOT login the user if User not exists', function (done) {
+            let user = {
+                username: 'unexistent',
+                password: 'testingasd'
+            }
+
+            request.post('/users/login')
+                .expect(400)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should.exist(res.body.message);
+                    done();
+                });
+        });
+
         it('should get the user details', function (done) {
             request.get('/users/me')
                 .expect(200)

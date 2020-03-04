@@ -90,7 +90,7 @@ module.exports.loginUser = async (options) => {
   try{
     result.data = await UsersController.authUser(options.body.username, options.body.password);
   }catch(e){
-    result = { status: 500, data: e };
+    result = { status: 400, data: e };
   }
   
   return result;

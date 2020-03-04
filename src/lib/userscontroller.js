@@ -46,17 +46,13 @@ UsersController.authUser = async (username, plainPass) => {
 	if(users.length !== 1){
 		throw { message: 'Username not found' };
 	}
-	try{
-		let user = users[0];
-		let success = await comparePassword(plainPass, user.password);
-		if(success){
-			let token = await UsersController.generateJWT(user);
-			return { token: token };
-		}else{
-			throw({ message: 'Username or password not correct'});
-		}
-	}catch(e){
-		console.log(e);
+	let user = users[0];
+	let success = await comparePassword(plainPass, user.password);
+	if(success){
+		let token = await UsersController.generateJWT(user);
+		return { token: token };
+	}else{
+		throw({ message: 'Username or password not correct'});
 	}
 	
 }
