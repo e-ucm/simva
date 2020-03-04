@@ -1,6 +1,8 @@
 
 let config = {}
 
+config.external_url = process.env.EXTERNAL_URL || 'https://simva.e-ucm.es'
+
 config.api = {}
 config.api.port  = process.env.PORT || 3000
 
@@ -12,9 +14,7 @@ config.mongo = {}
 config.mongo.host = process.env.MONGO_HOST || 3000
 config.mongo.db = process.env.MONGO_DB || '/simva'
 config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
-
 config.mongo.test = 'mongodb://localhost:27017/tests'
-
 
 config.limesurvey = {}
 config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey-dev.external.test'

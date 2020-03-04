@@ -256,11 +256,11 @@ class RageAnalyticsActivity extends Activity {
 				// If these conditions are satisfied, we're receiving an start
 				toret = { 
 					actor: {
-						account: { homePage: 'https://simva.test/', username: 'dhwe' },
-						name: 'dhwe'
+						account: { homePage: config.external_url, username: participant },
+						name: participant
 					},
-					playerId: 'dhwe',
-					objectId: 'https://simva.test/activities/' + this.id,
+					playerId: participant,
+					objectId: config.external_url  + '/activities/' + this.id,
 				}
 			}
 		}catch(e){
