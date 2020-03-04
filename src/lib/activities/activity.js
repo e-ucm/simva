@@ -1,5 +1,6 @@
 const ServerError = require('../error');
 var mongoose = require('mongoose');
+let fs = require('fs');
 var ObjectId = mongoose.Types.ObjectId;
 
 const validator = require('../utils/validator');
@@ -166,8 +167,44 @@ class Activity {
 		}
 
 		this.extra_data.participants[participant].result = result.result;
+		
+		if(result.tofile === true){
+			 await this.saveToFile(participant + '.result', result.result);
+			 return await this.save();
+		}else{
+			return await this.save();
+		}
+	}
 
-		return await this.save();
+	async saveToFile(filename, content){
+		return new Promise((resolve, reject) => {
+
+			let savefile = function(){
+				let fullname = "storage/"+this.activity._id + '/' + filename;
+				fs.writeFile(fullname, content, function(err) {
+					if(err) {
+						reject({ message: 'Unable to save file: "' +fullname + '".' })
+					}else{
+						resolve();
+					}
+				});
+			}
+
+			fs.stat('storage/' + this.activity._id, function(error, stats){
+				if(error){
+					fs.mkdir('storage/' + this.activity._id, function(error, stats){
+						if(error){
+							reject({ message: 'Unable to create the directory.', error: error })
+						}else{
+							savefile();
+						}
+					})
+				}else{
+					savefile();
+				}
+			})
+			
+		});
 	}
 
 	async getResults(participants){
