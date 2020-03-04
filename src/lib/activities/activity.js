@@ -169,8 +169,8 @@ class Activity {
 		this.extra_data.participants[participant].result = result.result;
 		
 		if(result.tofile === true){
-			 await this.saveToFile(participant + '.result', result.result);
-			 return await this.save();
+			await this.saveToFile(participant + '.result', result.result);
+			return await this.save();
 		}else{
 			return await this.save();
 		}
@@ -179,31 +179,36 @@ class Activity {
 	async saveToFile(filename, content){
 		return new Promise((resolve, reject) => {
 
-			let savefile = function(){
-				let fullname = "storage/"+this.activity._id + '/' + filename;
-				fs.writeFile(fullname, content, function(err) {
-					if(err) {
-						reject({ message: 'Unable to save file: "' +fullname + '".' })
-					}else{
-						resolve();
-					}
-				});
-			}
+			let activity = this;
 
-			fs.stat('storage/' + this.activity._id, function(error, stats){
-				if(error){
-					fs.mkdir('storage/' + this.activity._id, function(error, stats){
-						if(error){
-							reject({ message: 'Unable to create the directory.', error: error })
+			try{
+				let savefile = function(){
+					let fullname = "storage/" + activity._id + '/' + filename;
+					fs.writeFile(fullname, content, function(error) {
+						if(error) {
+							reject({ message: 'Unable to save file: "' + fullname + '".', error: error})
 						}else{
-							savefile();
+							resolve();
 						}
-					})
-				}else{
-					savefile();
+					});
 				}
-			})
-			
+
+				fs.stat('storage/' + activity._id, function(error, stats){
+					if(error){
+						fs.mkdir('storage/' + activity._id, function(error){
+							if(error){
+								reject({ message: 'Unable to create the directory.', error: error })
+							}else{
+								savefile();
+							}
+						})
+					}else{
+						savefile();
+					}
+				})
+			}catch(e){
+				console.log(e);
+			}
 		});
 	}
 
