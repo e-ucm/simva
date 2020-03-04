@@ -5,8 +5,9 @@ var ActivitiesController = {};
 var Activity = require('./activities/activity');
 var LimeSurveyActivity = require('./activities/LimeSurveyActivity');
 var RageAnalyticsActivity = require('./activities/RageAnalyticsActivity');
+var MinioActivity = require('./activities/MinioActivity');
 
-var types = [Activity, LimeSurveyActivity, RageAnalyticsActivity];
+var types = [Activity, LimeSurveyActivity, RageAnalyticsActivity, MinioActivity];
 
 ActivitiesController.getStudy = async (id) => {
 	let res = null;

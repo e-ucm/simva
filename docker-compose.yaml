@@ -7,6 +7,8 @@ volumes:
 networks:
   system_traefik:
     external: true
+  kzk-connect:
+    external: true
 
 services:
   mongodb:
@@ -25,8 +27,13 @@ services:
     stdin_open: true
     tty: true
     environment:
+      EXTERNAL_URL: https://simva.e-ucm.es/
       MONGO_HOST: mongodb
       MONGO_DB: /simva
+      KAFKA_HOST: kafka1
+      KAFKA_PORT: 9092
+      KAFKA_TOPIC: traces
+      MINIO_URL: https://minio.simva.e-ucm.es/
       LIMESURVEY_PROTOCOL: http
       LIMESURVEY_HOST: limesurvey-dev
       LIMESURVEY_PORT: 80
@@ -45,6 +52,7 @@ services:
     networks:
       - default
       - system_traefik
+      - kzk-connect
     labels:
       traefik.enable: true
       traefik.port: 3000

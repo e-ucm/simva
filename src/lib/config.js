@@ -16,6 +16,15 @@ config.mongo.db = process.env.MONGO_DB || '/simva'
 config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
 config.mongo.test = 'mongodb://localhost:27017/tests'
 
+config.kafka = {}
+config.kafka.host = process.env.KAFKA_HOST || 'kafka'
+config.kafka.port = process.env.KAFKA_PORT || 9092
+config.kafka.topic = process.env.KAFKA_TOPIC || 'traces'
+config.kafka.url = config.kafka.host + ':' + config.kafka.port
+
+config.minio = {}
+config.minio.url = process.env.MINIO_URL || 'minio.external.test'
+
 config.limesurvey = {}
 config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey-dev.external.test'
 config.limesurvey.protocol = process.env.LIMESURVEY_PROTOCOL || 'https'
