@@ -490,6 +490,38 @@ class AnalyticsBackendController {
 		});
 	}
 
+	/**
+	 * Get Activity Results
+	 * @param activityId 
+	 */
+	async getActivityResults(activityId) {
+		return new Promise((resolve, reject) => {
+			let self = this;
+			this.Log("AnalyticsBackendController.getActivityResults -> Started");
+
+			let options = this.cloneOptions();
+			options.url += '/activities/' + activityId + '/results';
+			options.method = 'GET';
+			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+
+			request(options, function(error, response, body){
+				if(!error && response.statusCode == 200){
+					try{
+						let parsedbody = JSON.parse(body);
+						self.Log('AnalyticsBackendController.getActivityResults -> Completed');
+						resolve(parsedbody);
+					}catch(e){
+						reject({ message: 'Malformed body received from Backend'})
+					}
+				}else{
+					self.Log('AnalyticsBackendController.getActivityResults -> Error obtaining the results');
+					self.LogMultiple({error: error, response: response, body: body});
+					reject({ message: 'Error obtaining the results', error: error });  
+				}
+			});
+		});
+	}
+
 	arrayToLower(a){
 		var r = [];
 		for(let i = 0; i < a.length; i++){

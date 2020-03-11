@@ -271,13 +271,39 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async getResults(participants){
-		return new Promise((resolve, reject) => {
-			let results = {}
+		let results = {};
+
+		if(participants.length === 0){
+			if(this.extra_data && this.extra_data.participants){
+				participants = Object.keys(this.extra_data.participants);
+			}
+
+			if(participants.length === 0){
+				return {};
+			}
+		}
+
+		try{
 			for (var i = participants.length - 1; i >= 0; i--) {
 				results[participants[i]] = null;
 			}
-			resolve(results);
-		});
+
+			let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
+
+			this.backendController.AuthToken = loggeduser.token;
+			let analyzed_results = await this.backendController.getActivityResults(this.extra_data.activity._id);
+
+			for (var i = analyzed_results.length - 1; i >= 0; i--) {
+				if(results[analyzed_results[i].name] !== undefined){
+					results[analyzed_results[i].name] = analyzed_results[i];
+				}
+			}
+
+			return results;
+		}catch(e){
+			console.log(e);
+			throw { message: 'Error getting results', error: e };
+		}
 	}
 
 	async setCompletion(participant, status){
@@ -285,13 +311,28 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async getCompletion(participants){
-		// TODO
-		// Calculate the completion based on the traces
+		if(participants.length === 0){
+			if(this.extra_data && this.extra_data.participants){
+				participants = Object.keys(this.extra_data.participants);
+			}
 
-		let completion = {}
+			if(participants.length === 0){
+				return {};
+			}
+		}
+		
+		let completion = {};
+		let results = await this.getResults(participants);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
-			completion[participants[i]] = false;
+			if(results[participants[i]] !== null
+				&& results[participants[i]]
+				&& results[participants[i]].completed
+				&& results[participants[i]].completed['serious-game']){
+				completion[participants[i]] = true;
+			}else{
+				completion[participants[i]] = false;
+			}
 		}
 
 		return completion;
