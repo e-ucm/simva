@@ -24,6 +24,7 @@ config.kafka.url = config.kafka.host + ':' + config.kafka.port
 
 config.minio = {}
 config.minio.url = process.env.MINIO_URL || 'minio.external.test'
+config.minio.bucket = process.env.MINIO_BUCKET || 'datalake'
 
 config.limesurvey = {}
 config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey-dev.external.test'

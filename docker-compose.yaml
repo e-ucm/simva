@@ -34,6 +34,7 @@ services:
       KAFKA_PORT: 9092
       KAFKA_TOPIC: traces
       MINIO_URL: https://minio.simva.e-ucm.es/
+      MINIO_BUCKET: datalake
       LIMESURVEY_PROTOCOL: http
       LIMESURVEY_HOST: limesurvey-dev
       LIMESURVEY_PORT: 80

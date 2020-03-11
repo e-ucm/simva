@@ -51,7 +51,9 @@ class MinioActivity extends Activity {
 
 	static async getUtils(username){
 		return {
-			minio_url: config.minio.url
+			minio_url: config.minio.url,
+			minio_bucket: config.minio.bucket,
+			kafka_topic: config.kafka.topic
 		};
 	}
 
