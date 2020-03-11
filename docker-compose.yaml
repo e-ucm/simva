@@ -40,9 +40,12 @@ services:
       LIMESURVEY_EXTERNAL: https://limesurvey.simva.e-ucm.es/
       LIMESURVEY_ADMIN_USER: admin
       LIMESURVEY_ADMIN_PASSWORD: password
-      A2_HOST: analytics.e-ucm.es
+      A2_HOST: a2
+      A2_PORT: 3000
+      A2_PROTOCOL: http
       A2_ADMIN_USER: root
-      A2_ADMIN_PASSWORD: EiK4iSWyFqzHjG42Dn8ifVDSGd83PRIe
+      A2_ADMIN_PASSWORD: r0qha5N6e2u8bhbHkgiaWlbQ80usTBvp
+      A2_EXTERNAL: https://analytics.simva.e-ucm.es
       NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
     volumes:
       - ./:/app

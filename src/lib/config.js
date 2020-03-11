@@ -41,6 +41,7 @@ config.a2.port = process.env.A2_PORT || '443'
 config.a2.url =  config.a2.protocol + '://' + config.a2.host + ':' + config.a2.port
 config.a2.adminUser =  process.env.A2_ADMIN_USER || 'root'
 config.a2.adminPassword =  process.env.A2_ADMIN_PASSWORD || 'password'
+config.a2.external_url =  process.env.A2_EXTERNAL || 'a2.external.test'
 
 config.analyticsbackend = {}
 config.analyticsbackend.host = process.env.ANALYTICSBACKEND_HOST || config.a2.host
