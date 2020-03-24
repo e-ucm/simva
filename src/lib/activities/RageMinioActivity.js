@@ -91,12 +91,14 @@ class RageMinioActivity extends MinioActivity {
 
 	async setResult(participant, result){
 		let toret = 0;
+
 		try{
 			if(Array.isArray(result)){
 				// If we're receiving an array, we're receiving traces
+
 				await super.sendTracesToKafka(result);
-				await AnalyticsActivity.sendTracesToAnalytics(participant, this.extra_data, result)
-				return { message: 'Traces Received' };
+				await AnalyticsActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
+				toret =  { message: 'Traces Received' };
 			}else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start
 				if(result && result.result){
@@ -142,7 +144,7 @@ class RageMinioActivity extends MinioActivity {
 	}
 
 	async setCompletion(participant, status){
-		return false;
+		return await super.setCompletion(participant, status);
 	}
 
 	async getCompletion(participants){

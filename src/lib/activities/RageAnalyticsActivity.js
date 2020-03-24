@@ -280,8 +280,7 @@ class RageAnalyticsActivity extends Activity {
 		try{
 			if(Array.isArray(result)){
 				// If we're receiving an array, we're receiving traces
-				
-				this.sendTracesToAnalytics(participant, this.extra_data, result)
+				toret = this.sendTracesToAnalytics(participant, this.extra_data, result)
 			}else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start
 				toret = { 
@@ -305,8 +304,8 @@ class RageAnalyticsActivity extends Activity {
 			await trackerManager.InitTracker(analytics.activity, participant, participant);
 		}
 
-		trackerManager.AddTrace(analytics.activity._id, participant, result);
-		toret = { message: 'Traces Added' };
+		trackerManager.AddTrace(analytics.activity._id, participant, traces);
+		return { message: 'Traces Added' };
 	}
 
 	async getResults(participants){
