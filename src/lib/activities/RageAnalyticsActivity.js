@@ -97,47 +97,58 @@ class RageAnalyticsActivity extends Activity {
 		}
 
 		if(!this.id){
-			let user = {
-				username: this.owners[0],
-				password: this.owners[0],
-				email: this.owners[0] + '@simva.test',
-				role: ['teacher', 'developer'],
-				prefix: "gleaner"
-			};
-
-			this.extra_data.manager = await this.createManager(user);
-
-			let loggeduser = await this.login(user.username, user.password);
-
-			this.backendController.AuthToken = loggeduser.token;
-			this.extra_data.game = await this.backendController.addGame(this.name);
-			this.extra_data.game.versions = await this.backendController.getVersions(this.extra_data.game._id);
-
-			this.extra_data.class = await this.backendController.addClass(this.name);
-
-			let gameId = this.extra_data.game._id;
-			let versionId = this.extra_data.game.versions[0]._id;
-			let classId = this.extra_data.class._id;
-
-			this.extra_data.activity = await this.backendController.addActivity(this.name, gameId, versionId, classId);
-			await this.backendController.startActivity(this.extra_data.activity._id);
+			let analytics = await this.initAnalytics(this.owners[0], this.name);
+			this.extra_data.game = analytics.game;
+			this.extra_data.manager = analytics.manager;
+			this.extra_data.class = analytics.class;
+			this.extra_data.activity = analytics.activity;
 		}
 
 		return await super.save();
 	}
 
+	async initAnalytics(username, activityname){
+		let analytics = {};
+
+		analytics.manager = await this.createManager(username);
+
+		let loggeduser = await this.login(username, username);
+
+		this.backendController.AuthToken = loggeduser.token;
+		analytics.game = await this.backendController.addGame(activityname);
+		analytics.game.versions = await this.backendController.getVersions(analytics.game._id);
+
+		analytics.class = await this.backendController.addClass(activityname);
+
+		let gameId = analytics.game._id;
+		let versionId = analytics.game.versions[0]._id;
+		let classId = analytics.class._id;
+
+		analytics.activity = await this.backendController.addActivity(activityname, gameId, versionId, classId);
+		await this.backendController.startActivity(analytics.activity._id);
+
+		return analytics;
+	}
+
 	async remove(){
 		// TODO:
 		// check if the participants can be deleted from A2
-		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
-		this.backendController.AuthToken = loggeduser.token;
 
-		await this.backendController.endActivity(this.extra_data.activity._id);
-		await this.backendController.deleteActivity(this.extra_data.activity._id);
-		await this.backendController.deleteClass(this.extra_data.class._id);
-		await this.backendController.deleteGame(this.extra_data.game._id);
+		await this.cleanAnalytics(this.extra_data);
 
 		return await super.remove();
+	}
+
+	async cleanAnalytics(analytics){
+		let loggeduser = await this.login(analytics.manager.username, analytics.manager.username);
+		this.backendController.AuthToken = loggeduser.token;
+
+		await this.backendController.endActivity(analytics.activity._id);
+		await this.backendController.deleteActivity(analytics.activity._id);
+		await this.backendController.deleteClass(analytics.class._id);
+		await this.backendController.deleteGame(analytics.game._id);
+
+		return true;
 	}
 
 	// ##########################################
@@ -149,9 +160,15 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async addParticipants(participants){
+		this.extra_data = await this.addParticipantsToAnalytics(participants, this.extra_data);
+
+		return await this.save();
+	}
+
+	async addParticipantsToAnalytics(participants, analytics){
 		for(let i = 0; i < participants.length; i++){
-			if(!this.extra_data.participants[participants[i]]){
-				this.extra_data.participants[participants[i]] = null;
+			if(!analytics.participants[participants[i]]){
+				analytics.participants[participants[i]] = null;
 			}
 		}
 
@@ -162,24 +179,33 @@ class RageAnalyticsActivity extends Activity {
 				throw { message: 'The number of participants added is different form the ones created.'};
 			}else{
 				for (var i = 0; i < a2participants.data.length; i++) {
-					this.extra_data.participants[a2participants.data[i].username] = a2participants.data[i];
+					analytics.participants[a2participants.data[i].username] = a2participants.data[i];
 				}
 			}
 		}
 
-		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
+		let loggeduser = await this.login(analytics.manager.username, analytics.manager.username);
 		this.backendController.AuthToken = loggeduser.token;
-		await this.backendController.addUsersToClass(this.extra_data.class._id, participants);
+		await this.backendController.addUsersToClass(analytics.class._id, participants);
 
-		return await this.save();
+		return analytics;
 	}
 
-	async createManager(user){
+	async createManager(username){
 		return new Promise((resolve, reject) => {
+
+			let user = {
+				username: username,
+				password: username,
+				email: username + '@simva.test',
+				role: ['teacher', 'developer'],
+				prefix: "gleaner"
+			};
+
 			async.waterfall([
 				a2controller.auth,
 				a2controller.signup(user),
-				a2controller.getUsers(this.owners[0])
+				a2controller.getUsers(username)
 			], function (error, result) {
 				if(error){
 					reject(error);
@@ -227,31 +253,33 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async removeParticipants(participants){
+		this.extra_data = await this.removeParticipantsFromAnalytics(participants, this.extra_data);
+		
+		return await this.save();
+	}
+
+	async removeParticipantsFromAnalytics(participants, analytics){
 		for (var i = 0; i < participants.length; i++) {
-			delete this.extra_data.participants[participants[i]];
+			delete analytics.participants[participants[i]];
 		}
 
 		// TODO:
 		// check if the participants can be deleted from A2
 		
-		let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
+		let loggeduser = await this.login(analytics.manager.username, analytics.manager.username);
 		this.backendController.AuthToken = loggeduser.token;
-		await this.backendController.removeUsersFromClass(this.extra_data.class._id, participants);
-		
-		return await this.save();
+		await this.backendController.removeUsersFromClass(analytics.class._id, participants);
+
+		return analytics;
 	}
 
 	async setResult(participant, result){
 		let toret = 0;
 		try{
-			if(!trackerManager.hasTracker(this.extra_data.activity._id, participant)){
-				await trackerManager.InitTracker(this.extra_data.activity, participant, participant);
-			}
-
 			if(Array.isArray(result)){
 				// If we're receiving an array, we're receiving traces
-				trackerManager.AddTrace(this.extra_data.activity._id, participant, result);
-				toret = { message: 'Traces Added' };
+				
+				this.sendTracesToAnalytics(participant, this.extra_data, result)
 			}else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start
 				toret = { 
@@ -270,12 +298,25 @@ class RageAnalyticsActivity extends Activity {
 		return toret;
 	}
 
+	async sendTracesToAnalytics(participant, analytics, traces){
+		if(!trackerManager.hasTracker(analytics.activity._id, participant)){
+			await trackerManager.InitTracker(analytics.activity, participant, participant);
+		}
+
+		trackerManager.AddTrace(analytics.activity._id, participant, result);
+		toret = { message: 'Traces Added' };
+	}
+
 	async getResults(participants){
+		return await this.getAnalyticsResults(participants, this.extra_data);
+	}
+
+	async getAnalyticsResults(participants, analytics){
 		let results = {};
 
 		if(participants.length === 0){
-			if(this.extra_data && this.extra_data.participants){
-				participants = Object.keys(this.extra_data.participants);
+			if(analytics && analytics.participants){
+				participants = Object.keys(analytics.participants);
 			}
 
 			if(participants.length === 0){
@@ -288,10 +329,10 @@ class RageAnalyticsActivity extends Activity {
 				results[participants[i]] = null;
 			}
 
-			let loggeduser = await this.login(this.extra_data.manager.username, this.extra_data.manager.username);
+			let loggeduser = await this.login(analytics.manager.username, analytics.manager.username);
 
 			this.backendController.AuthToken = loggeduser.token;
-			let analyzed_results = await this.backendController.getActivityResults(this.extra_data.activity._id);
+			let analyzed_results = await this.backendController.getActivityResults(analytics.activity._id);
 
 			for (var i = analyzed_results.length - 1; i >= 0; i--) {
 				if(results[analyzed_results[i].name] !== undefined){
@@ -311,9 +352,13 @@ class RageAnalyticsActivity extends Activity {
 	}
 
 	async getCompletion(participants){
+		return await this.getAnalyticsCompletion(participants, this.extra_data);
+	}
+
+	async getAnalyticsCompletion(participants, analytics){
 		if(participants.length === 0){
-			if(this.extra_data && this.extra_data.participants){
-				participants = Object.keys(this.extra_data.participants);
+			if(analytics && analytics.participants){
+				participants = Object.keys(analytics.participants);
 			}
 
 			if(participants.length === 0){
@@ -322,7 +367,7 @@ class RageAnalyticsActivity extends Activity {
 		}
 		
 		let completion = {};
-		let results = await this.getResults(participants);
+		let results = await this.getAnalyticsResults(participants, analytics);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
 			if(results[participants[i]] !== null
