@@ -110,6 +110,8 @@ class RageAnalyticsActivity extends Activity {
 	async initAnalytics(username, activityname){
 		let analytics = {};
 
+		analytics.participants = {};
+
 		analytics.manager = await this.createManager(username);
 
 		let loggeduser = await this.login(username, username);
