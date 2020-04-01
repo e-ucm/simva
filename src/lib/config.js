@@ -1,6 +1,8 @@
 
 let config = {}
 
+let ignored_ports = [80, 8080, 443];
+
 config.external_url = process.env.EXTERNAL_URL || 'https://simva.e-ucm.es'
 
 config.api = {}
@@ -34,6 +36,22 @@ config.limesurvey.url =  config.limesurvey.protocol + '://' + config.limesurvey.
 config.limesurvey.external_url = process.env.LIMESURVEY_EXTERNAL || config.limesurvey.url
 config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
+
+config.sso = {}
+config.sso.realm = process.env.SSO_REALM || 'simva'
+config.sso.clientId = process.env.SSO_CLIENT_ID || 'simva'
+config.sso.clientSecret = process.env.SSO_CLIENT_SECRET || 'th1s_1s_th3_s3cr3t'
+config.sso.sslRequired = process.env.SSO_SSL_REQUIRED || 'external'
+config.sso.publicClient = process.env.SSO_PUBLIC_CLIENT || 'false'
+config.sso.host = process.env.SSO_HOST || 'sso.simva.e-ucm.es'
+config.sso.protocol = process.env.SSO_PROTOCOL || 'https'
+config.sso.port = parseInt(process.env.SSO_PORT || '443')
+config.sso.url = config.sso.protocol + '://' + config.sso.host
+			+ ( (ignored_ports.indexOf(config.sso.port) !== -1) ? '' : (':' + config.sso.port) );
+config.sso.authPath = process.env.SSO_AUTH_PATH || '/auth'
+config.sso.authUrl = config.sso.url + config.sso.authPath
+config.sso.realmUrl = config.sso.authUrl + '/realms/' + config.sso.realm
+config.sso.publicKey = "-----BEGIN PUBLIC KEY----- \n" + process.env.SSO_PUBLIC_KEY + "\n-----END PUBLIC KEY-----\n";
 
 config.a2 = {}
 config.a2.host = process.env.A2_HOST || 'a2.external.test'

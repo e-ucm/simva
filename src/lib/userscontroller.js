@@ -3,6 +3,8 @@ var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 
+var config = require('./config');
+
 var UsersController = {};
 
 var secretKey = 'th1s_15_a_tmporall7_k3y';
@@ -116,9 +118,23 @@ UsersController.validateJWT = async (token) => {
 	return new Promise((resolve, reject) => {
 		let decoded = jwt.decode(token);
 
+		console.log(JSON.stringify(decoded, null, 2));
+		console.log(config.sso.realmUrl);
+
 		if(decoded && decoded.iss){
 			switch(decoded.iss){
-				case 'simva':
+				case config.sso.realmUrl:
+					console.log('inside keycloak');
+					console.log(config.sso);
+					console.log(config.sso.publicKey);
+					jwt.verify(token, config.sso.publicKey, function(err, decoded) {
+						if(err){
+							console.log(err);
+							reject('Token is not valid.');
+						}else{
+							resolve(decoded);
+						}
+					});	
 				default:
 					jwt.verify(token, secretKey, function(err, decoded) {
 						if(err){
