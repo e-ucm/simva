@@ -118,23 +118,55 @@ UsersController.validateJWT = async (token) => {
 	return new Promise((resolve, reject) => {
 		let decoded = jwt.decode(token);
 
-		console.log(JSON.stringify(decoded, null, 2));
-		console.log(config.sso.realmUrl);
-
 		if(decoded && decoded.iss){
 			switch(decoded.iss){
 				case config.sso.realmUrl:
-					console.log('inside keycloak');
-					console.log(config.sso);
-					console.log(config.sso.publicKey);
 					jwt.verify(token, config.sso.publicKey, function(err, decoded) {
 						if(err){
 							console.log(err);
 							reject('Token is not valid.');
 						}else{
-							resolve(decoded);
+							UsersController.getUsers({ email: decoded.email })
+								.then((users) => {
+									if(users.length !== 0){
+										resolve({ data: users[0] });
+									}else{
+										let user = {
+											username: decoded.preferred_username,
+											password: Math.random().toString(36).slice(-8),
+											email: decoded.email,
+											role: 'student'
+										};
+
+										for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
+											if(decoded.realm_access.roles[i] === 'teacher' || decoded.realm_access.roles[i] === 'researcher'){
+												user.role = 'teacher';
+												break;
+											};
+										}
+
+										UsersController.addUser(user)
+											.then((result) => {
+												resolve({ data: {
+													_id: result._id,
+													username: result.username,
+													email: result.email,
+													role: result.role
+												}});
+											})
+											.catch((error) => {
+												console.log(error);
+												reject(error);
+											});
+									}
+								})
+								.catch((error) => {
+									console.log(error);
+									reject(error);
+								});
 						}
 					});	
+					break;
 				default:
 					jwt.verify(token, secretKey, function(err, decoded) {
 						if(err){
@@ -142,7 +174,8 @@ UsersController.validateJWT = async (token) => {
 						}else{
 							resolve(decoded);
 						}
-					});		
+					});	
+					break;	
 			}
 		}else{
 			reject('Unable to decode token.');
