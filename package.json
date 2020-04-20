@@ -18,6 +18,8 @@
     "html-pdf": "*",
     "jsonwebtoken": "*",
     "kafka-node": "*",
+    "get-keycloak-public-key": "*",
+    "keycloak-admin": "*",
     "mongoose": "^5.7.8",
     "node-yaml-config": "0.0.3",
     "request": "*",

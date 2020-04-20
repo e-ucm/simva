@@ -1,13 +1,19 @@
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
-
+const KeyCloakCerts = require('get-keycloak-public-key');
+const jwt = require('jsonwebtoken');
+ 
 var config = require('./config');
+
+const keyCloakCerts = new KeyCloakCerts(config.sso.url, config.sso.realm);
+
+console.log(config.sso.url, config.sso.realm, keyCloakCerts);
 
 var UsersController = {};
 
 var secretKey = 'th1s_15_a_tmporall7_k3y';
+
 
 UsersController.getUser = async (id) => {
 	var res = await mongoose.model('user').find({_id: id});
@@ -116,57 +122,66 @@ UsersController.generateJWT = async (user) => {
 
 UsersController.validateJWT = async (token) => {
 	return new Promise((resolve, reject) => {
-		let decoded = jwt.decode(token);
+		let decoded = jwt.decode(token, { complete: true });
 
-		if(decoded && decoded.iss){
-			switch(decoded.iss){
+		if(decoded && decoded.header && decoded.payload && decoded.payload.iss){
+			switch(decoded.payload.iss){
 				case config.sso.realmUrl:
-					jwt.verify(token, config.sso.publicKey, function(err, decoded) {
-						if(err){
-							console.log(err);
-							reject('Token is not valid.');
-						}else{
-							UsersController.getUsers({ email: decoded.email })
-								.then((users) => {
-									if(users.length !== 0){
-										resolve({ data: users[0] });
-									}else{
-										let user = {
-											username: decoded.preferred_username,
-											password: Math.random().toString(36).slice(-8),
-											email: decoded.email,
-											role: 'student'
-										};
-
-										for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
-											if(decoded.realm_access.roles[i] === 'teacher' || decoded.realm_access.roles[i] === 'researcher'){
-												user.role = 'teacher';
-												break;
-											};
-										}
-
-										UsersController.addUser(user)
-											.then((result) => {
-												resolve({ data: {
-													_id: result._id,
-													username: result.username,
-													email: result.email,
-													role: result.role
-												}});
-											})
-											.catch((error) => {
-												console.log(error);
-												reject(error);
-											});
-									}
-								})
-								.catch((error) => {
+					keyCloakCerts.fetch(decoded.header.kid)
+						.then((publicKey) => {
+							jwt.verify(token, 'publicKey', function(error, decoded) {
+								if(error){
 									console.log(error);
 									reject(error);
-								});
-						}
-					});	
+								}else{
+									UsersController.getUsers({ email: decoded.email })
+										.then((users) => {
+											if(users.length !== 0){
+												resolve({ data: users[0] });
+											}else{
+												let user = {
+													username: decoded.preferred_username,
+													password: Math.random().toString(36).slice(-8),
+													email: decoded.email,
+													role: 'student'
+												};
+
+												for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
+													if(decoded.realm_access.roles[i] === 'teacher' || decoded.realm_access.roles[i] === 'researcher'){
+														user.role = 'teacher';
+														break;
+													};
+												}
+
+												UsersController.addUser(user)
+													.then((result) => {
+														resolve({ data: {
+															_id: result._id,
+															username: result.username,
+															email: result.email,
+															role: result.role
+														}});
+													})
+													.catch((error) => {
+														console.log(error);
+														reject(error);
+													});
+											}
+										})
+										.catch((error) => {
+											console.log(error);
+											reject(error);
+										});
+								}
+							});
+						})
+						.catch((error) => {
+							console.log(error);
+							reject(error);
+						});
+
 					break;
+				case 'simva':
 				default:
 					jwt.verify(token, secretKey, function(err, decoded) {
 						if(err){
