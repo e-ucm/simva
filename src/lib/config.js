@@ -53,6 +53,9 @@ config.sso.authUrl = config.sso.url + config.sso.authPath
 config.sso.realmUrl = config.sso.authUrl + '/realms/' + config.sso.realm
 config.sso.publicKey = "-----BEGIN PUBLIC KEY----- \n" + process.env.SSO_PUBLIC_KEY + "\n-----END PUBLIC KEY-----\n";
 
+config.sso.adminUser = process.env.SSO_ADMIN_USER || 'admin';
+config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'password';
+
 config.a2 = {}
 config.a2.host = process.env.A2_HOST || 'a2.external.test'
 config.a2.protocol = process.env.A2_PROTOCOL || 'https'

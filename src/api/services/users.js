@@ -65,6 +65,13 @@ module.exports.addUser = async (options) => {
       if(users.length > 0){
         result = { status: 400, data: { message: 'Email already exists.' } };
       }else{
+        try {
+          let keycloakuser = await UsersController.addUserToKeycloak(params);
+        }catch(e){
+          console.log(e);
+          return {status: 500, data: e };
+        }
+        
         let user = await UsersController.addUser(params);
 
         result = { status: 200, data: user };
