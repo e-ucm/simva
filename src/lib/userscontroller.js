@@ -290,7 +290,8 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 			.then((users) => {
 				if(users.length !== 0){
 					if(users[0].role !== UsersController.getRoleFromJWT(decoded)){
-						UsersController.updateUser()
+						users[0].role = UsersController.getRoleFromJWT(decoded);
+						UsersController.updateUser(users[0]._id, users[0])
 							.then((result) => {
 								resolve(UsersController.simplifyUser(result));
 							})
