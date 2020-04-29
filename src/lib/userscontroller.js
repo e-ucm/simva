@@ -21,12 +21,15 @@ let kcconfig = {
 
 let kcAdminClient = new KcAdminClient(kcconfig);
 
-kcAdminClient.auth({
+
+let KeycloakUserCredentials = {
   username: config.sso.adminUser,
   password: config.sso.adminPassword,
   grantType: 'password',
   clientId: 'admin-cli'
-})
+};
+
+kcAdminClient.auth(KeycloakUserCredentials)
 .then((result) => {
 	console.log('Connected');
 	console.log(result);
@@ -70,7 +73,12 @@ UsersController.addUser = async (params) => {
 }
 
 UsersController.addUserToKeycloak = async (params) => {
+	console.log('KeyCloak -> Auth');
+
+	await kcAdminClient.auth(KeycloakUserCredentials);
+
 	console.log('KeyCloak -> Adding user');
+
 	let user;
 	try{
 		user = await kcAdminClient.users.create({
@@ -80,10 +88,8 @@ UsersController.addUserToKeycloak = async (params) => {
 			enabled: true
 		});
 	}catch(e){
-		console.log('failed creating the user');
 		console.log(e);
-		console.log('end of exception');
-		throw e;
+		throw { message: 'Failed creating the user into keycloak' };
 	}
 
 	console.log('KeyCloak -> getting Role Mappings');
