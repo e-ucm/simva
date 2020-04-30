@@ -1235,15 +1235,16 @@ security:
       - read
       - write
 components:
-  OAuth2:
-    type: oauth2
-    flows:
-      authorizationCode:
-        authorizationUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/auth
-        tokenUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/token
-        scopes:
-          read: Grants read access
-          write: Grants write access
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/auth
+          tokenUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
   schemas:
     user:
       type: object
