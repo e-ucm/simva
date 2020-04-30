@@ -15,6 +15,8 @@ info:
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+    
+
 tags:
   - name: admins
     description: Secured Admin-only calls
@@ -34,6 +36,12 @@ paths:
       responses:
         '200':
           description: the list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/user'
       parameters:
         - in: query
           name: searchString
@@ -104,6 +112,10 @@ paths:
       responses:
         '200':
           description: The user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
         '400':
           description: 'invalid input'
   /groups:
@@ -118,7 +130,13 @@ paths:
         Obtains the list of groups owned by current user.
       responses:
         '200':
-          description: the list of groups for this uer
+          description: the list of groups for this user
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/group'
       parameters:
         - in: query
           name: searchString
@@ -173,6 +191,10 @@ paths:
       responses:
         '200':
           description: group object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/group'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -223,6 +245,12 @@ paths:
       responses:
         '200':
           description: list of studies assigned
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/study'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -246,6 +274,12 @@ paths:
       responses:
         '200':
           description: list of participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  type: string
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -271,6 +305,11 @@ paths:
       responses:
         '200':
           description: printable version in PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -294,6 +333,12 @@ paths:
       responses:
         '200':
           description: the list of studies for this teacher
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/study'
       parameters:
         - in: query
           name: searchString
@@ -348,6 +393,10 @@ paths:
       responses:
         '200':
           description: study object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/study'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -425,6 +474,18 @@ paths:
       responses:
         '200':
           description: The list of scheduled activities in order.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  next:
+                    type: string
+                    description: "The next activity ID"
+                activities: 
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/activity'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -448,6 +509,12 @@ paths:
       responses:
         '200':
           description: list of groups assigned
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/group'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -471,6 +538,12 @@ paths:
       responses:
         '200':
           description: list of tests assigned
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/test'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -520,6 +593,12 @@ paths:
       responses:
         '200':
           description: list of participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  type: string
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -543,6 +622,10 @@ paths:
       responses:
         '200':
           description: test object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/test'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -638,6 +721,12 @@ paths:
       responses:
         '200':
           description: the list of activities for this test
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/activity'
       parameters:
         - in: path
           name: studyid
@@ -699,6 +788,12 @@ paths:
       responses:
         '200':
           description: the allocator object
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/allocator'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -748,6 +843,12 @@ paths:
       responses:
         '200':
           description: the list of activities for this teacher
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/activity'
       parameters:
         - in: query
           name: searchString
@@ -802,6 +903,10 @@ paths:
       responses:
         '200':
           description: Activity object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activity'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -878,6 +983,10 @@ paths:
       responses:
         '200':
           description: if it is openable or not
+          content:
+            application/json:
+              schema:
+                type: string
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1111,11 +1220,30 @@ paths:
       responses:
         '200':
           description: the available activity types
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/activity_type'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
+security:
+  - OAuth2:
+      - read
+      - write
 components:
+  OAuth2:
+    type: oauth2
+    flows:
+      authorizationCode:
+        authorizationUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/auth
+        tokenUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/token
+        scopes:
+          read: Grants read access
+          write: Grants write access
   schemas:
     user:
       type: object
@@ -1242,6 +1370,24 @@ components:
             example: ObjectId("5d07a0767c1405004bc702af")
         extra_data:
           type: object
+    activity_type:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          example: "LimeSurvey Activity"
+        type:
+          type: string
+          example: "limesurvey"
+        description:
+          type: string
+          example: "A survey-based activity that uses LimeSurvey as service."
+        utils:
+          type: object
+          additionalProperties: true
     allocator:
       type: object
       required:
