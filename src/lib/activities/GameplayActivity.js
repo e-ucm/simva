@@ -9,7 +9,7 @@ var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 var RealtimeActivity = new RageAnalyticsActivity({});
 var TraceStorageActivity = new RageAnalyticsActivity({});
 
-var UsersController = require('../UsersController');
+var UsersController = require('../userscontroller');
 
 var config = require('..//config');
 
@@ -92,6 +92,10 @@ class GameplayActivity extends Activity {
 				this.extra_data.analytics = await RealtimeActivity.initAnalytics(this.owners[0], this.name);
 			}
 		}
+
+		console.log(this);
+		console.log(this.extra_data);
+		console.log(this.extra_data.config);
 
 		return await super.save();
 	}
@@ -220,13 +224,15 @@ class GameplayActivity extends Activity {
 	async getCompletion(participants){
 		let completion = {};
 
+		let basecompletion = await super.getCompletion(participants);
+
 		if(this.extra_data.config.realtime){
 			let analyticscompletion = await RealtimeActivity.getAnalyticsCompletion(participants, this.extra_data.analytics);
 		}
 
-		let basecompletion = await super.getCompletion(participants);
-
 		participants = Object.keys(basecompletion);
+
+		console.log(basecompletion, participants);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
 			if(this.extra_data.config.realtime){
@@ -235,6 +241,8 @@ class GameplayActivity extends Activity {
 
 			completion[participants[i]] = completion[participants[i]] || basecompletion[participants[i]];
 		}
+
+		console.log(completion);
 
 		return completion;
 	}
