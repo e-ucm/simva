@@ -98,7 +98,7 @@ class MinioActivity extends Activity {
 		try{
 			if(Array.isArray(result)){
 				// If we're receiving an array, we're receiving traces
-				await this.sendTracesToKafka(result);
+				await this.sendTracesToKafka(result, this.id);
 				return { message: 'Traces Enqueued' };
 			}else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start
@@ -124,14 +124,14 @@ class MinioActivity extends Activity {
 		return toret;
 	}
 
-	async sendTracesToKafka(traces){
+	async sendTracesToKafka(traces, activityId){
 		return new Promise((resolve, reject) => {
 				let payloads = [];
 
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
-					trace._id = this.id;
-					payloads.push({ topic: config.kafka.topic, key: JSON.stringify({ _id: this.id }), messages: JSON.stringify(trace), partition: 0 });
+					trace._id = activityId;
+					payloads.push({ topic: config.kafka.topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
 				producer.send(payloads, function (err, data) {

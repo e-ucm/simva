@@ -96,7 +96,7 @@ class RageMinioActivity extends MinioActivity {
 			if(Array.isArray(result)){
 				// If we're receiving an array, we're receiving traces
 
-				await super.sendTracesToKafka(result);
+				await super.sendTracesToKafka(result, this.id);
 				await AnalyticsActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
 				toret =  { message: 'Traces Received' };
 			}else if(!result || typeof result === 'object'){
