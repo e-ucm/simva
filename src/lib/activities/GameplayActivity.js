@@ -9,7 +9,7 @@ var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 var RealtimeActivity = new RageAnalyticsActivity({});
 var TraceStorageActivity = new RageAnalyticsActivity({});
 
-var UsersController = require('../UsersController');
+var UsersController = require('../userscontroller');
 
 var config = require('..//config');
 
