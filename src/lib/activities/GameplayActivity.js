@@ -22,36 +22,40 @@ class GameplayActivity extends Activity {
 	constructor(params){
 		super(params);
 
-		this.extra_data.config = {
-			trace_storage: false,
-			realtime: false,
-			backup: false
-		};
+		if(!this.id){
+			if(!this.extra_data.config){
+				this.extra_data.config = {
+					trace_storage: false,
+					realtime: false,
+					backup: false
+				};
+			}
 
-		if(params.trace_storage && params.trace_storage === true){
-			this.extra_data.config.trace_storage = true;
-		}
+			if(params.trace_storage && params.trace_storage === true){
+				this.extra_data.config.trace_storage = true;
+			}
 
-		if(params.realtime && params.realtime === true){
-			this.extra_data.config.realtime = true;
-			this.extra_data.analytics = {};
-		}
+			if(params.realtime && params.realtime === true){
+				this.extra_data.config.realtime = true;
+				this.extra_data.analytics = {};
+			}
 
-		if(params.backup && params.backup === true){
-			this.extra_data.config.backup = true;
-		}
+			if(params.backup && params.backup === true){
+				this.extra_data.config.backup = true;
+			}
 
-		if(!this.extra_data.participants){
-			this.extra_data.participants = [];
-			this.extra_data.analytics = {};
-		}
+			if(!this.extra_data.participants){
+				this.extra_data.participants = [];
+				this.extra_data.analytics = {};
+			}
 
-		if(params.game_uri){
-			// Game URI can include parameters such as {activityId}, {authToken} or {username}
-			// so the game can obtain when opened the authorization to send traces, and result
-			// or completion status to simva.
-			
-			this.extra_data.game_uri = params.game_uri;
+			if(params.game_uri){
+				// Game URI can include parameters such as {activityId}, {authToken} or {username}
+				// so the game can obtain when opened the authorization to send traces, and result
+				// or completion status to simva.
+				
+				this.extra_data.game_uri = params.game_uri;
+			}
 		}
 	}
 
@@ -92,10 +96,6 @@ class GameplayActivity extends Activity {
 				this.extra_data.analytics = await RealtimeActivity.initAnalytics(this.owners[0], this.name);
 			}
 		}
-
-		console.log(this);
-		console.log(this.extra_data);
-		console.log(this.extra_data.config);
 
 		return await super.save();
 	}
@@ -191,9 +191,10 @@ class GameplayActivity extends Activity {
 		let results = {};
 
 		let backupresults = await super.getResults(participants);
+		let analyticsresults = {};
 
 		if(this.extra_data.config.realtime){
-			let analyticsresults = await RealtimeActivity.getAnalyticsResults(participants, this.extra_data.analytics);
+			analyticsresults = await RealtimeActivity.getAnalyticsResults(participants, this.extra_data.analytics);
 		}
 
 		participants = Object.keys(backupresults);
@@ -225,14 +226,13 @@ class GameplayActivity extends Activity {
 		let completion = {};
 
 		let basecompletion = await super.getCompletion(participants);
+		let analyticscompletion = {};
 
 		if(this.extra_data.config.realtime){
-			let analyticscompletion = await RealtimeActivity.getAnalyticsCompletion(participants, this.extra_data.analytics);
+			analyticscompletion = await RealtimeActivity.getAnalyticsCompletion(participants, this.extra_data.analytics);
 		}
 
 		participants = Object.keys(basecompletion);
-
-		console.log(basecompletion, participants);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
 			if(this.extra_data.config.realtime){
@@ -241,8 +241,6 @@ class GameplayActivity extends Activity {
 
 			completion[participants[i]] = completion[participants[i]] || basecompletion[participants[i]];
 		}
-
-		console.log(completion);
 
 		return completion;
 	}
@@ -263,7 +261,7 @@ class GameplayActivity extends Activity {
 
 			var users = {};
 			if(this.extra_data.game_uri.indexOf('{authToken}' !== -1)){
-				users = UsersController.getUsers({ username: participants })
+				users = await UsersController.getUsers({ username: { '$in': participants } })
 
 				let tmpusers = {};
 				for (var i = users.length - 1; i >= 0; i--) {
@@ -272,7 +270,6 @@ class GameplayActivity extends Activity {
 
 				users = tmpusers;
 			}
-
 
 			for (var i = participants.length - 1; i >= 0; i--) {
 				let customUri = this.extra_data.game_uri;
