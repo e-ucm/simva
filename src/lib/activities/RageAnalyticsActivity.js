@@ -384,7 +384,7 @@ class RageAnalyticsActivity extends Activity {
 		return completion;
 	}
 
-	target(participants){
+	async target(participants){
 		// As this activity is not openable, there are no targets
 		return false;
 	}

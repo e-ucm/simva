@@ -359,7 +359,7 @@ class LimeSurveyActivity extends Activity {
 		return results;
 	}
 
-	target(participants){
+	async target(participants){
 		let targets = {};
 
 		if(participants.length === 0){

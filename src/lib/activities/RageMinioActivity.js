@@ -161,7 +161,7 @@ class RageMinioActivity extends MinioActivity {
 		return completion;
 	}
 
-	target(participants){
+	async target(participants){
 		// As this activity is not openable, there are no targets
 		return false;
 	}

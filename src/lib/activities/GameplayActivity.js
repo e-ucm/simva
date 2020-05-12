@@ -245,7 +245,7 @@ class GameplayActivity extends Activity {
 		return completion;
 	}
 
-	target(participants){
+	async target(participants){
 		if(this.extra_data.game_uri){
 			let targets = {};
 
@@ -275,7 +275,7 @@ class GameplayActivity extends Activity {
 				let customUri = this.extra_data.game_uri;
 
 				if(this.extra_data.game_uri.indexOf('{authToken}' !== -1)){
-					let authToken = UsersController.generateJWT(users[participants[i]]);
+					let authToken = await UsersController.generateJWT(users[participants[i]]);
 					customUri = customUri.replace('{authToken}', authToken);
 				}
 

@@ -156,7 +156,7 @@ class MinioActivity extends Activity {
 		return super.getCompletion(participants);
 	}
 
-	target(participants){
+	async target(participants){
 		return false;
 	}
 };

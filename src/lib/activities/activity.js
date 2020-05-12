@@ -274,7 +274,7 @@ class Activity {
 		return results;
 	}
 
-	target(participant){
+	async target(participant){
 		return false;
 	}
 
