@@ -155,8 +155,7 @@ module.exports.getOpenable = async (options) => {
       body.data.openable = activity.canBeOpened();
     }else{
       if(study.owners.indexOf(options.user.data.username) !== -1){
-        body.status = 401;
-        body.data.message = 'You are owner but not participant.';
+        body.data.openable = activity.canBeOpened();
       }else{
         body.status = 401;
         body.data.message = 'You do not participate in the activity either as owner or user';
