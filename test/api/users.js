@@ -379,5 +379,27 @@ module.exports = function (request) {
                     done();
                 });
         });
+
+        it('should NOT accept JWT tokens signed with algorithm "none"', function (done) {
+            let token = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJkYXRhIjp7ImlkIjoiNWViYzYzYz'
+                + 'cwNTUxY2E0Y2E4N2FmZGQwIiwidXNlcm5hbWUiOiJ0ZXN0IiwiZW1haWwiOiJ0ZXN0QHRlc3'
+                + 'Rlcmluby5jb20iLCJyb2xlIjoidGVhY2hlciJ9LCJpYXQiOjE1ODk0MDQ2MTUsImV4cCI6MTU4OTQ5MTAxNSwiaXNzIjoic2ltdmEifQ';
+
+            request.get('/users/me')
+                .expect(401)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + token)
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.message).equals('JWT token is not valid.');
+                    should(res.body.error.message).equals('JWT not valid or unsupported signing algoritm');
+
+                    done();
+                });
+        });
     });
 };

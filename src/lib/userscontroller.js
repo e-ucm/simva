@@ -228,6 +228,10 @@ UsersController.validateJWT = async (token) => {
 	return new Promise((resolve, reject) => {
 		let decoded = jwt.decode(token, { complete: true });
 
+		if(!decoded || !decoded.header || !decoded.header.alg || !decoded.header.alg.toLowerCase() === 'none'){
+			return reject({ message: 'JWT not valid or unsupported signing algoritm' });
+		}
+
 		if(decoded && decoded.header && decoded.payload && decoded.payload.iss){
 			switch(decoded.payload.iss){
 				case config.sso.realmUrl:
