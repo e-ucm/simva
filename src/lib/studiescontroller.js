@@ -145,6 +145,22 @@ StudiesController.getParticipants = async (study) => {
 	return participants;
 }
 
+StudiesController.addParticipants = async (study, participants) => {
+	for (var i = study.tests.length - 1; i >= 0; i--) {
+		await TestsController.addParticipants(study.tests[i], participants);
+	}
+
+	return true;
+}
+
+StudiesController.removeParticipants = async (study, participants) => {
+	for (var i = study.tests.length - 1; i >= 0; i--) {
+		await TestsController.removeParticipants(study.tests[i], participants);
+	}
+
+	return true;
+}
+
 StudiesController.addGroupToStudy = async (id, groupid) => {
 	var Study = mongoose.model('study');
 

@@ -158,6 +158,13 @@ module.exports = function (request) {
                                             email: 's5@test.com',
                                             role: 'student',
                                             external_entity: []
+                                        },
+                                        {
+                                            username: 'sadditional',
+                                            password: 'sadditional',
+                                            email: 'sadditional@test.com',
+                                            role: 'student',
+                                            external_entity: []
                                         }]
                                     ,function(){
                                         mongoose.connection.collection('groups').insertMany(
@@ -405,6 +412,94 @@ module.exports = function (request) {
                     });
         });
 
+        it('should be able to add a participant to the group and update activity participants', function (done) {
+            request.get('/groups/' + groupid1)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    let group = res.body;
+
+                    group.participants.push('sadditional');
+
+                    request.put('/groups/' + groupid1)
+                        .expect(200)
+                        .send(group)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+
+                            CompareStoredObject(groupid1, group, Group, function(err, res){
+                                should.not.exist(err);
+                                should(res).equals(true);
+
+                                request.get('/activities/' + activityid)
+                                    .expect(200)
+                                    .set('Accept', 'application/json')
+                                    .set('Authorization', 'Bearer ' + authToken)
+                                    .end(function (err, res) {
+                                        should.not.exist(err);
+                                        should(res.body).be.Object();
+
+                                        let activity = res.body;
+
+                                        should(activity.extra_data).be.Object();
+                                        should(activity.extra_data.participants).be.Object();
+                                        should(Object.keys(activity.extra_data.participants).length).equals(4);
+                                        should(Object.keys(activity.extra_data.participants)).containEql('sadditional');
+
+                                        done();
+                                    });
+                            });
+                        });
+                    });
+        });
+
+        it('should be able to remove a participant from the group and update activity participants', function (done) {
+            request.get('/groups/' + groupid1)
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    let group = res.body;
+
+                    group.participants.splice(group.participants.length -1);
+
+                    request.put('/groups/' + groupid1)
+                        .expect(200)
+                        .send(group)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + authToken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+
+                            CompareStoredObject(groupid1, group, Group, function(err, res){
+                                should.not.exist(err);
+                                should(res).equals(true);
+
+                                request.get('/activities/' + activityid)
+                                    .expect(200)
+                                    .set('Accept', 'application/json')
+                                    .set('Authorization', 'Bearer ' + authToken)
+                                    .end(function (err, res) {
+                                        should.not.exist(err);
+                                        should(res.body).be.Object();
+
+                                        let activity = res.body;
+
+                                        should(activity.extra_data).be.Object();
+                                        should(activity.extra_data.participants).be.Object();
+                                        should(Object.keys(activity.extra_data.participants).length).equals(3);
+                                        should(Object.keys(activity.extra_data.participants)).not.containEql('sadditional');
+
+                                        done();
+                                    });
+                            });
+                        });
+                    });
+        });
+
         var putAndGet = function(study, activity, callback){
             request.put('/studies/' + study._id)
                 .expect(200)
@@ -528,15 +623,14 @@ module.exports = function (request) {
                 });
         });
 
-        it('should NOT be able to obtain if it is openable or not if its only owner', function (done) {
+        it('should be able to obtain if it is openable or not if its only owner', function (done) {
            request.get('/activities/' + activityid + '/openable')
-                .expect(401)
+                .expect(200)
                 .set('Accept', 'application/json')
                 .set('Authorization', 'Bearer ' + authToken)
                 .end(function (err, res) {
                     should.not.exist(err);
                     should(res.body).be.Object();
-                    should(res.body.message).be.String();
 
                     done();
                 });

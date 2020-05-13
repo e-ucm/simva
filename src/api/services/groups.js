@@ -3,6 +3,7 @@ var mongoose = require('mongoose');
 
 var GroupsController = require('../../lib/groupscontroller');
 var UsersController = require('../../lib/userscontroller');
+var StudiesController = require('../../lib/StudiesController');
 
 if(!Array.prototype.flat){
   Object.defineProperty(Array.prototype, 'flat', {
@@ -101,6 +102,7 @@ module.exports.updateGroup = async (options) => {
 
             let ownersadded = options.body.owners.filter(x => !group.owners.includes(x));
             let participantsadded = options.body.participants.filter(x => !group.participants.includes(x));
+            let participantsremoved = group.participants.filter(x => !options.body.participants.includes(x));
 
             let allusers = [ownersadded, participantsadded].flat();
             allusers = allusers.filter((g,i) => allusers.indexOf(g) === i);
@@ -117,6 +119,27 @@ module.exports.updateGroup = async (options) => {
             }else if(loadedparticipantsadded.length !== participantsadded.length){
               result = { status: 404, data: {message: 'A participant added does not exist'} };
             }else{
+              if(participantsadded.length > 0 || participantsremoved.length > 0){
+                try {
+                  let studies = await StudiesController.getStudies({ groups: group.id });
+
+                  if(participantsadded.length > 0){
+                    for (var i = studies.length - 1; i >= 0; i--) {
+                      await StudiesController.addParticipants(studies[i], participantsadded);
+                    }
+                  }
+
+                  if(participantsremoved.length > 0){
+                    for (var i = studies.length - 1; i >= 0; i--) {
+                      await StudiesController.removeParticipants(studies[i], participantsremoved);
+                    }
+                  }
+                }catch(e){
+                  console.log(e);
+                  result = { status: 500, data: {message: 'Error notifying the studies about changes in participans.', error: e} };
+                }
+              }
+
               if(await GroupsController.updateGroup(options.id, options.body)){
                 result.data = { message: 'Group updated' };
               }else{
