@@ -48,6 +48,7 @@ services:
       A2_ADMIN_PASSWORD: r0qha5N6e2u8bhbHkgiaWlbQ80usTBvp
       A2_EXTERNAL: https://analytics.simva.e-ucm.es
       NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
+      SSO_ENABLED: true
       SSO_PUBLIC_KEY: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl8J97hjtDV3TZuR+FEvK4StI2obCdBs36G6J8xvAPKkPlZSuUYNTGbjAWXb+zN5G5jGOAFk5pY03/BVIqdirtXc079sFCoHNprGKzNq79f7EGWOimor4N/b/DKqcZBCGpOMCowOkp+SoQi+3zU0BzaKygXQSqORDXj0w0CmWM4Q+1nCVrIj8JGMzH0/UeEWYWUum535M/urEqMfWfobXaWqK+kyVovRZNkTiljrs4ct0IyksBtAN205aeILcOGzjLSBjymcL3DZatJi/GB1pOAtT6xjxzCpBd8jAnXV4mnEdY25IB+QiujMeUIVs7IadXK9PCi5ju0ZbsnwmSgnv/QIDAQAB
       SSO_ADMIN_USER: admin-simva
       SSO_ADMIN_PASSWORD: simva-password

@@ -38,6 +38,7 @@ config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
 
 config.sso = {}
+config.sso.enabled = process.env.SSO_ENABLED || false
 config.sso.realm = process.env.SSO_REALM || 'simva'
 config.sso.clientId = process.env.SSO_CLIENT_ID || 'simva'
 config.sso.clientSecret = process.env.SSO_CLIENT_SECRET || 'th1s_1s_th3_s3cr3t'

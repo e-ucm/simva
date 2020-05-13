@@ -29,15 +29,18 @@ let KeycloakUserCredentials = {
   clientId: 'admin-cli'
 };
 
-kcAdminClient.auth(KeycloakUserCredentials)
-.then((result) => {
-	console.log('Connected');
-	console.log(result);
-})
-.catch((error) => {
-	console.log('unable to connect to keycloak');
-	console.log(error);
-});
+let keycloakStatus = false;
+if(config.sso.enabled){
+	kcAdminClient.auth(KeycloakUserCredentials)
+	.then((result) => {
+		console.log('Connected to Keycloak!');
+		keycloakStatus = true;
+	})
+	.catch((error) => {
+		console.log('unable to connect to keycloak');
+		keycloakStatus = false;
+	});
+}
 
 UsersController.getUser = async (id) => {
 	var res = await mongoose.model('user').find({_id: id});
@@ -73,6 +76,10 @@ UsersController.addUser = async (params) => {
 }
 
 UsersController.addUserToKeycloak = async (params) => {
+	if(!config.sso.enabled){
+		return true;
+	}
+
 	console.log('KeyCloak -> Auth');
 
 	await kcAdminClient.auth(KeycloakUserCredentials);
@@ -224,6 +231,10 @@ UsersController.validateJWT = async (token) => {
 		if(decoded && decoded.header && decoded.payload && decoded.payload.iss){
 			switch(decoded.payload.iss){
 				case config.sso.realmUrl:
+					if(!config.sso.enabled){
+						throw { message: 'SSO is disabled, no JWT from sso will be accepted.' }
+					}
+
 					let ValidateToken = function(){
 						KeycloakKeyManager.getKey(decoded.header.kid)
 							.then((publicKey) => {
@@ -286,6 +297,10 @@ UsersController.validateJWT = async (token) => {
 
 UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 	return new Promise((resolve, reject) => {
+		if(!config.sso.enabled){
+			resolve(decoded);
+		}
+
 		UsersController.getUsers({ email: decoded.email })
 			.then((users) => {
 				if(users.length !== 0){
