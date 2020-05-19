@@ -168,7 +168,11 @@ paths:
         Creates a new group for the current user as owner.
       responses:
         '200':
-          description: item created
+          description: group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/group'
         '400':
           description: 'invalid input, object invalid'
         '409':
@@ -370,7 +374,11 @@ paths:
         Creates a new study for the current teacher.
       responses:
         '200':
-          description: item created
+          description: study created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/study'
         '400':
           description: 'invalid input, object invalid'
         '409':
@@ -565,7 +573,11 @@ paths:
         Adds a test for the current group
       responses:
         '200':
-          description: item created
+          description: test created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/test'
         '400':
           description: 'invalid input, object invalid'
       parameters:
@@ -751,7 +763,11 @@ paths:
         Creates a new activity for the current teacher.
       responses:
         '200':
-          description: item created
+          description: activity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activity'
         '400':
           description: 'invalid input, object invalid'
         '409':
@@ -880,7 +896,11 @@ paths:
         Creates a new activity for the current teacher.
       responses:
         '200':
-          description: item created
+          description: activity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activity'
         '400':
           description: 'invalid input, object invalid'
         '409':
