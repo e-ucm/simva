@@ -1305,6 +1305,9 @@ components:
         - participants
         - created
       properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
           example: "Test group for School"
@@ -1331,6 +1334,9 @@ components:
         - owners
         - created
       properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
           example: "Survey for SG validation"
@@ -1361,6 +1367,9 @@ components:
       required:
         - name
       properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
           example: "Test A for my study"
@@ -1375,6 +1384,9 @@ components:
         - name
         - type
       properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
           example: "Survey for validation"
