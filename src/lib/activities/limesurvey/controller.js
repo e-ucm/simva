@@ -277,6 +277,8 @@ function insertOrCopy(name, options, callback){
 						surveyid = body.result.newsid;
 					}else{
 						Log('LimesurveyController.' + name + ' -> Error');
+						Log('LimesurveyController.' + name + ' -> Received Body:');
+						Log(JSON.stringify(body));
 						return callback({ message: 'Unable to obtain the new survey id from body.'});
 					}
 				}else{
