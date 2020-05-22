@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 
 var GroupsController = require('../../lib/groupscontroller');
 var UsersController = require('../../lib/userscontroller');
-var StudiesController = require('../../lib/StudiesController');
+var StudiesController = require('../../lib/studiescontroller');
 
 if(!Array.prototype.flat){
   Object.defineProperty(Array.prototype, 'flat', {
