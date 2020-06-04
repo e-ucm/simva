@@ -43,6 +43,10 @@ class RageMinioActivity extends MinioActivity {
 		return {...autils, ...mutils};
 	}
 
+	async getDetails(){
+		return {};
+	}
+
 	set params(params){
 		super.params = params;
 

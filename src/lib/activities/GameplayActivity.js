@@ -78,6 +78,14 @@ class GameplayActivity extends Activity {
 		return {...autils, ...mutils};
 	}
 
+	async getDetails(){
+		return {
+			backup: this.extra_data.config.backup,
+			trace_storage: this.extra_data.config.trace_storage,
+			realtime: this.extra_data.config.realtime
+		};
+	}
+
 	set params(params){
 		super.params = params;
 

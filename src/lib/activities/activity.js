@@ -50,6 +50,10 @@ class Activity {
 		return {};
 	}
 
+	async getDetails(){
+		return {};
+	}
+
 	set params(params){
 		for(var p in activityschema.properties){
 			if(params[p]){

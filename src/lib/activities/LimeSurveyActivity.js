@@ -82,6 +82,10 @@ class LimeSurveyActivity extends Activity {
 		});
 	}
 
+	async getDetails(){
+		return {};
+	}
+
 	set params(params){
 		super.params = params;
 
