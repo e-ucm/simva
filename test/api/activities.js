@@ -1094,6 +1094,36 @@ module.exports = function (request) {
                 });
         });
 
+        it('should specify details in each of the activities of the schedule', function (done) {
+            request.post('/users/login')
+                .expect(200)
+                .send({username: 's1', password: 'pass1'})
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should(res.body).be.Object();
+                    should.exist(res.body.token);
+                    let tmptoken = res.body.token;
+
+                    request.get('/studies/' + studyid + '/schedule')
+                        .expect(200)
+                        .set('Accept', 'application/json')
+                        .set('Authorization', 'Bearer ' + tmptoken)
+                        .end(function (err, res) {
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                                
+                            should(res.body.activities).be.Object();
+                            should(Object.keys(res.body.activities).length).equals(1);
+                            should(res.body.activities[activityid].name).equals('testactivity');
+                            should(res.body.activities[activityid].details).is.Object();
+
+                            done();
+                        });
+                });
+        });
+
         it('should have allocated the student after he tries to get its schedule', function (done) {
             request.get('/studies/' + studyid + '/allocator')
                 .expect(200)
