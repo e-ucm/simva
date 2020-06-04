@@ -121,7 +121,7 @@ module.exports.updateGroup = async (options) => {
             }else{
               if(participantsadded.length > 0 || participantsremoved.length > 0){
                 try {
-                  let studies = await StudiesController.getStudies({ groups: group.id });
+                  let studies = await StudiesController.getStudies({ groups: group._id });
 
                   if(participantsadded.length > 0){
                     for (var i = studies.length - 1; i >= 0; i--) {
