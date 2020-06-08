@@ -330,6 +330,7 @@ paths:
     get:
       tags:
         - teachers
+        - students
       summary: gets the list of studies for the current teacher
       operationId: getStudies
       description: |

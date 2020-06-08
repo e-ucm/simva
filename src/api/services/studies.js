@@ -19,7 +19,18 @@ var ActivitiesController = require('../../lib/activitiescontroller');
 module.exports.getStudies = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    result.data = await StudiesController.getStudies({owners: options.user.data.username});
+    if(options.user.data.role === 'teacher'){
+      result.data = await StudiesController.getStudies({owners: options.user.data.username});
+    }else{
+      let groups = await GroupsController.getGroups({participants: options.user.data.username});
+
+      let ids = [];
+      for (var i = groups.length - 1; i >= 0; i--) {
+        ids.push(groups[i]._id);
+      }
+
+      result.data = await StudiesController.getStudies({ "groups" : { "$in" : ids }});
+    }
   }catch(e){
     result = { status: 500, data: e };
   }
