@@ -645,7 +645,7 @@ function getResponses(sid, participants){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponses -> Started');
-			options.body = JSON.stringify({ method: 'export_responses', params: [SESSIONKEY, sid, 'json', 'es', 'all', 'code', 'short'], id:1 });
+			options.body = JSON.stringify({ method: 'export_responses', params: [SESSIONKEY, sid, 'json'/*, 'es', 'all', 'code', 'short'*/], id:1 });
 			request(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
 
@@ -657,12 +657,15 @@ function getResponses(sid, participants){
 
 					let responses = {};
 
+					Log(JSON.stringify(body));
+
 					if(body && body.result){
 						if(body.result.length > 0){
 							var raw = null;
 
 							try{
 								raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+
 							}catch(e){
 								Log('LimesurveyController.getResponses -> Error');
 								Log(e);
