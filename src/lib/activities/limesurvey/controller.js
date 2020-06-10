@@ -662,7 +662,7 @@ function getResponses(sid, participants){
 					if(body && body.result){
 						if(body.result.length > 0){
 							var raw = null;
-
+							
 							try{
 								raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
 
@@ -722,7 +722,7 @@ function getClassResponses(sid, classroom, r){
 		try{
 			Log('LimesurveyController.getClassResponses -> Started');
 			r['content'] = '';
-			options.body = JSON.stringify({method:'export_responses',params:[SESSIONKEY,sid,'csv','es','complete','code','short'],id:1});
+			options.body = JSON.stringify({method:'export_responses',params:[SESSIONKEY,sid,'csv',null,'complete','code','short'],id:1});
 			request(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
 					
@@ -731,6 +731,8 @@ function getClassResponses(sid, classroom, r){
 					}catch(e){
 						return NotifyRCError('getClassResponses', error, response, body, callback);
 					}
+
+					Log(JSON.stringify(body));
 
 					if(body && body.result){
 						if(body.result.length > 0){
@@ -784,7 +786,7 @@ function tokenHasCompleted(survey, token, rid){
 	return function(callback){
 		try{
 			Log('LimesurveyController.tokenHasCompleted -> Started');
-			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token,'es','all','code','short'],id:1});
+			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1});
 
 			request(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
@@ -852,7 +854,7 @@ function getResponseByToken(survey, token){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponseByToken -> Started');
-			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token,'es','all','code','short'],id:1});
+			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1});
 
 			request(options, function(error, response, body){
 				if (!error && response.statusCode == 200) {
