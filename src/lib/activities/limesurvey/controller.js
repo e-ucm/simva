@@ -657,12 +657,15 @@ function getResponses(sid, participants){
 
 					let responses = {};
 
+					Log(JSON.stringify(body));
+
 					if(body && body.result){
 						if(body.result.length > 0){
 							var raw = null;
-
+							
 							try{
 								raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+
 							}catch(e){
 								Log('LimesurveyController.getResponses -> Error');
 								Log(e);
