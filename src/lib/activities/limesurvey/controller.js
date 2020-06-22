@@ -253,7 +253,11 @@ function insert(survey) {
 function copy(surveyId, name) {
 	return function(callback) {
 		Log('LimesurveyController.copy -> Started');
-		options.body = JSON.stringify({method:'copy_survey',params:[SESSIONKEY, surveyId, name],id:1});
+		options.body = JSON.stringify(
+			{method:'copy_survey',
+			params:[SESSIONKEY, surveyId, name, ['copysurveyexcludepermissions','copysurveyresetstartenddate']],
+			id:1
+		});
 
 		insertOrCopy('copy', options, callback);
 	}
