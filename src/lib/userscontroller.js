@@ -29,6 +29,13 @@ let KeycloakUserCredentials = {
   clientId: 'admin-cli'
 };
 
+console.log('----- KEYCLOAK -----');
+console.log('Keycloak-> Connecting to: ');
+console.log(JSON.stringify(kcconfig, null, 2));
+console.log('Keycloak-> Authentication: ');
+console.log(JSON.stringify(KeycloakUserCredentials, null, 2));
+console.log('--------------------');
+
 let keycloakStatus = false;
 if(config.sso.enabled){
 	kcAdminClient.auth(KeycloakUserCredentials)
