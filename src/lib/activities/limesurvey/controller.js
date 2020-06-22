@@ -657,8 +657,6 @@ function getResponses(sid, participants){
 
 					let responses = {};
 
-					Log(JSON.stringify(body));
-
 					if(body && body.result){
 						if(body.result.length > 0){
 							var raw = null;
