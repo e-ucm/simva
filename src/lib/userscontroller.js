@@ -97,7 +97,7 @@ UsersController.addUserToKeycloak = async (params) => {
 	let user;
 	try{
 		user = await kcAdminClient.users.create({
-			realm: config.sso.realm,
+			/*realm: config.sso.realm,*/
 			username: params.username,
 			email: params.email,
 			enabled: true
