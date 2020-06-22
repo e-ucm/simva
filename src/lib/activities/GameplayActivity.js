@@ -7,7 +7,7 @@ var MinioActivity = require('./MinioActivity');
 var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 
 var RealtimeActivity = new RageAnalyticsActivity({});
-var TraceStorageActivity = new RageAnalyticsActivity({});
+var TraceStorageActivity = new MinioActivity({});
 
 var UsersController = require('../userscontroller');
 
