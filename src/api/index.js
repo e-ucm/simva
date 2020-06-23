@@ -9,6 +9,27 @@ var isTest = (process.env.NODE_ENV === 'test');
 
 console.log(isTest);
 
+let createAdminUser = async function(){
+  let UsersController = require('../lib/userscontroller');
+
+  let result = await UsersController.getUsers({ username: 'admin' });
+
+  if(result.length > 0){
+    console.log('## Admin user already exists');
+  }else{
+    let result = await UsersController.addUser({
+      username: 'admin',
+      password: config.api.adminPassword,
+      email: 'admin@simva.admin',
+      role: 'admin'
+    });
+
+    console.log('## Admin user created:');
+    console.log(result);
+    console.log('######################');
+  }
+}
+
 var mongoose = require('mongoose');
 mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true});
 var db = mongoose.connection;
@@ -21,8 +42,11 @@ db.once('open', function() {
 	const swaggerMongoose = require('swagger-mongoose');
 
 	const descriptor = yaml.parse(fs.readFileSync('./api.yaml', 'utf8'));
-	swaggerMongoose.compile(JSON.stringify(descriptor))
+	swaggerMongoose.compile(JSON.stringify(descriptor));
+
+  createAdminUser();
 });
+
 
 const log = logger(config.logger);
 const app = express();
