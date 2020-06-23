@@ -186,6 +186,7 @@ paths:
   /groups/{id}:
     get:
       tags:
+        - admins
         - students
         - teachers
       summary: gets the group with the given ID
@@ -329,6 +330,7 @@ paths:
   /studies:
     get:
       tags:
+        - admins
         - teachers
         - students
       summary: gets the list of studies for the current teacher
@@ -394,6 +396,7 @@ paths:
   /studies/{id}:
     get:
       tags:
+        - admins
         - teachers
       summary: gets the study with the given ID
       operationId: getStudy
@@ -852,6 +855,7 @@ paths:
   /activities:
     get:
       tags:
+        - admins
         - teachers
       summary: gets the list of activities for the current teacher
       operationId: getActivities
@@ -916,6 +920,7 @@ paths:
   /activities/{id}:
     get:
       tags:
+        - admins
         - teachers
       summary: gets the activity with the given ID
       operationId: getActivity
