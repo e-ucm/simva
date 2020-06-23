@@ -16,6 +16,20 @@ var TestsController = require('../../lib/testscontroller');
 module.exports.getActivities = async (options) => {
   var result = { status: 200, data: {} };
   try{
+    let query = {};
+
+    if(options.searchString && options.searchString !== ''){
+      try{
+        query = JSON.parse(options.searchString);
+      }catch(e){
+        return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
+      }
+    }
+
+    if(options.user.data.role === 'teacher'){
+      query.owners = options.user.data.username;
+    }
+
     result.data = await ActivitiesController.getActivities({});
   }catch(e){
     result = { status: 500, data: e };
@@ -46,13 +60,23 @@ module.exports.addActivity = async (options) => {
  * @return {Promise}
  */
 module.exports.getActivity = async (options) => {
+  let result = { status: 200, data: null };
+
   try {
     activity = await ActivitiesController.getActivity(options.id);
+
+    if(options.user.data.role === 'teacher'){
+      if(activity.owners.indexOf(options.user.data.username) !== -1){
+        result.data = activity;
+      }else{
+        result = { status: 401, data: { message: 'You are not owner of the activity' } };
+      }
+    }
   }catch(e){
     return {status: 500, data: e };
   }
 
-  return { status: 200, data: activity };
+  return result;
 };
 
 /**

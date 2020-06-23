@@ -34,7 +34,17 @@ module.exports.getUser = async (options) => {
 module.exports.getUsers = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    result.data = await UsersController.getUsers({});
+    let query = {};
+
+    if(options.searchString && options.searchString !== ''){
+      try{
+        query = JSON.parse(options.searchString);
+      }catch(e){
+        return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
+      }
+    }
+
+    result.data = await UsersController.getUsers(query);
   }catch(e){
     result = { status: 500, data: e };
   }

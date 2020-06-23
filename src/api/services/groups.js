@@ -26,7 +26,25 @@ if(!Array.prototype.flat){
 module.exports.getGroups = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    result.data = await GroupsController.getGroups({owners: options.user.data.username});
+    let query = {};
+
+    if(options.searchString && options.searchString !== ''){
+      try{
+        query = JSON.parse(options.searchString);
+      }catch(e){
+        return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
+      }
+    }
+
+    if(options.user.data.role !== 'admin'){
+      if(options.user.data.role === 'teacher'){
+        query.owners = options.user.data.username;
+      }else{
+        query.participants = options.user.data.username;
+      }
+    }
+
+    result.data = await GroupsController.getGroups(query);
   }catch(e){
     result = { status: 500, data: e };
   }
@@ -67,7 +85,10 @@ module.exports.getGroup = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var group = await GroupsController.getGroup(options.id);
       if(group !== null){
-        if(group.owners.indexOf(options.user.data.username) !== -1 || group.participants.indexOf(options.user.data.username) !== -1){
+        if(options.user.data.role === 'admin'
+          || group.owners.indexOf(options.user.data.username) !== -1
+          || group.participants.indexOf(options.user.data.username) !== -1){
+
           result = { status: 200, data: group };
         }else{
           result = { status: 401, data: {message: 'User is not authorized to obtain group data.'} };

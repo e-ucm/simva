@@ -19,18 +19,34 @@ var ActivitiesController = require('../../lib/activitiescontroller');
 module.exports.getStudies = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    if(options.user.data.role === 'teacher'){
-      result.data = await StudiesController.getStudies({owners: options.user.data.username});
-    }else{
-      let groups = await GroupsController.getGroups({participants: options.user.data.username});
+    let query = {};
 
-      let ids = [];
-      for (var i = groups.length - 1; i >= 0; i--) {
-        ids.push(groups[i]._id);
+    if(options.searchString && options.searchString !== ''){
+      try{
+        query = JSON.parse(options.searchString);
+      }catch(e){
+        return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
       }
-
-      result.data = await StudiesController.getStudies({ "groups" : { "$in" : ids }});
     }
+
+    if(options.user.data.role !== 'admin'){
+      if(options.user.data.role === 'teacher'){
+        query.owners = options.user.data.username;
+      }else{
+        let groups = await GroupsController.getGroups({participants: options.user.data.username});
+
+        let ids = [];
+        for (var i = groups.length - 1; i >= 0; i--) {
+          ids.push(groups[i]._id);
+        }
+
+        query.groups = { "$in" : ids };
+
+        result.data = await StudiesController.getStudies(query);
+      }
+    }
+
+    result.data = await StudiesController.getStudies(query);
   }catch(e){
     result = { status: 500, data: e };
   }
@@ -75,7 +91,7 @@ module.exports.getStudy = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(options.user.data.role === 'admin' || study.owners.indexOf(options.user.data.username) !== -1){
           result = { status: 200, data: study };
         }else{
           result = { status: 401, data: { message: 'You are not owner of the study' } };
