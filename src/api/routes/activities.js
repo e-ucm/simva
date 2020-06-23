@@ -16,7 +16,8 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
   const options = {
     searchString: req.query['searchString'],
     skip: req.query['skip'],
-    limit: req.query['limit']
+    limit: req.query['limit'],
+    user: req.user
   };
 
   try {
@@ -54,7 +55,8 @@ router.post('/', Authenticator.auth, async (req, res, next) => {
  */
 router.get('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id']
+    id: req.params['id'],
+    user: req.user
   };
 
   try {
