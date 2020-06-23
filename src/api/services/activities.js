@@ -30,7 +30,7 @@ module.exports.getActivities = async (options) => {
       query.owners = options.user.data.username;
     }
 
-    result.data = await ActivitiesController.getActivities({});
+    result.data = await ActivitiesController.getActivities(query);
   }catch(e){
     result = { status: 500, data: e };
   }
