@@ -18,9 +18,9 @@ let createAdminUser = async function(){
     console.log('## Admin user already exists');
   }else{
     let result = await UsersController.addUser({
-      username: 'admin',
+      username: config.api.adminUsername,
       password: config.api.adminPassword,
-      email: 'admin@simva.admin',
+      email: config.api.adminEmail,
       role: 'admin'
     });
 

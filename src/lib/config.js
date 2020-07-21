@@ -7,6 +7,8 @@ config.external_url = process.env.EXTERNAL_URL || 'https://simva.e-ucm.es'
 
 config.api = {}
 config.api.port  = process.env.PORT || 3000
+config.api.adminUsername = process.env.ADMIN_USERNAME || 'admin'
+config.api.adminEmail = process.env.ADMIN_EMAIL || 'admin@simva.admin'
 config.api.adminPassword = process.env.ADMIN_PASSWORD || 'password'
 
 config.logger = {}
