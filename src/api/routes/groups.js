@@ -158,7 +158,7 @@ router.get('/:id/printable', Authenticator.auth, async (req, res, next) => {
 
     if(result.status === 200){
       res.writeHead(200, [['Content-Type', 'application/pdf']]);
-      res.end(new Buffer(result.data, 'base64'));
+      res.end(Buffer.from(result.data, 'base64'));
     }else{
       res.status(result.status).send(result.data);
     }

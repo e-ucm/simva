@@ -56,7 +56,7 @@ ActivitiesController.addActivity = async (params, files) => {
 	for (var i = 0; i < types.length; i++) {
 		if(types[i].getType() == params.type){
 			if(files){
-				params.rawsurvey = new Buffer(files.survey, '7bit').toString('base64');
+				params.rawsurvey = Buffer.from(files.survey, '7bit').toString('base64');
 			}
 
 			var activity = new types[i](params);
