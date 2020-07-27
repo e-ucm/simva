@@ -11,9 +11,6 @@ var config = require('./config');
 
 var UsersController = {};
 
-var secretKey = 'th1s_15_a_tmporall7_k3y';
-
-
 let kcconfig = {
 	baseUrl: config.sso.url + '/auth',
 	realmName: config.sso.realm
@@ -224,10 +221,10 @@ UsersController.generateJWT = async (user) => {
 				role: user.role
 			}
 		},
-		secretKey,
+		config.JWT.secret,
 		{
-			expiresIn: '24h',
-			issuer: 'simva'
+			expiresIn: config.JWT.expiresIn,
+			issuer: config.JWT.issuer
 		}
 	);
 }

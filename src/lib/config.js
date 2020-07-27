@@ -11,6 +11,11 @@ config.api.adminUsername = process.env.ADMIN_USERNAME || 'admin'
 config.api.adminEmail = process.env.ADMIN_EMAIL || 'admin@simva.admin'
 config.api.adminPassword = process.env.ADMIN_PASSWORD || 'password'
 
+config.JWT = {}
+config.JWT.issuer = 'simva'
+config.JWT.expiresIn = '24h'
+config.JWT.secret = 's3cret'
+
 config.logger = {}
 config.logger.levels = {}
 config.logger.name = 'SIMVA'
