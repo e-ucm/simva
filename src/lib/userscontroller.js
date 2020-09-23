@@ -288,8 +288,9 @@ UsersController.validateJWT = async (token) => {
 					break;
 				case 'simva':
 				default:
-					jwt.verify(token, secretKey, function(err, decoded) {
+					jwt.verify(token, config.JWT.secret, function(err, decoded) {
 						if(err){
+							console.log(JSON.stringify(err));
 							reject('Token is not valid.');
 						}else{
 							resolve(decoded);
