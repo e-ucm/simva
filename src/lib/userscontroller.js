@@ -249,7 +249,6 @@ UsersController.validateJWT = async (token) => {
 							.then((publicKey) => {
 								jwt.verify(token, publicKey, function(error, decoded) {
 									if(error){
-										console.log(error);
 										reject(error);
 									}else{
 										UsersController.CreateOrUpdateKeycloakUser(decoded)
@@ -263,7 +262,6 @@ UsersController.validateJWT = async (token) => {
 								});
 							})
 							.catch((error) => {
-								console.log(error);
 								reject(error);
 							});
 					}
