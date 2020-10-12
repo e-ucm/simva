@@ -69,5 +69,19 @@ AllocatorsController.castToClass = function(allocator){
 	return null;
 }
 
+AllocatorsController.getAllocatorTypes = async (user) => {
+	let allocatortypes = [];
+
+	for (let i = 0; i < types.length; i++) {
+		let allocatortype = {};
+		allocatortype.type = types[i].getType();
+		allocatortype.name = types[i].getName();
+		allocatortype.description = types[i].getDescription();
+
+		allocatortypes.push(allocatortype);
+	}
+
+	return allocatortypes;
+}
 
 module.exports = AllocatorsController;

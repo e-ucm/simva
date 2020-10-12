@@ -664,3 +664,20 @@ module.exports.getStudyParticipants = async (options) => {
   
   return result;
 };
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getAllocatorTypes = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await AllocatorsController.getAllocatorTypes(options.user.data.username);
+  }catch(e){
+    console.log(e);
+    result = { status: 500, data: e };
+  }
+  
+  return result;
+};
