@@ -1431,7 +1431,6 @@ components:
       type: object
       required:
         - type
-        - extra_data
       properties:
         type:
           type: string
