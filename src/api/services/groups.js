@@ -321,14 +321,16 @@ let toPDF = async (title, participants) => {
     html += '<td width="40%" colspan="4">Código</td></tr>';
     html += '<tr><td>'+ (1) + '</td><td></td>';
 
-    html += '<td>'+participants[0]+'</td><td>'+participants[0]+'</td><td>'+participants[0]+'</td><td>'+participants[0]+'</td></tr>';
+    let token = participants[0].toUpperCase();
+    html += '<td>'+token+'</td><td>'+token+'</td><td>'+token+'</td><td>'+token+'</td></tr>';
 
     for(var i = 1; i < participants.length; i++){
+      token = participants[i].toUpperCase();
       if((i%30)==0){
         html += '</table><br><br><table width="100%" style=""><tr><th colspan="6" style="text-align:left">Group: ' + title + ':</th></tr><tr><td width="5%">No.</td><td width="45%">Nombre</td><td width="40%" colspan="4">Código</td></tr>';
       }
       html += '<tr><td>'+ (i+1) + '</td><td></td>';
-      html += '<td>'+participants[i]+'</td><td>'+participants[i]+'</td><td>'+participants[i]+'</td><td>'+participants[i]+'</td></tr>';
+      html += '<td>'+token+'</td><td>'+token+'</td><td>'+token+'</td><td>'+token+'</td></tr>';
     }
 
     html += '</table></body></html>';
