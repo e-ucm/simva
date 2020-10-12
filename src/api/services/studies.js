@@ -62,14 +62,19 @@ module.exports.getStudies = async (options) => {
 module.exports.addStudy = async (options) => {
   try {
     var allocator = await AllocatorsController.createAllocator(AllocatorsController.getTypes()[0].getType());
-    var study = await StudiesController.addStudy({
+    let rawstudy = {
       name: options.body.name,
       owners: [options.user.data.username],
       tests: [],
-      participants: [],
       allocator: allocator.id,
       created: Date.now()
-    });
+    };
+
+    if(options.body.groups && options.body.groups.length > 0){
+      rawstudy.groups = options.body.groups;
+    }
+
+    var study = await StudiesController.addStudy(rawstudy);
   }catch(e){
     console.log(e);
     return {status: 500, data: e };
@@ -239,7 +244,7 @@ module.exports.getSchedule = async (options) => {
           }else{
             result =  { 
               status: 401,
-              data: { message: 'You do not participate in the activity either as owner or user' }
+              data: { message: 'You do not participate in the study either as owner or user' }
             };
           }
         }
@@ -601,9 +606,18 @@ module.exports.setStudyAllocator = async (options) => {
           }
 
           if(await allocator.save()){
-            return { status: 200, data: {message: 'Allocator updated'} };
+            if(study.allocator !== allocator.id){
+              study.allocator = allocator.id;
+              if(await study.save()){
+                result = { status: 200, data: {message: 'Allocator updated'} };
+              }else{
+                result = { status: 500, data: {message: 'Error updating the study'} };
+              }
+            }else{
+              result = { status: 200, data: {message: 'Allocator updated'} };
+            }
           }else{
-            return { status: 500, data: {message: 'Error updating the allocator'} };
+            result = { status: 500, data: {message: 'Error updating the allocator'} };
           }
         }else{
           result = { status: 400, data: {message: 'Unable to load the allocator'} };
