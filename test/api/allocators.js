@@ -236,6 +236,22 @@ module.exports = function (request) {
             });
         });
 
+        it('should be able to obtain the list of allocator types', function (done) {
+
+            request.get('/allocatortypes')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should.not.exist(err);
+
+                    should(res.body.length).equals(2);
+                    should(res.body[0].type).equals('default');
+                    should(res.body[1].type).equals('group');
+                    done();
+                });
+        });
+
         it('should be able to prepare the study with test, groups, and one activity', function (done) {
             let study = {
                 name: 'teststudy',
