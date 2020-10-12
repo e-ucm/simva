@@ -195,17 +195,34 @@ class Activity {
 					});
 				}
 
-				fs.stat('storage/' + activity._id, function(error, stats){
+				let checkSubfolder = function(){
+					fs.stat('storage/' + activity._id, function(error, stats){
+						if(error){
+							console.log('Folder does not exist');
+							fs.mkdir('storage/' + activity._id, function(error){
+								if(error){
+									reject({ message: 'Unable to create the subdirectory.', error: error })
+								}else{
+									savefile();
+								}
+							})
+						}else{
+							savefile();
+						}
+					})
+				}
+
+				fs.stat('storage', function(error, stats){
 					if(error){
-						fs.mkdir('storage/' + activity._id, function(error){
+						fs.mkdir('storage', function(error){
 							if(error){
-								reject({ message: 'Unable to create the directory.', error: error })
+								reject({ message: 'Unable to create the base directory.', error: error })
 							}else{
 								savefile();
 							}
 						})
 					}else{
-						savefile();
+						checkSubfolder();
 					}
 				})
 			}catch(e){
