@@ -3,8 +3,9 @@ var mongoose = require('mongoose');
 
 var AllocatorsController = {};
 var Allocator = require('./allocators/allocator');
+var GroupAllocator = require('./allocators/GroupAllocator');
 
-var types = [Allocator];
+var types = [Allocator, GroupAllocator];
 
 
 AllocatorsController.getAllocators = async (params) => {
