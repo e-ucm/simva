@@ -218,7 +218,7 @@ class Activity {
 							if(error){
 								reject({ message: 'Unable to create the base directory.', error: error })
 							}else{
-								savefile();
+								checkSubfolder();
 							}
 						})
 					}else{
