@@ -34,7 +34,10 @@ config.kafka.url = config.kafka.host + ':' + config.kafka.port
 
 config.minio = {}
 config.minio.url = process.env.MINIO_URL || 'minio.external.test'
-config.minio.bucket = process.env.MINIO_BUCKET || 'datalake'
+config.minio.bucket = process.env.MINIO_BUCKET || 'traces'
+config.minio.topics_dir = process.env.MINIO_TOPICS_DIR || 'kafka-topics'
+config.minio.users_dir = process.env.MINIO_USERS_DIR || 'users'
+config.minio.traces_file = process.env.MINIO_TRACES_FILE || 'traces.json'
 
 config.limesurvey = {}
 config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey-dev.external.test'
