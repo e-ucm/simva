@@ -85,6 +85,13 @@ Authenticator.auth = async (req, res, next) => {
 		let result;
 		try{
 			result = await UsersController.validateJWT(token);
+			let users = await UsersController.getUsers({ username: result.data.username });
+			if(users.length > 0){
+				result.data = users[0];
+			}else{
+				return res.status(401).send({message: 'Username not found'});
+			}
+			
 		}catch(e){
 			return res.status(401).send({message: 'JWT token is not valid.', error: e });
 		}

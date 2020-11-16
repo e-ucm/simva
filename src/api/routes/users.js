@@ -37,12 +37,12 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
  */
 router.get('/me', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.user.data.id
+    searchString: JSON.stringify({ username: req.user.data.username })
   };
 
   try {
-    const result = await users.getUser(options);
-    res.status(result.status || 200).send(result.data);
+    const result = await users.getUsers(options);
+    res.status(result.status || 200).send(result.data[0]);
   } catch (err) {
     return res.status(500).send({
       status: 500,
