@@ -95,7 +95,7 @@ UsersController.addUserToKeycloak = async (params) => {
 	try{
 		user = await kcAdminClient.users.create({
 			/*realm: config.sso.realm,*/
-			username: params.username,
+			username: params.username.toLowerCase(),
 			email: params.email,
 			enabled: true
 		});
@@ -158,7 +158,7 @@ UsersController.updateUser = async (id, params) => {
 }
 
 UsersController.authUser = async (username, plainPass) => {
-	var users = await UsersController.getUsers({'username': username});
+	var users = await UsersController.getUsers({ 'username': username.toLowerCase() });
 
 	if(users.length !== 1){
 		throw { message: 'Username not found' };
