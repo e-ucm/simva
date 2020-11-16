@@ -85,4 +85,13 @@ config.analyticsbackend.apiPath = process.env.ANALYTICSBACKEND_API || '/api/prox
 config.analyticsbackend.url =  config.analyticsbackend.protocol + '://' + config.analyticsbackend.host
 							+ ':' + config.analyticsbackend.port + config.analyticsbackend.apiPath
 
+config.LTI = {}
+config.LTI.platform = {}
+config.LTI.platform.key = process.env.LTI_PLATFORM_SIGNING_KEY || 'LTISIGNINGKEY';
+config.LTI.platform.mongo = {}
+config.LTI.platform.mongo.db = process.env.LTI_PLATFORM_DB_NAME || '/lti'
+config.LTI.platform.mongo.url = 'mongodb://'+config.mongo.host+config.LTI.platform.db
+config.LTI.platform.mongo.user = process.env.LTI_PLATFORM_DB_USER || 'root'
+config.LTI.platform.mongo.password = process.env.LTI_PLATFORM_DB_PASSWORD || ''
+
 module.exports = config;
