@@ -1256,6 +1256,28 @@ paths:
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
+  /allocatortypes:
+    get:
+      tags:
+        - teachers
+      summary: gets the types of allocators available
+      operationId: getAllocatorTypes
+      description: |
+        Obtains the list of allocator types available to
+        be assigned to the studies
+      responses:
+        '200':
+          description: the available allocator types
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/allocator_type'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
 security:
   - OAuth2:
       - read
@@ -1427,11 +1449,28 @@ components:
         utils:
           type: object
           additionalProperties: true
+    allocator_type:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          example: "Group Allocator"
+        type:
+          type: string
+          example: "group"
+        description:
+          type: string
+          example: "This allocator allows you to select to which test branch is each group assigned."
+        utils:
+          type: object
+          additionalProperties: true
     allocator:
       type: object
       required:
         - type
-        - extra_data
       properties:
         type:
           type: string

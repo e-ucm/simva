@@ -274,6 +274,29 @@ module.exports = function (request) {
                 });
         });
 
+        it('should login the user ignoring letter case', function (done) {
+            let user = {
+                username: 'tEsT',
+                password: 'testing'
+            }
+
+            request.post('/users/login')
+                .expect(200)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should.exist(res.body.token);
+                    authToken = res.body.token;
+                    done();
+                });
+        });
+
         it('should NOT login the user if User exists but pass is wrong', function (done) {
             let user = {
                 username: 'test',

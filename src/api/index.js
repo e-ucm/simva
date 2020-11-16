@@ -1,8 +1,8 @@
-const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
+const AppManager = require('../lib/utils/appmanager');
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
 
 var isTest = (process.env.NODE_ENV === 'test');
@@ -49,8 +49,8 @@ db.once('open', function() {
 
 
 const log = logger(config.logger);
-const app = express();
 
+const app = AppManager.InitApp();
 app.use(bodyParser.json({limit: '1mb'}));
 
 // ALLOW CORS
@@ -70,6 +70,7 @@ app.use('/groups', require('./routes/groups'));
 app.use('/studies', require('./routes/studies'));
 app.use('/activities', require('./routes/activities'));
 app.use('/activitytypes', require('./routes/activitytypes'));
+app.use('/allocatortypes', require('./routes/allocatortypes'));
 
 
 // catch 404

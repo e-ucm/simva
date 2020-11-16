@@ -11,6 +11,11 @@ config.api.adminUsername = process.env.ADMIN_USERNAME || 'admin'
 config.api.adminEmail = process.env.ADMIN_EMAIL || 'admin@simva.admin'
 config.api.adminPassword = process.env.ADMIN_PASSWORD || 'password'
 
+config.JWT = {}
+config.JWT.issuer = 'simva'
+config.JWT.expiresIn = '24h'
+config.JWT.secret = 's3cret'
+
 config.logger = {}
 config.logger.levels = {}
 config.logger.name = 'SIMVA'
@@ -29,7 +34,10 @@ config.kafka.url = config.kafka.host + ':' + config.kafka.port
 
 config.minio = {}
 config.minio.url = process.env.MINIO_URL || 'minio.external.test'
-config.minio.bucket = process.env.MINIO_BUCKET || 'datalake'
+config.minio.bucket = process.env.MINIO_BUCKET || 'traces'
+config.minio.topics_dir = process.env.MINIO_TOPICS_DIR || 'kafka-topics'
+config.minio.users_dir = process.env.MINIO_USERS_DIR || 'users'
+config.minio.traces_file = process.env.MINIO_TRACES_FILE || 'traces.json'
 
 config.limesurvey = {}
 config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey-dev.external.test'
@@ -76,5 +84,14 @@ config.analyticsbackend.port = process.env.ANALYTICSBACKEND_PORT || config.a2.po
 config.analyticsbackend.apiPath = process.env.ANALYTICSBACKEND_API || '/api/proxy/gleaner'
 config.analyticsbackend.url =  config.analyticsbackend.protocol + '://' + config.analyticsbackend.host
 							+ ':' + config.analyticsbackend.port + config.analyticsbackend.apiPath
+
+config.LTI = {}
+config.LTI.platform = {}
+config.LTI.platform.key = process.env.LTI_PLATFORM_SIGNING_KEY || 'LTISIGNINGKEY';
+config.LTI.platform.mongo = {}
+config.LTI.platform.mongo.db = process.env.LTI_PLATFORM_DB_NAME || '/lti'
+config.LTI.platform.mongo.url = 'mongodb://'+config.mongo.host+config.LTI.platform.db
+config.LTI.platform.mongo.user = process.env.LTI_PLATFORM_DB_USER || 'root'
+config.LTI.platform.mongo.password = process.env.LTI_PLATFORM_DB_PASSWORD || ''
 
 module.exports = config;

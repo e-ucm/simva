@@ -53,7 +53,11 @@ class MinioActivity extends Activity {
 		return {
 			minio_url: config.minio.url,
 			minio_bucket: config.minio.bucket,
-			kafka_topic: config.kafka.topic
+			kafka_topic: config.kafka.topic,
+			topics_dir: config.minio.topics_dir,
+			users_dir: config.minio.users_dir,
+			user_folder: username,
+			file_name: config.minio.file_name
 		};
 	}
 

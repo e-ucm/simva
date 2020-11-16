@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node src/bin/www",
-    "dev": "node src/bin/www | bunyan",
+    "dev": "nodemon --inspect=0.0.0.0:9229 src/bin/www | bunyan",
     "test": "set NODE_ENV=test&& mocha -R spec"
   },
   "dependencies": {
@@ -20,6 +20,7 @@
     "kafka-node": "*",
     "get-keycloak-public-key": "*",
     "keycloak-admin": "*",
+    "ltijs": "*",
     "mongoose": "^5.7.8",
     "node-yaml-config": "0.0.3",
     "request": "*",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "mocha": "*",
+    "nodemon": "^2.0.4",
     "should": "*",
     "supertest": "*"
   }

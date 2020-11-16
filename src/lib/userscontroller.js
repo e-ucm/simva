@@ -11,9 +11,6 @@ var config = require('./config');
 
 var UsersController = {};
 
-var secretKey = 'th1s_15_a_tmporall7_k3y';
-
-
 let kcconfig = {
 	baseUrl: config.sso.url + '/auth',
 	realmName: config.sso.realm
@@ -98,7 +95,7 @@ UsersController.addUserToKeycloak = async (params) => {
 	try{
 		user = await kcAdminClient.users.create({
 			/*realm: config.sso.realm,*/
-			username: params.username,
+			username: params.username.toLowerCase(),
 			email: params.email,
 			enabled: true
 		});
@@ -161,7 +158,7 @@ UsersController.updateUser = async (id, params) => {
 }
 
 UsersController.authUser = async (username, plainPass) => {
-	var users = await UsersController.getUsers({'username': username});
+	var users = await UsersController.getUsers({ 'username': username.toLowerCase() });
 
 	if(users.length !== 1){
 		throw { message: 'Username not found' };
@@ -224,10 +221,10 @@ UsersController.generateJWT = async (user) => {
 				role: user.role
 			}
 		},
-		secretKey,
+		config.JWT.secret,
 		{
-			expiresIn: '24h',
-			issuer: 'simva'
+			expiresIn: config.JWT.expiresIn,
+			issuer: config.JWT.issuer
 		}
 	);
 }
@@ -252,7 +249,6 @@ UsersController.validateJWT = async (token) => {
 							.then((publicKey) => {
 								jwt.verify(token, publicKey, function(error, decoded) {
 									if(error){
-										console.log(error);
 										reject(error);
 									}else{
 										UsersController.CreateOrUpdateKeycloakUser(decoded)
@@ -266,7 +262,6 @@ UsersController.validateJWT = async (token) => {
 								});
 							})
 							.catch((error) => {
-								console.log(error);
 								reject(error);
 							});
 					}
@@ -291,8 +286,9 @@ UsersController.validateJWT = async (token) => {
 					break;
 				case 'simva':
 				default:
-					jwt.verify(token, secretKey, function(err, decoded) {
+					jwt.verify(token, config.JWT.secret, function(err, decoded) {
 						if(err){
+							console.log(JSON.stringify(err));
 							reject('Token is not valid.');
 						}else{
 							resolve(decoded);

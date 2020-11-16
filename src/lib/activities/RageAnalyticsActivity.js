@@ -6,6 +6,9 @@ var Activity = require('./activity');
 
 var config = require('..//config');
 
+let timeout = function(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 var a2config = {
 	options: {
 		url: config.a2.url + '/api',
@@ -131,6 +134,10 @@ class RageAnalyticsActivity extends Activity {
 		let classId = analytics.class._id;
 
 		analytics.activity = await this.backendController.addActivity(activityname, gameId, versionId, classId);
+
+		//RAGE Analytics backend needs a little bit of extra time to init the activity.
+		await timeout(2000);
+
 		await this.backendController.startActivity(analytics.activity._id);
 
 		return analytics;
