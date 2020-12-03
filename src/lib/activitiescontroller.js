@@ -9,8 +9,9 @@ var MinioActivity = require('./activities/MinioActivity');
 var RageMinioActivity = require('./activities/RageMinioActivity');
 var GameplayActivity = require('./activities/GameplayActivity');
 var ManualActivity = require('./activities/ManualActivity');
+var LTIToolActivity = require('./activities/LTIToolActivity');
 
-var types = [Activity, LimeSurveyActivity, /*RageAnalyticsActivity, MinioActivity, RageMinioActivity, */ GameplayActivity, ManualActivity];
+var types = [Activity, LimeSurveyActivity, /*RageAnalyticsActivity, MinioActivity, RageMinioActivity, */ GameplayActivity, ManualActivity, LTIToolActivity];
 
 ActivitiesController.getStudy = async (id) => {
 	let res = null;

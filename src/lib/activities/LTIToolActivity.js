@@ -10,10 +10,12 @@ const validator = require('../utils/validator');
 
 var activityschema = validator.getSchema('#/components/schemas/activity');
 
-let ltitoolclient = 
+var Activity = require('./activity');
 
 /*
 	THIS PART IS FOR THE LTI TOOL
+
+	let ltitoolclient = 
 
 	lti.setup(
 		config.LTI.platform.key,
