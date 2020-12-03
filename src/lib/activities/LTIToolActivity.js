@@ -57,7 +57,7 @@ let lticonfig = {
 	auth_url: "https://4b8ab6ba9bba.ngrok.io/auth/realms/master/protocol/openid-connect/token",
 }
 
-class LTIToolActivity {
+class LTIToolActivity extends Activity {
 
 	// ##########################################
 	// Constructor and basic set of functions
@@ -219,4 +219,4 @@ class LTIToolActivity {
 // Module exports
 // ##########################################
 
-module.exports = Activity;
+module.exports = LTIToolActivity;
