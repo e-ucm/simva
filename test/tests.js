@@ -54,6 +54,7 @@ describe('API Test', function (done) {
         require('./api/studies')(request);
         require('./api/activities')(request);
         require('./api/allocators')(request);
+        require('./api/lti')(request);
         done();
     });
 
