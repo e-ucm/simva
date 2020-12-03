@@ -1278,6 +1278,176 @@ paths:
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
+  /lti:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the status of the LTI compatibility
+      operationId: getLtiStatus
+      description: |
+        Returns an object that specifies if simva is acting as
+        an LTI platform and/or LTI tool
+      responses:
+        '200':
+          description: the object with the LTI status
+          content:
+            application/json:
+              schema:
+                type: object
+                items: 
+                  $ref: '#/components/schemas/lti_status'
+  /lti/claims:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LTI claims for the given hints
+      operationId: getLtiClaims
+      description: |
+        An lti tool launch will provide two parameters including
+        lti_message_hint and lti_login_hint and, in base of that,
+        this endpoint will return an object including all the claims
+        needed for the tool to work.
+      responses:
+        '200':
+          description: the list of groups for this user
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: query
+          name: lti_login_hint
+          description: simva signed JWT token with LTI-login data
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: lti_message_hint
+          description: simva signed JWT token with LTI-related data
+          required: false
+          schema:
+            type: string
+  /lti/tools:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of LTI tools
+      operationId: getLtiTools
+      description: |
+        Obtains the list of lti tools available
+      responses:
+        '200':
+          description: the list of LTI tools available
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/lti_tool'
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a lti tool
+      operationId: addLtiTool
+      description: |
+        Adds an lti tool that will be later available for the activities
+      responses:
+        '200':
+          description: lti tool created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_tool'
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        required: true
+  /lti/tools/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the LTI tool with the given ID
+      operationId: getLtiTool
+      description: |
+        Obtains the requested LTI tool
+      responses:
+        '200':
+          description: lti tool object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_tool'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti_tool ID
+    put:
+      tags:
+        - teachers
+      summary: updates the LTI tool
+      operationId: updateLtiTool
+      description: Updates an existing LTI tool
+      responses:
+        '200':
+          description: item created
+        '401':
+          description: 'Teacher does not own the group'
+        '400':
+          description: 'invalid input'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti tool ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        description: LTI tool to be modified
 security:
   - OAuth2:
       - read
@@ -1477,6 +1647,40 @@ components:
           example: "manual, random, ponderated..."
         extra_data:
           type: object
+    lti_tool:
+      type: object
+      required:
+        - name
+        - description
+        - url
+        - jwks_uri
+        - login_uri
+        - redirect_uri
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        name:
+          type: string
+          example: "Test tool"
+        description:
+          type: string
+          example: "This is a test tool used for testing"
+        client_id:
+          type: string
+          example: "lti-tool-client-12345"
+        url:
+          type: string
+          example: "https://lti-tool.test/"
+        jwks_uri:
+          type: string
+          example: "https://lti-tool.test/.well-known/jwks.json"
+        login_uri:
+          type: string
+          example: "https://lti-tool.test/oidc/init"
+        redirect_uri:
+          type: string
+          example: "https://lti-tool.test/launch"
     add_group_body:
       required:
       - name
@@ -1537,3 +1741,48 @@ components:
           example: Pass12345
       x-swagger-mongoose:
         exclude-schema: true
+    lti_status:
+      required:
+      - tool
+      - platform
+      type: object
+      properties:
+        username:
+          type: boolean
+          example: true
+        password:
+          type: boolean
+          example: false
+      x-swagger-mongoose:
+        exclude-schema: true
+#    lti_claims:
+#      type: object
+#      example: |
+#        '{
+#            "https://purl.imsglobal.org/spec/lti/claim/message_type"    : "LtiResourceLinkRequest",
+#            "https://purl.imsglobal.org/spec/lti/claim/version"         : "1.3.0",
+#            "https://purl.imsglobal.org/spec/lti/claim/deployment_id"   : "D001",
+#            "https://purl.imsglobal.org/spec/lti/claim/target_link_uri" : "https://lti-ri.imsglobal.org/lti/tools/1376/launches",
+#            "https://purl.imsglobal.org/spec/lti/claim/resource_link"   : {
+#              "id"          : "link001",
+#              "title"       : "Resource 001",
+#              "description" : "Resource Description 001"
+#            },
+#            "https://purl.imsglobal.org/spec/lti/claim/roles"           : [
+#              "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner"
+#            ],
+#
+#            "https://purl.imsglobal.org/spec/lti/claim/context"         : {
+#              "id": "context001",
+#              "label": "Ctxt001",
+#              "title":  "Context 001",
+#              "type": ["http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"]
+#            },
+#            "https://purl.imsglobal.org/spec/lti/claim/tool_platform"   : {
+#              "guid": "tool_id_0001",
+#              "product_family_code": "SIMVA",
+#              "name": "SIMVA e-UCM"
+#            }
+#        }'
+#      x-swagger-mongoose:
+#        exclude-schema: true
