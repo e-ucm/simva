@@ -1,5 +1,4 @@
 const ServerError = require('../error');
-const lti = require('ltijs').Provider;
 
 let config = require('../config');
 let mongoose = require('mongoose');
@@ -11,39 +10,52 @@ const validator = require('../utils/validator');
 
 var activityschema = validator.getSchema('#/components/schemas/activity');
 
-lti.setup(
-	config.LTI.platform.key,
-	{
-		url: config.LTI.platform.mongo.url,
-		connection: {
-			user: config.LTI.platform.mongo.user,
-			pass: config.LTI.platform.mongo.password
-		}
-	},
-	{
-		/*appRoute: '/activities/:',
-		loginRoute: '/login',*/
+let ltitoolclient = 
 
-		cookies: {
-			secure: true,
-			sameSite: 'None'
+/*
+	THIS PART IS FOR THE LTI TOOL
+
+	lti.setup(
+		config.LTI.platform.key,
+		{
+			url: config.LTI.platform.mongo.url,
+			connection: {
+				user: config.LTI.platform.mongo.user,
+				pass: config.LTI.platform.mongo.password
+			}
 		},
-		devMode: true
-	}
-)
+		{
+			appRoute: '/activities/:',
+			loginRoute: '/login',
 
-lti.onConnect((token, req, res) => {
-  console.log(token)
-  return res.send('It\'s alive!')
-})
+			cookies: {
+				secure: true,
+				sameSite: 'None'
+			},
+			devMode: true
+		}
+	)
 
-await lti.deploy({ serverless: true });
-app.use('/lti', lti.app)
+	lti.onConnect((token, req, res) => {
+	  console.log(token)
+	  return res.send('It\'s alive!')
+	})
 
-setup()
+	await lti.deploy({ serverless: true });
+	app.use('/lti', lti.app)
+
+	setup()
+	*/
 
 
-class LTIPlatformActivity {
+let lticonfig = {
+	client_id: 'lti-platform',
+	client_password: 'e30c49da-5d2b-401e-919c-0d483161dac2',
+	claims_url: "https://simva.e-ucm.es/activities/",
+	auth_url: "https://4b8ab6ba9bba.ngrok.io/auth/realms/master/protocol/openid-connect/token",
+}
+
+class LTIToolActivity {
 
 	// ##########################################
 	// Constructor and basic set of functions
@@ -71,11 +83,11 @@ class LTIPlatformActivity {
 	}
 
 	static getType(){
-		return 'ltiplatform';
+		return 'ltitool';
 	}
 
 	static getName(){
-		return 'LTI Platform Activity';
+		return 'LTI Tool Activity';
 	}
 
 	static getDescription(){
