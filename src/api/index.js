@@ -71,6 +71,7 @@ app.use('/studies', require('./routes/studies'));
 app.use('/activities', require('./routes/activities'));
 app.use('/activitytypes', require('./routes/activitytypes'));
 app.use('/allocatortypes', require('./routes/allocatortypes'));
+app.use('/lti', require('./routes/lti'));
 
 
 // catch 404
