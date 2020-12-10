@@ -4,7 +4,7 @@ var mongoose = require('mongoose');
 var LtiController = {};
 
 let lticlientbase = require('./utils/lticlientbase');
-const KeycloakClient = require('./utils/keycloakkeymanager');
+const KeycloakClient = require('./utils/keycloakclient');
 
 let maxid = 100000;
 let minid = 1;

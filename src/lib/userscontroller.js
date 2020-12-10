@@ -2,7 +2,7 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
 const KeycloakKeyManager = require('./utils/keycloakkeymanager');
-const KeycloakClient = require('./utils/keycloakkeymanager');
+const KeycloakClient = require('./utils/keycloakclient');
 const jwt = require('jsonwebtoken');
 
 var config = require('./config');

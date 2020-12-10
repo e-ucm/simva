@@ -49,3 +49,5 @@ KeycloakClient.getClient = function(){
 KeycloakClient.getStatus = function(){
 	return keycloakStatus;
 }
+
+module.exports = KeycloakClient;
