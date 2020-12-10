@@ -3,6 +3,11 @@ var mongoose = require('mongoose');
 
 var LtiController = {};
 
+let lticlientbase = require('./utils/lticlientbase');
+const KeycloakClient = require('./utils/keycloakkeymanager');
+
+let maxid = 100000;
+let minid = 1;
 
 LtiController.getLtiTools = async (params) => {
 	var res = await mongoose.model('lti_tool').find(params);
@@ -25,7 +30,8 @@ LtiController.addLtiTool = async (tool) => {
 
 	var tool = new LtiTool(tool);
 
-	await tool.save();
+	//await tool.save();
+	LtiController.addClientToKeycloak(Math.floor(Math.random() * (maxid-minid+1)+minid));
 
 	return tool;
 }
@@ -36,6 +42,22 @@ LtiController.updateLtiTool = async (id, tool) => {
 	var result = await LtiTool.updateOne({ _id: id }, tool);
 
 	return result.ok > 0;
+}
+
+LtiController.addClientToKeycloak = async(id) => {
+	let client = JSON.parse(JSON.stringify(lticlientbase));
+
+	client.clientId = id;
+
+	const createdClient = await KeycloakClient.getClient().clients.create(client);
+
+	console.log(JSON.stringify(createdClient));
+
+	return id;
+}
+
+LtiController.removeClientFromKeycloak = async(id) => {
+
 }
 
 
