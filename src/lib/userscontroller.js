@@ -2,50 +2,12 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
 const KeycloakKeyManager = require('./utils/keycloakkeymanager');
+const KeycloakClient = require('./utils/keycloakkeymanager');
 const jwt = require('jsonwebtoken');
-const KcAdminClient = require('keycloak-admin').default;
 
-console.log(KcAdminClient);
- 
 var config = require('./config');
 
-var UsersController = {};
-
-let kcconfig = {
-	baseUrl: config.sso.url + '/auth',
-	realmName: config.sso.realm
-};
-
-let kcAdminClient = new KcAdminClient(kcconfig);
-
-
-let KeycloakUserCredentials = {
-  username: config.sso.adminUser,
-  password: config.sso.adminPassword,
-  grantType: 'password',
-  clientId: 'admin-cli'
-};
-
-console.log('----- KEYCLOAK -----');
-console.log('Keycloak-> Connecting to: ');
-console.log(JSON.stringify(kcconfig, null, 2));
-console.log('Keycloak-> Authentication: ');
-console.log(JSON.stringify(KeycloakUserCredentials, null, 2));
-console.log('--------------------');
-
-let keycloakStatus = false;
-if(config.sso.enabled){
-	kcAdminClient.auth(KeycloakUserCredentials)
-	.then((result) => {
-		console.log('Connected to Keycloak!');
-		keycloakStatus = true;
-	})
-	.catch((error) => {
-		console.log('unable to connect to keycloak');
-		console.info(error);
-		keycloakStatus = false;
-	});
-}
+let UsersController = {};
 
 UsersController.getUser = async (id) => {
 	var res = await mongoose.model('user').find({_id: id});
@@ -87,13 +49,13 @@ UsersController.addUserToKeycloak = async (params) => {
 
 	console.log('KeyCloak -> Auth');
 
-	await kcAdminClient.auth(KeycloakUserCredentials);
+	await KeycloakClient.getClient().auth(KeycloakUserCredentials);
 
 	console.log('KeyCloak -> Adding user');
 
 	let user;
 	try{
-		user = await kcAdminClient.users.create({
+		user = await KeycloakClient.getClient().users.create({
 			/*realm: config.sso.realm,*/
 			username: params.username.toLowerCase(),
 			email: params.email,
@@ -105,7 +67,7 @@ UsersController.addUserToKeycloak = async (params) => {
 	}
 
 	console.log('KeyCloak -> getting Role Mappings');
-	let roleMappings = await kcAdminClient.users.listAvailableRealmRoleMappings({id: user.id});
+	let roleMappings = await KeycloakClient.getClient().users.listAvailableRealmRoleMappings({id: user.id});
 
 	let selectedRole;
 	for (var i = roleMappings.length - 1; i >= 0; i--) {
@@ -116,10 +78,10 @@ UsersController.addUserToKeycloak = async (params) => {
 	}
 
 	console.log('KeyCloak -> Adding Role to User');
-	let result = await kcAdminClient.users.addRealmRoleMappings({id: user.id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
+	let result = await KeycloakClient.getClient().users.addRealmRoleMappings({id: user.id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
 
 	console.log('KeyCloak -> Setting up User Password');
-	await kcAdminClient.users.resetPassword({
+	await KeycloakClient.getClient().users.resetPassword({
 		id: user.id,
 		credential: {
 			temporary: false,
@@ -133,7 +95,7 @@ UsersController.addUserToKeycloak = async (params) => {
 	
 
 	console.log('KeyCloak -> Obtaining user to enable it');
-	user = await kcAdminClient.users.findOne({
+	user = await KeycloakClient.getClient().users.findOne({
       id: user.id,
     });
 
@@ -141,7 +103,7 @@ UsersController.addUserToKeycloak = async (params) => {
     user.enabled = true;
 
 	console.log('KeyCloak -> Enabling the user and removing pass edit request for it to be able to login');
-    await kcAdminClient.users.update({id: user.Id}, { enabled: true });*/
+    await KeycloakClient.getClient().users.update({id: user.Id}, { enabled: true });*/
 
     console.log('KeyCloak -> User Added to Keycloak!');
 	return true;
