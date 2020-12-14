@@ -68,6 +68,8 @@ LtiController.addClientToKeycloak = async(id) => {
 
 	client.clientId = id;
 
+	await KeycloakClient.AuthClient();
+
 	let createdClient = await KeycloakClient.getClient().clients.create(client);
 
 	return createdClient.id;
@@ -75,6 +77,8 @@ LtiController.addClientToKeycloak = async(id) => {
 
 LtiController.removeClientFromKeycloak = async(id) => {
 	try{
+		await KeycloakClient.AuthClient();
+
 		let result = await KeycloakClient.getClient().clients.del({ id: id });
 	}catch(e){
 		console.log(e);

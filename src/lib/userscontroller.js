@@ -49,7 +49,7 @@ UsersController.addUserToKeycloak = async (params) => {
 
 	console.log('KeyCloak -> Auth');
 
-	await KeycloakClient.getClient().auth(KeycloakUserCredentials);
+	await KeycloakClient.AuthClient();
 
 	console.log('KeyCloak -> Adding user');
 

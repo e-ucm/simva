@@ -42,6 +42,10 @@ if(config.sso.enabled){
 	});
 }
 
+KeycloakClient.AuthClient = function(){
+	await kcAdminClient.auth(KeycloakUserCredentials);
+}
+
 KeycloakClient.getClient = function(){
 	return kcAdminClient;
 }
