@@ -162,7 +162,7 @@ module.exports.updateLtiTool = async (options) => {
  */
 module.exports.deleteLtiTool = async (options) => {
   try {
-    tool = await LtiController.deleteLtiTool(options.id);
+    tool = await LtiController.removeLtiTool(options.id);
   }catch(e){
     return {status: 500, data: e };
   }

@@ -54,12 +54,13 @@ LtiController.updateLtiTool = async (id, tool) => {
 	return result.ok > 0;
 }
 
-LtiController.removeLtiTool = async (id, tool) => {
+LtiController.removeLtiTool = async (id) => {
 	var LtiTool = mongoose.model('lti_tool');
 
-	await LtiTool.deleteOne({ _id: id }, tool);
 
-	return result.ok > 0;
+	await LtiTool.deleteOne({ _id: id });
+
+	return true;
 }
 
 LtiController.addClientToKeycloak = async(id) => {
