@@ -30,8 +30,18 @@ LtiController.addLtiTool = async (tool) => {
 
 	var tool = new LtiTool(tool);
 
-	//await tool.save();
-	LtiController.addClientToKeycloak(Math.floor(Math.random() * (maxid-minid+1)+minid));
+	tool.extra_data = {};
+	let random_num = Math.floor(Math.random() * (maxid-minid+1)+minid);
+	tool.client_id = "lti-tool-" + random_num;
+
+	try{
+		tool.real_client_id = await LtiController.addClientToKeycloak(tool.client_id);
+		await tool.save();
+	}catch(e){
+		console.log(e);
+		throw { message: 'Error creating the tool', error: e };
+	}
+	
 
 	return tool;
 }
@@ -44,20 +54,33 @@ LtiController.updateLtiTool = async (id, tool) => {
 	return result.ok > 0;
 }
 
+LtiController.removeLtiTool = async (id, tool) => {
+	var LtiTool = mongoose.model('lti_tool');
+
+	await LtiTool.deleteOne({ _id: id }, tool);
+
+	return result.ok > 0;
+}
+
 LtiController.addClientToKeycloak = async(id) => {
 	let client = JSON.parse(JSON.stringify(lticlientbase));
 
 	client.clientId = id;
 
-	const createdClient = await KeycloakClient.getClient().clients.create(client);
+	let createdClient = await KeycloakClient.getClient().clients.create(client);
 
-	console.log(JSON.stringify(createdClient));
-
-	return id;
+	return createdClient.id;
 }
 
 LtiController.removeClientFromKeycloak = async(id) => {
-
+	try{
+		let result = await KeycloakClient.getClient().clients.del({ id: id });
+	}catch(e){
+		console.log(e);
+		throw { nessage: 'Error deleting the keycloak client', error: e};
+	}
+	
+	return true;
 }
 
 

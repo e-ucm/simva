@@ -1448,6 +1448,28 @@ paths:
             schema:
               $ref: '#/components/schemas/lti_tool'
         description: LTI tool to be modified
+    delete:
+      tags:
+        - teachers
+      summary: Deletes the lti tool with the given ID
+      operationId: deleteLtiTool
+      description: |
+        Deletes the designed lti tool
+      responses:
+        '200':
+          description: LTI tool deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The LTI tool ID
 security:
   - OAuth2:
       - read
@@ -1681,6 +1703,8 @@ components:
         redirect_uri:
           type: string
           example: "https://lti-tool.test/launch"
+        extra_data:
+          type: object
     add_group_body:
       required:
       - name

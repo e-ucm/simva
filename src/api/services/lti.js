@@ -153,3 +153,19 @@ module.exports.updateLtiTool = async (options) => {
 
   return { status: 200, data: tool };
 };
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The lti tool ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.deleteLtiTool = async (options) => {
+  try {
+    tool = await LtiController.deleteLtiTool(options.id);
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return { status: 200, data: tool };
+};

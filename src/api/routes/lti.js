@@ -122,4 +122,20 @@ router.put('/tools/:id', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+/**
+ * Deletes an existing LTI tool
+ */
+router.delete('/tools/:id', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id']
+  };
+
+  try {
+    const result = await lti.deleteLtiTool(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
