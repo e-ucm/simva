@@ -35,7 +35,7 @@ LtiController.addLtiTool = async (tool) => {
 	tool.client_id = "lti-tool-" + random_num;
 
 	try{
-		tool.real_client_id = await LtiController.addClientToKeycloak(tool.client_id);
+		tool.extra_data.real_client_id = await LtiController.addClientToKeycloak(tool.client_id);
 		await tool.save();
 	}catch(e){
 		console.log(e);
@@ -57,9 +57,15 @@ LtiController.updateLtiTool = async (id, tool) => {
 LtiController.removeLtiTool = async (id) => {
 	var LtiTool = mongoose.model('lti_tool');
 
-
-	await LtiTool.deleteOne({ _id: id });
-
+	try{
+		let tool = await LtiController.getLtiTool(id);
+		await LtiController.removeClientFromKeycloak(tool.extra_data.real_client_id);
+		await LtiTool.deleteOne({ _id: id });
+	}catch(e){
+		console.log(e);
+		throw { message: 'Error deleting the tool', error: e};
+	}
+	
 	return true;
 }
 

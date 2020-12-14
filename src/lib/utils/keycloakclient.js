@@ -42,7 +42,7 @@ if(config.sso.enabled){
 	});
 }
 
-KeycloakClient.AuthClient = function(){
+KeycloakClient.AuthClient = async () => {
 	await kcAdminClient.auth(KeycloakUserCredentials);
 }
 
