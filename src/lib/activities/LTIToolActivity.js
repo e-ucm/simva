@@ -152,28 +152,44 @@ class LTIToolActivity extends Activity {
 		return await super.getCompletion(participants);
 	}
 
-	async target(participant){
-		let tool = await LtiController.getLtiTool(this.extra_data.tool);
+	async target(participants){
+		let targets = {};
 
-		let login_hint = await LtiController.generateJWT({
-			participant: participant
-		});
+		if(participants.length === 0){
+			if(this.extra_data && this.extra_data.participants){
+				participants = Object.keys(this.extra_data.participants);
+			}
+
+			if(participants.length === 0){
+				return {};
+			}
+		}
+
+		let tool = await LtiController.getLtiTool(this.extra_data.tool);
 
 		let lti_message_hint = await LtiController.generateJWT({
 			activity: this.id
 		});
 
-		let deployment = 'D001';
+		for (var i = 0; i < participants.length; i++) {
+			let login_hint = await LtiController.generateJWT({
+				participant: participants[i]
+			});
 
-		let url = tool.login_url
-			+ '?login_hint=' + login_hint
-			+ '&lti_message_hint=' + lti_message_hint
-			+ '&client_id=' + tool.client_id
-			+ '&lti_deployment_id=' + deployment
-			+ '&iss=' + config.sso.realmUrl
-			+ '&target_link_uri=' + tool.url;
+			let deployment = 'D001';
 
-		return url;
+			let url = tool.login_uri
+				+ '?login_hint=' + login_hint
+				+ '&lti_message_hint=' + lti_message_hint
+				+ '&client_id=' + tool.client_id
+				+ '&lti_deployment_id=' + deployment
+				+ '&iss=' + config.sso.realmUrl
+				+ '&target_link_uri=' + tool.url;
+			
+			targets[participants[i]] = url;
+		}
+
+		return targets;
 	}
 };
 
