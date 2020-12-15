@@ -1,5 +1,6 @@
 const ServerError = require('./error');
 var mongoose = require('mongoose');
+var config = require('./config');
 
 var LtiController = {};
 
@@ -35,7 +36,7 @@ LtiController.addLtiTool = async (tool) => {
 	tool.client_id = "lti-tool-" + random_num;
 
 	try{
-		tool.extra_data.real_client_id = await LtiController.addClientToKeycloak(tool.client_id);
+		tool.extra_data.real_client_id = await LtiController.addClientToKeycloak(tool);
 		await tool.save();
 	}catch(e){
 		console.log(e);
@@ -69,10 +70,19 @@ LtiController.removeLtiTool = async (id) => {
 	return true;
 }
 
-LtiController.addClientToKeycloak = async(id) => {
+LtiController.addClientToKeycloak = async(tool) => {
 	let client = JSON.parse(JSON.stringify(lticlientbase));
 
-	client.clientId = id;
+	client.clientId = tool.client_id;
+	client.redirectUris[0] = tool.redirect_uri;
+	client.attributes['jwks.url'] = tool.jwks_uri;
+
+	for (var i = 0; i < client.protocolMappers.length; i++) {
+		if(client.protocolMappers[i].name === 'lti-mapper'){
+			client.protocolMappers[i].config['lti3_platform.url'] = config.external_url + config.LTI.platform.claims_url;
+			client.protocolMappers[i].config['lti3_platform.auth.url'] = tool.login_uri;
+		}
+	}
 
 	await KeycloakClient.AuthClient();
 
