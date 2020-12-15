@@ -30,6 +30,8 @@ module.exports.getLtiStatus = async (options) => {
  * @return {Promise}
  */
 module.exports.getLtiClaims = async (options) => {
+  console.log(options);
+
   let claims = {
       "https://purl.imsglobal.org/spec/lti/claim/message_type"    : "LtiResourceLinkRequest",
       "https://purl.imsglobal.org/spec/lti/claim/version"         : "1.3.0",

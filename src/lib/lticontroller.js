@@ -1,6 +1,7 @@
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 var config = require('./config');
+const jwt = require('jsonwebtoken');
 
 var LtiController = {};
 
@@ -80,7 +81,7 @@ LtiController.addClientToKeycloak = async(tool) => {
 	for (var i = 0; i < client.protocolMappers.length; i++) {
 		if(client.protocolMappers[i].name === 'lti-mapper'){
 			client.protocolMappers[i].config['lti3_platform.url'] = config.external_url + config.LTI.platform.claims_url;
-			client.protocolMappers[i].config['lti3_platform.auth.url'] = tool.login_uri;
+			client.protocolMappers[i].config['lti3_platform.auth.url'] = config.sso.realmUrl + '/protocol/openid-connect/token';
 		}
 	}
 
@@ -102,6 +103,10 @@ LtiController.removeClientFromKeycloak = async(id) => {
 	}
 	
 	return true;
+}
+
+LtiController.generateJWT = async (data) => {
+	return jwt.sign(data, config.JWT.secret, { expiresIn: config.JWT.expiresIn, issuer: config.JWT.issuer });
 }
 
 
