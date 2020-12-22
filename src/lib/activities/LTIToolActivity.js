@@ -95,7 +95,11 @@ class LTIToolActivity extends Activity {
 	}
 
 	static async getUtils(username){
-		return {};
+		let tools = await LtiController.getLtiTools();
+
+		return {
+			tools: tools
+		};
 	}
 
 	async getDetails(){
