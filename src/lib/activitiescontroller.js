@@ -10,8 +10,17 @@ var RageMinioActivity = require('./activities/RageMinioActivity');
 var GameplayActivity = require('./activities/GameplayActivity');
 var ManualActivity = require('./activities/ManualActivity');
 var LTIToolActivity = require('./activities/LTIToolActivity');
+var ImsPackageActivity = require('./activities/ImsPackageActivity');
 
-var types = [Activity, LimeSurveyActivity, /*RageAnalyticsActivity, MinioActivity, RageMinioActivity, */ GameplayActivity, ManualActivity, LTIToolActivity];
+var types = [
+	Activity,
+	LimeSurveyActivity,
+	/*RageAnalyticsActivity, MinioActivity, RageMinioActivity, */
+	GameplayActivity,
+	ManualActivity,
+	LTIToolActivity,
+	ImsPackageActivity
+];
 
 ActivitiesController.getStudy = async (id) => {
 	let res = null;
@@ -53,11 +62,56 @@ ActivitiesController.loadActivity = async (id) => {
 	return ActivitiesController.castToClass(activity);
 }
 
+
+
 ActivitiesController.addActivity = async (params, files) => {
 	for (var i = 0; i < types.length; i++) {
 		if(types[i].getType() == params.type){
 			if(files){
-				params.rawsurvey = Buffer.from(files.survey, '7bit').toString('base64');
+				if(files.survey){
+					params.rawsurvey = Buffer.from(files.survey, '7bit').toString('base64');
+				}
+				
+				if(files.imspackage){
+					let movefile = async () => {
+						new Promise((resolve, reject) => {
+							fs.stat('uploads', function(error, stats){
+								if(error){
+									fs.mkdir('uploads', function(error){
+										if(error){
+											reject({ message: 'Unable to create the base directory.', error: error });
+										}else{
+											files.imspackage.mv('uploads', function(error, result){
+												if(error){
+													reject(error);
+												}else{
+													resolve(result);
+												}
+											});
+										}
+									});
+								}else{
+									files.imspackage.mv('uploads', function(error, result){
+										if(error){
+											reject(error);
+										}else{
+											resolve(result);
+										}
+									});
+								}
+							});
+						});
+					};
+
+
+					try{
+						await movefile();
+					}catch(e){
+						throw { message: 'Error moving the file', error: e };
+					}
+
+					params.file_name = files.imspackage.name;
+				}
 			}
 
 			var activity = new types[i](params);
