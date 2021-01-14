@@ -52,6 +52,29 @@ router.get('/claims', async (req, res, next) => {
 });
 
 /**
+ * An lti tool launch will provide two parameters including
+ * lti_message_hint and lti_login_hint and, in base of that,
+ * this endpoint will return an object including all the claims
+ * needed for the tool to work.
+ */
+router.post('/claims', async (req, res, next) => {
+  const options = {
+    lti_login_hint: req.query['lti_login_hint'],
+    lti_message_hint: req.query['lti_message_hint']
+  };
+
+  try {
+    const result = await lti.getLtiClaims(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
+/**
  * Obtains the list of lti tools available
  */
 router.get('/tools', Authenticator.auth, async (req, res, next) => {

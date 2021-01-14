@@ -1331,6 +1331,38 @@ paths:
           required: false
           schema:
             type: string
+    post:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LTI claims for the given hints
+      operationId: postLtiClaims
+      description: |
+        An lti tool launch will provide two parameters including
+        lti_message_hint and lti_login_hint and, in base of that,
+        this endpoint will return an object including all the claims
+        needed for the tool to work.
+      responses:
+        '200':
+          description: the list of groups for this user
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: query
+          name: lti_login_hint
+          description: simva signed JWT token with LTI-login data
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: lti_message_hint
+          description: simva signed JWT token with LTI-related data
+          required: false
+          schema:
+            type: string
   /lti/tools:
     get:
       tags:
@@ -1470,6 +1502,31 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The LTI tool ID
+  /uploads:
+    post:
+      tags:
+        - teachers
+      summary: adds a lti tool
+      operationId: addLtiTool
+      description: |
+        Adds an lti tool that will be later available for the activities
+      responses:
+        '200':
+          description: lti tool created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_tool'
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        required: true
 security:
   - OAuth2:
       - read
@@ -1705,6 +1762,16 @@ components:
           example: "https://lti-tool.test/launch"
         extra_data:
           type: object
+    upload_file:
+      type: object
+      required:
+        - file
+      properties:
+        file:
+          type: string
+          format: binary
+      x-swagger-mongoose:
+        exclude-schema: true
     add_group_body:
       required:
       - name
