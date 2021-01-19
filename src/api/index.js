@@ -1,5 +1,7 @@
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const fileUpload = require('express-fileupload');
+const multiparty = require('multiparty')
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 const AppManager = require('../lib/utils/appmanager');
@@ -47,11 +49,49 @@ db.once('open', function() {
   createAdminUser();
 });
 
+let multipartwith
 
 const log = logger(config.logger);
 
 const app = AppManager.InitApp();
 app.use(bodyParser.json({limit: '1mb'}));
+app.use(
+  //fileUpload({ limits: { fileSize: 200 * 1024 * 1024 }}),
+  function(req, res, next){
+    try {
+      new multiparty.Form().parse(req, (err, fields, files) => {
+        if(!err){
+          req.fields = fields;
+          req.files = files;
+          next();
+        }else if(err.constructor.name !== 'UnsupportedMediaTypeError'){
+          next(err);
+        }else{
+          next();
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+  function(req, res, next){
+    console.log(req.fields);
+    if((req.method === 'POST' || req.method === 'PUT') && (!req.body || Object.keys(req.body).length === 0)){
+      if(req.files){
+        console.log(req.files);
+        let filekeys = Object.keys(req.files);
+        console.log(filekeys);
+        for (var i = 0; i < filekeys.length; i++) {
+          if(req.files[filekeys[i]].mimetype === 'application/json'){
+            console.log(req.files[filekeys[i]].data);
+            req.body = JSON.parse(req.files[filekeys[i]].data);
+          }
+        }
+      }
+    }
+
+    next();
+});
 
 // ALLOW CORS
 app.use((req, res, next) => {
