@@ -35,12 +35,8 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
  * needed for the tool to work.
  */
 router.get('/claims', async (req, res, next) => {
-  console.log(req);
-  console.log(req.query);
-  console.log(req.body);
-
   const options = {
-    lti_login_hint: req.query['lti_login_hint'],
+    lti_login_hint: req.query['login_hint'],
     lti_message_hint: req.query['lti_message_hint']
   };
 
@@ -62,13 +58,9 @@ router.get('/claims', async (req, res, next) => {
  * needed for the tool to work.
  */
 router.post('/claims', async (req, res, next) => {
-  console.log(req);
-  console.log(req.query);
-  console.log(req.body);
-
   const options = {
-    lti_login_hint: req.query['lti_login_hint'],
-    lti_message_hint: req.query['lti_message_hint']
+    lti_login_hint: req.body['login_hint'],
+    lti_message_hint: req.body['lti_message_hint']
   };
 
   try {

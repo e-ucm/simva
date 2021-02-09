@@ -56,6 +56,8 @@ const log = logger(config.logger);
 
 const app = AppManager.InitApp();
 app.use(bodyParser.json({limit: '1mb'}));
+app.use(bodyParser.urlencoded({ extended: true }));
+
 /*app.use(
   //fileUpload({ limits: { fileSize: 200 * 1024 * 1024 }}),
   function(req, res, next){
