@@ -1,7 +1,8 @@
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
-const multiparty = require('multiparty')
+const multiparty = require('multiparty');
+const formidable = require('formidable');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 const AppManager = require('../lib/utils/appmanager');
@@ -55,9 +56,18 @@ const log = logger(config.logger);
 
 const app = AppManager.InitApp();
 app.use(bodyParser.json({limit: '1mb'}));
-app.use(
+/*app.use(
   //fileUpload({ limits: { fileSize: 200 * 1024 * 1024 }}),
   function(req, res, next){
+    const form = formidable({ multiples: true });
+    
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        next(err);
+        return;
+      }
+      res.json({ fields, files });
+    });
     try {
       new multiparty.Form().parse(req, (err, fields, files) => {
         if(!err){
@@ -75,7 +85,6 @@ app.use(
     }
   },
   function(req, res, next){
-    console.log(req.fields);
     if((req.method === 'POST' || req.method === 'PUT') && (!req.body || Object.keys(req.body).length === 0)){
       if(req.files){
         console.log(req.files);
@@ -91,7 +100,7 @@ app.use(
     }
 
     next();
-});
+});*/
 
 // ALLOW CORS
 app.use((req, res, next) => {
