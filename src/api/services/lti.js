@@ -56,6 +56,10 @@ module.exports.getLtiClaims = async (options) => {
         "guid": "tool_id_0001",
         "product_family_code": "SIMVA",
         "name": "SIMVA e-UCM"
+      },
+      "https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice": {
+        "context_memberships_url": "https://simva.e-ucm.es/lti/memberships",
+        "service_versions": ["2.0"]
       }
   };
 
