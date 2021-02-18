@@ -1363,6 +1363,37 @@ paths:
           required: false
           schema:
             type: string
+  /lti/memberships:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the list of members based on the LTI NRPS
+      operationId: getLtiMemberships
+      description: |
+        Returns the list of members of an activity based on the specification
+        of the LTI service Names and Roles Provisioning Service
+      responses:
+        '200':
+          description: the object including context and users
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: query
+          name: lti_login_hint
+          description: simva signed JWT token with LTI-login data
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: lti_message_hint
+          description: simva signed JWT token with LTI-related data
+          required: false
+          schema:
+            type: string
   /lti/tools:
     get:
       tags:
@@ -1762,6 +1793,39 @@ components:
           example: "https://lti-tool.test/launch"
         extra_data:
           type: object
+    lti_context:
+      type: object
+      required:
+        - org
+        - type
+        - label
+        - title
+        - sourcedId
+        - history
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        org:
+          type: string
+          example: "https://lti-tool.test/oidc/init"
+        type:
+          type: array
+          items:
+            type: string
+            example: "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"
+        label:
+          type: string
+          example: "lti-tool-client-12345"
+        title:
+          type: string
+          example: "https://lti-tool.test/"
+        sourcedId:
+          type: string
+          example: "activity:5d07a0767c1405004bc702b2"
+        history:
+          type: string
+          example: "A comma-separated list of URL-encoded context ID values representing previous copies of the context"
     upload_file:
       type: object
       required:

@@ -71,6 +71,31 @@ LtiController.removeLtiTool = async (id) => {
 	return true;
 }
 
+LtiController.getLtiContext = async (id) => {
+	var res = await mongoose.model('lti_context').find({_id: id});
+
+	if(res.length > 0) {
+		return res[0];
+	}else{
+		return null;
+	}
+};
+
+LtiController.addLtiContext = async (context) => {
+	var LtiContext = mongoose.model('lti_context');
+
+	var context = new LtiContext(context);
+
+	try{
+		await context.save();
+	}catch(e){
+		console.log(e);
+		throw { message: 'Error creating the context', error: e };
+	}
+
+	return context;
+}
+
 LtiController.addClientToKeycloak = async(tool) => {
 	let client = JSON.parse(JSON.stringify(lticlientbase));
 

@@ -161,4 +161,26 @@ router.delete('/tools/:id', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+/**
+ * An lti tool launch will provide two parameters including
+ * lti_message_hint and lti_login_hint and, in base of that,
+ * this endpoint will return an object including all the claims
+ * needed for the tool to work.
+ */
+router.get('/memberships', async (req, res, next) => {
+  console.log(req.query);
+  console.log(req.body);
+  console.log(req.headers.authorization);
+
+  try {
+    const result = { test: 'hello' };
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
 module.exports = router;

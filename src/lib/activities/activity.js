@@ -302,6 +302,21 @@ class Activity {
 	open(res, participant){
 		return false;
 	}
+
+	async getStudy(){
+		let res = null;
+
+		let tests = await mongoose.model('test').find({ activities:  this._id });
+
+
+		if(tests.length > 0){
+			let studies = await mongoose.model('study').find({ tests:  tests[0]._id });
+
+			res = studies[0];
+		}
+
+		return res;
+	}
 };
 
 // ##########################################

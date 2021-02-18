@@ -320,5 +320,21 @@ module.exports = function (request) {
                     done();
                 });
         });
+
+        it('should be able to get the lti memberships', function (done) {
+            request.get('/lti/memberships')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    console.log(res.body);
+
+                    done();
+                });
+        });
     });
 };

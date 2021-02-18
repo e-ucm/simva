@@ -195,6 +195,32 @@ class LTIToolActivity extends Activity {
 
 		return targets;
 	}
+
+	async getLtiContext(){
+		if(!this.extra_data.context_id){
+			let study = super.getStudy()
+
+			let label = 'ACT' + this.id;
+			let title = this.name;
+			if(study){
+				label = 'STD' + study._id + label;
+				title = study.name + ' - ' + title;
+			}
+
+			LtiController.addLtiContext({
+				org: 'https://simva.e-ucm.es/',
+				type: [ "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering" ],
+				label: label,
+				title: title,
+				sourcedId: 'activity:' + this.id,
+				history: ''
+			})
+
+			this.extra_data.context_id
+		}
+
+		LtiController.getLtiContext()
+	}
 };
 
 // ##########################################

@@ -3,6 +3,13 @@ var mongoose = require('mongoose');
 
 var LtiController = require('../../lib/lticontroller');
 
+var StudiesController = require('../../lib/studiescontroller');
+var UsersController = require('../../lib/userscontroller');
+var GroupsController = require('../../lib/groupscontroller');
+var AllocatorsController = require('../../lib/allocatorscontroller');
+var TestsController = require('../../lib/testscontroller');
+var ActivitiesController = require('../../lib/activitiescontroller');
+
 if(!Array.prototype.flat){
   Object.defineProperty(Array.prototype, 'flat', {
       value: function(depth = 1) {
@@ -58,7 +65,7 @@ module.exports.getLtiClaims = async (options) => {
         "name": "SIMVA e-UCM"
       },
       "https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice": {
-        "context_memberships_url": "https://simva.e-ucm.es/lti/memberships",
+        "context_memberships_url": "https://simva-api.simva.e-ucm.es/lti/memberships",
         "service_versions": ["2.0"]
       }
   };
