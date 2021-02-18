@@ -197,6 +197,8 @@ class LTIToolActivity extends Activity {
 	}
 
 	async getLtiContext(){
+		let context = {};
+
 		if(!this.extra_data.context_id){
 			let study = super.getStudy()
 
@@ -207,19 +209,23 @@ class LTIToolActivity extends Activity {
 				title = study.name + ' - ' + title;
 			}
 
-			LtiController.addLtiContext({
+			context = await LtiController.addLtiContext({
 				org: 'https://simva.e-ucm.es/',
 				type: [ "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering" ],
 				label: label,
 				title: title,
 				sourcedId: 'activity:' + this.id,
-				history: ''
+				history: 'none'
 			})
 
-			this.extra_data.context_id
+			this.extra_data.context_id = context._id;
+
+			await super.save();
+		}else{
+			context = await LtiController.getLtiContext(this.extra_data.context_id);
 		}
 
-		LtiController.getLtiContext()
+		return context;
 	}
 };
 

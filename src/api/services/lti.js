@@ -39,6 +39,19 @@ module.exports.getLtiStatus = async (options) => {
 module.exports.getLtiClaims = async (options) => {
   console.log(options);
 
+  try{
+    let message_hint = await LtiController.decodeJWT(options.lti_message_hint);
+    console.log(message_hint);
+
+    let activity = await ActivitiesController.loadActivity(message_hint.activity);
+    console.log(activity);
+    let context = await activity.getLtiContext();
+    console.log(context);
+  }catch(e){
+    console.log(e);
+  }
+  
+
   let claims = {
       "https://purl.imsglobal.org/spec/lti/claim/message_type"    : "LtiResourceLinkRequest",
       "https://purl.imsglobal.org/spec/lti/claim/version"         : "1.3.0",

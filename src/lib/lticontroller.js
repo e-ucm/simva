@@ -134,5 +134,17 @@ LtiController.generateJWT = async (data) => {
 	return jwt.sign(data, config.JWT.secret, { expiresIn: config.JWT.expiresIn, issuer: config.JWT.issuer });
 }
 
+LtiController.decodeJWT = async (token) => {
+	return new Promise((resolve, reject) => {
+		jwt.verify(token, config.JWT.secret, function(error, decoded) {
+			if(error){
+				reject(error);
+			}else{
+				resolve(decoded);
+			}
+		});
+	});
+}
+
 
 module.exports = LtiController;
