@@ -35,9 +35,9 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
  * needed for the tool to work.
  */
 router.get('/claims', async (req, res, next) => {
-  console.log('claims get');
+  /*console.log('claims get');
   console.log(req.query);
-  console.log(req.body);
+  console.log(req.body);*/
 
   const options = {
     lti_login_hint: req.query['login_hint'],
@@ -62,18 +62,31 @@ router.get('/claims', async (req, res, next) => {
  * needed for the tool to work.
  */
 router.post('/claims', async (req, res, next) => {
-  console.log('claims post');
+  /*console.log('claims post');
   console.log(req.query);
   console.log(req.body);
-  console.log(req.headers.authorization);
-
+  console.log(req.headers.authorization);*/
+  
   const options = {
     lti_login_hint: req.body['login_hint'],
     lti_message_hint: req.body['lti_message_hint']
   };
 
   try {
-    const result = await lti.getLtiClaims(options);
+    let result = { status: 200, data: { error: 'No message hint received' } };
+
+    console.log('#### Claims post:');
+
+    if(options.lti_message_hint){
+      result = await lti.getLtiClaims(options);
+    }else{
+      console.log('## Bad Claims request');
+      console.log(req.body);
+    }
+
+
+    console.log(JSON.stringify(result));
+    
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({
@@ -178,11 +191,14 @@ router.delete('/tools/:id', Authenticator.auth, async (req, res, next) => {
  */
 router.get('/memberships', async (req, res, next) => {
   console.log(req.query);
-  console.log(req.body);
-  console.log(req.headers.authorization);
+  console.log(req.headers.authorization)
+
+  let options = {
+    context_id: req.query.context_id
+  };
 
   try {
-    const result = { test: 'hello' };
+    const result = await lti.getLtiMemberships(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({

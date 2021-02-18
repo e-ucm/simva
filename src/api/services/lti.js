@@ -37,16 +37,18 @@ module.exports.getLtiStatus = async (options) => {
  * @return {Promise}
  */
 module.exports.getLtiClaims = async (options) => {
-  console.log(options);
+  let context = {};
+  let tool = {};
 
   try{
     let message_hint = await LtiController.decodeJWT(options.lti_message_hint);
-    console.log(message_hint);
-
     let activity = await ActivitiesController.loadActivity(message_hint.activity);
-    console.log(activity);
-    let context = await activity.getLtiContext();
-    console.log(context);
+    tool = await LtiController.getLtiTool(activity.extra_data.tool);
+    context = JSON.parse(JSON.stringify(await activity.getLtiContext()));
+    
+    context.id = context._id;
+    delete context._id;
+    delete context.__v;
   }catch(e){
     console.log(e);
   }
@@ -56,7 +58,7 @@ module.exports.getLtiClaims = async (options) => {
       "https://purl.imsglobal.org/spec/lti/claim/message_type"    : "LtiResourceLinkRequest",
       "https://purl.imsglobal.org/spec/lti/claim/version"         : "1.3.0",
       "https://purl.imsglobal.org/spec/lti/claim/deployment_id"   : "D001",
-      "https://purl.imsglobal.org/spec/lti/claim/target_link_uri" : "https://lti-ri.imsglobal.org/lti/tools/1376/launches",
+      "https://purl.imsglobal.org/spec/lti/claim/target_link_uri" : tool.redirect_uri,
       "https://purl.imsglobal.org/spec/lti/claim/resource_link"   : {
         "id"          : "link001",
         "title"       : "Resource 001",
@@ -71,14 +73,14 @@ module.exports.getLtiClaims = async (options) => {
         "label": "Ctxt001",
         "title":  "Context 001",
         "type": ["http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"]
-      },
+      },//context,
       "https://purl.imsglobal.org/spec/lti/claim/tool_platform"   : {
         "guid": "tool_id_0001",
         "product_family_code": "SIMVA",
         "name": "SIMVA e-UCM"
       },
       "https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice": {
-        "context_memberships_url": "https://simva-api.simva.e-ucm.es/lti/memberships",
+        "context_memberships_url": "https://simva-api.simva.e-ucm.es/lti/memberships?context_id=" + context.id,
         "service_versions": ["2.0"]
       }
   };
@@ -194,4 +196,36 @@ module.exports.deleteLtiTool = async (options) => {
   }
 
   return { status: 200, data: tool };
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.lti_login_hint simva signed JWT token with LTI-login data
+ * @param {String} options.lti_message_hint simva signed JWT token with LTI-related data
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getLtiMemberships = async (options) => {
+  let memberships = {};
+
+  try{
+    let context = await LtiController.getLtiContext(options.context_id);
+    let activityid = context.sourcedId.split(':')[1];
+    let activity = await ActivitiesController.loadActivity(activityid);
+    
+    let member_usernames = Object.keys(activity.extra_data.participants);
+    
+    let members = await UsersController.getUsers({ username: member_usernames });
+
+    memberships = {
+      "id" : "https://simva-api.simva.e-ucm.es/lti/memberships?context_id=" + options.context_id,
+      "context" : context,
+      "members" : members
+    };
+  }catch(e){
+    console.log(e);
+    return { message: 'Error getting the memberships', error: e };
+  }
+
+  return { status: 200, data: memberships };
 };
