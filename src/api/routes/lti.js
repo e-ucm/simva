@@ -183,18 +183,95 @@ router.delete('/tools/:id', Authenticator.auth, async (req, res, next) => {
   }
 });
 
-/**
- * An lti tool launch will provide two parameters including
- * lti_message_hint and lti_login_hint and, in base of that,
- * this endpoint will return an object including all the claims
- * needed for the tool to work.
- */
-router.get('/memberships', async (req, res, next) => {
-  console.log(req.query);
-  console.log(req.headers.authorization)
-
+router.get('/context/:id/lineitems', async (req, res, next) => {
   let options = {
-    context_id: req.query.context_id
+    context_id: req.params['id']
+  };
+
+  try {
+    const result = await lti.getLtiLineItems(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
+router.get('/context/:id/lineitems/:lineitem', async (req, res, next) => {
+  let options = {
+    context_id: req.params['id'],
+    lineitem: req.params['lineitem']
+  };
+
+  try {
+    const result = await lti.getLtiLineItem(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
+router.put('/context/:id/lineitems/:lineitem', async (req, res, next) => {
+  let options = {
+    context_id: req.params['id'],
+    lineitem: req.params['lineitem'],
+    content: req.body
+  };
+
+  try {
+    const result = await lti.putLtiLineItem(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
+router.post('/context/:id/lineitems/:lineitem/score', async (req, res, next) => {
+  let options = {
+    context_id: req.params['id'],
+    lineitem: req.params['lineitem'],
+    content: req.body
+  };
+
+  try {
+    const result = await lti.setLtiLineItemScore(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
+router.get('/context/:id/lineitems/:lineitem/results', async (req, res, next) => {
+  let options = {
+    context_id: req.params['id'],
+    lineitem: req.params['lineitem']
+  };
+
+  try {
+    const result = await lti.getLtiLineItemResults(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      status: 500,
+      error: 'Server Error'
+    });
+  }
+});
+
+router.get('/context/:id/memberships', async (req, res, next) => {
+  let options = {
+    context_id: req.params['id']
   };
 
   try {

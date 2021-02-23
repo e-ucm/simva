@@ -1363,7 +1363,159 @@ paths:
           required: false
           schema:
             type: string
-  /lti/memberships:
+  /lti/context/{id}/lineitems/:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: getLtiLineItems
+      description: |
+        Returns the list of LineItems
+      responses:
+        '200':
+          description: the object including all the LineItems
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+  /lti/context/{id}/lineitems/{lineitem}/:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: getLtiLineItem
+      description: |
+        Returns the list of LineItems
+      responses:
+        '200':
+          description: the object including all the LineItems
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+    put:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: putLtiLineItem
+      description: |
+        Sets the value of a lineitem
+      responses:
+        '200':
+          description: the object including all the LineItems
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+  /lti/context/{id}/lineitems/{lineitem}/results:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the result for the LineItems of the Lti Activity
+      operationId: getLtiLineItemResults
+      description: |
+        Sets the value of a lineitem score
+      responses:
+        '200':
+          description: The result of the lineitem
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+  /lti/context/{id}/lineitems/{lineitem}/score:
+    post:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: setLtiLineItemScore
+      description: |
+        Sets the value of a lineitem score
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+  /lti/context/{id}memberships:
     get:
       tags:
         - admins
@@ -1382,18 +1534,13 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: query
-          name: lti_login_hint
-          description: simva signed JWT token with LTI-login data
-          required: false
+        - in: path
+          name: id
+          required: true
           schema:
             type: string
-        - in: query
-          name: lti_message_hint
-          description: simva signed JWT token with LTI-related data
-          required: false
-          schema:
-            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
   /lti/tools:
     get:
       tags:

@@ -40,12 +40,17 @@ module.exports.getLtiClaims = async (options) => {
   let context = {};
   let tool = {};
 
+  let username = "";
+
   try{
     let message_hint = await LtiController.decodeJWT(options.lti_message_hint);
+    let login_hint = await LtiController.decodeJWT(options.lti_login_hint);
     let activity = await ActivitiesController.loadActivity(message_hint.activity);
     tool = await LtiController.getLtiTool(activity.extra_data.tool);
     context = JSON.parse(JSON.stringify(await activity.getLtiContext()));
-    
+
+    username = login_hint.participant;
+
     context.id = context._id;
     delete context._id;
     delete context.__v;
@@ -68,20 +73,26 @@ module.exports.getLtiClaims = async (options) => {
         "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner"
       ],
 
-      "https://purl.imsglobal.org/spec/lti/claim/context"         : {
-        "id": "context001",
-        "label": "Ctxt001",
-        "title":  "Context 001",
-        "type": ["http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"]
-      },//context,
+      "https://purl.imsglobal.org/spec/lti/claim/context"         : context,
       "https://purl.imsglobal.org/spec/lti/claim/tool_platform"   : {
         "guid": "tool_id_0001",
         "product_family_code": "SIMVA",
         "name": "SIMVA e-UCM"
       },
       "https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice": {
-        "context_memberships_url": "https://simva-api.simva.e-ucm.es/lti/memberships?context_id=" + context.id,
+        "context_memberships_url": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/memberships",
         "service_versions": ["2.0"]
+      },
+      "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint": {
+        "scope": [
+          "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
+          "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly",
+          "https://purl.imsglobal.org/spec/lti-ags/scope/score",
+        ],
+        "lineitems": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems",
+        "lineitem": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems/" + username + "/",
+        "score": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems/" + username + "/score",
+        "results": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems/" + username + "/results"
       }
   };
 
@@ -196,6 +207,32 @@ module.exports.deleteLtiTool = async (options) => {
   }
 
   return { status: 200, data: tool };
+};
+
+module.exports.getLtiLineItems = async (options) => {
+  console.log(options);
+
+  return { status: 200, data: {} };
+};
+module.exports.getLtiLineItem = async (options) => {
+  console.log(options);
+
+  return { status: 200, data: {} };
+};
+module.exports.putLtiLineItem = async (options) => {
+  console.log(options);
+
+  return { status: 200, data: {} };
+};
+module.exports.setLtiLineItemScore = async (options) => {
+  console.log(options);
+
+  return { status: 200, data: {} };
+};
+module.exports.getLtiLineItemResults = async (options) => {
+  console.log(options);
+
+  return { status: 200, data: {} };
 };
 
 /**
