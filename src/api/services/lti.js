@@ -90,9 +90,7 @@ module.exports.getLtiClaims = async (options) => {
           "https://purl.imsglobal.org/spec/lti-ags/scope/score",
         ],
         "lineitems": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems",
-        "lineitem": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems/" + username + "/",
-        "score": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems/" + username + "/score",
-        "results": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems/" + username + "/results"
+        "lineitem": "https://simva-api.simva.e-ucm.es/lti/context/" + context.id + "/lineitems/" + username + "/"
       }
   };
 
@@ -266,3 +264,70 @@ module.exports.getLtiMemberships = async (options) => {
 
   return { status: 200, data: memberships };
 };
+
+module.exports.addLtiPlatform = async (options) => {
+  try {
+    console.log('services');
+    console.log(options);
+    platform = await LtiController.addLtiPlatform(options.body);
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return { status: 200, data: platform };
+};
+
+module.exports.getLtiPlatforms = async (options) => {
+    var result = { status: 404, data: {message: 'Not found'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+
+      var platform = await LtiController.getLtiPlatform(options.id);
+
+      if(tool !== null){
+        result = { status: 200, data: platform };
+      }else{
+        result = { status: 404, data: {message: 'Not found'} };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid.'} };
+    }
+  }catch(e){
+    console.log(e);
+    result =  { status: 500, data: e };
+  }
+
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The lti platform ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateLtiPlatform = async (options) => {
+  try {
+    if(options.body === {}){
+      return {status: 400, data: {message: 'Platform cant be an empty object'} };
+    }else{
+      tool = await LtiController.updateLtiPlatform(options.id, options.body);
+    }
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return { status: 200, data: tool };
+};
+
+module.exports.deleteLtiPlatform = async (options) => {
+    try {
+      tool = await LtiController.removeLtiPlatform(options.id);
+    }catch(e){
+      return {status: 500, data: e };
+    }
+
+    return { status: 200, data: tool };
+};
+

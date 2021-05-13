@@ -2,6 +2,7 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 var config = require('./config');
 const jwt = require('jsonwebtoken');
+let ltijs = require('./lti/tool');
 
 var LtiController = {};
 
@@ -10,6 +11,7 @@ const KeycloakClient = require('./utils/keycloakclient');
 
 let maxid = 100000;
 let minid = 1;
+
 
 LtiController.getLtiTools = async (params) => {
 	var res = await mongoose.model('lti_tool').find(params);
@@ -144,6 +146,74 @@ LtiController.decodeJWT = async (token) => {
 			}
 		});
 	});
+}
+
+LtiController.addLtiPlatform = async (platform) => {
+	console.log('adding platform');
+	console.log(platform);
+	let internal_id = "";
+
+	 try {
+	 	console.log('prepare');
+	 	console.log(platform);
+	 	console.log("prepared")
+		let p = {
+			url: platform.url,
+			name: platform.name,
+			clientId: platform.clientId,
+			authenticationEndpoint: platform.authenticationEndpoint,
+			accesstokenEndpoint: platform.accesstokenEndpoint,
+			authConfig: platform.authConfig
+		};
+
+		console.log(p);
+
+		let registered_platform = await ltijs.provider.registerPlatform(p);
+
+		let result = await registered_platform.platformJSON();
+		internal_id = result._id
+	} catch (err) {
+		console.log(e);
+		throw { message: 'Error creating the Platform in ltijs', error: e };
+	}
+
+	var LtiPlatform = mongoose.model('lti_platform');
+
+	var created_platform = new LtiPlatform(platform);
+	created_platform.internal_id = internal_id;
+
+	try{
+		await created_platform.save();
+	}catch(e){
+		console.log(e);
+		throw { message: 'Error creating the Platform', error: e };
+	}
+	
+
+	return created_platform;
+}
+
+LtiController.updateLtiPlatform = async (id, platform) => {
+	var LtiPlatform = mongoose.model('lti_platform');
+
+	var result = await LtiPlatform.updateOne({ _id: id }, platform);
+
+	return result.ok > 0;
+}
+
+LtiController.removeLtiPlatform = async (id) => {
+	var LtiPlatform = mongoose.model('lti_platform');
+
+	try{
+		let platform = await LtiController.getLtiPlatform(id);
+		//await ltijs.provider.deleteplatform(platform.internal_id) REMOVE PLATFORM
+		await LtiPlatform.deleteOne({ _id: id });
+	}catch(e){
+		console.log(e);
+		throw { message: 'Error deleting the platform', error: e};
+	}
+	
+	return true;
 }
 
 

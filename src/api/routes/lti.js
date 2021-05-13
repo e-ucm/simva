@@ -1,5 +1,6 @@
 const express = require('express');
 const lti = require('../services/lti');
+let tool = require('../../lib/lti/tool');
 
 const router = new express.Router();
 
@@ -117,6 +118,8 @@ router.get('/tools', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+router.use('/tool', tool.provider.app);
+
 /**
  * Adds an lti tool that will be later available for the activities
  */
@@ -177,6 +180,73 @@ router.delete('/tools/:id', Authenticator.auth, async (req, res, next) => {
 
   try {
     const result = await lti.deleteLtiTool(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Adds an lti platform that will be later available for the studies
+ */
+router.post('/platforms', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    user: req.user
+  };
+
+  try {
+    console.log('routers');
+    const result = await lti.addLtiPlatform(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * gets the LTI platform with the given ID
+ */
+router.get('/platforms/:id', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id']
+  };
+
+  try {
+    const result = await lti.getLtiPlatform(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Updates an existing LTI platform
+ */
+router.put('/platforms/:id', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id']
+  };
+
+  try {
+    const result = await lti.updateLtiPlatform(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Deletes an existing LTI platform
+ */
+router.delete('/platforms/:id', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id']
+  };
+
+  try {
+    const result = await lti.deleteLtiPlatform(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);

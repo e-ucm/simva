@@ -1515,7 +1515,7 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The id of the line item
-  /lti/context/{id}memberships:
+  /lti/context/{id}/memberships:
     get:
       tags:
         - admins
@@ -1680,6 +1680,69 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The LTI tool ID
+  /lti/platforms:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of LTI platforms
+      operationId: getLtiPlatforms
+      description: |
+        Obtains the list of lti platforms registered
+      responses:
+        '200':
+          description: the list of LTI platforms registered
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/lti_platform'
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a lti platform
+      operationId: addLtiPlatform
+      description: |
+        Register an lti platform that is allowed to launch simva as tool
+      responses:
+        '200':
+          description: lti platform registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_platform'
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_platform'
+        required: true
   /uploads:
     post:
       tags:
@@ -1938,6 +2001,39 @@ components:
         redirect_uri:
           type: string
           example: "https://lti-tool.test/launch"
+        extra_data:
+          type: object
+    lti_platform:
+      type: object
+      required:
+        - url
+        - name
+        - clientId
+        - authenticationEndpoint
+        - accesstokenEndpoint
+        - authConfig
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        url:
+          type: string
+          example: "https://sso.simva.e-ucm.es/auth/realms/simva"
+        name:
+          type: string
+          example: "simva"
+        clientId:
+          type: string
+          example: "lti-tool-81751"
+        authenticationEndpoint:
+          type: string
+          example: "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/auth"
+        accesstokenEndpoint:
+          type: string
+          example: "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/token"
+        authConfig:
+          type: object
+          #example: { "method": "JWK_SET", "key": "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/certs" }
         extra_data:
           type: object
     lti_context:

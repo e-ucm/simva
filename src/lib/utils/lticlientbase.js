@@ -113,6 +113,7 @@ module.exports = {
         "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly",
         "https://purl.imsglobal.org/spec/lti-ags/scope/score",
         "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
+        "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly",
         "address",
         "phone",
         "offline_access",
