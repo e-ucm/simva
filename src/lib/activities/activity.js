@@ -171,11 +171,14 @@ class Activity {
 		}
 
 		this.extra_data.participants[participant].result = result.result;
+
+		let toret = { result: await this.save() };
 		
 		if(result.tofile === true){
 			await this.saveToFile(participant + '.result', result.result);
 		}
-		return { result: await this.save() };
+
+		return toret;
 	}
 
 	async saveToFile(filename, content){
@@ -227,6 +230,7 @@ class Activity {
 				})
 			}catch(e){
 				console.log(e);
+				reject({ message: 'error saving to file', error: e });
 			}
 		});
 	}

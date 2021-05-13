@@ -9,7 +9,7 @@ const config = require('../lib/config');
 const logger = require('../lib/logger');
 
 const log = logger(config.logger);
-
+process.env.DEBUG = '*';
 
 //XXX
 //require('https').globalAgent.options.ca = require('ssl-root-cas/latest').create();

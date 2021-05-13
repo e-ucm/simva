@@ -23,7 +23,9 @@ config.logger.name = 'SIMVA'
 config.mongo = {}
 config.mongo.host = process.env.MONGO_HOST || 3000
 config.mongo.db = process.env.MONGO_DB || '/simva'
+config.mongo.ltidb = process.env.LTI_MONGO_DB || '/lti_simva'
 config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
+config.mongo.ltiurl = 'mongodb://'+config.mongo.host+config.mongo.ltidb
 config.mongo.test = 'mongodb://localhost:1234/tests'
 
 config.kafka = {}

@@ -186,6 +186,8 @@ class GameplayActivity extends Activity {
 						throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
 					}
 				}
+			}else{
+				throw { message: 'Unknown case' };
 			}
 		}catch(e){
 			console.log(e);

@@ -265,11 +265,64 @@ module.exports.getLtiMemberships = async (options) => {
   return { status: 200, data: memberships };
 };
 
+/**
+ * @param {Object} options
+ * @param {String} options.searchString pass an optional search string for result filtering
+ * @param {Integer} options.skip number of records to skip for pagination
+ * @param {Integer} options.limit maximum number of records to return
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getLtiPlatforms = async (options) => {
+  var result = { status: 200, data: {} };
+  let query = {};
+
+    console.log(options);
+    console.log(options.searchString);
+
+  try{
+    if(options.searchString && options.searchString !== ''){
+      try{
+        console.log('asd');
+        query = JSON.parse(options.searchString);
+        console.log(query);
+      }catch(e){
+        console.log(e);
+        return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
+      }
+    }
+
+    result.data = await LtiController.getLtiPlatforms(query);
+  }catch(e){
+    result = { status: 500, data: e };
+  }
+  
+  return result;
+};
+
 module.exports.addLtiPlatform = async (options) => {
   try {
-    console.log('services');
-    console.log(options);
     platform = await LtiController.addLtiPlatform(options.body);
+
+    if(options.body.studyId){
+      let group = await GroupsController.addGroup({
+        name: 'LTI:' + options.body.name,
+        owners: [],
+        participants: [],
+        link: { 
+          type: 'lti_platform',
+          id: platform._id
+        },
+        created: Date.now()
+      });
+
+      let study = await StudiesController.getStudy(options.body.studyId);
+
+      study.groups.push(group._id);
+
+      await StudiesController.updateStudy(study._id, study);
+    }
+    
   }catch(e){
     return {status: 500, data: e };
   }
@@ -277,7 +330,7 @@ module.exports.addLtiPlatform = async (options) => {
   return { status: 200, data: platform };
 };
 
-module.exports.getLtiPlatforms = async (options) => {
+module.exports.getLtiPlatform = async (options) => {
     var result = { status: 404, data: {message: 'Not found'} };
 
   try{
@@ -285,7 +338,7 @@ module.exports.getLtiPlatforms = async (options) => {
 
       var platform = await LtiController.getLtiPlatform(options.id);
 
-      if(tool !== null){
+      if(platform !== null){
         result = { status: 200, data: platform };
       }else{
         result = { status: 404, data: {message: 'Not found'} };
@@ -323,11 +376,58 @@ module.exports.updateLtiPlatform = async (options) => {
 
 module.exports.deleteLtiPlatform = async (options) => {
     try {
-      tool = await LtiController.removeLtiPlatform(options.id);
+      var platform = await LtiController.getLtiPlatform(options.id);
+
+      if(platform !== null){
+
+        if(platform.studyId && platform.studyId !== ''){
+          console.log('1');
+          let query = { 'link.type': 'lti_platform', 'link.id': platform._id };
+          console.log(query);
+          let groups = await GroupsController.getGroups(query);
+
+          if(groups.length !== 0){
+            await GroupsController.removeGroup(groups[0]._id);
+
+            console.log(groups);
+
+            console.log('2');
+            let study = await StudiesController.getStudy(platform.studyId);
+            console.log(study);
+
+            console.log('3');
+            let todelete = -1;
+            for (var i = 0; i < study.groups.length; i++) {
+              console.log('4');
+              if(study.groups[i].toString() === groups[0]._id.toString()){
+                todelete = i;
+                console.log('5');
+                break;
+              }
+            }
+
+            console.log('6');
+
+            if(todelete >= 0){
+              study.groups.splice(todelete, 1);
+            }
+
+            console.log('7');
+
+            console.log(study);
+
+            await StudiesController.updateStudy(study._id, study);
+          }
+        }
+      }else{
+        result = { status: 404, data: {message: 'Not found'} };
+      }
+
+      platform = await LtiController.removeLtiPlatform(options.id);
     }catch(e){
       return {status: 500, data: e };
     }
 
-    return { status: 200, data: tool };
+    return { status: 200, data: platform };
 };
 

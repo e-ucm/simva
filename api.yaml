@@ -1743,6 +1743,82 @@ paths:
             schema:
               $ref: '#/components/schemas/lti_platform'
         required: true
+  /lti/platforms/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the LTI platforms with the given ID
+      operationId: getLtiPlatform
+      description: |
+        Obtains the requested LTI platforms
+      responses:
+        '200':
+          description: lti platforms object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_platform'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti_tool ID
+    put:
+      tags:
+        - teachers
+      summary: updates the LTI platforms
+      operationId: updateLtiPlatform
+      description: Updates an existing LTI platforms
+      responses:
+        '200':
+          description: item created
+        '401':
+          description: 'Teacher does not own the group'
+        '400':
+          description: 'invalid input'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti platform ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_platform'
+        description: LTI platform to be modified
+    delete:
+      tags:
+        - teachers
+      summary: Deletes the lti platform with the given ID
+      operationId: deleteLtiTool
+      description: |
+        Deletes the designed lti platform
+      responses:
+        '200':
+          description: LTI platform deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The LTI platform ID
   /uploads:
     post:
       tags:
@@ -1839,6 +1915,8 @@ components:
           items:
             type: string
             example: ObjectId("5d07a0767c1405004bc702af")
+        link:
+          type: object
         created:
           type: string
           format: date-time
@@ -2034,6 +2112,12 @@ components:
         authConfig:
           type: object
           #example: { "method": "JWK_SET", "key": "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/certs" }
+        studyId:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        internal_id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
         extra_data:
           type: object
     lti_context:

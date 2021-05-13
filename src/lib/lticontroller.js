@@ -2,7 +2,7 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 var config = require('./config');
 const jwt = require('jsonwebtoken');
-let ltijs = require('./lti/tool');
+let ltijs = require('ltijs').Provider;
 
 var LtiController = {};
 
@@ -148,15 +148,26 @@ LtiController.decodeJWT = async (token) => {
 	});
 }
 
+LtiController.getLtiPlatforms = async (params) => {
+	var res = await mongoose.model('lti_platform').find(params);
+
+	return res;
+};
+
+LtiController.getLtiPlatform = async (id) => {
+	var res = await mongoose.model('lti_platform').find({_id: id});
+
+	if(res.length > 0) {
+		return res[0];
+	}else{
+		return null;
+	}
+};
+
 LtiController.addLtiPlatform = async (platform) => {
-	console.log('adding platform');
-	console.log(platform);
 	let internal_id = "";
 
 	 try {
-	 	console.log('prepare');
-	 	console.log(platform);
-	 	console.log("prepared")
 		let p = {
 			url: platform.url,
 			name: platform.name,
@@ -166,21 +177,22 @@ LtiController.addLtiPlatform = async (platform) => {
 			authConfig: platform.authConfig
 		};
 
-		console.log(p);
+		let registered_platform = await ltijs.registerPlatform(p);
 
-		let registered_platform = await ltijs.provider.registerPlatform(p);
-
-		let result = await registered_platform.platformJSON();
-		internal_id = result._id
+		internal_id = await registered_platform.platformId();
 	} catch (err) {
 		console.log(e);
 		throw { message: 'Error creating the Platform in ltijs', error: e };
 	}
 
+	console.log('loading lib');
+
 	var LtiPlatform = mongoose.model('lti_platform');
 
 	var created_platform = new LtiPlatform(platform);
 	created_platform.internal_id = internal_id;
+
+	console.log(created_platform);
 
 	try{
 		await created_platform.save();
@@ -198,7 +210,7 @@ LtiController.updateLtiPlatform = async (id, platform) => {
 
 	var result = await LtiPlatform.updateOne({ _id: id }, platform);
 
-	return result.ok > 0;
+	return result.ok > 0; 
 }
 
 LtiController.removeLtiPlatform = async (id) => {
@@ -206,7 +218,11 @@ LtiController.removeLtiPlatform = async (id) => {
 
 	try{
 		let platform = await LtiController.getLtiPlatform(id);
-		//await ltijs.provider.deleteplatform(platform.internal_id) REMOVE PLATFORM
+
+		if(platform.internal_id){
+			await ltijs.deletePlatformById(platform.internal_id);
+		}
+
 		await LtiPlatform.deleteOne({ _id: id });
 	}catch(e){
 		console.log(e);
