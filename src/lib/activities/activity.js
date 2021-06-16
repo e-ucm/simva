@@ -185,7 +185,6 @@ class Activity {
 
 	async saveToFile(filename, content){
 		return new Promise((resolve, reject) => {
-
 			let activity = this;
 
 			try{
@@ -233,6 +232,27 @@ class Activity {
 			}catch(e){
 				console.log(e);
 				reject({ message: 'error saving to file', error: e });
+			}
+		});
+	}
+
+	async readFromFile(filename){
+		return new Promise((resolve, reject) => {
+			let activity = this;
+
+			try{
+				let fullname = config.storage.path + activity._id + '/' + filename;
+
+				fs.readFile(fullname, 'utf8', function(error, result) {
+					if(error) {
+						reject({ message: 'Unable to read file: "' + fullname + '".', error: error})
+					}else{
+						resolve(result);
+					}
+				});
+			}catch(e){
+				console.log(e);
+				reject({ message: 'Error reading file', error: e });
 			}
 		});
 	}

@@ -167,7 +167,7 @@ class GameplayActivity extends Activity {
 				// If these conditions are satisfied, we're receiving an start or backup
 				if(result && result.result){
 					if(this.extra_data.config.backup){
-						await super.setResult(participant, result);
+						await super.saveToFile(participant, result.result);
 						return { message: 'Results Saved' };
 					}else{
 						throw { message: 'Backup is not enabled for this activity' };
@@ -187,6 +187,8 @@ class GameplayActivity extends Activity {
 					}
 				}
 			}else{
+				console.log('Unknown case');
+				console.log(result.result);
 				throw { message: 'Unknown case setting the result' };
 			}
 		}catch(e){
@@ -200,7 +202,7 @@ class GameplayActivity extends Activity {
 	async getResults(participants){
 		let results = {};
 
-		let backupresults = await super.getResults(participants);
+		let backupresults = await this.loadBackups(participants);
 		let analyticsresults = {};
 
 		if(this.extra_data.config.realtime){
@@ -226,6 +228,25 @@ class GameplayActivity extends Activity {
 		}
 
 		return results;
+	}
+
+	async loadBackups(participants){
+		if(!participants || participants.length == 0){
+			participants = Object.keys(this.extra_data.participants);
+		}
+
+		let backups = [];
+
+		for (var i = 0; i < participants.length; i++) {
+			try {
+				backups[participants[i]] = await super.readFromFile(participants[i]);
+			}catch(e){
+				console.log(e);
+				backups[participants[i]] = null;
+			}
+		}
+
+		return backups;
 	}
 
 	async setCompletion(participant, status){
