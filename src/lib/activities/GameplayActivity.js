@@ -134,7 +134,7 @@ class GameplayActivity extends Activity {
 		}
 
 		return await super.addParticipants(participants);
-	}º
+	}
 
 	async removeParticipants(participants){
 		if(this.extra_data.config.realtime){
@@ -187,7 +187,7 @@ class GameplayActivity extends Activity {
 					}
 				}
 			}else{
-				throw { message: 'Unknown case' };
+				throw { message: 'Unknown case setting the result' };
 			}
 		}catch(e){
 			console.log(e);

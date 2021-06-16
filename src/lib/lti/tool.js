@@ -65,16 +65,14 @@ lti.onConnect(async (token, req, res) => {
       user = users[0];
     }else{
       console.log('new user');
-      let username = null;
+      let username = token.user;
       let email = null;
 
       if(token.userInfo && token.userInfo.email){
         console.log('adding with email');
-        username = token.userInfo.email;
         email = token.userInfo.email;
       }else{
         console.log('adding with username');
-        username = token.user;
         email = token.user + '@dummy.com';
       }
 

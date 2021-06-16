@@ -277,15 +277,10 @@ module.exports.getLtiPlatforms = async (options) => {
   var result = { status: 200, data: {} };
   let query = {};
 
-    console.log(options);
-    console.log(options.searchString);
-
   try{
     if(options.searchString && options.searchString !== ''){
       try{
-        console.log('asd');
         query = JSON.parse(options.searchString);
-        console.log(query);
       }catch(e){
         console.log(e);
         return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
