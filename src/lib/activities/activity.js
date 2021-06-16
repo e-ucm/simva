@@ -7,6 +7,8 @@ const validator = require('../utils/validator');
 
 var activityschema = validator.getSchema('#/components/schemas/activity');
 
+var config = require('../config');
+
 class Activity {
 
 	// ##########################################
@@ -188,7 +190,7 @@ class Activity {
 
 			try{
 				let savefile = function(){
-					let fullname = "storage/" + activity._id + '/' + filename;
+					let fullname = config.storage.path + activity._id + '/' + filename;
 					fs.writeFile(fullname, content, function(error) {
 						if(error) {
 							reject({ message: 'Unable to save file: "' + fullname + '".', error: error})
@@ -199,10 +201,10 @@ class Activity {
 				}
 
 				let checkSubfolder = function(){
-					fs.stat('storage/' + activity._id, function(error, stats){
+					fs.stat(config.storage.path + activity._id, function(error, stats){
 						if(error){
 							console.log('Folder does not exist');
-							fs.mkdir('storage/' + activity._id, function(error){
+							fs.mkdir(config.storage.path + activity._id, function(error){
 								if(error){
 									reject({ message: 'Unable to create the subdirectory.', error: error })
 								}else{
@@ -215,9 +217,9 @@ class Activity {
 					})
 				}
 
-				fs.stat('storage', function(error, stats){
+				fs.stat(config.storage.path, function(error, stats){
 					if(error){
-						fs.mkdir('storage', function(error){
+						fs.mkdir(config.storage.path, function(error){
 							if(error){
 								reject({ message: 'Unable to create the base directory.', error: error })
 							}else{

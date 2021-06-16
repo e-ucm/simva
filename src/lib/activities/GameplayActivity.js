@@ -11,7 +11,7 @@ var TraceStorageActivity = new MinioActivity({});
 
 var UsersController = require('../userscontroller');
 
-var config = require('..//config');
+var config = require('../config');
 
 class GameplayActivity extends Activity {
 
