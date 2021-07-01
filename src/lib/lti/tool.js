@@ -151,6 +151,34 @@ lti.onDynamicRegistration(async (req, res, next) => {
   }
 })
 
+// Deep Linking callback
+lti.onDeepLinking((token, req, res) => {
+  console.log('deplinking request');
+  return res.sendFile('./deeplinkview.html');
+})
+
+// Handles deep linking request generation with the selected resource
+lti.app.post('/deeplink', async (req, res) => {
+  console.log('teep');
+  const resource = req.body
+
+  const items = [
+    {
+      type: 'ltiResourceLink',
+      title: resource.title,
+      custom: {
+        resourceurl: resource.path,
+        resourcename: resource.title
+      }
+    }
+  ]
+
+  // Creates the deep linking request form
+  const form = await lti.DeepLinking.createDeepLinkingForm(res.locals.token, items, { message: 'Successfully registered resource!' })
+
+  return res.send(form)
+})
+
 const setup = async () => {
   console.log('LTIJS: started');
   try{
