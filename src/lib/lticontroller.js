@@ -12,6 +12,19 @@ const KeycloakClient = require('./utils/keycloakclient');
 let maxid = 100000;
 let minid = 1;
 
+let platformToJSON = async (platform) => {
+	let ret = {
+		_id: await platform.platformId(),
+		name: await platform.platformName(),
+		url: await platform.platformUrl(),
+		clientId: await platform.platformClientId(),
+		authenticationEndpoint: await platform.platformAuthenticationEndpoint(),
+		accesstokenEndpoint: await platform.platformAccessTokenEndpoint(),
+		authConfig: await platform.platformAuthConfig(),
+		active: await platform.platformActive()
+	};
+	return ret;
+}
 
 LtiController.getLtiTools = async (params) => {
 	var res = await mongoose.model('lti_tool').find(params);
@@ -149,23 +162,50 @@ LtiController.decodeJWT = async (token) => {
 }
 
 LtiController.getLtiPlatforms = async (params) => {
-	var res = await mongoose.model('lti_platform').find(params);
+	/*var res = await mongoose.model('lti_platform').find(params);
 
-	return res;
+	return res;*/
+	try{
+		let platforms = await ltijs.getAllPlatforms();
+		console.log(platforms);
+
+		let result = [];
+
+		for (var i = 0; i < platforms.length; i++) {
+			console.log('transforming platform');
+			result.push(await platformToJSON(platforms[i]));
+		}
+
+		console.log('completed');
+
+		return result;
+	}catch(e){
+		console.log(e);
+		throw { message: 'Error getting the platforms', error: e };
+	}
 };
 
 LtiController.getLtiPlatform = async (id) => {
-	var res = await mongoose.model('lti_platform').find({_id: id});
+	/*var res = await mongoose.model('lti_platform').find({_id: id});
 
 	if(res.length > 0) {
 		return res[0];
 	}else{
 		return null;
+	}*/
+
+	let platform = await ltijs.getPlatformById(id);
+
+	if(platform !== null){
+		return await platformToJSON(platform);
+	}else{
+		return null
 	}
 };
 
 LtiController.addLtiPlatform = async (platform) => {
-	let internal_id = "";
+	//let internal_id = "";
+	let registered_platform = null;
 
 	 try {
 		let p = {
@@ -177,7 +217,7 @@ LtiController.addLtiPlatform = async (platform) => {
 			authConfig: platform.authConfig
 		};
 
-		let registered_platform = await ltijs.registerPlatform(p);
+		registered_platform = await ltijs.registerPlatform(p);
 
 		internal_id = await registered_platform.platformId();
 	} catch (err) {
@@ -185,7 +225,7 @@ LtiController.addLtiPlatform = async (platform) => {
 		throw { message: 'Error creating the Platform in ltijs', error: e };
 	}
 
-	console.log('loading lib');
+	/*console.log('loading lib');
 
 	var LtiPlatform = mongoose.model('lti_platform');
 
@@ -199,31 +239,31 @@ LtiController.addLtiPlatform = async (platform) => {
 	}catch(e){
 		console.log(e);
 		throw { message: 'Error creating the Platform', error: e };
-	}
-	
+	}*/
 
-	return created_platform;
+	return await platformToJSON(registered_platform);
 }
 
 LtiController.updateLtiPlatform = async (id, platform) => {
-	var LtiPlatform = mongoose.model('lti_platform');
+	/*var LtiPlatform = mongoose.model('lti_platform');
 
 	var result = await LtiPlatform.updateOne({ _id: id }, platform);
 
-	return result.ok > 0; 
+	return result.ok > 0; */
+	return null;
 }
 
 LtiController.removeLtiPlatform = async (id) => {
-	var LtiPlatform = mongoose.model('lti_platform');
+	//var LtiPlatform = mongoose.model('lti_platform');
 
 	try{
-		let platform = await LtiController.getLtiPlatform(id);
+		/*let platform = await LtiController.getLtiPlatform(id);
 
-		if(platform.internal_id){
-			await ltijs.deletePlatformById(platform.internal_id);
-		}
+		if(platform.internal_id){*/
+			await ltijs.deletePlatformById(id);
+		//}
 
-		await LtiPlatform.deleteOne({ _id: id });
+		//await LtiPlatform.deleteOne({ _id: id });
 	}catch(e){
 		console.log(e);
 		throw { message: 'Error deleting the platform', error: e};
