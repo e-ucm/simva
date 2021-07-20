@@ -133,7 +133,34 @@ UsersController.authUser = async (username, plainPass) => {
 	}else{
 		throw({ message: 'Username or password not correct'});
 	}
-	
+}
+
+UsersController.linkUser = async (mainjwt, secondaryjwt, domain) => {
+	var User = mongoose.model('user');
+
+	if(!domain){
+		domain = 'internal';
+	}
+
+	let mainuser, secondaryuser, loadeduser;
+
+	try{
+		result = await UsersController.validateJWT(mainjwt);
+		mainuser = result.data.id;
+
+		result = await UsersController.validateJWT(secondaryjwt);
+		secondaryuser = result.data.id;
+
+		loadeduser = await UsersController.getUser(mainuser);
+
+		loadeduser.external_entity.push({domain: domain, id: secondaryuser});
+
+		await UsersController.updateUser(loadeduser._id, loadeduser);
+	}catch(e){
+		throw { message: 'error linking the accounts', error: e };
+	}
+
+	return loadeduser;
 }
 
 
