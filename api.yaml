@@ -118,6 +118,26 @@ paths:
                 $ref: '#/components/schemas/user'
         '400':
           description: 'invalid input'
+  /users/link:
+    post:
+      summary: Links the secondary account to the main one
+      operationId: linkUser
+      description: |
+        Receives two valid JWT tokens and adds to the main
+        account, as an external_entity, the secondary account
+      responses:
+        '200':
+          description: Accounts linked
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/link_accounts'
+        required: true
   /groups:
     get:
       tags:
@@ -1234,6 +1254,45 @@ paths:
           schema:
             type: string
             format: 'user1,user2,user3'
+  /activities/{id}/test:
+    post:
+      tags:
+        - teachers
+        - students
+      summary: testing endpoint for uadventure testing
+      operationId: setTest
+      description: |
+        Testing endpoint
+      responses:
+        '200':
+          description: if it is openable or not
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+        - in: query
+          name: time
+          description: |
+            milliseconds to return
+          schema:
+            type: integer
+            format: '2000'
+        - in: query
+          name: user
+          description: |
+            the user to set its result
+            (if logged in student , user is not needed)
+          schema:
+            type: string
+            format: 'user1'
   /activitytypes:
     get:
       tags:
@@ -2112,9 +2171,6 @@ components:
         authConfig:
           type: object
           #example: { "method": "JWK_SET", "key": "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/certs" }
-        studyId:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702b2")
         internal_id:
           type: string
           example: ObjectId("5d07a0767c1405004bc702b2")
@@ -2235,6 +2291,23 @@ components:
         password:
           type: boolean
           example: false
+      x-swagger-mongoose:
+        exclude-schema: true
+    link_accounts:
+      required:
+      - main
+      - secondary
+      type: object
+      properties:
+        main:
+          type: string
+          example: JWT of the main account
+        secondary:
+          type: string
+          example: JWT of the secondary account
+        domain:
+          type: string
+          example: moodle_12321
       x-swagger-mongoose:
         exclude-schema: true
 #    lti_claims:
