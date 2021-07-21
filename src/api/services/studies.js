@@ -31,28 +31,7 @@ module.exports.getStudies = async (options) => {
 
     if(options.user.data.role !== 'admin'){
       if(options.user.data.role === 'teacher'){
-        let usernames = [options.user.data.username];
-
-        if(options.user.data.external_entity){
-          for (var i = 0; i < options.user.data.external_entity.length; i++) {
-            if(options.user.data.external_entity[i].domain === 'internal'){
-              let user = await UsersController.getUser(options.user.data.external_entity[i].id);
-              usernames.push(user.username);
-            }
-          }
-        }
-        let users = await UsersController.getUsers(
-          {
-            'external_entity.domain': 'internal',
-            'external_entity.id': options.user.data._id.toString()
-          }
-        );
-
-        for (var i = 0; i < users.length; i++) {
-          usernames.push(users[i].username);
-        }
-
-        query.owners = { "$in" : usernames };
+        query.owners = { "$in" : await UsersController.getEffectiveUsernames(options.user.data) };
       }else{
         let groups = await GroupsController.getGroups({participants: options.user.data.username});
 

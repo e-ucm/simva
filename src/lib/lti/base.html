@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Simva Deeplinking select</title>
+	<style type="text/css">
+		body {
+			text-align: center;
+			font-family: calibri;
+			background-color: #332d26;
+		}
+
+		ul {
+			margin-left: auto;
+			margin-right: auto;
+			width: 300px;
+			padding: 10px;
+			list-style-type: none;
+		}
+		ul li {
+			font-weight: bold;
+			font-size: 16px;
+			margin: 6px;
+			padding: 6px;
+			color: black;
+			background-color: #fff6ec;
+		}
+
+		ul li:hover{
+			color: white;
+			background-color: darkgray;
+			cursor: pointer;
+		}
+
+		.login {
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
+			text-align: center;
+			width: 260px;
+			background-color: #fff6ec;
+			padding: 20px;
+		}
+
+		.login input {
+			width: 220px;
+			padding: 6px;
+			font-size: 15px;
+			border: 1px solid black;
+			margin: 5px;
+		}
+		.login input[type="submit"],
+		.button{
+				display: inline-block;
+			    width: 234px;
+			    border: 0;
+			    padding: 6px;	
+			    background: #f0913f;
+			    font-size: 15px;
+			    color: #fff;
+			    cursor: pointer;
+			    text-decoration: none;
+		}
+
+		.separator {
+			font-size: 20px;
+			font-weight: bold;
+			color: #fff6ec;
+			padding: 6px;
+		}
+	</style>
+	<script type="text/javascript">
+		var token = "<TOKEN>";
+		window.onload = function(e){
+			let forms = document.getElementsByClassName("submitable");
+
+			let click = function(form){
+				return function(){
+					form.submit();
+				}
+			}
+
+			for (var i = 0; i < forms.length; i++) {
+			    forms[i].addEventListener('click', click(forms[i]), false);
+			}
+		}
+	</script>
+</head>
+<body>
+	<img src="https://simva.e-ucm.es/logo_text.png">
+	<div>
+		<CONTENT>
+	</div>
+</body>
+</html>

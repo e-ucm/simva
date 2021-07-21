@@ -163,6 +163,31 @@ UsersController.linkUser = async (mainjwt, secondaryjwt, domain) => {
 	return loadeduser;
 }
 
+UsersController.getEffectiveUsernames = async (user) => {
+	let usernames = [user.username];
+
+    if(user.external_entity){
+      for (var i = 0; i < user.external_entity.length; i++) {
+        if(user.external_entity[i].domain === 'internal'){
+          let tmp = await UsersController.getUser(user.external_entity[i].id);
+          usernames.push(tmp.username);
+        }
+      }
+    }
+
+    let users = await UsersController.getUsers(
+      {
+        'external_entity.domain': 'internal',
+        'external_entity.id': user._id.toString()
+      }
+    );
+
+    for (var i = 0; i < users.length; i++) {
+      usernames.push(users[i].username);
+    }
+
+    return usernames;
+}
 
 var cryptPassword = async (password) => {
 	return new Promise((resolve, reject) => {

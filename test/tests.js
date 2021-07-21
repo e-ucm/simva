@@ -52,9 +52,9 @@ describe('API Test', function (done) {
         require('./api/users')(request);
         require('./api/groups')(request);
         require('./api/studies')(request);
-        require('./api/activities')(request);
+        /*require('./api/activities')(request);
         require('./api/allocators')(request);
-        require('./api/lti')(request);
+        require('./api/lti')(request);*/
         done();
     });
 
