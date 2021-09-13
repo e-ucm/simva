@@ -133,6 +133,7 @@ class MinioActivity extends Activity {
 	}
 
 	async sendTracesToKafka(traces, activityId){
+		console.log("Sending traces: " + JSON.stringify(traces));
 		return new Promise((resolve, reject) => {
 				let payloads = [];
 
@@ -144,8 +145,10 @@ class MinioActivity extends Activity {
 
 				producer.send(payloads, function (err, data) {
 					if(err){
+						console.log("Error in Kafka enqueue: " + JSON.stringify(err));
 						reject(err);
 					}else{
+						console.log("Trace enqueued ok!");
 						resolve(data);
 					}
 				});
