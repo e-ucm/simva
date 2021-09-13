@@ -241,7 +241,9 @@ class GameplayActivity extends Activity {
 			try {
 				backups[participants[i]] = await super.readFromFile(participants[i]);
 			}catch(e){
-				console.log(e);
+				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
+					console.log(e);
+				}
 				backups[participants[i]] = null;
 			}
 		}
