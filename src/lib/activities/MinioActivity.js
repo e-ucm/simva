@@ -147,7 +147,7 @@ class MinioActivity extends Activity {
 						console.log("Error in Kafka enqueue: " + err);
 						reject(err);
 					}else{
-						console.log("Trace enqueued ok! Data: " + data);
+						console.log("Trace enqueued ok! Data: " + JSON.stringify(data));
 						resolve(data);
 					}
 				});
