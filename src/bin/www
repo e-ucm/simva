@@ -19,6 +19,8 @@ const log = logger(config.logger);
  */
 const port = normalizePort(config.api.port || '3000');
 app.set('port', port);
+app.use(express.json({limit: config.api.maxUploadFileSize}));
+app.use(express.urlencoded({limit: config.api.maxUploadFileSize}));
 
 /**
  * Create HTTP server.
