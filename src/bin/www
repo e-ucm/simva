@@ -3,6 +3,7 @@
 /**
  * Module dependencies.
  */
+const express = require('express');
 const app = require('../api');
 const http = require('http');
 const config = require('../lib/config');
