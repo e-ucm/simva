@@ -7,6 +7,7 @@ const app = require('../api');
 const http = require('http');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
+const bodyParser = require('body-parser');
 
 const log = logger(config.logger);
 process.env.DEBUG = '*';
@@ -19,6 +20,8 @@ process.env.DEBUG = '*';
  */
 const port = normalizePort(config.api.port || '3000');
 app.set('port', port);
+app.use(bodyParser.json({limit: config.api.maxUploadFileSize}));
+app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: true}));
 
 /**
  * Create HTTP server.
