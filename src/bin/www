@@ -3,7 +3,6 @@
 /**
  * Module dependencies.
  */
-const express = require('express');
 const app = require('../api');
 const http = require('http');
 const config = require('../lib/config');
@@ -20,8 +19,6 @@ process.env.DEBUG = '*';
  */
 const port = normalizePort(config.api.port || '3000');
 app.set('port', port);
-app.use(express.json({limit: config.api.maxUploadFileSize}));
-app.use(express.urlencoded({limit: config.api.maxUploadFileSize}));
 
 /**
  * Create HTTP server.
