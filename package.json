@@ -21,7 +21,7 @@
     "get-keycloak-public-key": "*",
     "keycloak-admin": "*",
     "ltijs": "*",
-    "mongoose": "^5.7.8",
+    "mongoose": "^5.13.15",
     "node-yaml-config": "0.0.3",
     "request": "*",
     "ssl-root-cas": "1.3.x",
