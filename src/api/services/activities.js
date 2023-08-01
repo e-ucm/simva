@@ -45,12 +45,12 @@ module.exports.getActivities = async (options) => {
  */
 module.exports.addActivity = async (options) => {
   try {
-    group = await ActivitiesController.addActivity(options.body);
+    activity = await ActivitiesController.addActivity(options.body);
   }catch(e){
     return {status: 500, data: e };
   }
 
-  return { status: 200, data: group };
+  return { status: 200, data: activity };
 };
 
 /**
@@ -121,31 +121,35 @@ module.exports.deleteActivity = async (options) => {
 
     if(activity){
 
-      await ActivitiesController.deleteActivity(options.id);
+      if(activity.owners.indexOf(options.user.data.username) !== -1){
+        await ActivitiesController.deleteActivity(options.id);
 
-      if(activity.test){
-        var test = await TestsController.getTest(activity.test);
-
-        if(test !== null){
-          let toremove = -1;
-          for (var i = 0; i < test.activities.length; i++) {
-            let activityid = activity._id.toString();
-            if(test.activities[i] === activityid){
-              toremove = i;
-              break;
+        if(activity.test){
+          var test = await TestsController.getTest(activity.test);
+  
+          if(test !== null){
+            let toremove = -1;
+            for (var i = 0; i < test.activities.length; i++) {
+              let activityid = activity._id.toString();
+              if(test.activities[i] === activityid){
+                toremove = i;
+                break;
+              }
             }
+  
+            if(toremove > -1){
+              test.activities.splice(toremove, 1);
+              await TestsController.updateTest(activity.test, test);
+            }
+          }else{
+             return { status: 404, data: { message: 'Unable to load test.' } };
           }
-
-          if(toremove > -1){
-            test.activities.splice(toremove, 1);
-            await TestsController.updateTest(activity.test, test);
-          }
-        }else{
-           return { status: 404, data: { message: 'Unable to load test.' } };
         }
+  
+        result = { status: 200, data: { message: 'Activity deleted.' } }
+      }else{
+        result = { status: 401, data: { message: 'Activity does not belong to the user.' } };
       }
-
-      result = { status: 200, data: { message: 'Activity deleted' } }
     }else{
       result = { status: 404, data: { message: 'Activity not found.' } };
     }

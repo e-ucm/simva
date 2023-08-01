@@ -29,53 +29,59 @@ paths:
     get:
       tags:
         - admins
-      summary: gets the list of users.
+      summary: 'Gets the list of users'
       operationId: getUsers
       description: |
-        Obtains the list of groups owned by current user.
+        Obtains the list of users.
       responses:
         '200':
-          description: the list of users
+          description: 'List of users'
           content:
             application/json:
               schema:
                 type: array
                 items: 
                   $ref: '#/components/schemas/user'
+        '400':
+          description: 'Invalid input'
       parameters:
         - in: query
           name: searchString
-          description: pass an optional search string for result filtering
+          description: 'Optional search string for result filtering'
           required: false
           schema:
             type: string
         - in: query
           name: skip
-          description: number of records to skip for pagination
+          description: 'Number of records to skip for pagination'
           schema:
             type: integer
             format: int32
             minimum: 0
         - in: query
           name: limit
-          description: maximum number of records to return
+          description: 'Maximum number of records to return'
           schema:
             type: integer
             format: int32
             minimum: 0
             maximum: 50
     post:
-      summary: adds a user.
+      summary: 'Adds a user'
       operationId: addUser
       description: |
-        Creates a new group for the current user as owner.
+        Creates a new user.
       responses:
         '200':
-          description: item created
+          description: 'User created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
         '400':
-          description: 'invalid input, object invalid'
+          description: 'Invalid input, object invalid'
         '409':
-          description: an existing item already exists
+          description: 'Username or email already exists'
       requestBody:
         content:
           application/json:
@@ -84,13 +90,13 @@ paths:
         required: true
   /users/login:
     post:
-      summary: logs in the user obtaining an auth token
+      summary: 'Logs in the user obtaining an auth token'
       operationId: loginUser
       description: |
         Creates a new group for the current user as owner.
       responses:
         '200':
-          description: Success including the auth token to be used
+          description: 'Success including the auth token to be used'
         '400':
           description: 'invalid input'
       requestBody:
@@ -105,55 +111,57 @@ paths:
         - admins
         - teachers
         - students
-      summary: Obtains your own user.
+      summary: 'Obtains your own user'
       operationId: getMe
       description: |
         Based on the current auth header obtains the user
       responses:
         '200':
-          description: The user
+          description: 'Logged in user'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/user'
         '400':
-          description: 'invalid input'
+          description: 'Invalid input'
   /groups:
     get:
       tags:
         - admins
         - teachers
         - students
-      summary: gets the list of groups where this student pl
+      summary: 'Gets the list of groups where this student is present'
       operationId: getGroups
       description: |
         Obtains the list of groups owned by current user.
       responses:
         '200':
-          description: the list of groups for this user
+          description: 'List of groups owned by the current user'
           content:
             application/json:
               schema:
                 type: array
                 items: 
                   $ref: '#/components/schemas/group'
+        '400':
+          description: 'Invalid input'
       parameters:
         - in: query
           name: searchString
-          description: pass an optional search string for result filtering
+          description: 'Optional search string for result filtering'
           required: false
           schema:
             type: string
         - in: query
           name: skip
-          description: number of records to skip for pagination
+          description: 'Number of records to skip for pagination'
           schema:
             type: integer
             format: int32
             minimum: 0
         - in: query
           name: limit
-          description: maximum number of records to return
+          description: 'Maximum number of records to return'
           schema:
             type: integer
             format: int32
@@ -162,21 +170,19 @@ paths:
     post:
       tags:
         - teachers
-      summary: adds a group for the current user as owner.
+      summary: 'Adds a group owned by the current user'
       operationId: addGroup
       description: |
-        Creates a new group for the current user as owner.
+        Creates a new group with the current user as owner.
       responses:
         '200':
-          description: group created
+          description: 'Group created'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/group'
         '400':
-          description: 'invalid input, object invalid'
-        '409':
-          description: an existing item already exists
+          description: 'Invalid input, object invalid'
       requestBody:
         content:
           application/json:
@@ -189,19 +195,21 @@ paths:
         - admins
         - students
         - teachers
-      summary: gets the group with the given ID
+      summary: 'Gets the group with the given ID'
       operationId: getGroup
       description: |
         Obtains the requested group
       responses:
         '200':
-          description: group object
+          description: 'Group object'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/group'
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not belong to the group'
         '404':
           description: 'Not found'
       parameters:
@@ -210,46 +218,49 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The group ID'
     put:
       tags:
         - teachers
-      summary: updates the group
+      summary: 'Updates the group'
       operationId: updateGroup
-      description: Updates an existing group
+      description: |
+        Updates an existing group.
       responses:
         '200':
-          description: item created
-        '401':
-          description: 'Teacher does not own the group'
+          description: 'Group updated'
         '400':
-          description: 'invalid input'
+          description: 'Invalid input'
+        '401':
+          description: 'User does not own the group'
+        '404':
+          description: 'Group, participant or owner does not exist'
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The group ID'
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/group'
-        description: Group to be modified
+        description: 'Group to be modified'
   /groups/{id}/studies:
     get:
       tags:
         - teachers
-      summary: gets the assigned studies to the group
+      summary: 'Gets the assigned studies to the group'
       operationId: getGroupStudies
       description: |
-        Obtains the list of studies assigned to the group
+        Obtains the list of studies assigned to the group.
       responses:
         '200':
-          description: list of studies assigned
+          description: 'Group studies'
           content:
             application/json:
               schema:
@@ -258,6 +269,8 @@ paths:
                   $ref: '#/components/schemas/study'
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not belong to the group'
         '404':
           description: 'Group not found'
       parameters:
@@ -266,27 +279,29 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The group ID'
   /groups/{id}/participants:
     get:
       tags:
         - teachers
-      summary: gets the list of participants for this group
+      summary: 'Gets the list of participants for this group'
       operationId: getGroupParticipants
       description: |
-        Obtains the list of participants of the group
+        Obtains the list of participants of the group.
       responses:
         '200':
-          description: list of participants
+          description: 'List of participants'
           content:
             application/json:
               schema:
                 type: array
                 items: 
-                  type: string
+                  $ref: '#/components/schemas/user'
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not belong to the group'
         '404':
           description: 'Group not found'
       parameters:
@@ -295,21 +310,21 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The group ID'
   /groups/{id}/printable:
     get:
       tags:
         - teachers
-      summary: gets the printable PDF version of the group
+      summary: 'Gets a printable PDF list of users in the group'
       operationId: getGroupPrintable
       description: |
-        Usefull for assistance in the classroom, the printable
+        Useful for assistance in the classroom, the printable
         version of the class allows the teacher to cut and
         give the codes to the students easily to anonymize them.
       responses:
         '200':
-          description: printable version in PDF
+          description: 'Group participants list PDF file'
           content:
             application/pdf:
               schema:
@@ -317,6 +332,8 @@ paths:
                 format: binary
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'Teacher is not an owner of the group'
         '404':
           description: 'Group not found'
       parameters:
@@ -325,44 +342,46 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The class ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The class ID'
   /studies:
     get:
       tags:
         - admins
         - teachers
         - students
-      summary: gets the list of studies for the current teacher
+      summary: 'Gets the list of studies for the current teacher'
       operationId: getStudies
       description: |
         Obtains the list of studies for the current teacher.
       responses:
         '200':
-          description: the list of studies for this teacher
+          description: 'List of studies for this teacher'
           content:
             application/json:
               schema:
                 type: array
                 items: 
                   $ref: '#/components/schemas/study'
+        '400':
+          description: 'Invalid input'
       parameters:
         - in: query
           name: searchString
-          description: pass an optional search string for result filtering
+          description: 'Optional search string for result filtering'
           required: false
           schema:
             type: string
         - in: query
           name: skip
-          description: number of records to skip for pagination
+          description: 'Number of records to skip for pagination'
           schema:
             type: integer
             format: int32
             minimum: 0
         - in: query
           name: limit
-          description: maximum number of records to return
+          description: 'Maximum number of records to return'
           schema:
             type: integer
             format: int32
@@ -371,7 +390,7 @@ paths:
     post:
       tags:
         - teachers
-      summary: adds an study for the current teacher
+      summary: Adds an study for the current teacher
       operationId: addStudy
       description: |
         Creates a new study for the current teacher.
@@ -384,8 +403,6 @@ paths:
                 $ref: '#/components/schemas/study'
         '400':
           description: 'invalid input, object invalid'
-        '409':
-          description: an existing item already exists
       requestBody:
         required: true
         content:
@@ -398,137 +415,21 @@ paths:
       tags:
         - admins
         - teachers
-      summary: gets the study with the given ID
+      summary: 'Gets the study with the given ID'
       operationId: getStudy
       description: |
-        Obtains the requested study
+        Obtains the requested study.
       responses:
         '200':
-          description: study object
+          description: 'Study object'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/study'
         '400':
           description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-    put:
-      tags:
-        - teachers
-      summary: updates the study
-      operationId: updateStudy
-      description: Updates an existing stidy
-      responses:
-        '200':
-          description: item created
         '401':
-          description: 'Teacher does not own the class'
-        '400':
-          description: 'invalid input'
-        '404':
-          description: 'Requested study does not exist'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/study'
-        description: study to be modified
-    delete:
-      tags:
-        - teachers
-      summary: Deletes the study with the given ID
-      operationId: deleteStudy
-      description: |
-        Deleted the designed study
-      responses:
-        '200':
-          description: Study deleted
-        '400':
-          description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-  /studies/{id}/schedule:
-    get:
-      tags:
-        - teachers
-        - students
-      summary: gets the list of scheduled activities for the student
-      operationId: getSchedule
-      description: |
-        Obtains the list of scheduled activities for the current
-        student and study, and its completion status. Hides the
-        current used test to the user.
-      responses:
-        '200':
-          description: The list of scheduled activities in order.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  next:
-                    type: string
-                    description: "The next activity ID"
-                activities: 
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/activity'
-        '400':
-          description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
-  /studies/{id}/groups:
-    get:
-      tags:
-        - teachers
-      summary: gets the assigned groups to the study
-      operationId: getStudyGroups
-      description: |
-        Obtains the list of groups assigned to the study
-      responses:
-        '200':
-          description: list of groups assigned
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/group'
-        '400':
-          description: 'ID is not a valid ObjectId'
+          description: 'User does not own the study'
         '404':
           description: 'Study not found'
       parameters:
@@ -537,16 +438,141 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The study ID'
+    put:
+      tags:
+        - teachers
+      summary: 'Updates the study'
+      operationId: updateStudy
+      description: | 
+        Updates an existing study.
+      responses:
+        '200':
+          description: 'Study updated'
+        '400':
+          description: 'Invalid input'
+        '401':
+          description: 'Teacher does not own the study'
+        '404':
+          description: 'Study or group does not exist'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The study ID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/study'
+        description: 'Study to be modified'
+    delete:
+      tags:
+        - teachers
+      summary: 'Deletes the study with the given ID'
+      operationId: deleteStudy
+      description: |
+        Deleted the designed study.
+      responses:
+        '200':
+          description: 'Study deleted'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'You are not owner of the study'
+        '404':
+          description: 'Study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The study ID'
+  /studies/{id}/schedule:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: 'Gets the list of scheduled activities for the student'
+      operationId: getSchedule
+      description: |
+        Obtains the list of scheduled activities for the current
+        student and study, and its completion status. Hides the
+        current used test to the user.
+      responses:
+        '200':
+          description: 'List of scheduled activities in order'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  next:
+                    type: string
+                    description: 'Next activity ID in the schedule'
+                activities: 
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/activity'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not participate in the study'
+        '404':
+          description: 'Study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The study ID'
+  /studies/{id}/groups:
+    get:
+      tags:
+        - teachers
+      summary: 'Gets the assigned groups to the study'
+      operationId: getStudyGroups
+      description: |
+        Obtains the list of groups assigned to the study.
+      responses:
+        '200':
+          description: 'List of groups assigned'
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/group'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not own the study'
+        '404':
+          description: 'Study not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
           description: The study ID
   /studies/{id}/tests:
     get:
       tags:
         - teachers
-      summary: gets the tests from a study
+      summary: 'Gets the study tests'
       operationId: getStudyTests
       description: |
-        Obtains the list of tests assigned to the study
+        Obtains the list of tests assigned to the study.
       responses:
         '200':
           description: list of tests assigned
@@ -558,6 +584,8 @@ paths:
                   $ref: '#/components/schemas/test'
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not own the study'
         '404':
           description: 'Study not found'
       parameters:
@@ -566,32 +594,36 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The study ID'
     post:
       tags:
         - teachers
-      summary: adds a test to the study
+      summary:' Adds a test to the study'
       operationId: addTestToStudy
       description: |
-        Adds a test for the current group
+        Adds a test for the current group.
       responses:
         '200':
-          description: test created
+          description: 'Test created'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/test'
         '400':
-          description: 'invalid input, object invalid'
+          description: 'Invalid input, object invalid'
+        '401':
+          description: 'User does not own the study'
+        '404':
+          description: 'Study not found'
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The study ID'
       requestBody:
         content:
           application/json:
@@ -602,7 +634,7 @@ paths:
     get:
       tags:
         - teachers
-      summary: gets the list of participants for this study
+      summary: 'Gets the list of participants for this study'
       operationId: getStudyParticipants
       description: |
         Obtains the list of participants of the study
@@ -617,63 +649,68 @@ paths:
                   type: string
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not own the study'
         '404':
-          description: 'study not found'
+          description: 'Study not found'
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
+            example: ObjectId("5d07a0767c1405004bc702af")
           description: The study ID
   /studies/{studyid}/tests/{testid}:
     get:
       tags:
         - teachers
-      summary: gets the test with the given ID
+      summary: 'Gets the test with the given ID in a study'
       operationId: getTest
       description: |
-        Obtains the requested test
+        Obtains the requested test by Id in the study.
       responses:
         '200':
-          description: test object
+          description: 'Test object'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/test'
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not own the study'
         '404':
-          description: 'Not found'
+          description: 'Study or test not found'
       parameters:
         - in: path
           name: studyid
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
+            example: ObjectId("5d07a0767c1405004bc702as")
+          description: 'The Study ID'
         - in: path
           name: testid
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+            example: ObjectId("5d07a0767c1405004bc702at")
+          description: 'The Test ID'
     put:
       tags:
         - teachers
-      summary: updates the test
+      summary: 'Updates the test'
       operationId: updateTest
-      description: Updates an existing test
+      description: |
+        Updates an existing test.
       responses:
         '200':
-          description: item updated
+          description: 'Test updated'
+        '400':
+          description: 'Invalid input'
         '401':
           description: 'Teacher does not own the class'
-        '400':
-          description: 'invalid input'
         '404':
           description: 'Requested study does not exist'
       parameters:
@@ -682,21 +719,22 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
+            example: ObjectId("5d07a0767c1405004bc702as")
+          description: 'The Study ID'
         - in: path
           name: testid
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+            example: ObjectId("5d07a0767c1405004bc702at")
+          description: 'The Test ID'
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/test'
-        description: test to be modified
+        description: 'Test to be modified'
+        required: true
     delete:
       tags:
         - teachers
@@ -730,84 +768,94 @@ paths:
     get:
       tags:
         - teachers
-      summary: gets the list of activities for the selected test
+      summary: 'Gets the list of activities in the selected test'
       operationId: getTestActivities
       description: |
-        Obtains the list of activities for the selected test
+        Obtains the list of activities in the selected test.
       responses:
         '200':
-          description: the list of activities for this test
+          description: 'List of activities in this test'
           content:
             application/json:
               schema:
                 type: array
                 items: 
                   $ref: '#/components/schemas/activity'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not own the study'
+        '404':
+          description: 'Study or test not found'
       parameters:
         - in: path
           name: studyid
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
+            example: ObjectId("5d07a0767c1405004bc702as")
+          description: 'The Study ID'
         - in: path
           name: testid
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+            example: ObjectId("5d07a0767c1405004bc702at")
+          description: 'The Test ID'
     post:
       tags:
         - teachers
-      summary: adds a Activity to a test
+      summary: 'Adds an Activity to a test in a given test'
       operationId: addActivityToTest
       description: |
         Creates a new activity for the current teacher.
       responses:
         '200':
-          description: activity created
+          description: 'Activity created'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/activity'
         '400':
-          description: 'invalid input, object invalid'
+          description: 'Invalid input, object invalid'
+        '401':
+          description: 'User does not own the study'
+        '404':
+          description: 'Study or test not found'
         '409':
-          description: an existing item already exists
+          description: 'An existing item already exists'
       parameters:
         - in: path
           name: studyid
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
+            example: ObjectId("5d07a0767c1405004bc702as")
+          description: 'The Study ID'
         - in: path
           name: testid
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+            example: ObjectId("5d07a0767c1405004bc702at")
+          description: 'The Test ID'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/activity'
+              $ref: '#/components/schemas/add_activity_body'
   /studies/{id}/allocator:
     get:
       tags:
         - teachers
-      summary: gets the allocator from a study
+      summary: 'Gets the allocator from a study'
       operationId: getStudyAllocator
       description: |
-        Obtains the allocator used by the study
+        Obtains the allocator used by the study.
       responses:
         '200':
-          description: the allocator object
+          description: 'Allocator object'
           content:
             application/json:
               schema:
@@ -816,6 +864,8 @@ paths:
                   $ref: '#/components/schemas/allocator'
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not own the study'
         '404':
           description: 'Study not found'
       parameters:
@@ -824,69 +874,78 @@ paths:
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The Study ID'
     put:
       tags:
         - teachers
-      summary: set the allocator to the study
+      summary: 'Sets the allocator to the study'
       operationId: setStudyAllocator
       description: |
-        Updates the allocator from the study
+        Updates the allocator from the study.
       responses:
         '200':
-          description: updated correctly
+          description: 'Allocator updated'
         '400':
-          description: 'invalid input, object invalid'
+          description: 'Invalid input, object invalid'
+        '401':
+          description: 'User does not own the study'
+        '404':
+          description: 'Study not found'
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The Study ID'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/allocator'
-        description: study to be modified
+        description: 'Allocator to be modified'
   /activities:
     get:
       tags:
         - admins
         - teachers
-      summary: gets the list of activities for the current teacher
+      summary: 'Gets the list of activities for the current user'
       operationId: getActivities
       description: |
         Obtains the list of activities for the current teacher.
       responses:
         '200':
-          description: the list of activities for this teacher
+          description: 'List of activities for this teacher'
           content:
             application/json:
               schema:
                 type: array
                 items: 
                   $ref: '#/components/schemas/activity'
+        '400':
+          description: 'Invalid search string'
+        '401': 
+          description: 'User must be logged in'
       parameters:
         - in: query
           name: searchString
-          description: pass an optional search string for result filtering
+          description: 'Optional search string for result filtering'
           required: false
           schema:
             type: string
         - in: query
           name: skip
-          description: number of records to skip for pagination
+          description: 'Number of records to skip for pagination'
           schema:
             type: integer
             format: int32
             minimum: 0
         - in: query
           name: limit
-          description: maximum number of records to return
+          description: 'Maximum number of records to return'
           schema:
             type: integer
             format: int32
@@ -895,28 +954,30 @@ paths:
     post:
       tags:
         - teachers
-      summary: adds a Activity
+      summary: 'Adds an Activity'
       operationId: addActivity
       description: |
         Creates a new activity for the current teacher.
       responses:
         '200':
-          description: activity created
+          description: 'Activity created'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/activity'
         '400':
           description: 'invalid input, object invalid'
+        '401':
+          description: 'User must be logged in'
         '409':
-          description: an existing item already exists
+          description: 'An existing item already exists'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/activity'
-        description: Activity to be created
+              $ref: '#/components/schemas/add_activity_body'
+        description: 'Activity to be created'
   /activities/{id}:
     get:
       tags:
@@ -935,67 +996,72 @@ paths:
                 $ref: '#/components/schemas/activity'
         '400':
           description: 'ID is not a valid ObjectId'
+        '401':
+          description: 'User does not own the activity'
         '404':
-          description: 'Not found'
+          description: 'Activity not found'
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The Activity ID'
     put:
       tags:
         - teachers
-      summary: updates the test
+      summary: 'Updates the activity'
       operationId: updateActivity
-      description: Updates an existing test
+      description: |
+        Updates an existing activity.
       responses:
         '200':
-          description: item updated
-        '401':
-          description: 'Teacher does not own the class'
+          description: 'Activity updated'
         '400':
-          description: 'invalid input'
+          description: 'Invalid input'
+        '401':
+          description: 'Teacher does not own the activity'
         '404':
-          description: 'Requested study does not exist'
+          description: 'Activity not found'
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The activity Id'
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/activity'
-        description: activity to be modified
+        description: 'Activity to be modified'
     delete:
       tags:
         - teachers
-      summary: deletes the activity with the given ID
+      summary: 'Deletes the activity with the given Id'
       operationId: deleteActivity
       description: |
-        Deleted the specified activity
+        Deleted the specified activity.
       responses:
         '200':
-          description: activity deleted
+          description: 'Activity deleted'
         '400':
-          description: 'ID is not a valid ObjectId'
+          description: 'Id is not a valid ObjectId'
+        '401':
+          description: 'Activity does not belong to the user'
         '404':
-          description: 'Not found'
+          description: 'Activity not found'
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
+            example: ObjectId("5d07a0767c1405004bc702af")
+          description: 'The activity Id'
   /activities/{id}/openable:
     get:
       tags:
@@ -1282,16 +1348,19 @@ components:
       properties:
         username:
           type: string
+          minLength: 1
           example: "username_unique"
         email:
           type: string
-          example: "email"
+          format: "email"
+          example: "email@email.com"
         password:
           type: string
           example: "Pass12345"
         role:
           type: string
           example: "teacher"
+          enum: [ "admin", "teacher", "student" ]
         external_entity:
           type: array
           items:
@@ -1316,6 +1385,7 @@ components:
           example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
+          minLength: 1
           example: "Test group for School"
         owners:
           type: array
@@ -1345,6 +1415,7 @@ components:
           example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
+          minLength: 1
           example: "Survey for SG validation"
         tests:
           type: array
@@ -1378,6 +1449,7 @@ components:
           example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
+          minLength: 1
           example: "Test A for my study"
         activities:
           type: array
@@ -1395,6 +1467,7 @@ components:
           example: ObjectId("5d07a0767c1405004bc702af")
         name:
           type: string
+          minLength: 1
           example: "Survey for validation"
         type:
           type: string
@@ -1407,8 +1480,9 @@ components:
           items:
             type: string
             example: ObjectId("5d07a0767c1405004bc702af")
-        extra_data:
+        details:
           type: object
+          additionalProperties: true
     activity_type:
       type: object
       required:
@@ -1445,9 +1519,11 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
           example: Name of the group
         random_participants:
           type: integer
+          minValue: 1
           description: |
             The amount of codes to be created
             randomly when the group is created
@@ -1461,7 +1537,36 @@ components:
       properties:
         name:
           type: string
-          example: Name of the Study
+          minLength: 1
+          example: 'Name of the Study'
+      x-swagger-mongoose:
+        exclude-schema: true
+    add_activity_body:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
+        name:
+          type: string
+          minLength: 1
+          example: "Survey for validation"
+        type:
+          type: string
+          example: "survey, gameplay, etc..."
+        test:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
+        owners:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+        extra_data:
+          type: object
       x-swagger-mongoose:
         exclude-schema: true
     add_study_to_group_body:
@@ -1471,7 +1576,7 @@ components:
       properties:
         study:
           type: string
-          example: 5d07a0767c1405004bc702af
+          example: ObjectId("5d07a0767c1405004bc702af")
       x-swagger-mongoose:
         exclude-schema: true
     add_group_to_study_body:
@@ -1481,7 +1586,7 @@ components:
       properties:
         group:
           type: string
-          example: 5d07a0767c1405004bc702af
+          example: ObjectId("5d07a0767c1405004bc702af")
       x-swagger-mongoose:
         exclude-schema: true
     login_body:
@@ -1492,9 +1597,11 @@ components:
       properties:
         username:
           type: string
+          minLength: 1
           example: pepito
         password:
           type: string
+          minLength: 6
           example: Pass12345
       x-swagger-mongoose:
         exclude-schema: true

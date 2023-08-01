@@ -60,22 +60,27 @@ module.exports.getStudies = async (options) => {
  * @return {Promise}
  */
 module.exports.addStudy = async (options) => {
+  var result = { };
   try {
     var allocator = await AllocatorsController.createAllocator(AllocatorsController.getTypes()[0].getType());
-    var study = await StudiesController.addStudy({
-      name: options.body.name,
-      owners: [options.user.data.username],
-      tests: [],
-      participants: [],
-      allocator: allocator.id,
-      created: Date.now()
-    });
+    if (!study.body.name) {          
+      result = { status: 400, data: 'Study name must not be empty' };
+    } else {
+      var study = await StudiesController.addStudy({
+        name: options.body.name,
+        owners: [options.user.data.username],
+        tests: [],
+        allocator: allocator.id,
+        created: Date.now()
+      });
+      result = { status: 200, data: study };
+    }
   }catch(e){
     console.log(e);
     return {status: 500, data: e };
   }
 
-  return { status: 200, data: study };
+  return result;
 };
 
 /**
@@ -96,7 +101,9 @@ module.exports.getStudy = async (options) => {
         }else{
           result = { status: 401, data: { message: 'You are not owner of the study' } };
         }
-      } 
+      } else {
+        result = { status: 404, data: {message: 'Study not found'} };
+      }
     }else{
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
@@ -117,30 +124,34 @@ module.exports.updateStudy = async (options) => {
   var result = { status: 200, data: {message: 'Study updated'} };
 
   if(mongoose.Types.ObjectId.isValid(options.id)){
-    try{
-      var study = await StudiesController.getStudy(options.id);
-      if(study !== null){
+    if(options.body.name){
+      try{
+        var study = await StudiesController.getStudy(options.id);
+        if(study !== null){
 
-        if(study.owners.indexOf(options.user.data.username) !== -1){
-          if(options.body.owners.indexOf(options.user.data.username) !== -1){
+          if(study.owners.indexOf(options.user.data.username) !== -1){
+            if(options.body.owners.indexOf(options.user.data.username) !== -1){
 
-            let ownersadded = options.body.owners.filter(x => !study.owners.includes(x));
-            var loadedownersadded = await UsersController.getUsers({"username" : {"$in" : ownersadded}});
+              let ownersadded = options.body.owners.filter(x => !study.owners.includes(x));
+              var loadedownersadded = await UsersController.getUsers({"username" : {"$in" : ownersadded}});
 
-            if(loadedownersadded.length !== ownersadded.length){
-              result = { status: 404, data: {message: 'An owner added does not exist'} };
+              if(loadedownersadded.length !== ownersadded.length){
+                result = { status: 404, data: {message: 'An owner added does not exist'} };
+              }else{
+                await StudiesController.updateStudy(options.id, options.body);
+              }
             }else{
-              await StudiesController.updateStudy(options.id, options.body);
+              result = { status: 400, data: {message: 'Teacher cannot remove itself from the study'} };
             }
           }else{
-            result = { status: 400, data: {message: 'Teacher cannot remove itself from the study'} };
+            result = { status: 401, data: {message: 'User is not authorized to update this study.'} };
           }
-        }else{
-          result = { status: 401, data: {message: 'User is not authorized to update this study.'} };
         }
+      }catch(e){
+        result = { status: 500, data: e };
       }
-    }catch(e){
-      result = { status: 500, data: e };
+    }else{
+      result = { status: 400, data: { message: 'Study name must not be empty' } };
     }
   }else{
     result = { status: 400, data: { message: 'ObjectId is not valid' } };
@@ -239,7 +250,7 @@ module.exports.getSchedule = async (options) => {
           }else{
             result =  { 
               status: 401,
-              data: { message: 'You do not participate in the activity either as owner or user' }
+              data: { message: 'You do not participate in the study either as owner or user' }
             };
           }
         }
@@ -336,8 +347,12 @@ module.exports.addTestToStudy = async (options) => {
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
         if(study.owners.indexOf(options.user.data.username) !== -1){
-          let test = await StudiesController.addTestToStudy(options.id, options.body);
-          result = { status: 200, data: test };
+          if(options.body.name){
+            let test = await StudiesController.addTestToStudy(options.id, options.body);
+            result = { status: 200, data: test };
+          }else{
+            result = { status: 400, data: { message: 'Name parameter is invalid' } };
+          }
         }else{
           result = { status: 401, data: { message: 'You are not owner of the study' } };
         }
@@ -362,7 +377,7 @@ module.exports.addTestToStudy = async (options) => {
  * @return {Promise}
  */
 module.exports.getTest = async (options) => {
-  var result = { status: 404, data: {message: 'Not found'} };
+  var result = { status: 404, data: {message: 'Test not found'} };
 
   try{
     if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
@@ -407,17 +422,21 @@ module.exports.updateTest = async (options) => {
          return result = { status: 404, data: { message: 'Unable to load test.' } };
       }
 
-      let activitiesdeleted = test.activities.filter(x => !options.body.activities.includes(x));
-      let activitiesadded = options.body.activities.filter(x => !test.activities.includes(x));
-
-      if(activitiesadded.length > 0){
-        result = { status: 400, data: {message: 'Activities cannot be added through put interface.'} };
-      }else{
-        for (var i = 0; i < activitiesdeleted.length; i++) {
-          await ActivitiesController.deleteActivity(activitiesdeleted[i]);
+      if(options.body.name){
+        let activitiesdeleted = test.activities.filter(x => !options.body.activities.includes(x));
+        let activitiesadded = options.body.activities.filter(x => !test.activities.includes(x));
+  
+        if(activitiesadded.length > 0){
+          result = { status: 400, data: {message: 'Activities cannot be added through put interface.'} };
+        }else{
+          for (var i = 0; i < activitiesdeleted.length; i++) {
+            await ActivitiesController.deleteActivity(activitiesdeleted[i]);
+          }
+          await TestsController.updateTest(options.testid, options.body);
+          result = { status: 200, data: { message: 'Test updated.'} };
         }
-        await TestsController.updateTest(options.testid, options.body);
-        result = { status: 200, data: { message: 'Test updated.'} };
+      }else{
+        result = { status: 400, data: {message: 'Invalid test name.'} };
       }
     }catch(e){
       console.log(e);
@@ -486,6 +505,10 @@ module.exports.addActivityToTest = async (options) => {
     let test = await TestsController.getTest(options.testid);
     if(!test){
       return { status: 404, data: { message: 'Test not found' } };
+    }
+    
+    if(!options.body.name){
+      return { status: 400, data: { message: 'Name is invalid' } };
     }
 
     if(!options.body.owners){
@@ -563,8 +586,12 @@ module.exports.getStudyAllocator = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        var allocator = await AllocatorsController.getAllocator(study.allocator);
-        result = { status: 200, data: allocator };
+        if(study.owners.indexOf(options.user.data.username) !== -1){
+          var allocator = await AllocatorsController.getAllocator(study.allocator);
+          result = { status: 200, data: allocator };
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the study' } };
+        }
       }else{
         result = { status: 404, data: {message: 'Unable to find the study'} };
       }
@@ -591,22 +618,26 @@ module.exports.setStudyAllocator = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        var allocator = await AllocatorsController.loadAllocator(study.allocator);
+        if(study.owners.indexOf(options.user.data.username) !== -1){
+          var allocator = await AllocatorsController.loadAllocator(study.allocator);
 
-        if(allocator){
-          if(options.body.type !== allocator.type){
-            allocator = AllocatorsController.castToClass(options.body);
-          }else{
-            allocator.params = options.body;
-          }
+          if(allocator){
+            if(options.body.type !== allocator.type){
+              allocator = AllocatorsController.castToClass(options.body);
+            }else{
+              allocator.params = options.body;
+            }
 
-          if(await allocator.save()){
-            return { status: 200, data: {message: 'Allocator updated'} };
+            if(await allocator.save()){
+              return { status: 200, data: {message: 'Allocator updated'} };
+            }else{
+              return { status: 500, data: {message: 'Error updating the allocator'} };
+            }
           }else{
-            return { status: 500, data: {message: 'Error updating the allocator'} };
+            result = { status: 400, data: {message: 'Unable to load the allocator'} };
           }
         }else{
-          result = { status: 400, data: {message: 'Unable to load the allocator'} };
+          result = { status: 401, data: { message: 'You are not owner of the study' } };
         }
       }else{
         result = { status: 404, data: {message: 'Unable to find the study'} };
@@ -628,7 +659,7 @@ module.exports.setStudyAllocator = async (options) => {
  * @return {Promise}
  */
 module.exports.getStudyParticipants = async (options) => {
-  var result = { status: 200, data: {message: 'Group updated'} };
+  var result = { status: 404, data: {message: 'Study not found.'} };
 
   if(mongoose.Types.ObjectId.isValid(options.id)){
     try{

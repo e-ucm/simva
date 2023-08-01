@@ -59,12 +59,16 @@ module.exports.getGroups = async (options) => {
  */
 module.exports.addGroup = async (options) => {
   try {
-    group = await GroupsController.addGroup({
-      name: options.body.name,
-      owners: [options.user.data.username],
-      participants: [],
-      created: Date.now()
-    });
+    if(options.body.name){
+      group = await GroupsController.addGroup({
+        name: options.body.name,
+        owners: [options.user.data.username],
+        participants: [],
+        created: Date.now()
+      });
+    }else{
+      return {status: 400, data: { message: 'Group name field is invalid'} };
+    }
   }catch(e){
     return {status: 500, data: e };
   }
@@ -173,6 +177,8 @@ module.exports.updateGroup = async (options) => {
         }else{
           result = { status: 401, data: {message: 'User is not authorized to update this group.'} };
         }
+      }else{
+        result = { status: 404, data: {message: 'Group does not exist'} };
       }
     }catch(e){
       console.log(e);
@@ -205,7 +211,7 @@ module.exports.getGroupStudies = async (options) => {
           result = { status: 401, data: { message: 'You are not owner of the group' } };
         }
       }else{
-        result = { status: 404, data: { message: 'Group not found' } };
+        result = { status: 404, data: { message: 'Group not found.' } };
       }
     }else{
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
@@ -266,13 +272,15 @@ module.exports.getGroupParticipants = async (options) => {
         }else{
           result = { status: 401, data: {message: 'User is not authorized to access this group.'} };
         }
+      }else{
+        result = { status: 404, data: { message: 'Group not found.' } };
       }
     }catch(e){
       console.log(e);
       result = { status: 500, data: e };
     }
   }else{
-    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+    result = { status: 400, data: { message: 'ObjectId is not valid.' } };
   }
   
   return result;
@@ -297,6 +305,8 @@ module.exports.getGroupPrintable = async (options) => {
         }else{
           result = { status: 401, data: {message: 'User is not authorized to obtain group data.'} };
         }
+      }else{
+        result = { status: 404, data: { message: 'Group not found.' } };
       }
     }else{
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
