@@ -1,6 +1,7 @@
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
+var Minio = require('minio');
 
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
@@ -202,19 +203,19 @@ class GameplayActivity extends Activity {
 	async getResults(participants){
 		let results = {};
 
-		if(this.extra_data.config.trace_storage && (!participants || participants == []))
+		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
 		{
-			var Minio = require('minio')
-			var utils = getUtils("");
-			var minioClient = new Minio.Client({
-			  endPoint: utils.minio_url + "minio",
-			  useSSL: true,
-			  accessKey: config.minio.access_key,
-			  secretKey: config.minio.secret_key,
-			})
-			
-			return minioClient.listObjects("traces", "kafka-topics/traces/_id=" + this.id + "/"); 
+				var utils = getUtils("");
+				var minioClient = new Minio.Client({
+				  endPoint: utils.minio_url + "minio",
+				  useSSL: true,
+				  accessKey: config.minio.access_key,
+				  secretKey: config.minio.secret_key,
+				});
+
+				return minioClient.listObjects("traces", "kafka-topics/traces/_id=" + this.id + "/");
 		}
+
 
 		let backupresults = await this.loadBackups(participants);
 		let analyticsresults = {};

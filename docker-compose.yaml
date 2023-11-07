@@ -22,7 +22,7 @@ services:
       - 27017:27017
 
   simva-api:
-    image: node:8
+    image: node:14
     command: bash -c "cd /app && chmod +x docker-startup.sh && ./docker-startup.sh"
     stdin_open: true
     tty: true
