@@ -205,7 +205,7 @@ class GameplayActivity extends Activity {
 
 		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
 		{
-				var utils = getUtils("");
+				var utils = GameplayActivity.getUtils("");
 				var minioClient = new Minio.Client({
 				  endPoint: utils.minio_url + "minio",
 				  useSSL: true,
