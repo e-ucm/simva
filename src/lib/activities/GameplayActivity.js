@@ -3,6 +3,11 @@ var mongoose = require('mongoose');
 var async = require('async');
 var Minio = require('minio');
 
+const axios = require('axios');
+const xml2js = require('xml2js');
+const fs = require('fs');
+const https = require('https');
+
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
 var RageAnalyticsActivity = require('./RageAnalyticsActivity');
@@ -205,15 +210,10 @@ class GameplayActivity extends Activity {
 
 		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
 		{
-				var utils = GameplayActivity.getUtils("");
-				var minioClient = new Minio.Client({
-				  endPoint: utils.minio_url + "minio",
-				  useSSL: true,
-				  accessKey: config.minio.access_key,
-				  secretKey: config.minio.secret_key,
-				});
+				var minioClient = await GameplayActivity.initializeMinioClient(this.token);
 
-				return minioClient.listObjects("traces", "kafka-topics/traces/_id=" + this.id + "/");
+				return minioClient.listObjects(config.minio.bucket, config.minio.kafka_dir + "/" 
+					+ config.minio.kafka_topic + "/_id=" + this.id + "/");
 		}
 
 
@@ -243,6 +243,60 @@ class GameplayActivity extends Activity {
 		}
 
 		return results;
+	}
+
+	static async getTemporaryCredentials(minio_endpoint, access_token, ca_file) {
+		const data = {
+			Action: 'AssumeRoleWithWebIdentity',
+			Version: '2011-06-15',
+			DurationSeconds: 3600,
+			WebIdentityToken: access_token // Reemplaza con tu token
+		};
+
+		try {
+			const response = await axios.post(minio_endpoint, new URLSearchParams(data), {
+				httpsAgent: new https.Agent({
+					ca: fs.readFileSync(ca_file) // Reemplaza con la ruta a tu archivo CA
+				})
+			});
+
+			if (response.status !== 200) {
+				console.log('Problems getting temporary credentials');
+				console.log(response.data);
+			} else {
+				const parser = new xml2js.Parser({
+					explicitArray: false,
+					tagNameProcessors: [xml2js.processors.stripPrefix]
+				});
+
+				const result = await parser.parseStringPromise(response.data);
+				const credentials = result.AssumeRoleWithWebIdentityResult.Credentials;
+				return {
+					access_key_id: credentials.AccessKeyId,
+					secret_access_key: credentials.SecretAccessKey,
+					session_token: credentials.SessionToken
+				};
+			}
+		} catch (error) {
+			console.error('Error:', error);
+		}
+	}
+
+	async setUserToken(token){
+		this.token = token;
+	}
+
+	static async initializeMinioClient(access_token, ca_file = "") {
+		var utils = await GameplayActivity.getUtils("");
+		var temporaryCredentials = await getTemporaryCredentials(utils.minio_url, access_token, ca_file);
+		var minioClient = new Minio.Client({
+			endPoint: "minio",
+			useSSL: true,
+			accessKey: temporaryCredentials.access_key_id,
+			secretKey: temporaryCredentials.secret_access_key,
+			sessionToken: temporaryCredentials.session_token
+		});
+		return minioClient;
 	}
 
 	async loadBackups(participants){
