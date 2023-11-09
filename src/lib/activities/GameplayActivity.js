@@ -250,14 +250,14 @@ class GameplayActivity extends Activity {
 			Action: 'AssumeRoleWithWebIdentity',
 			Version: '2011-06-15',
 			DurationSeconds: 3600,
-			WebIdentityToken: access_token // Reemplaza con tu token
+			WebIdentityToken: access_token
 		};
 
 		try {
 			const response = await axios.post(minio_endpoint, new URLSearchParams(data), {
-				httpsAgent: new https.Agent({
-					ca: fs.readFileSync(ca_file) // Reemplaza con la ruta a tu archivo CA
-				})
+				httpsAgent: new https.Agent((ca_file && ca_file != "") ? {
+					ca: fs.readFileSync(ca_file) 
+				}:{})
 			});
 
 			if (response.status !== 200) {
@@ -288,7 +288,7 @@ class GameplayActivity extends Activity {
 
 	static async initializeMinioClient(access_token, ca_file = "") {
 		var utils = await GameplayActivity.getUtils("");
-		var temporaryCredentials = await getTemporaryCredentials(utils.minio_url, access_token, ca_file);
+		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
 		var minioClient = new Minio.Client({
 			endPoint: "minio",
 			useSSL: true,
