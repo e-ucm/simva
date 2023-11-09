@@ -270,7 +270,8 @@ class GameplayActivity extends Activity {
 				});
 
 				const result = await parser.parseStringPromise(response.data);
-				const credentials = result.AssumeRoleWithWebIdentityResult.Credentials;
+				const credentials = result.AssumeRoleWithWebIdentityResponse
+					.AssumeRoleWithWebIdentityResult.Credentials;
 				return {
 					access_key_id: credentials.AccessKeyId,
 					secret_access_key: credentials.SecretAccessKey,

@@ -335,7 +335,7 @@ module.exports.getResult = async (options) => {
 
   try {
     let activity = await ActivitiesController.loadActivity(options.id);
-    if(activity.setToken){activity.setToken(options.token);}
+    if(activity.setUserToken){activity.setUserToken(options.token);}
     let study = await ActivitiesController.getStudy(options.id);
 
     let participants = await StudiesController.getParticipants(study);
