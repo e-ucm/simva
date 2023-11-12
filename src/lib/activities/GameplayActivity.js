@@ -210,10 +210,12 @@ class GameplayActivity extends Activity {
 
 		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
 		{
+				var utils = await GameplayActivity.getUtils();
+
 				var minioClient = await GameplayActivity.initializeMinioClient(this.token);
 
-				return this.listMinioObjects(minioClient, config.minio.bucket, config.minio.kafka_dir + "/" 
-					+ config.minio.kafka_topic + "/_id=" + this.id + "/");
+				return this.listMinioObjects(minioClient, config.minio.bucket, utils.topics_dir + "/" 
+					+ utils.kafka_topic + "/_id=" + this.id + "/");
 		}
 
 
@@ -310,7 +312,7 @@ class GameplayActivity extends Activity {
 		var utils = await GameplayActivity.getUtils("");
 		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
 		var minioClient = new Minio.Client({
-			endPoint: "minio",
+			endPoint: new URL(utils.minio_url).hostname,
 			useSSL: true,
 			accessKey: temporaryCredentials.access_key_id,
 			secretKey: temporaryCredentials.secret_access_key,
