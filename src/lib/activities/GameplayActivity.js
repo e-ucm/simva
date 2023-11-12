@@ -212,7 +212,7 @@ class GameplayActivity extends Activity {
 		{
 				var minioClient = await GameplayActivity.initializeMinioClient(this.token);
 
-				return minioClient.listObjects(config.minio.bucket, config.minio.kafka_dir + "/" 
+				return this.listMinioObjects(minioClient, config.minio.bucket, config.minio.kafka_dir + "/" 
 					+ config.minio.kafka_topic + "/_id=" + this.id + "/");
 		}
 
@@ -244,6 +244,25 @@ class GameplayActivity extends Activity {
 
 		return results;
 	}
+
+	async listMinioObjects(minioClient, bucket, prefix) {
+		return new Promise((resolve, reject) => {
+		  const objectsList = [];
+		  const stream = minioClient.listObjects(bucket, prefix); // El tercer parámetro 'recursive' es opcional
+	  
+		  stream.on('data', function(obj) {
+			objectsList.push(obj);
+		  });
+	  
+		  stream.on('error', function(err) {
+			reject(err);
+		  });
+	  
+		  stream.on('end', function() {
+			resolve(objectsList);
+		  });
+		});
+	  }
 
 	static async getTemporaryCredentials(minio_endpoint, access_token, ca_file) {
 		const data = {
