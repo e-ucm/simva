@@ -214,7 +214,7 @@ class GameplayActivity extends Activity {
 
 				var minioClient = await GameplayActivity.initializeMinioClient(this.token);
 
-				return this.listMinioObjects(minioClient, config.minio.bucket, utils.topics_dir + "/" 
+				return this.getMinioObjects(minioClient, config.minio.bucket, utils.topics_dir + "/" 
 					+ utils.kafka_topic + "/_id=" + this.id + "/");
 		}
 
@@ -247,24 +247,59 @@ class GameplayActivity extends Activity {
 		return results;
 	}
 
-	async listMinioObjects(minioClient, bucket, prefix) {
+	
+	async getMinioObjects(minioClient, bucket, prefix){
+		var objectsList = await this.listMinioObjects(minioClient, bucket, prefix);
+		var objectPromises = [];
+		for(var obj in objectsList){
+			objectPromises.push(this.getObject(minioClient, bucket, obj.name));
+		}
+
+		return Promise.all(objectPromises)
+			.then(contents => {
+				return "[" + contents.concat(",") + "]";
+			})
+	}
+
+	async getObject(minioClient, bucket, name){
 		return new Promise((resolve, reject) => {
-		  const objectsList = [];
-		  const stream = minioClient.listObjects(bucket, prefix); // El tercer parámetro 'recursive' es opcional
-	  
-		  stream.on('data', function(obj) {
-			objectsList.push(obj);
-		  });
-	  
-		  stream.on('error', function(err) {
-			reject(err);
-		  });
-	  
-		  stream.on('end', function() {
-			resolve(objectsList);
-		  });
+			var chunks = [];
+			const stream = minioClient.getObject(bucket, name, function (e, dataStream) {
+				stream.on('data', function(chunk) {
+					chunks.push(chunk);
+				});
+		
+				stream.on('error', function(err) {
+					reject(err);
+				});
+		
+				stream.on('end', function() {
+					const buffer = Buffer.concat(chunks);
+					const string = buffer.toString('utf8');
+					resolve(string);
+				});
+			});
 		});
-	  }
+	}
+
+	async listMinioObjects(minioClient, bucket, prefix){
+		return new Promise((resolve, reject) => {
+			const objectsList = [];
+			const stream =  minioClient.listObjects(bucket, prefix);
+	  
+			stream.on('data', function(obj) {
+				objectsList.push(obj);
+			});
+	  
+			stream.on('error', function(err) {
+				reject(err);
+			});
+	  
+			stream.on('end', function() {
+				resolve(objectsList);
+		    });
+		});
+	}
 
 	static async getTemporaryCredentials(minio_endpoint, access_token, ca_file) {
 		const data = {
