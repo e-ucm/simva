@@ -210,12 +210,7 @@ class GameplayActivity extends Activity {
 
 		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
 		{
-				var utils = await GameplayActivity.getUtils();
-
-				var minioClient = await GameplayActivity.initializeMinioClient(this.token);
-
-				return this.getMinioObjects(minioClient, config.minio.bucket, utils.topics_dir + "/" 
-					+ utils.kafka_topic + "/_id=" + this.id + "/");
+				return await getTracesFromZip(this.id, this.token);
 		}
 
 
@@ -341,6 +336,49 @@ class GameplayActivity extends Activity {
 
 	async setUserToken(token){
 		this.token = token;
+	}
+
+	
+	static async getTracesFromZip(activity_id, access_token, ca_file = "") {
+		var utils = await GameplayActivity.getUtils("");
+		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
+
+		// Preparar el body de la petición
+		const requestBody = {
+			"bucketName": "traces",
+			"prefix": "kafka-topics/traces/",
+			"objects": [`_id=${activity_id}/`]
+		};
+
+		try {
+			// Hacer una petición POST para descargar el archivo zip
+			const response = await axios.post(
+				utils.minio_url + "minio/zip?token=" + temporaryCredentials.session_token,
+				requestBody, 
+				{
+					responseType: 'arraybuffer'
+				}
+			);
+
+			// Descargar el archivo zip en memoria
+			const zipData = response.data;
+
+			// Abrir el archivo zip
+			const zip = await JSZip.loadAsync(zipData);
+			let combinedData = "";
+
+			// Combinar todos los archivos del interior utilizando un separador de ","
+			for (const filename of Object.keys(zip.files)) {
+				const fileData = await zip.files[filename].async('string');
+				combinedData += fileData + ",";
+			}
+
+			// Retornar el resultado con "[" y "]" alrededor
+			return "[" + combinedData.slice(0, -1) + "]";  // Elimina la última coma
+		} catch (error) {
+			console.error("Error al procesar el archivo ZIP:", error);
+			throw error;
+		}
 	}
 
 	static async initializeMinioClient(access_token, ca_file = "") {
