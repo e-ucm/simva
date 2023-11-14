@@ -7,6 +7,7 @@ const axios = require('axios');
 const xml2js = require('xml2js');
 const fs = require('fs');
 const https = require('https');
+const JSZip = require('jszip');
 
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
@@ -356,7 +357,10 @@ class GameplayActivity extends Activity {
 				utils.minio_url + "minio/zip?token=" + temporaryCredentials.session_token,
 				requestBody, 
 				{
-					responseType: 'arraybuffer'
+					responseType: 'arraybuffer',
+					headers: {
+						'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0'
+					}
 				}
 			);
 
