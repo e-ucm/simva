@@ -372,7 +372,8 @@ class GameplayActivity extends Activity {
 			);
 	
 			console.log('Respuesta del ZIP recibida, procesando...');
-	
+			res.setHeader('Content-Disposition', `attachment; filename="${activity_id}.zip"`);
+
 			let isFirstFile = true;
 			const transformStream = new Transform({
 				writableObjectMode: true,
