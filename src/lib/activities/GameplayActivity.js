@@ -8,7 +8,9 @@ const xml2js = require('xml2js');
 const fs = require('fs');
 const https = require('https');
 const { pipeline, Transform } = require('stream');
+const { promisify } = require('util');
 const unzipper = require('unzipper');
+const pipelineAsync = promisify(pipeline);
 
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
@@ -212,7 +214,7 @@ class GameplayActivity extends Activity {
 
 		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
 		{
-				return await GameplayActivity.getTracesFromZip(this.id, this.res, this.token);
+			return await GameplayActivity.getTracesFromZip(this.id, this.token, this.res);
 		}
 
 
@@ -348,13 +350,15 @@ class GameplayActivity extends Activity {
 	static async getTracesFromZip(activity_id, access_token, res, ca_file = "") {
 		var utils = await GameplayActivity.getUtils("");
 		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
-
+	
 		const requestBody = {
 			"bucketName": "traces",
 			"prefix": "kafka-topics/traces/",
 			"objects": [`_id=${activity_id}/`]
 		};
-
+	
+		console.log('Iniciando solicitud de ZIP...');
+	
 		try {
 			const response = await axios.post(
 				utils.minio_url + "minio/zip?token=" + temporaryCredentials.session_token,
@@ -366,34 +370,44 @@ class GameplayActivity extends Activity {
 					}
 				}
 			);
-
-			let isFirstEntry = true;
+	
+			console.log('Respuesta del ZIP recibida, procesando...');
+	
+			let isFirstFile = true;
 			const transformStream = new Transform({
-				transform(chunk, encoding, callback) {
-					if (isFirstEntry) {
-						this.push("[");
-						isFirstEntry = false;
+				writableObjectMode: true,
+				transform(file, encoding, callback) {
+					console.log('Procesando archivo:', file.name);
+					let data = file.contents;
+					if (isFirstFile) {
+						data = "[" + data;
+						isFirstFile = false;
 					} else {
-						this.push(",");
+						data = "," + data;
 					}
-					this.push(chunk);
+					this.push(data);
 					callback();
 				},
 				final(callback) {
 					this.push("]");
+					console.log('Finalizando el stream de transformación...');
 					callback();
 				}
 			});
-
-			pipeline(
+	
+			await pipelineAsync(
 				response.data,
 				unzipper.Parse(),
 				new Transform({
 					objectMode: true,
 					transform(entry, encoding, callback) {
 						if (entry.type === 'File') {
-							entry.pipe(transformStream, { end: false });
-							entry.on('end', () => callback());
+							let contents = '';
+							entry.on('data', (chunk) => contents += chunk);
+							entry.on('end', () => {
+								this.push({ name: entry.path, contents });
+								callback();
+							});
 						} else {
 							entry.autodrain();
 							callback();
@@ -401,15 +415,11 @@ class GameplayActivity extends Activity {
 					}
 				}),
 				transformStream,
-				res,
-				(err) => {
-					if (err) {
-						console.error('Pipeline failed.', err);
-					} else {
-						console.log('Pipeline succeeded.');
-					}
-				}
+				res
 			);
+	
+			console.log('Pipeline completada con éxito.');
+	
 		} catch (error) {
 			console.error("Error al procesar el archivo ZIP:", error);
 			res.status(500).send({ error: error.message });
