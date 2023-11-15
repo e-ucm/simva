@@ -212,7 +212,7 @@ class GameplayActivity extends Activity {
 	async getResults(participants){
 		let results = {};
 
-		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
+		if(this.extra_data.config.trace_storage && !participants && (!Array.isArray(participants) || participants.length == 0))
 		{
 			return await GameplayActivity.getTracesFromZip(this.id, this.token, this.res);
 		}
