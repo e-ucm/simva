@@ -216,6 +216,7 @@ router.get('/:id/result', Authenticator.auth, async (req, res, next) => {
     user: req.user,
     users: req.query['users'],
     token: req.headers.authorization.split(" ")[1],
+    res: res,
   };
 
   try {

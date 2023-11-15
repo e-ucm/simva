@@ -7,7 +7,8 @@ const axios = require('axios');
 const xml2js = require('xml2js');
 const fs = require('fs');
 const https = require('https');
-const JSZip = require('jszip');
+const { pipeline, Transform } = require('stream');
+const unzipper = require('unzipper');
 
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
@@ -211,7 +212,7 @@ class GameplayActivity extends Activity {
 
 		if(this.extra_data.config.trace_storage && (!Array.isArray(participants) || participants.length == 0))
 		{
-				return await getTracesFromZip(this.id, this.token);
+				return await GameplayActivity.getTracesFromZip(this.id, this.res, this.token);
 		}
 
 
@@ -339,12 +340,15 @@ class GameplayActivity extends Activity {
 		this.token = token;
 	}
 
+	async setRes(res){
+		this.res = res;
+	}
+
 	
-	static async getTracesFromZip(activity_id, access_token, ca_file = "") {
+	static async getTracesFromZip(activity_id, access_token, res, ca_file = "") {
 		var utils = await GameplayActivity.getUtils("");
 		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
 
-		// Preparar el body de la petición
 		const requestBody = {
 			"bucketName": "traces",
 			"prefix": "kafka-topics/traces/",
@@ -352,36 +356,63 @@ class GameplayActivity extends Activity {
 		};
 
 		try {
-			// Hacer una petición POST para descargar el archivo zip
 			const response = await axios.post(
 				utils.minio_url + "minio/zip?token=" + temporaryCredentials.session_token,
-				requestBody, 
+				requestBody,
 				{
-					responseType: 'arraybuffer',
+					responseType: 'stream',
 					headers: {
 						'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0'
 					}
 				}
 			);
 
-			// Descargar el archivo zip en memoria
-			const zipData = response.data;
+			let isFirstEntry = true;
+			const transformStream = new Transform({
+				transform(chunk, encoding, callback) {
+					if (isFirstEntry) {
+						this.push("[");
+						isFirstEntry = false;
+					} else {
+						this.push(",");
+					}
+					this.push(chunk);
+					callback();
+				},
+				final(callback) {
+					this.push("]");
+					callback();
+				}
+			});
 
-			// Abrir el archivo zip
-			const zip = await JSZip.loadAsync(zipData);
-			let combinedData = "";
-
-			// Combinar todos los archivos del interior utilizando un separador de ","
-			for (const filename of Object.keys(zip.files)) {
-				const fileData = await zip.files[filename].async('string');
-				combinedData += fileData + ",";
-			}
-
-			// Retornar el resultado con "[" y "]" alrededor
-			return "[" + combinedData.slice(0, -1) + "]";  // Elimina la última coma
+			pipeline(
+				response.data,
+				unzipper.Parse(),
+				new Transform({
+					objectMode: true,
+					transform(entry, encoding, callback) {
+						if (entry.type === 'File') {
+							entry.pipe(transformStream, { end: false });
+							entry.on('end', () => callback());
+						} else {
+							entry.autodrain();
+							callback();
+						}
+					}
+				}),
+				transformStream,
+				res,
+				(err) => {
+					if (err) {
+						console.error('Pipeline failed.', err);
+					} else {
+						console.log('Pipeline succeeded.');
+					}
+				}
+			);
 		} catch (error) {
 			console.error("Error al procesar el archivo ZIP:", error);
-			throw error;
+			res.status(500).send({ error: error.message });
 		}
 	}
 
