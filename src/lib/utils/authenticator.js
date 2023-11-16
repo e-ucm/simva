@@ -73,7 +73,7 @@ Authenticator.CompareRoutes = function(generic, specific){
 }
 
 Authenticator.auth = async (req, res, next) => {
-	var token = req.headers.authorization || "Bearer " + req.param.token;
+	var token = req.headers.authorization || "Bearer " + req.query.token;
 	if(!token){
 		return res.status(401).send({message: 'No authorization header'});
 	}
