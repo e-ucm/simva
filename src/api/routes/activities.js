@@ -1,7 +1,9 @@
 const express = require('express');
 const activities = require('../services/activities');
 const config = require('../../lib/config');
+const logger = require('../../lib/logger');
 
+const log = logger(config.logger);
 const router = new express.Router();
 
 // Validators
