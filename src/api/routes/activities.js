@@ -137,6 +137,8 @@ router.get('/:id/target', Authenticator.auth, async (req, res, next) => {
   try {
     const result = await activities.getTarget(options);
     res.setHeader('Access-Control-Allow-Origin', config.external_url);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);
@@ -156,8 +158,10 @@ router.get('/:id/open', Authenticator.auth, async (req, res, next) => {
   };
 
   try {
-     const result = await activities.getTarget(options);
-     res.setHeader('Access-Control-Allow-Origin', config.external_url);
+    const result = await activities.getTarget(options);
+    res.setHeader('Access-Control-Allow-Origin', config.external_url);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if(result && result.data && result.data[req.user.data.username]){
       res.redirect(result.data[req.user.data.username]);
     }else{
