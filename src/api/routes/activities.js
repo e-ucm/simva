@@ -1,6 +1,6 @@
 const express = require('express');
 const activities = require('../services/activities');
-const config = require('../lib/config');
+const config = require('../../lib/config');
 
 const router = new express.Router();
 
