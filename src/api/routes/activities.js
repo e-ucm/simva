@@ -1,9 +1,6 @@
 const express = require('express');
 const activities = require('../services/activities');
 const config = require('../../lib/config');
-const logger = require('../../lib/logger');
-
-const log = logger(config.logger);
 const router = new express.Router();
 
 // Validators
@@ -142,7 +139,7 @@ router.get('/:id/target', Authenticator.auth, async (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', config.external_url);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    Log(result.data);
+    console.log(result.data);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);
@@ -167,7 +164,7 @@ router.get('/:id/open', Authenticator.auth, async (req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if(result && result.data && result.data[req.user.data.username]){
-      Log(result.data[req.user.data.username]);
+      console.log(result.data[req.user.data.username]);
       res.redirect(result.data[req.user.data.username]);
     }else{
       res.status(200).send({ message: 'Cannot be opened' });
