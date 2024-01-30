@@ -4,6 +4,16 @@ set -euo pipefail
 
 if [[ ! -d "node_modules" ]]; then
   npm install
+  cksum "./packages.json" | cut -d' ' -f1 >> rm "node_modules/.checksum"
+else 
+  OldSum=$(cat "node_modules/.checksum")
+  NewSum=$(cksum "./package.json" | cut -d' ' -f1)
+  if [[ $OldSum != $NewSum ]]; then
+    # Checksum mismatch, do something useful here
+    rm -rf "node_modules"
+    npm install
+    echo $NewSum >> "node_modules/.checksum"
+  fi
 fi
 
 if [[ "${NODE_ENV:-production}" == "development" ]]; then
