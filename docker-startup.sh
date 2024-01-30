@@ -4,7 +4,7 @@ set -euo pipefail
 
 if [[ ! -d "node_modules" ]]; then
   npm install
-  cksum "./packages.json" | cut -d' ' -f1 >> rm "node_modules/.checksum"
+  cksum "./package.json" | cut -d' ' -f1 >> "node_modules/.checksum"
 else 
   OldSum=$(cat "node_modules/.checksum")
   NewSum=$(cksum "./package.json" | cut -d' ' -f1)
