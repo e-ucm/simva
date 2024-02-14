@@ -15,7 +15,7 @@ console.log(isTest);
 let createAdminUser = async function(){
   let UsersController = require('../lib/userscontroller');
 
-  let result = await UsersController.getUsers({ username: 'admin' });
+  let result = await UsersController.getUsers({ username: config.api.adminUsername });
 
   if(result.length > 0){
     console.log('## Admin user already exists');
