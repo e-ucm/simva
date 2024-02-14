@@ -19,6 +19,7 @@ let createAdminUser = async function(){
 
   if(result.length > 0){
     console.log('## Admin user already exists');
+    console.log(result);
   }else{
     let result = await UsersController.addUser({
       username: config.api.adminUsername,
