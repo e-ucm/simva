@@ -352,12 +352,12 @@ class GameplayActivity extends Activity {
 		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
 	
 		const requestBody = {
-			"bucketName": "traces",
-			"prefix": "kafka-topics/traces/",
+			"bucketName": `${config.minio.bucket}`,
+			"prefix":  `${config.minio.topics_dir}/traces/`,
 			"objects": [`_id=${activity_id}/`]
 		};
 	
-		console.log('Iniciando solicitud de ZIP...');
+		console.log('Starting ZIP request...');
 	
 		try {
 			const response = await axios.post(
@@ -371,14 +371,14 @@ class GameplayActivity extends Activity {
 				}
 			);
 	
-			console.log('Respuesta del ZIP recibida, procesando...');
+			console.log('ZIP reply received, processing...');
 			res.setHeader('Content-Disposition', `attachment; filename="${activity_id}.zip"`);
 
 			let isFirstFile = true;
 			const transformStream = new Transform({
 				writableObjectMode: true,
 				transform(file, encoding, callback) {
-					console.log('Procesando archivo:', file.name);
+					console.log('Processing file:', file.name);
 					let data = file.contents;
 					if (isFirstFile) {
 						data = "[" + data;
@@ -391,7 +391,7 @@ class GameplayActivity extends Activity {
 				},
 				final(callback) {
 					this.push("]");
-					console.log('Finalizando el stream de transformación...');
+					console.log('Finalizing the transformation stream...');
 					callback();
 				}
 			});
