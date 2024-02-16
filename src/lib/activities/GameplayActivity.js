@@ -353,7 +353,7 @@ class GameplayActivity extends Activity {
 	
 		const requestBody = {
 			"bucketName": `${config.minio.bucket}`,
-			"prefix":  `${config.minio.topics_dir}/traces/`,
+			"prefix":  `${config.minio.topics_dir}/${config.minio.trace_topic}/`,
 			"objects": [`_id=${activity_id}/`]
 		};
 	
