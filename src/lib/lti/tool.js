@@ -27,16 +27,16 @@ lti.setup(config.LTI.platform.key, // Key used to sign cookies and tokens
       sameSite: 'None' // Set sameSite to 'None' if the testing platform is in a different domain and https is being used
     },
     devMode: false, // Set DevMode to false if running in a production environment with https
-    dynRegRoute: config.external_url + '/lti/register', // Setting up dynamic registration route. Defaults to '/register'
+    dynRegRoute: config.api.url + '/lti/register', // Setting up dynamic registration route. Defaults to '/register'
     dynReg: {
-      url: config.external_url + '/lti/tool/', // Tool Provider URL. Required field.
+      url: config.api.url + '/lti/tool/', // Tool Provider URL. Required field.
       name: 'SIMVA', // Tool Provider name. Required field.
-      logo: config.external_url + '/favicon.ico', // Tool Provider logo URL.
+      logo: config.api.url + '/favicon.ico', // Tool Provider logo URL.
       description: 'SIMple VAlidation service for serious game validation and deployment', // Tool Provider description.
       redirectUris: [
-        config.external_url,
-        config.external_url + '/lti/tool/',
-        config.external_url + '/lti/tool/*'
+        config.api.url,
+        config.api.url + '/lti/tool/',
+        config.api.url + '/lti/tool/*'
       ],
       autoActivate: true // Whether or not dynamically registered Platforms should be automatically activated. Defaults to false.
     }

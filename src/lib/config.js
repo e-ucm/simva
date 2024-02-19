@@ -3,10 +3,14 @@ let config = {}
 
 let ignored_ports = [80, 8080, 443];
 
-config.external_url = process.env.EXTERNAL_URL || 'https://simva.e-ucm.es'
+config.external_url = process.env.EXTERNAL_URL || 'https://simva.external.test'
 
 config.api = {}
-config.api.port  = process.env.PORT || 3000
+config.api.host = process.env.SIMVA_API_HOST || 'simva-api.simva.external.test'
+config.api.port  = process.env.SIMVA_API_PORT || 443
+config.api.protocol = process.env.SIMVA_API_PROTOCOL
+config.api.url = config.api.protocol + '://' + config.api.host
+			+ ( (ignored_ports.indexOf(config.api.port) !== -1) ? '' : (':' + config.api.port) );
 config.api.adminUsername = process.env.ADMIN_USERNAME || 'admin'
 config.api.adminEmail = process.env.ADMIN_EMAIL || 'admin@simva.admin'
 config.api.adminPassword = process.env.ADMIN_PASSWORD || 'password'
