@@ -109,7 +109,9 @@ lti.onConnect(async (token, req, res) => {
         created: Date.now()
       });
 
+      console.log(JSON.stringify(req.query));
       let study = await StudiesController.getStudy(req.query.study);
+
 
       study.groups.push(group._id);
 
