@@ -93,6 +93,7 @@ config.analyticsbackend.url =  config.analyticsbackend.protocol + '://' + config
 
 config.LTI = {}
 config.LTI.platform = {}
+config.LTI.platform.client_id = process.env.LTI_PLATFORM_CLIENT_ID || 'lti-platform'
 config.LTI.platform.key = process.env.LTI_PLATFORM_SIGNING_KEY || 'LTISIGNINGKEY';
 config.LTI.platform.mongo = {}
 config.LTI.platform.mongo.db = process.env.LTI_PLATFORM_DB_NAME || '/lti'

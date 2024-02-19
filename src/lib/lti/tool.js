@@ -29,14 +29,14 @@ lti.setup(config.LTI.platform.key, // Key used to sign cookies and tokens
     devMode: false, // Set DevMode to false if running in a production environment with https
     dynRegRoute: '/register', // Setting up dynamic registration route. Defaults to '/register'
     dynReg: {
-      url: 'https://simva-api.simva.e-ucm.es/lti/tool/', // Tool Provider URL. Required field.
+      url: config.external_url + '/lti/tool/', // Tool Provider URL. Required field.
       name: 'SIMVA', // Tool Provider name. Required field.
-      logo: 'https://simva.e-ucm.es/favicon.ico', // Tool Provider logo URL.
+      logo: config.external_url + '/favicon.ico', // Tool Provider logo URL.
       description: 'SIMple VAlidation service for serious game validation and deployment', // Tool Provider description.
       redirectUris: [
-        'https://simva-api.simva.e-ucm.es',
-        'https://simva-api.simva.e-ucm.es/lti/tool/',
-        'https://simva-api.simva.e-ucm.es/lti/tool/*'
+        config.external_url,
+        config.external_url + '/lti/tool/',
+        config.external_url + '/lti/tool/*'
       ],
       autoActivate: true // Whether or not dynamically registered Platforms should be automatically activated. Defaults to false.
     }
@@ -88,7 +88,7 @@ lti.onConnect(async (token, req, res) => {
       });
     }
 
-    console.log('getting group');
+    
     let query = { 'link.type': 'lti_platform', 'link.id': token.platformId + '_' + token.deploymentId };
     let groups = await GroupsController.getGroups(query);
     console.log(groups);
@@ -135,9 +135,9 @@ lti.onConnect(async (token, req, res) => {
     console.log('getting jwt');
     let jwt = await UsersController.generateJWT(user);
 
-    let redirection = 'https://simva.e-ucm.es/users/login'
+    let redirection = config.external_url + '/users/login'
       + '?jwt=' + jwt
-      + '&next=' + encodeURI('https://simva.e-ucm.es/scheduler/' + platform.studyId);
+      + '&next=' + encodeURI(config.external_url + '/scheduler/' + platform.studyId);
 
     console.log(redirection);
     return res.redirect(redirection);
@@ -162,7 +162,7 @@ lti.onDynamicRegistration(async (req, res, next) => {
 
 lti.onDeepLinking(async (token, req, res) => {
   let content = requireText('./base.html', require);
-  let baseurl = 'https://simva.e-ucm.es/scheduler/';
+  let baseurl = config.external_url + '/scheduler/';
   let toreplace = '';
 
   let users = await UsersController.getUsers(
