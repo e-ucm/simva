@@ -36,9 +36,9 @@ config.kafka.url = config.kafka.host + ':' + config.kafka.port
 
 config.minio = {}
 config.minio.url = process.env.MINIO_URL || 'minio.external.test'
-config.minio.access_key = process.env.SIMVA_MINIO_ACCESS_KEY
-config.minio.secret_key = process.env.SIMVA_MINIO_SECRET_KEY
-config.minio.port = process.env.SIMVA_MINIO_PORT || 80
+config.minio.access_key = process.env.MINIO_ACCESS_KEY
+config.minio.secret_key = process.env.MINIO_SECRET_KEY
+config.minio.port = process.env.MINIO_PORT || 80
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces'
 config.minio.topics_dir = process.env.MINIO_TOPICS_DIR || 'kafka-topics'
 config.minio.trace_topic = process.env.MINIO_TRACE_TOPIC || 'traces'
