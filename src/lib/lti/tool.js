@@ -99,7 +99,7 @@ lti.onConnect(async (token, req, res) => {
       group = groups[0];
     }else{
       group = await GroupsController.addGroup({
-        name: 'LTI:' + options.body.name,
+        name: 'LTI:' + token.clientId,
         owners: [],
         participants: [],
         link: { 
