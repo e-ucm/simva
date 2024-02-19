@@ -32,7 +32,6 @@ config.mongo.test = 'mongodb://localhost:1234/tests'
 config.kafka = {}
 config.kafka.host = process.env.KAFKA_HOST || 'kafka'
 config.kafka.port = process.env.KAFKA_PORT || 9092
-config.kafka.topic = process.env.KAFKA_TOPIC || 'traces'
 config.kafka.url = config.kafka.host + ':' + config.kafka.port
 
 config.minio = {}
@@ -42,6 +41,7 @@ config.minio.secret_key = process.env.SIMVA_MINIO_SECRET_KEY
 config.minio.port = process.env.SIMVA_MINIO_PORT || 80
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces'
 config.minio.topics_dir = process.env.MINIO_TOPICS_DIR || 'kafka-topics'
+config.minio.trace_topic = process.env.MINIO_TRACE_TOPIC || 'traces'
 config.minio.users_dir = process.env.MINIO_USERS_DIR || 'users'
 config.minio.traces_file = process.env.MINIO_TRACES_FILE || 'traces.json'
 
