@@ -348,7 +348,8 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 				}else{
 					UsersController.createUserFromJWT(decoded)
 						.then((result) => {
-							resolve(UsersController.simplifyUser(result));
+							let user = UsersController.simplifyUser(result);
+							resolve();
 						})
 						.catch((error) => {
 							console.log(error);
@@ -377,7 +378,7 @@ UsersController.createUserFromJWT = async function(decoded){
 		username: decoded.preferred_username,
 		password: Math.random().toString(36).slice(-8),
 		email: decoded.email,
-		role: 'student'
+		role: ''
 	};
 
 	user.role = UsersController.getRoleFromJWT(decoded);
@@ -386,12 +387,17 @@ UsersController.createUserFromJWT = async function(decoded){
 }
 
 UsersController.getRoleFromJWT = function(decoded){
-	let role = 'student';
+	let role = '';
 
 	for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
-		if(decoded.realm_access.roles[i] === 'teacher' || decoded.realm_access.roles[i] === 'researcher'){
+		let teacherroles = ['teacher', 'teaching-assistant', 'researcher'];
+		let jwtrole = decoded.realm_access.roles[i];
+
+		if(teacherroles.includes(jwtrole)){
 			role = 'teacher';
 			break;
+		}else if(jwtrole === 'student'){
+			role = 'student';
 		};
 	}
 
