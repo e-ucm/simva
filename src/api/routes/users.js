@@ -103,4 +103,24 @@ router.post('/link', async (req, res, next) => {
   }
 });
 
+/**
+ * Receives the SSO events and updates the users, both creating
+ * the users and updating their roles and permissions 
+ * 
+ */
+router.post('/events', async (req, res, next) => {
+  const options = {
+    body: req.body,
+    headers: req.headers,
+    query: req.query
+  };
+
+  try {
+    const result = await users.eventUser(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

@@ -131,3 +131,19 @@ module.exports.linkUser = async (options) => {
   
   return result;
 };
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.eventUser = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.eventUser(options);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};

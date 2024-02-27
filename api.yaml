@@ -138,6 +138,26 @@ paths:
             schema:
               $ref: '#/components/schemas/link_accounts'
         required: true
+  /users/events:
+    post:
+      summary: Receives the events of the SSO to sync the users
+      operationId: eventUser
+      description: |
+        Receives the SSO events and updates the users, both creating
+        the users and updating their roles and permissions 
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
   /groups:
     get:
       tags:

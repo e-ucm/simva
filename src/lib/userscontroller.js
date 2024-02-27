@@ -163,6 +163,12 @@ UsersController.linkUser = async (mainjwt, secondaryjwt, domain) => {
 	return loadeduser;
 }
 
+UsersController.eventUser = async (options) => {
+	console.log(JSON.stringify(options));
+
+	return;
+}
+
 UsersController.getEffectiveUsernames = async (user) => {
 	let usernames = [user.username];
 
