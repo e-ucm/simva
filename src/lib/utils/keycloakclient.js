@@ -19,7 +19,7 @@ var options = {
 var KeycloakClient = {};
 
 let kcconfig = {
-	baseUrl: config.sso.url + '/auth',
+	baseUrl: config.sso.url,
 	realmName: config.sso.realm
 };
 
