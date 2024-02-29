@@ -73,10 +73,8 @@ config.sso.protocol = process.env.SSO_PROTOCOL || 'https'
 config.sso.port = parseInt(process.env.SSO_PORT || '443')
 config.sso.url = config.sso.protocol + '://' + config.sso.host
 			+ ( (ignored_ports.indexOf(config.sso.port) !== -1) ? '' : (':' + config.sso.port) );
-config.sso.authPath = process.env.SSO_AUTH_PATH || '/auth'
 config.sso.webhookPath = process.env.SSO_WEBHOOK_PATH || '/webhook'
-config.sso.authUrl = config.sso.url + config.sso.authPath
-config.sso.realmUrl = config.sso.authUrl + '/realms/' + config.sso.realm
+config.sso.realmUrl = config.sso.url + '/realms/' + config.sso.realm
 config.sso.webhookUrl = config.sso.realmUrl + config.sso.webhookPath
 config.sso.publicKey = "-----BEGIN PUBLIC KEY----- \n" + process.env.SSO_PUBLIC_KEY + "\n-----END PUBLIC KEY-----\n";
 
