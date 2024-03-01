@@ -134,6 +134,26 @@ module.exports.linkUser = async (options) => {
 
 /**
  * @param {Object} options
+ * @param {String} options.main JWT of the main account
+ * @param {String} options.secondary JWT of the secondary account
+ * @param {String} options.domain domain name
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.setRole = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.setRole(options.body.username, options.body.role);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};
+
+
+/**
+ * @param {Object} options
  * @throws {Error}
  * @return {Promise}
  */

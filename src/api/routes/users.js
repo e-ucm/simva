@@ -86,6 +86,25 @@ router.post('/login', async (req, res, next) => {
 });
 
 /**
+ * Modifies the role of the logged user.
+ * Receives the new role to be added to the user.
+ * 
+ */
+router.post('/role', async (req, res, next) => {
+  const options = {
+    body: req.body,
+    username: req.user.data.username
+  };
+
+  try {
+    const result = await users.setRole(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Receives two valid JWT tokens and adds to the main
  * account, as an external_entity, the secondary account
  * 
