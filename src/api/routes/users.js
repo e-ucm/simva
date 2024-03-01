@@ -91,17 +91,22 @@ router.post('/login', async (req, res, next) => {
  * 
  */
 router.post('/role', async (req, res, next) => {
-  const options = {
-    body: req.body,
-    username: req.user.data.username
-  };
+  if(req.jwt.sub){
+    const options = {
+      body: req.body,
+      username: req.user.data.username,
+      keycloak_id: req.jwt.sub
+    };
 
-  try {
-    const result = await users.setRole(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    next(err);
-  }
+    try {
+      const result = await users.setRole(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      next(err);
+    }
+  }else{
+    next({'message': 'Invalid JWT. The Authorization JWT must be a Keycloak token.'});
+  }  
 });
 
 /**

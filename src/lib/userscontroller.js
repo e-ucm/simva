@@ -9,6 +9,8 @@ var config = require('./config');
 
 let UsersController = {};
 
+let allowedRoles = config.sso.allowedRoles.split(',');
+
 UsersController.getUser = async (id) => {
 	var res = await mongoose.model('user').find({_id: id});
 
@@ -109,6 +111,49 @@ UsersController.addUserToKeycloak = async (params) => {
 	return true;
 }
 
+UsersController.updateUser = async (id, params) => {
+	let result =  await mongoose.model('user').updateOne({ _id: id }, params);
+
+	if(result.ok !== result.n){
+		throw {message: 'There was an error in the study.'};
+	}
+
+	return params;
+}
+
+UsersController.setRole = async (username, role, keycloak_id) => {
+	let users = await UsersController.getUsers({ 'username': username.toLowerCase() });
+
+	if(users && users.length > 0){
+		let user = users[0];
+
+		if(allowedRoles.includes(role)){
+			user.role = role;
+			UsersController.giveRoleToUserInKeycloak(keycloak_id, user)
+				.then((result) => {
+					UsersController.updateUser(user._id, user)
+						.then((updateduser) => {
+							resolve(updateduser);
+						})
+						.catch((error) => {
+							reject(error);
+						});
+				})
+				.catch((error) => {
+					reject(error);
+				});
+		}else{
+			throw {message: 'The role "' + role + '" is not allowed. The allowed roles are: ' + allowedRoles.join(', ')};
+		}
+	}
+
+	if(result.ok !== result.n){
+		throw {message: 'There was an error in the study.'};
+	}
+
+	return params;
+}
+
 UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 	if(!config.sso.enabled){
 		return true;
@@ -134,16 +179,6 @@ UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 
     console.log('KeyCloak -> Role Added to User in Keycloak!');
 	return true;
-}
-
-UsersController.updateUser = async (id, params) => {
-	let result =  await mongoose.model('user').updateOne({ _id: id }, params);
-
-	if(result.ok !== result.n){
-		throw {message: 'There was an error in the study.'};
-	}
-
-	return params;
 }
 
 UsersController.authUser = async (username, plainPass) => {
@@ -409,7 +444,7 @@ UsersController.createUserFromJWT = async function(decoded){
 		username: decoded.preferred_username,
 		password: Math.random().toString(36).slice(-8),
 		email: decoded.email,
-		role: ''
+		role: 'norole'
 	};
 
 	user.role = UsersController.getRoleFromJWT(decoded);
@@ -419,7 +454,7 @@ UsersController.createUserFromJWT = async function(decoded){
 
 UsersController.getRoleFromJWT = function(decoded){
 	console.log("getRoleFromJWT : " + JSON.stringify(decoded));
-	let role = '';
+	let role = 'norole';
 
 	for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
 		let teacherroles = ['teacher', 'teaching-assistant', 'researcher'];
