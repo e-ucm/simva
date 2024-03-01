@@ -99,6 +99,8 @@ Authenticator.auth = async (req, res, next) => {
 
 		req.user = result;
 		req.jwt = jwt.decode(token, { complete: true });
+
+		console.log(req.jwt);
 		
 		return Authenticator.roleAllowed(req, res, next);
 	}
