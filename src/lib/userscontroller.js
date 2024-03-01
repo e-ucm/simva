@@ -109,6 +109,33 @@ UsersController.addUserToKeycloak = async (params) => {
 	return true;
 }
 
+UsersController.giveRoleToUserInKeycloak = async (id, params) => {
+	if(!config.sso.enabled){
+		return true;
+	}
+
+	console.log('KeyCloak -> Auth');
+
+	await KeycloakClient.AuthClient();
+
+	console.log('KeyCloak -> getting Role Mappings');
+	let roleMappings = await KeycloakClient.getClient().users.listAvailableRealmRoleMappings({id: id});
+
+	let selectedRole;
+	for (var i = roleMappings.length - 1; i >= 0; i--) {
+		if(roleMappings[i].name === params.role){
+			selectedRole = roleMappings[i];
+			break;
+		}
+	}
+
+	console.log('KeyCloak -> Adding Role to User');
+	let result = await KeycloakClient.getClient().users.addRealmRoleMappings({id: id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
+
+    console.log('KeyCloak -> Role Added to User in Keycloak!');
+	return true;
+}
+
 UsersController.updateUser = async (id, params) => {
 	let result =  await mongoose.model('user').updateOne({ _id: id }, params);
 
