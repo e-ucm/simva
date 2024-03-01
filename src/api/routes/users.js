@@ -91,7 +91,8 @@ router.post('/login', async (req, res, next) => {
  * 
  */
 router.post('/role', async (req, res, next) => {
-  if(req.jwt.sub){
+  console.log(req.jwt);
+  if(req.jwt.hasOwnProperty('sub')){
     const options = {
       body: req.body,
       username: req.user.data.username,
