@@ -24,6 +24,8 @@ tags:
     description: Operations available to teachers
   - name: students
     description: Operations available to students
+  - name: noroles
+    description: Operations available to users with no role
 paths:
   /users:
     get:
@@ -137,6 +139,26 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/link_accounts'
+        required: true
+  /users/role:
+    post:
+      tags:
+        - admins
+        - noroles
+      summary: Modifies the role of the logged user.
+      operationId: setRole
+      description: |
+        Receives the new role to be added to the user
+      responses:
+        '200':
+          description: Role updated
+        '400':
+          description: 'invalid input, object invalid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/set_role_body'
         required: true
   /users/events:
     post:
@@ -2237,6 +2259,20 @@ components:
         file:
           type: string
           format: binary
+      x-swagger-mongoose:
+        exclude-schema: true
+    set_role_body:
+      required:
+      - role
+      type: object
+      properties:
+        role:
+          type: string
+          example: teacher
+          description: |
+            The role for the user to have. Some
+            examples include teacher, student 
+            teaching-assistant or researcher
       x-swagger-mongoose:
         exclude-schema: true
     add_group_body:
