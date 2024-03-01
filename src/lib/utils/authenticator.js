@@ -1,5 +1,6 @@
 const fs = require('fs');
 const yaml = require('yaml');
+const jwt = require('jsonwebtoken');
 var UsersController = require('../userscontroller');
 
 var Authenticator = {};
@@ -97,6 +98,7 @@ Authenticator.auth = async (req, res, next) => {
 		}
 
 		req.user = result;
+		req.jwt = jwt.decode(token, { complete: true });
 		
 		return Authenticator.roleAllowed(req, res, next);
 	}
