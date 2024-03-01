@@ -90,7 +90,7 @@ router.post('/login', async (req, res, next) => {
  * Receives the new role to be added to the user.
  * 
  */
-router.post('/role', async (req, res, next) => {
+router.post('/role', Authenticator.auth, async (req, res, next) => {
   console.log(req.jwt);
   if(req.jwt && req.jwt.hasOwnProperty('sub')){
     const options = {
