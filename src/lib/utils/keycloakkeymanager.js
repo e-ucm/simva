@@ -1,4 +1,4 @@
-const KeyCloakCerts = require('get-keycloak-public-key');
+const KeyCloakCerts = require('keycloak-public-key');
 const jwt = require('jsonwebtoken');
 var config = require('../config');
 
