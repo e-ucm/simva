@@ -78,6 +78,7 @@ config.sso.realmUrl = config.sso.url + '/realms/' + config.sso.realm
 config.sso.webhookUrl = config.sso.realmUrl + config.sso.webhookPath
 config.sso.publicKey = "-----BEGIN PUBLIC KEY----- \n" + process.env.SSO_PUBLIC_KEY + "\n-----END PUBLIC KEY-----\n";
 config.sso.allowedRoles = process.env.SSO_ALLOWED_ROLES || 'teacher,teaching-assistant,student,researcher'
+config.sso.loggerActive = process.env.SSO_LOGGER_ACTIVE || true;
 
 config.sso.adminUser = process.env.SSO_ADMIN_USER || 'admin';
 config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'password';
