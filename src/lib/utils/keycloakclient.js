@@ -1,4 +1,4 @@
-import KcAdminClient from '@keycloak/keycloak-admin-client';
+const KcAdminClient = require('@keycloak/keycloak-admin-client').default;
 
 console.log(KcAdminClient);
  
@@ -49,7 +49,7 @@ if(config.sso.enabled){
 		keycloakStatus = true;
 	})
 	.catch((error) => {
-		console.log('unable to connect to keycloak');
+		console.log('Unable to connect to keycloak');
 		console.info(error);
 		keycloakStatus = false;
 	});
