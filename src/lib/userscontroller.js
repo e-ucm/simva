@@ -126,19 +126,22 @@ UsersController.setRole = async (username, role, keycloak_id) => {
 
 	if(users && users.length > 0){
 		let user = users[0];
-
+		console.log(user);
 		if(allowedRoles.includes(role)){
 			user.role = role;
 			UsersController.giveRoleToUserInKeycloak(keycloak_id, user)
-				.then((newuser) => {
-					console.log(newuser);
-					UsersController.updateUser(newuser._id, newuser)
+				.then((result) => {
+					console.log('Update User to Keycloak > OK');
+					console.log('Update User to database : IN PROGRESS');
+					UsersController.updateUser(user._id, user)
 						.then((updateduser) => {
+							console.log('Update User to database > OK');
 							console.log(updateduser);
 							resolve(updateduser);
 							return updateduser;
 						})
 						.catch((error) => {
+							console.log('Update User to database > NOK ERROR');
 							console.log(error);
 							reject(error);
 						});
@@ -173,10 +176,10 @@ UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 	}
 
 	console.log('KeyCloak -> Adding Role to User');
-	let result = await KeycloakClient.getClient().users.addRealmRoleMappings({id: id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
+	await KeycloakClient.getClient().users.addRealmRoleMappings({id: id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
 
     console.log('KeyCloak -> Role Added to User in Keycloak!');
-	return result;
+	return true;
 }
 
 UsersController.authUser = async (username, plainPass) => {
