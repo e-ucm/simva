@@ -5,7 +5,7 @@ var config = require('../config');
 
 var KeycloakKeyManager = {};
 
-const keyCloakCerts = new KeyCloakCerts(config.sso.url + "/realms/" +  config.sso.realm + "/protocol/openid-connect/certs");
+const keyCloakCerts = new KeyCloakCerts(config.sso.url, config.sso.realm);
 
 let LoadedKeys = {};
 
