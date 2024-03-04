@@ -94,8 +94,8 @@ router.post('/role', Authenticator.auth, async (req, res, next) => {
   console.log(req.jwt);
   if(req.jwt && req.jwt.payload.hasOwnProperty('sub')){
     const options = {
-      body: req.body,
       username: req.user.data.username,
+      role: req.body.role,
       keycloak_id: req.jwt.payload.sub
     };
     console.log(options);

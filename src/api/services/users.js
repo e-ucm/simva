@@ -143,7 +143,7 @@ module.exports.linkUser = async (options) => {
 module.exports.setRole = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    result.data = await UsersController.setRole(options.body.username, options.body.role, options.body.keycloak_id);
+    result.data = await UsersController.setRole(options.username, options.role, options.keycloak_id);
   }catch(e){
     result = { status: 400, data: e };
   }
