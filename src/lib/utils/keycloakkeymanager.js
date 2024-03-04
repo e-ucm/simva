@@ -5,7 +5,7 @@ var config = require('../config');
 
 var KeycloakKeyManager = {};
 
-const keyCloakCerts = new KeyCloakCerts(config.sso.url, config.sso.realm);
+const keyCloakCerts = new KeyCloakCerts(config.sso.url + "/realms/" +  config.sso.realm + "/protocol/openid-connect/certs");
 
 let LoadedKeys = {};
 
@@ -45,7 +45,7 @@ KeycloakKeyManager.checkKey = async function(kid, token){
 					reject(error);
 				})
 		}catch(e){
-			KeycloakKeyManager.Log(e)
+			KeycloakKeyManager.Log(e);
 			reject(e);
 		}
 	});
@@ -67,6 +67,7 @@ KeycloakKeyManager.reloadKey = async function(kid){
 				})
 		}catch(e){
 			KeycloakKeyManager.Log('### KeycloakKeyManager.reloadKey -> catch: ' + JSON.stringify(e));
+			KeycloakKeyManager.Log(e)
 			reject(e);
 		}
 	})
