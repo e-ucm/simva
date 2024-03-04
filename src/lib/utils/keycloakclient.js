@@ -1,4 +1,4 @@
-const KcAdminClient = require('keycloak-admin').default;
+import KcAdminClient from '@keycloak/keycloak-admin-client';
 
 console.log(KcAdminClient);
  
