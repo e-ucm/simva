@@ -130,12 +130,16 @@ UsersController.setRole = async (username, role, keycloak_id) => {
 		if(allowedRoles.includes(role)){
 			user.role = role;
 			UsersController.giveRoleToUserInKeycloak(keycloak_id, user)
-				.then((result) => {
-					UsersController.updateUser(user._id, user)
+				.then((newuser) => {
+					console.log(newuser);
+					UsersController.updateUser(newuser._id, newuser)
 						.then((updateduser) => {
+							console.log(updateduser);
 							resolve(updateduser);
+							return updateduser;
 						})
 						.catch((error) => {
+							console.log(error);
 							reject(error);
 						});
 				})
@@ -146,12 +150,6 @@ UsersController.setRole = async (username, role, keycloak_id) => {
 			throw {message: 'The role "' + role + '" is not allowed. The allowed roles are: ' + allowedRoles.join(', ')};
 		}
 	}
-
-	if(result.ok !== result.n){
-		throw {message: 'There was an error in the study.'};
-	}
-
-	return params;
 }
 
 UsersController.giveRoleToUserInKeycloak = async (id, params) => {
@@ -178,7 +176,7 @@ UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 	let result = await KeycloakClient.getClient().users.addRealmRoleMappings({id: id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
 
     console.log('KeyCloak -> Role Added to User in Keycloak!');
-	return true;
+	return result;
 }
 
 UsersController.authUser = async (username, plainPass) => {
