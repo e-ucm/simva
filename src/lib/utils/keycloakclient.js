@@ -1,3 +1,6 @@
+// Using version 18.0.2 instead of 23.0.7
+// https://github.com/keycloak/keycloak/issues/19829
+// https://github.com/keycloak/keycloak-nodejs-admin-client/issues/523
 const KcAdminClient = require('@keycloak/keycloak-admin-client').default;
 
 console.log(KcAdminClient);
