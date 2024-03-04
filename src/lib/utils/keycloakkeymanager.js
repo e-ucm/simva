@@ -35,8 +35,8 @@ KeycloakKeyManager.checkKey = async function(kid, token){
 							KeycloakKeyManager.Log('### KeycloakKeyManager.checkKey -> ERROR: Not valid signature');
 							reject('Not valid signature');
 						}else{
-							KeycloakKeyManager.Log('### KeycloakKeyManager.checkKey -> SUCCESS!');
-							resolve();
+							KeycloakKeyManager.Log('### KeycloakKeyManager.checkKey -> SUCCESS! (' + decoded + ')');
+							resolve(decoded);
 						}
 					});
 				})
