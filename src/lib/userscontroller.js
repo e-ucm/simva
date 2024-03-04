@@ -137,8 +137,7 @@ UsersController.setRole = async (username, role, keycloak_id) => {
 						.then((updateduser) => {
 							console.log('Update User to database > OK');
 							console.log(updateduser);
-							resolve(updateduser);
-							return updateduser;
+							resolve();
 						})
 						.catch((error) => {
 							console.log('Update User to database > NOK ERROR');
@@ -149,6 +148,7 @@ UsersController.setRole = async (username, role, keycloak_id) => {
 				.catch((error) => {
 					reject(error);
 				});
+			return user;
 		}else{
 			throw {message: 'The role "' + role + '" is not allowed. The allowed roles are: ' + allowedRoles.join(', ')};
 		}
