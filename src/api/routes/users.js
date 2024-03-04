@@ -92,11 +92,11 @@ router.post('/login', async (req, res, next) => {
  */
 router.post('/role', Authenticator.auth, async (req, res, next) => {
   console.log(req.jwt);
-  if(req.jwt && req.jwt.hasOwnProperty('sub')){
+  if(req.jwt && req.jwt.payload.hasOwnProperty('sub')){
     const options = {
       body: req.body,
       username: req.user.data.username,
-      keycloak_id: req.jwt.sub
+      keycloak_id: req.jwt.payload.sub
     };
 
     try {
