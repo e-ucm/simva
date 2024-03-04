@@ -122,35 +122,37 @@ UsersController.updateUser = async (id, params) => {
 }
 
 UsersController.setRole = async (username, role, keycloak_id) => {
-	let users = await UsersController.getUsers({ 'username': username.toLowerCase() });
-
-	if(users && users.length > 0){
-		let user = users[0];
-		console.log(user);
-		if(allowedRoles.includes(role)){
-			user.role = role;
-			UsersController.giveRoleToUserInKeycloak(keycloak_id, user)
-				.then((result) => {
-					console.log('Update User to Keycloak > OK');
-					console.log('Update User to database : IN PROGRESS');
-					UsersController.updateUser(user._id, user)
-						.then((updateduser) => {
-							console.log('Update User to database > OK');
-							console.log(updateduser);
-							return user;
-						})
-						.catch((error) => {
-							console.log('Update User to database > NOK ERROR');
-							console.log(error);
-						});
-				})
-				.catch((error) => {
-					reject(error);
-				});
-		} else {
-			throw {message: 'The role "' + role + '" is not allowed. The allowed roles are: ' + allowedRoles.join(', ')};
+	return new Promise(async (resolve, reject) => {
+		let users = await UsersController.getUsers({ 'username': username.toLowerCase() });
+		if(users && users.length > 0){
+			let user = users[0];
+			console.log(user);
+			if(allowedRoles.includes(role)){
+				user.role = role;
+				UsersController.giveRoleToUserInKeycloak(keycloak_id, user)
+					.then((result) => {
+						console.log('Update User to Keycloak > OK');
+						console.log('Update User to database : IN PROGRESS');
+						UsersController.updateUser(user._id, user)
+							.then((updateduser) => {
+								console.log('Update User to database > OK');
+								console.log(updateduser);
+								resolve(user);
+							})
+							.catch((error) => {
+								console.log('Update User to database > NOK ERROR');
+								console.log(error);
+								reject(error);
+							});
+					})
+					.catch((error) => {
+						reject(error);
+					});
+			} else {
+				reject({message: 'The role "' + role + '" is not allowed. The allowed roles are: ' + allowedRoles.join(', ')});
+			}
 		}
-	}
+	})
 }
 
 UsersController.giveRoleToUserInKeycloak = async (id, params) => {
