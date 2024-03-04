@@ -98,7 +98,7 @@ router.post('/role', Authenticator.auth, async (req, res, next) => {
       username: req.user.data.username,
       keycloak_id: req.jwt.payload.sub
     };
-
+    console.log(options);
     try {
       const result = await users.setRole(options);
       res.status(result.status || 200).send(result.data);
