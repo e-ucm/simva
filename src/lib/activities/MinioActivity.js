@@ -139,7 +139,7 @@ class MinioActivity extends Activity {
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
 					trace._id = activityId;
-					payloads.push({ topic: config.kafka.topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
+					payloads.push({ topic: config.minio.topics_dir, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
 				producer.send(payloads, function (err, data) {
