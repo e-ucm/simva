@@ -413,8 +413,7 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 				}else{
 					UsersController.createUserFromJWT(decoded)
 						.then((result) => {
-							let user = UsersController.simplifyUser(result);
-							resolve();
+							resolve(UsersController.simplifyUser(result));
 						})
 						.catch((error) => {
 							console.log(error);
