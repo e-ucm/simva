@@ -54,7 +54,7 @@ class MinioActivity extends Activity {
 			minio_url: config.minio.url,
 			minio_bucket: config.minio.bucket,
 			topics_dir: config.minio.topics_dir,
-			trace_topic: config.minio.trace_topic,
+			trace_topic: config.minio.traces_topic,
 			users_dir: config.minio.users_dir,
 			user_folder: username,
 			file_name: config.minio.file_name
@@ -139,7 +139,7 @@ class MinioActivity extends Activity {
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
 					trace._id = activityId;
-					payloads.push({ topic: config.minio.trace_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
+					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
 				producer.send(payloads, function (err, data) {
