@@ -31,7 +31,7 @@ module.exports.getStudies = async (options) => {
 
     if(options.user.data.role !== 'admin'){
       if(options.user.data.role === 'teacher'){
-        query.owners = options.user.data.username;
+        query.owners = { "$in" : await UsersController.getEffectiveUsernames(options.user.data) };
       }else{
         let groups = await GroupsController.getGroups({participants: options.user.data.username});
 

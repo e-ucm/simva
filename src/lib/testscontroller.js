@@ -43,7 +43,7 @@ TestsController.deleteTest = async (id) => {
 
 	for (var i = 0; i < test.activities.length; i++) {
 		let activity = await ActivitiesController.loadActivity(test.activities[i]);
-		if(!await activity.delete()){
+		if(!await activity.remove()){
 			throw { message: 'Unable to delete activity: ' . activity.id };
 		}
 	}

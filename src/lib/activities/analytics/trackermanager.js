@@ -81,6 +81,7 @@ class TrackerManager {
 			tracker.settings.host = this.URL;
 			tracker.settings.port = this.Port;
 			tracker.settings.trackingCode = activity.trackingCode;
+			tracker.settings.debug = false;
 
 			tracker.Login(user, password, function(data,error){
 				if(!error){

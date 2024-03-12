@@ -1,5 +1,6 @@
 const fs = require('fs');
 const yaml = require('yaml');
+const jwt = require('jsonwebtoken');
 var UsersController = require('../userscontroller');
 
 var Authenticator = {};
@@ -73,7 +74,7 @@ Authenticator.CompareRoutes = function(generic, specific){
 }
 
 Authenticator.auth = async (req, res, next) => {
-	var token = req.headers.authorization;
+	var token = req.headers.authorization || "Bearer " + req.query.token;
 	if(!token){
 		return res.status(401).send({message: 'No authorization header'});
 	}
@@ -85,11 +86,24 @@ Authenticator.auth = async (req, res, next) => {
 		let result;
 		try{
 			result = await UsersController.validateJWT(token);
+			let users = await UsersController.getUsers({ username: result.data.username });
+			if(users.length > 0){
+				result.data = users[0];
+			}else{
+				return res.status(401).send({message: 'Username not found'});
+			}
+			
 		}catch(e){
 			return res.status(401).send({message: 'JWT token is not valid.', error: e });
 		}
 
 		req.user = result;
+		console.log('TOKEN:');
+		console.log(token);
+		req.jwt = jwt.decode(token, { complete: true });
+
+		console.log('REQ.JWT:');
+		console.log(req.jwt);
 		
 		return Authenticator.roleAllowed(req, res, next);
 	}

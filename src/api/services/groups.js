@@ -293,6 +293,7 @@ module.exports.getGroupPrintable = async (options) => {
       if(group !== null){
         if(group.owners.indexOf(options.user.data.username) !== -1 || group.participants.indexOf(options.user.data.username) !== -1){
           let buffer = await toPDF(group.name, group.participants);
+          console.log(buffer);
           result = { status: 200, data: buffer };
         }else{
           result = { status: 401, data: {message: 'User is not authorized to obtain group data.'} };
@@ -310,10 +311,40 @@ module.exports.getGroupPrintable = async (options) => {
 };
 
 
-let toPDF = async (title, participants) => {
-  return new Promise((resolve, reject) => {
-    var pdf = require('html-pdf');
+async function convertHTMLtoPDF(htmlContent) {
+  try {
+      const puppeteer = require('puppeteer');
+      const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
+      const page = await browser.newPage();
+      
+      // Set the HTML content for the page
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' }); // Adjust options as needed
+      
+      console.log(await page.content());
 
+      // Generate the PDF
+      const pdf = await page.pdf({ format: 'A4' }); // Corrected method name
+      console.log("Pdf generated :");
+      console.log(pdf);
+      await browser.close();
+
+      if (pdf) {
+          // Resolve the promise with the PDF data
+          return pdf;
+      } else {
+          // Reject the promise with an error message
+          throw new Error("Error in PDF generation");
+      }
+  } catch (error) {
+      // Handle any exceptions or rejections
+      console.error('Error generating PDF:', error);
+      throw error; // Propagate the error further if needed
+  }
+}
+
+
+let toPDF = async (title, participants) => {
+  return new Promise(async (resolve, reject) => {
     var colspan = 6;
     var html = '<!DOCTYPE html><html><head><title></title><style type="text/css">body{padding:10px} table{font-size: 18px;font-family: "DejaVu Sans Mono"; border: solid 2px black;border-collapse: collapse;}table td{border: solid 2px black;text-align: center;}</style></head>';
     html += '<body><table width="100%" style=""><tr><th colspan="' + colspan + '" style="text-align:left">Group: ' + title + ':</th></tr><tr><td width="5%">No.</td><td width="45%">Nombre</td>';
@@ -334,13 +365,15 @@ let toPDF = async (title, participants) => {
     }
 
     html += '</table></body></html>';
-
-    pdf.create(html, { format: 'A4' }).toBuffer(function(err, buffer){
-      if(err){
-        reject(err);
-      }else{
-        resolve(buffer);
-      }
-    });
+    try {
+      let pdf = await convertHTMLtoPDF(html)
+      console.log("Pdf generated :");
+      console.log(pdf);
+      resolve(pdf);
+    } catch  {
+      console.log("Error generating Pdf :");
+      console.log(err);
+      reject(err);
+    }
   });
 }

@@ -1,5 +1,8 @@
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const fileUpload = require('express-fileupload');
+const multiparty = require('multiparty');
+const formidable = require('formidable');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 const AppManager = require('../lib/utils/appmanager');
@@ -12,10 +15,11 @@ console.log(isTest);
 let createAdminUser = async function(){
   let UsersController = require('../lib/userscontroller');
 
-  let result = await UsersController.getUsers({ username: 'admin' });
+  let result = await UsersController.getUsers({ username: config.api.adminUsername });
 
   if(result.length > 0){
     console.log('## Admin user already exists');
+    console.log(result);
   }else{
     let result = await UsersController.addUser({
       username: config.api.adminUsername,
@@ -47,11 +51,59 @@ db.once('open', function() {
   createAdminUser();
 });
 
+let multipartwith
 
 const log = logger(config.logger);
 
 const app = AppManager.InitApp();
-app.use(bodyParser.json({limit: '1mb'}));
+app.use(bodyParser.json({limit: config.api.maxUploadFileSize}));
+app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: true}));
+
+/*app.use(
+  //fileUpload({ limits: { fileSize: 200 * 1024 * 1024 }}),
+  function(req, res, next){
+    const form = formidable({ multiples: true });
+    
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        next(err);
+        return;
+      }
+      res.json({ fields, files });
+    });
+    try {
+      new multiparty.Form().parse(req, (err, fields, files) => {
+        if(!err){
+          req.fields = fields;
+          req.files = files;
+          next();
+        }else if(err.constructor.name !== 'UnsupportedMediaTypeError'){
+          next(err);
+        }else{
+          next();
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+  function(req, res, next){
+    if((req.method === 'POST' || req.method === 'PUT') && (!req.body || Object.keys(req.body).length === 0)){
+      if(req.files){
+        console.log(req.files);
+        let filekeys = Object.keys(req.files);
+        console.log(filekeys);
+        for (var i = 0; i < filekeys.length; i++) {
+          if(req.files[filekeys[i]].mimetype === 'application/json'){
+            console.log(req.files[filekeys[i]].data);
+            req.body = JSON.parse(req.files[filekeys[i]].data);
+          }
+        }
+      }
+    }
+
+    next();
+});*/
 
 // ALLOW CORS
 app.use((req, res, next) => {
@@ -71,6 +123,7 @@ app.use('/studies', require('./routes/studies'));
 app.use('/activities', require('./routes/activities'));
 app.use('/activitytypes', require('./routes/activitytypes'));
 app.use('/allocatortypes', require('./routes/allocatortypes'));
+app.use('/lti', require('./routes/lti'));
 
 
 // catch 404
@@ -93,6 +146,5 @@ app.use((err, req, res, next) => {
     res.status(status).send({ message: msg });
   }
 });
-
 
 module.exports = app;

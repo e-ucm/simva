@@ -112,3 +112,58 @@ module.exports.loginUser = async (options) => {
   
   return result;
 };
+
+/**
+ * @param {Object} options
+ * @param {String} options.main JWT of the main account
+ * @param {String} options.secondary JWT of the secondary account
+ * @param {String} options.domain domain name
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.linkUser = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.linkUser(options.body.main, options.body.secondary, options.body.domain);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.main JWT of the main account
+ * @param {String} options.secondary JWT of the secondary account
+ * @param {String} options.domain domain name
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.setRole = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.setRole(options.username, options.role, options.keycloak_id);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};
+
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.eventUser = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.eventUser(options);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};

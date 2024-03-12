@@ -1,6 +1,6 @@
 const express = require('express');
 const activities = require('../services/activities');
-
+const config = require('../../lib/config');
 const router = new express.Router();
 
 // Validators
@@ -135,7 +135,12 @@ router.get('/:id/target', Authenticator.auth, async (req, res, next) => {
   };
 
   try {
+    console.log("Get target activity");
     const result = await activities.getTarget(options);
+    console.log(result.data);
+    //res.setHeader('Access-Control-Allow-Origin', config.external_url);
+    //res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    //res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);
@@ -155,9 +160,13 @@ router.get('/:id/open', Authenticator.auth, async (req, res, next) => {
   };
 
   try {
-     const result = await activities.getTarget(options);
-
+    console.log("Redirect user to activity");
+    const result = await activities.getTarget(options);
+    //res.setHeader('Access-Control-Allow-Origin', config.external_url);
+    //res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    //res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if(result && result.data && result.data[req.user.data.username]){
+      console.log(result.data[req.user.data.username]);
       res.redirect(result.data[req.user.data.username]);
     }else{
       res.status(200).send({ message: 'Cannot be opened' });
@@ -215,6 +224,8 @@ router.get('/:id/result', Authenticator.auth, async (req, res, next) => {
     id: req.params['id'],
     user: req.user,
     users: req.query['users'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
   };
 
   try {

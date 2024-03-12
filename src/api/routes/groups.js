@@ -157,8 +157,8 @@ router.get('/:id/printable', Authenticator.auth, async (req, res, next) => {
     const result = await groups.getGroupPrintable(options);
 
     if(result.status === 200){
-      res.writeHead(200, [['Content-Type', 'application/pdf']]);
-      res.end(Buffer.from(result.data, 'base64'));
+      res.setHeader('Content-Type', 'application/pdf');
+      res.status(200).send(Buffer.from(result.data, 'base64'));
     }else{
       res.status(result.status).send(result.data);
     }

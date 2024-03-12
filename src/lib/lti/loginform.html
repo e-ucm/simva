@@ -1,0 +1,30 @@
+<script type="text/javascript">
+	let fuseaccounts = function(){
+		let username = $('#user_name').val();
+		let pass = $('#user_pass').val();
+		let baseurl = "https://simva-api.simva.e-ucm.es/";
+
+		$.post( baseurl + 'users/login' , { username: username, password: pass }, function(data){
+			console.log(data);
+			$.post( baseurl + 'users/link' , { main: data.token, secondary: token }, function(data){
+				location.reload();
+			}).fail(function(error) {
+				$('#login_result').text(error.message);
+			});
+		}).fail(function(error) {
+			$('#login_result').text(error.message);
+		});
+	}
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script></script>
+<form class="login" action="https://simva-">
+	<h2>Link your SIMVA account</h2>
+	<input id="user_name" type="text" name="username" placeholder="Username">
+	<input id="user_pass" type="password" name="password" placeholder="Password">
+	<a class="button" onclick="fuseaccounts()">Login</a>
+	<span style="color: red" id="login_result"></span>
+</form>
+<div class="separator">- OR -</div>
+<form class="login">
+	<a class="button" href="https://simva.e-ucm.es/studies/">Edit Studies on SIMVA</a>
+</form>

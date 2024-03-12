@@ -424,5 +424,93 @@ module.exports = function (request) {
                     done();
                 });
         });
+
+        it('should NOT add a secondary account and link it to the first one if bad JWT', function (done) {
+            let linkbody = {
+                main: authToken,
+                secondary: 'asddsadsadsa',
+                domain: 'simva'
+            }
+
+            request.post('/users/link')
+                .expect(400)
+                .send(linkbody)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should.exist(res.body.message);
+                    done();
+                });
+        });
+
+        it('should add a secondary account and link it to the first one', function (done) {
+            let user = {
+                username: 'test2',
+                password: 'testing',
+                email: 'test2@testerino.com',
+                role: 'teacher'
+            }
+
+            request.post('/users')
+                .expect(200)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should(res.body.username).equals(user.username);
+                    should(res.body.email).equals(user.email);
+                    should(res.body.role).equals(user.role);
+
+                    CompareStoredObject(res.body._id, res.body, function(err, res){
+                        should.not.exist(err);
+                        should(res).equals(true);
+                        let user = {
+                            username: 'test2',
+                            password: 'testing'
+                        }
+
+                        request.post('/users/login')
+                            .expect(200)
+                            .send(user)
+                            .set('Accept', 'application/json')
+                            .end(function (err, res) {
+                                if(err){
+                                    console.log(err, res);
+                                }
+
+                                should.not.exist(err);
+                                should(res.body).be.Object();
+                                should.exist(res.body.token);
+
+                                let linkbody = {
+                                    main: authToken,
+                                    secondary: res.body.token
+                                }
+                                
+
+                                request.post('/users/link')
+                                    .expect(200)
+                                    .send(linkbody)
+                                    .set('Accept', 'application/json')
+                                    .end(function (err, res) {
+                                        if(err){
+                                            console.log(err, res);
+                                        }
+
+                                        should.not.exist(err);
+                                        should(res.body).be.Object();
+                                        should.exist(res.body.external_entity);
+                                        done();
+                                    });
+                            });
+                    });
+                });   
+        });
     });
 };

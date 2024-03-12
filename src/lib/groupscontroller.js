@@ -38,5 +38,17 @@ GroupsController.updateGroup = async (id, group) => {
 	return result.ok > 0;
 }
 
+GroupsController.removeGroup = async (id) => {
+	let result = await mongoose.model('group').deleteOne({_id: id});
+
+	if(result){
+		console.log('Group removed');
+	}else{
+		console.log('Error removing the group');
+	}
+
+	return result;
+}
+
 
 module.exports = GroupsController;

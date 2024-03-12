@@ -9,7 +9,7 @@ const config = require('../lib/config');
 const logger = require('../lib/logger');
 
 const log = logger(config.logger);
-
+process.env.DEBUG = '*';
 
 //XXX
 //require('https').globalAgent.options.ca = require('ssl-root-cas/latest').create();
@@ -19,8 +19,6 @@ const log = logger(config.logger);
  */
 const port = normalizePort(config.api.port || '3000');
 app.set('port', port);
-app.use(express.json({limit: config.api.maxUploadFileSize}));
-app.use(express.urlencoded({limit: config.api.maxUploadFileSize}));
 
 /**
  * Create HTTP server.
@@ -81,11 +79,22 @@ function onError (error) {
   }
 }
 
+let ltijs = require('../lib/lti/tool');
+
 /**
  * Event listener for HTTP server "listening" event.
  */
-function onListening () {
+async function onListening () {
+  console.log("SERVER STARTED");
+  
   const addr = server.address();
   const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`;
   log.debug(`Listening on ${bind}`);
+
+  await ltijs.setup();
+
+  console.log(ltijs.provider.appRoute());
+  console.log(ltijs.provider.loginRoute());
+  console.log(ltijs.provider.keysetRoute());
+  console.log(ltijs.provider.dynRegRoute());
 }

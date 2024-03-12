@@ -1,6 +1,16 @@
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
+var Minio = require('minio');
+
+const axios = require('axios');
+const xml2js = require('xml2js');
+const fs = require('fs');
+const https = require('https');
+const { pipeline, Transform } = require('stream');
+const { promisify } = require('util');
+const unzipper = require('unzipper');
+const pipelineAsync = promisify(pipeline);
 
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
@@ -11,7 +21,7 @@ var TraceStorageActivity = new MinioActivity({});
 
 var UsersController = require('../userscontroller');
 
-var config = require('..//config');
+var config = require('../config');
 
 class GameplayActivity extends Activity {
 
@@ -134,7 +144,7 @@ class GameplayActivity extends Activity {
 		}
 
 		return await super.addParticipants(participants);
-	}º
+	}
 
 	async removeParticipants(participants){
 		if(this.extra_data.config.realtime){
@@ -167,7 +177,7 @@ class GameplayActivity extends Activity {
 				// If these conditions are satisfied, we're receiving an start or backup
 				if(result && result.result){
 					if(this.extra_data.config.backup){
-						await super.setResult(participant, result);
+						await super.saveToFile(participant, result.result);
 						return { message: 'Results Saved' };
 					}else{
 						throw { message: 'Backup is not enabled for this activity' };
@@ -186,6 +196,10 @@ class GameplayActivity extends Activity {
 						throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
 					}
 				}
+			}else{
+				console.log('Unknown case');
+				console.log(result.result);
+				throw { message: 'Unknown case setting the result' };
 			}
 		}catch(e){
 			console.log(e);
@@ -198,7 +212,13 @@ class GameplayActivity extends Activity {
 	async getResults(participants){
 		let results = {};
 
-		let backupresults = await super.getResults(participants);
+		if(this.extra_data.config.trace_storage && !participants && (!Array.isArray(participants) || participants.length == 0))
+		{
+			return await GameplayActivity.getTracesFromZip(this.id, this.token, this.res);
+		}
+
+
+		let backupresults = await this.loadBackups(participants);
 		let analyticsresults = {};
 
 		if(this.extra_data.config.realtime){
@@ -224,6 +244,221 @@ class GameplayActivity extends Activity {
 		}
 
 		return results;
+	}
+
+	
+	async getMinioObjects(minioClient, bucket, prefix){
+		var objectsList = await this.listMinioObjects(minioClient, bucket, prefix);
+		var objectPromises = [];
+		for(var obj in objectsList){
+			objectPromises.push(this.getObject(minioClient, bucket, obj.name));
+		}
+
+		return Promise.all(objectPromises)
+			.then(contents => {
+				return "[" + contents.concat(",") + "]";
+			})
+	}
+
+	async getObject(minioClient, bucket, name){
+		return new Promise((resolve, reject) => {
+			var chunks = [];
+			const stream = minioClient.getObject(bucket, name, function (e, dataStream) {
+				stream.on('data', function(chunk) {
+					chunks.push(chunk);
+				});
+		
+				stream.on('error', function(err) {
+					reject(err);
+				});
+		
+				stream.on('end', function() {
+					const buffer = Buffer.concat(chunks);
+					const string = buffer.toString('utf8');
+					resolve(string);
+				});
+			});
+		});
+	}
+
+	async listMinioObjects(minioClient, bucket, prefix){
+		return new Promise((resolve, reject) => {
+			const objectsList = [];
+			const stream =  minioClient.listObjects(bucket, prefix);
+	  
+			stream.on('data', function(obj) {
+				objectsList.push(obj);
+			});
+	  
+			stream.on('error', function(err) {
+				reject(err);
+			});
+	  
+			stream.on('end', function() {
+				resolve(objectsList);
+		    });
+		});
+	}
+
+	static async getTemporaryCredentials(minio_endpoint, access_token, ca_file) {
+		const data = {
+			Action: 'AssumeRoleWithWebIdentity',
+			Version: '2011-06-15',
+			DurationSeconds: 3600,
+			WebIdentityToken: access_token
+		};
+
+		try {
+			const response = await axios.post(minio_endpoint, new URLSearchParams(data), {
+				httpsAgent: new https.Agent((ca_file && ca_file != "") ? {
+					ca: fs.readFileSync(ca_file) 
+				}:{})
+			});
+
+			if (response.status !== 200) {
+				console.log('Problems getting temporary credentials');
+				console.log(response.data);
+			} else {
+				const parser = new xml2js.Parser({
+					explicitArray: false,
+					tagNameProcessors: [xml2js.processors.stripPrefix]
+				});
+
+				const result = await parser.parseStringPromise(response.data);
+				const credentials = result.AssumeRoleWithWebIdentityResponse
+					.AssumeRoleWithWebIdentityResult.Credentials;
+				return {
+					access_key_id: credentials.AccessKeyId,
+					secret_access_key: credentials.SecretAccessKey,
+					session_token: credentials.SessionToken
+				};
+			}
+		} catch (error) {
+			console.error('Error:', error);
+		}
+	}
+
+	async setUserToken(token){
+		this.token = token;
+	}
+
+	async setRes(res){
+		this.res = res;
+	}
+
+	
+	static async getTracesFromZip(activity_id, access_token, res, ca_file = "") {
+		var utils = await GameplayActivity.getUtils("");
+		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
+	
+		const requestBody = {
+			"bucketName": `${config.minio.bucket}`,
+			"prefix":  `${config.minio.topics_dir}/${config.minio.traces_topic}/`,
+			"objects": [`_id=${activity_id}/`]
+		};
+	
+		console.log('Starting ZIP request...');
+	
+		try {
+			const response = await axios.post(
+				utils.minio_url + "minio/zip?token=" + temporaryCredentials.session_token,
+				requestBody,
+				{
+					responseType: 'stream',
+					headers: {
+						'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0'
+					}
+				}
+			);
+	
+			console.log('ZIP reply received, processing...');
+			res.setHeader('Content-Disposition', `attachment; filename="${activity_id}.zip"`);
+
+			let isFirstFile = true;
+			const transformStream = new Transform({
+				writableObjectMode: true,
+				transform(file, encoding, callback) {
+					console.log('Processing file:', file.name);
+					let data = file.contents;
+					if (isFirstFile) {
+						data = "[" + data;
+						isFirstFile = false;
+					} else {
+						data = "," + data;
+					}
+					this.push(data);
+					callback();
+				},
+				final(callback) {
+					this.push("]");
+					console.log('Finalizing the transformation stream...');
+					callback();
+				}
+			});
+	
+			await pipelineAsync(
+				response.data,
+				unzipper.Parse(),
+				new Transform({
+					objectMode: true,
+					transform(entry, encoding, callback) {
+						if (entry.type === 'File') {
+							let contents = '';
+							entry.on('data', (chunk) => contents += chunk);
+							entry.on('end', () => {
+								this.push({ name: entry.path, contents });
+								callback();
+							});
+						} else {
+							entry.autodrain();
+							callback();
+						}
+					}
+				}),
+				transformStream,
+				res
+			);
+	
+			console.log('Pipeline completada con éxito.');
+	
+		} catch (error) {
+			console.error("Error al procesar el archivo ZIP:", error);
+			res.status(500).send({ error: error.message });
+		}
+	}
+
+	static async initializeMinioClient(access_token, ca_file = "") {
+		var utils = await GameplayActivity.getUtils("");
+		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
+		var minioClient = new Minio.Client({
+			endPoint: new URL(utils.minio_url).hostname,
+			useSSL: true,
+			accessKey: temporaryCredentials.access_key_id,
+			secretKey: temporaryCredentials.secret_access_key,
+			sessionToken: temporaryCredentials.session_token
+		});
+		return minioClient;
+	}
+
+	async loadBackups(participants){
+		if(!participants || participants.length == 0){
+			participants = Object.keys(this.extra_data.participants);
+		}
+
+		let backups = [];
+
+		for (var i = 0; i < participants.length; i++) {
+			try {
+				backups[participants[i]] = await super.readFromFile(participants[i]);
+			}catch(e){
+				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
+					console.log(e);
+				}
+				backups[participants[i]] = null;
+			}
+		}
+
+		return backups;
 	}
 
 	async setCompletion(participant, status){

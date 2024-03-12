@@ -859,12 +859,15 @@ function getResponseByToken(survey, token){
 			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1});
 
 			request(options, function(error, response, body){
+				console.log(body);
 				if (!error && response.statusCode == 200) {
 					try{
 						body = JSON.parse(body);
 					}catch(e){
 						return NotifyRCError('getResponseByToken', error, response, body, callback);
 					}
+
+					console.log(body);
 
 					var response = null;
 

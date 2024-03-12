@@ -60,6 +60,7 @@ var GetFirstStoredObject = function(callback){
 }
 
 let authToken = null;
+let authToken2 = null;
 let teacherid = null;
 let groupid1 = null;
 let groupid2 = null;
@@ -84,6 +85,13 @@ module.exports = function (request) {
                 role: 'teacher'
             }
 
+            let teacher2 = {
+                username: 'teacher2',
+                password: 'pass2',
+                email: 'teacher2@test.com',
+                role: 'teacher'
+            }
+
             let student = {
                 username: 's1',
                 password: 'pass1',
@@ -102,13 +110,9 @@ module.exports = function (request) {
                                 console.log(err, res);
                             }
 
-                            should.not.exist(err);
-                            should(res.body).be.Object();
-                            should(res.body._id).be.String();
-                            teacherid = res.body.id;
                             request.post('/users')
                                 .expect(200)
-                                .send(student)
+                                .send(teacher2)
                                 .set('Accept', 'application/json')
                                 .end(function (err, res) {
                                     if(err){
@@ -116,86 +120,100 @@ module.exports = function (request) {
                                     }
 
                                     should.not.exist(err);
-                                    mongoose.connection.collection('users').insertMany(
-                                        [{
-                                            username: 's2',
-                                            password: 's2',
-                                            email: 's2@test.com',
-                                            role: 'student',
-                                            external_entity: []
-                                        },
-                                        {
-                                            username: 's3',
-                                            password: 's3',
-                                            email: 's3@test.com',
-                                            role: 'student',
-                                            external_entity: []
-                                        },
-                                        {
-                                            username: 's4',
-                                            password: 's4',
-                                            email: 's4@test.com',
-                                            role: 'student',
-                                            external_entity: []
-                                        },
-                                        {
-                                            username: 's5',
-                                            password: 's5',
-                                            email: 's5@test.com',
-                                            role: 'student',
-                                            external_entity: []
-                                        }]
-                                    ,function(){
-                                        mongoose.connection.collection('groups').insertMany(
-                                            [{
-                                                name: 'g1',
-                                                owners: ['teacher'],
-                                                participants: ['s1', 's2', 's3'],
-                                                created: Date.now()
-                                            },
-                                            {
-                                                name: 'g2',
-                                                owners: ['teacher'],
-                                                participants: ['s3', 's4', 's5'],
-                                                created: Date.now()
-                                            },
-                                            {
-                                                name: 'g3',
-                                                owners: ['unaccessible'],
-                                                participants: ['s1', 's2','s3', 's4', 's5'],
-                                                created: Date.now()
-                                            }]
-                                        ,function(err, result){
-                                            groupid1 = result.ops[0]._id;
-                                            groupid2 = result.ops[1]._id;
-                                            groupid_unauth = result.ops[2]._id;
-                                            mongoose.connection.collection('studies').insertMany(
-                                                [{
-                                                    "tests" : [],
-                                                    "groups" : ['g3'],
-                                                    "owners" : ["unaccessible"],
-                                                    "name" : "teststudy",
-                                                    "allocator" : "5ddff46fbeccac38f888339a",
-                                                    "created" : Date.now()
-                                                }]
-                                            ,function(err, result){
-                                                studyid_unauth = result.ops[0]._id;
-                                                request.post('/users/login')
-                                                    .expect(200)
-                                                    .send({username: 'teacher', password: 'pass1'})
-                                                    .end(function (err, res) {
-                                                        if(err){
-                                                            console.log(err, res);
-                                                        }
-                                                        should(res.body).be.Object();
-                                                        should.exist(res.body.token);
-                                                        authToken = res.body.token;
+                                    should(res.body).be.Object();
+                                    should(res.body._id).be.String();
+                                    teacherid = res.body.id;
+                                    request.post('/users')
+                                        .expect(200)
+                                        .send(student)
+                                        .set('Accept', 'application/json')
+                                        .end(function (err, res) {
+                                            if(err){
+                                                console.log(err, res);
+                                            }
 
-                                                        done();
+                                            should.not.exist(err);
+                                            mongoose.connection.collection('users').insertMany(
+                                                [{
+                                                    username: 's2',
+                                                    password: 's2',
+                                                    email: 's2@test.com',
+                                                    role: 'student',
+                                                    external_entity: []
+                                                },
+                                                {
+                                                    username: 's3',
+                                                    password: 's3',
+                                                    email: 's3@test.com',
+                                                    role: 'student',
+                                                    external_entity: []
+                                                },
+                                                {
+                                                    username: 's4',
+                                                    password: 's4',
+                                                    email: 's4@test.com',
+                                                    role: 'student',
+                                                    external_entity: []
+                                                },
+                                                {
+                                                    username: 's5',
+                                                    password: 's5',
+                                                    email: 's5@test.com',
+                                                    role: 'student',
+                                                    external_entity: []
+                                                }]
+                                            ,function(){
+                                                mongoose.connection.collection('groups').insertMany(
+                                                    [{
+                                                        name: 'g1',
+                                                        owners: ['teacher'],
+                                                        participants: ['s1', 's2', 's3'],
+                                                        created: Date.now()
+                                                    },
+                                                    {
+                                                        name: 'g2',
+                                                        owners: ['teacher'],
+                                                        participants: ['s3', 's4', 's5'],
+                                                        created: Date.now()
+                                                    },
+                                                    {
+                                                        name: 'g3',
+                                                        owners: ['unaccessible'],
+                                                        participants: ['s1', 's2','s3', 's4', 's5'],
+                                                        created: Date.now()
+                                                    }]
+                                                ,function(err, result){
+                                                    groupid1 = result.ops[0]._id;
+                                                    groupid2 = result.ops[1]._id;
+                                                    groupid_unauth = result.ops[2]._id;
+                                                    mongoose.connection.collection('studies').insertMany(
+                                                        [{
+                                                            "tests" : [],
+                                                            "groups" : ['g3'],
+                                                            "owners" : ["unaccessible"],
+                                                            "name" : "teststudy",
+                                                            "allocator" : "5ddff46fbeccac38f888339a",
+                                                            "created" : Date.now()
+                                                        }]
+                                                    ,function(err, result){
+                                                        studyid_unauth = result.ops[0]._id;
+                                                        request.post('/users/login')
+                                                            .expect(200)
+                                                            .send({username: 'teacher', password: 'pass1'})
+                                                            .end(function (err, res) {
+                                                                if(err){
+                                                                    console.log(err, res);
+                                                                }
+                                                                should(res.body).be.Object();
+                                                                should.exist(res.body.token);
+                                                                authToken = res.body.token;
+
+                                                                done();
+                                                            });
                                                     });
+                                                });
                                             });
                                         });
-                                    });
                                 });
                         });
                 });
@@ -272,9 +290,9 @@ module.exports = function (request) {
                 .set('Accept', 'application/json')
                 .set('Authorization', 'Bearer ' + authToken)
                 .end(function (err, res) {
-                    if(err){
+                    /*if(err){
                         console.log(err, res);
-                    }
+                    }*/
 
                     should.not.exist(err);
                     should(res.body).be.instanceof(Array).and.have.lengthOf(1);
@@ -568,6 +586,72 @@ module.exports = function (request) {
                     done();
                 });
 
+        });
+
+        it('should be able to link two accounts', function (done) {
+            let user = {
+                username: "teacher2",
+                password: "pass2"
+            }
+
+            request.post('/users/login')
+                .expect(200)
+                .send(user)
+                .set('Accept', 'application/json')
+                .end(function (err, res) {
+                    if(err){
+                        console.log(err, res);
+                    }
+
+                    should.not.exist(err);
+                    should(res.body).be.Object();
+                    should.exist(res.body.token);
+
+                    authToken2 = res.body.token;
+
+                    let linkbody = {
+                        main: authToken,
+                        secondary: authToken2
+                    }
+                    
+
+                    request.post('/users/link')
+                        .expect(200)
+                        .send(linkbody)
+                        .set('Accept', 'application/json')
+                        .end(function (err, res) {
+                            if(err){
+                                console.log(err, res);
+                            }
+
+                            should.not.exist(err);
+                            should(res.body).be.Object();
+                            should.exist(res.body.external_entity);
+                            done();
+                        });
+                });
+        });
+
+        it('should be able to obtain the studies of the secondary linked account', function (done) {
+            request.get('/studies')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken)
+                .end(function (err, res) {
+                    should(res.body.length).equals(1);
+                    done();
+                });
+        });
+
+        it('should be able to obtain the studies of the main linked account', function (done) {
+            request.get('/studies')
+                .expect(200)
+                .set('Accept', 'application/json')
+                .set('Authorization', 'Bearer ' + authToken2)
+                .end(function (err, res) {
+                    should(res.body.length).equals(1);
+                    done();
+                });
         });
     });
 };

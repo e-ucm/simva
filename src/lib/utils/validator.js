@@ -19,20 +19,22 @@ validator.addValidations = function(base, router){
 			if(request['requestBody']){
 				var schemaRef = request['requestBody']['content']['application/json']['schema']['$ref'];
 
-				var schema = validator.getSchema(schemaRef);
+				if(schemaRef){
+					var schema = validator.getSchema(schemaRef);
 
-				if(schema['schema'] && schema['schema']['$ref']){
-					var schema = validator.getSchema(schema['schema']['$ref']);
+					if(schema['schema'] && schema['schema']['$ref']){
+						var schema = validator.getSchema(schema['schema']['$ref']);
+					}
+
+					reducedPath = path.substr(base.length);
+					reducedPath = reducedPath.replace('{', ':');
+					reducedPath = reducedPath.replace('}', '');
+					reducedPath = reducedPath === '' ? '/' : reducedPath;
+
+					console.log('Added validation to: ' + method + ' - ' + base + reducedPath);
+
+					router[method](reducedPath, validate.schema(schema));
 				}
-
-				reducedPath = path.substr(base.length);
-				reducedPath = reducedPath.replace('{', ':');
-				reducedPath = reducedPath.replace('}', '');
-				reducedPath = reducedPath === '' ? '/' : reducedPath;
-
-				console.log('Added validation to: ' + method + ' - ' + base + reducedPath);
-
-				router[method](reducedPath, validate.schema(schema));
 			}
 		}
 	}

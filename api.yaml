@@ -24,6 +24,8 @@ tags:
     description: Operations available to teachers
   - name: students
     description: Operations available to students
+  - name: noroles
+    description: Operations available to users with no role
 paths:
   /users:
     get:
@@ -118,6 +120,66 @@ paths:
                 $ref: '#/components/schemas/user'
         '400':
           description: 'invalid input'
+  /users/link:
+    post:
+      summary: Links the secondary account to the main one
+      operationId: linkUser
+      description: |
+        Receives two valid JWT tokens and adds to the main
+        account, as an external_entity, the secondary account
+      responses:
+        '200':
+          description: Accounts linked
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/link_accounts'
+        required: true
+  /users/role:
+    post:
+      tags:
+        - admins
+        - noroles
+      summary: Modifies the role of the logged user.
+      operationId: setRole
+      description: |
+        Receives the new role to be added to the user
+      responses:
+        '200':
+          description: Role updated
+        '400':
+          description: 'invalid input, object invalid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/set_role_body'
+        required: true
+  /users/events:
+    post:
+      summary: Receives the events of the SSO to sync the users
+      operationId: eventUser
+      description: |
+        Receives the SSO events and updates the users, both creating
+        the users and updating their roles and permissions 
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
   /groups:
     get:
       tags:
@@ -1234,6 +1296,45 @@ paths:
           schema:
             type: string
             format: 'user1,user2,user3'
+  /activities/{id}/test:
+    post:
+      tags:
+        - teachers
+        - students
+      summary: testing endpoint for uadventure testing
+      operationId: setTest
+      description: |
+        Testing endpoint
+      responses:
+        '200':
+          description: if it is openable or not
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The test ID
+        - in: query
+          name: time
+          description: |
+            milliseconds to return
+          schema:
+            type: integer
+            format: '2000'
+        - in: query
+          name: user
+          description: |
+            the user to set its result
+            (if logged in student , user is not needed)
+          schema:
+            type: string
+            format: 'user1'
   /activitytypes:
     get:
       tags:
@@ -1278,6 +1379,572 @@ paths:
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
+  /lti:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the status of the LTI compatibility
+      operationId: getLtiStatus
+      description: |
+        Returns an object that specifies if simva is acting as
+        an LTI platform and/or LTI tool
+      responses:
+        '200':
+          description: the object with the LTI status
+          content:
+            application/json:
+              schema:
+                type: object
+                items: 
+                  $ref: '#/components/schemas/lti_status'
+  /lti/claims:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LTI claims for the given hints
+      operationId: getLtiClaims
+      description: |
+        An lti tool launch will provide two parameters including
+        lti_message_hint and lti_login_hint and, in base of that,
+        this endpoint will return an object including all the claims
+        needed for the tool to work.
+      responses:
+        '200':
+          description: the list of groups for this user
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: query
+          name: lti_login_hint
+          description: simva signed JWT token with LTI-login data
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: lti_message_hint
+          description: simva signed JWT token with LTI-related data
+          required: false
+          schema:
+            type: string
+    post:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LTI claims for the given hints
+      operationId: postLtiClaims
+      description: |
+        An lti tool launch will provide two parameters including
+        lti_message_hint and lti_login_hint and, in base of that,
+        this endpoint will return an object including all the claims
+        needed for the tool to work.
+      responses:
+        '200':
+          description: the list of groups for this user
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: query
+          name: lti_login_hint
+          description: simva signed JWT token with LTI-login data
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: lti_message_hint
+          description: simva signed JWT token with LTI-related data
+          required: false
+          schema:
+            type: string
+  /lti/context/{id}/lineitems/:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: getLtiLineItems
+      description: |
+        Returns the list of LineItems
+      responses:
+        '200':
+          description: the object including all the LineItems
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+  /lti/context/{id}/lineitems/{lineitem}/:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: getLtiLineItem
+      description: |
+        Returns the list of LineItems
+      responses:
+        '200':
+          description: the object including all the LineItems
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+    put:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: putLtiLineItem
+      description: |
+        Sets the value of a lineitem
+      responses:
+        '200':
+          description: the object including all the LineItems
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+  /lti/context/{id}/lineitems/{lineitem}/results:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the result for the LineItems of the Lti Activity
+      operationId: getLtiLineItemResults
+      description: |
+        Sets the value of a lineitem score
+      responses:
+        '200':
+          description: The result of the lineitem
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+  /lti/context/{id}/lineitems/{lineitem}/score:
+    post:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the LineItems of the Lti Activity
+      operationId: setLtiLineItemScore
+      description: |
+        Sets the value of a lineitem score
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+        - in: path
+          name: lineitem
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The id of the line item
+  /lti/context/{id}/memberships:
+    get:
+      tags:
+        - admins
+        - teachers
+        - students
+      summary: gets the list of members based on the LTI NRPS
+      operationId: getLtiMemberships
+      description: |
+        Returns the list of members of an activity based on the specification
+        of the LTI service Names and Roles Provisioning Service
+      responses:
+        '200':
+          description: the object including context and users
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The context id
+  /lti/tools:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of LTI tools
+      operationId: getLtiTools
+      description: |
+        Obtains the list of lti tools available
+      responses:
+        '200':
+          description: the list of LTI tools available
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/lti_tool'
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a lti tool
+      operationId: addLtiTool
+      description: |
+        Adds an lti tool that will be later available for the activities
+      responses:
+        '200':
+          description: lti tool created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_tool'
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        required: true
+  /lti/tools/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the LTI tool with the given ID
+      operationId: getLtiTool
+      description: |
+        Obtains the requested LTI tool
+      responses:
+        '200':
+          description: lti tool object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_tool'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti_tool ID
+    put:
+      tags:
+        - teachers
+      summary: updates the LTI tool
+      operationId: updateLtiTool
+      description: Updates an existing LTI tool
+      responses:
+        '200':
+          description: item created
+        '401':
+          description: 'Teacher does not own the group'
+        '400':
+          description: 'invalid input'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti tool ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        description: LTI tool to be modified
+    delete:
+      tags:
+        - teachers
+      summary: Deletes the lti tool with the given ID
+      operationId: deleteLtiTool
+      description: |
+        Deletes the designed lti tool
+      responses:
+        '200':
+          description: LTI tool deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The LTI tool ID
+  /lti/platforms:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of LTI platforms
+      operationId: getLtiPlatforms
+      description: |
+        Obtains the list of lti platforms registered
+      responses:
+        '200':
+          description: the list of LTI platforms registered
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/lti_platform'
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for result filtering
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+    post:
+      tags:
+        - teachers
+      summary: adds a lti platform
+      operationId: addLtiPlatform
+      description: |
+        Register an lti platform that is allowed to launch simva as tool
+      responses:
+        '200':
+          description: lti platform registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_platform'
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_platform'
+        required: true
+  /lti/platforms/{id}:
+    get:
+      tags:
+        - teachers
+      summary: gets the LTI platforms with the given ID
+      operationId: getLtiPlatform
+      description: |
+        Obtains the requested LTI platforms
+      responses:
+        '200':
+          description: lti platforms object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_platform'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti_tool ID
+    put:
+      tags:
+        - teachers
+      summary: updates the LTI platforms
+      operationId: updateLtiPlatform
+      description: Updates an existing LTI platforms
+      responses:
+        '200':
+          description: item created
+        '401':
+          description: 'Teacher does not own the group'
+        '400':
+          description: 'invalid input'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702b2"
+          description: The lti platform ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_platform'
+        description: LTI platform to be modified
+    delete:
+      tags:
+        - teachers
+      summary: Deletes the lti platform with the given ID
+      operationId: deleteLtiTool
+      description: |
+        Deletes the designed lti platform
+      responses:
+        '200':
+          description: LTI platform deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "5d07a0767c1405004bc702af"
+          description: The LTI platform ID
+  /uploads:
+    post:
+      tags:
+        - teachers
+      summary: adds a lti tool
+      operationId: addLtiTool
+      description: |
+        Adds an lti tool that will be later available for the activities
+      responses:
+        '200':
+          description: lti tool created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lti_tool'
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        required: true
 security:
   - OAuth2:
       - read
@@ -1349,6 +2016,8 @@ components:
           items:
             type: string
             example: ObjectId("5d07a0767c1405004bc702af")
+        link:
+          type: object
         created:
           type: string
           format: date-time
@@ -1477,6 +2146,135 @@ components:
           example: "manual, random, ponderated..."
         extra_data:
           type: object
+    lti_tool:
+      type: object
+      required:
+        - name
+        - description
+        - url
+        - jwks_uri
+        - login_uri
+        - redirect_uri
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        name:
+          type: string
+          example: "Test tool"
+        description:
+          type: string
+          example: "This is a test tool used for testing"
+        client_id:
+          type: string
+          example: "lti-tool-client-12345"
+        url:
+          type: string
+          example: "https://lti-tool.test/"
+        jwks_uri:
+          type: string
+          example: "https://lti-tool.test/.well-known/jwks.json"
+        login_uri:
+          type: string
+          example: "https://lti-tool.test/oidc/init"
+        redirect_uri:
+          type: string
+          example: "https://lti-tool.test/launch"
+        extra_data:
+          type: object
+    lti_platform:
+      type: object
+      required:
+        - url
+        - name
+        - clientId
+        - authenticationEndpoint
+        - accesstokenEndpoint
+        - authConfig
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        url:
+          type: string
+          example: "https://sso.simva.e-ucm.es/auth/realms/simva"
+        name:
+          type: string
+          example: "simva"
+        clientId:
+          type: string
+          example: "lti-tool-81751"
+        authenticationEndpoint:
+          type: string
+          example: "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/auth"
+        accesstokenEndpoint:
+          type: string
+          example: "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/token"
+        authConfig:
+          type: object
+          #example: { "method": "JWK_SET", "key": "https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/certs" }
+        internal_id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        extra_data:
+          type: object
+    lti_context:
+      type: object
+      required:
+        - org
+        - type
+        - label
+        - title
+        - sourcedId
+        - history
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702b2")
+        org:
+          type: string
+          example: "https://lti-tool.test/oidc/init"
+        type:
+          type: array
+          items:
+            type: string
+            example: "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"
+        label:
+          type: string
+          example: "lti-tool-client-12345"
+        title:
+          type: string
+          example: "https://lti-tool.test/"
+        sourcedId:
+          type: string
+          example: "activity:5d07a0767c1405004bc702b2"
+        history:
+          type: string
+          example: "A comma-separated list of URL-encoded context ID values representing previous copies of the context"
+    upload_file:
+      type: object
+      required:
+        - file
+      properties:
+        file:
+          type: string
+          format: binary
+      x-swagger-mongoose:
+        exclude-schema: true
+    set_role_body:
+      required:
+      - role
+      type: object
+      properties:
+        role:
+          type: string
+          example: teacher
+          description: |
+            The role for the user to have. Some
+            examples include teacher, student 
+            teaching-assistant or researcher
+      x-swagger-mongoose:
+        exclude-schema: true
     add_group_body:
       required:
       - name
@@ -1537,3 +2335,65 @@ components:
           example: Pass12345
       x-swagger-mongoose:
         exclude-schema: true
+    lti_status:
+      required:
+      - tool
+      - platform
+      type: object
+      properties:
+        username:
+          type: boolean
+          example: true
+        password:
+          type: boolean
+          example: false
+      x-swagger-mongoose:
+        exclude-schema: true
+    link_accounts:
+      required:
+      - main
+      - secondary
+      type: object
+      properties:
+        main:
+          type: string
+          example: JWT of the main account
+        secondary:
+          type: string
+          example: JWT of the secondary account
+        domain:
+          type: string
+          example: moodle_12321
+      x-swagger-mongoose:
+        exclude-schema: true
+#    lti_claims:
+#      type: object
+#      example: |
+#        '{
+#            "https://purl.imsglobal.org/spec/lti/claim/message_type"    : "LtiResourceLinkRequest",
+#            "https://purl.imsglobal.org/spec/lti/claim/version"         : "1.3.0",
+#            "https://purl.imsglobal.org/spec/lti/claim/deployment_id"   : "D001",
+#            "https://purl.imsglobal.org/spec/lti/claim/target_link_uri" : "https://lti-ri.imsglobal.org/lti/tools/1376/launches",
+#            "https://purl.imsglobal.org/spec/lti/claim/resource_link"   : {
+#              "id"          : "link001",
+#              "title"       : "Resource 001",
+#              "description" : "Resource Description 001"
+#            },
+#            "https://purl.imsglobal.org/spec/lti/claim/roles"           : [
+#              "http://purl.imsglobal.org/vocab/lis/v2/membership#Learner"
+#            ],
+#
+#            "https://purl.imsglobal.org/spec/lti/claim/context"         : {
+#              "id": "context001",
+#              "label": "Ctxt001",
+#              "title":  "Context 001",
+#              "type": ["http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering"]
+#            },
+#            "https://purl.imsglobal.org/spec/lti/claim/tool_platform"   : {
+#              "guid": "tool_id_0001",
+#              "product_family_code": "SIMVA",
+#              "name": "SIMVA e-UCM"
+#            }
+#        }'
+#      x-swagger-mongoose:
+#        exclude-schema: true
