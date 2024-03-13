@@ -313,7 +313,7 @@ UsersController.generateJWT = async (user) => {
 }
 
 UsersController.validateJWT = async (token) => {
-	console.log("Token : " + token);
+	//console.log("Token : " + token);
 	return new Promise((resolve, reject) => {
 		let decoded = jwt.decode(token, { complete: true });
 
@@ -388,7 +388,7 @@ UsersController.validateJWT = async (token) => {
 }
 
 UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
-	console.log("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
+	//console.log("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
 	return new Promise((resolve, reject) => {
 		if(!config.sso.enabled){
 			resolve(decoded);
@@ -429,7 +429,7 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 }
 
 UsersController.simplifyUser = function(user){
-	console.log("simplifyUser - User : " + JSON.stringify(user));
+	//console.log("simplifyUser - User : " + JSON.stringify(user));
 	return { data: {
 		_id: user._id,
 		username: user.username,
@@ -439,7 +439,7 @@ UsersController.simplifyUser = function(user){
 }
 
 UsersController.createUserFromJWT = async function(decoded){
-	console.log("createUserFromJWT : " + JSON.stringify(decoded));
+	//console.log("createUserFromJWT : " + JSON.stringify(decoded));
 	let user = {
 		username: decoded.preferred_username,
 		password: Math.random().toString(36).slice(-8),
@@ -453,7 +453,7 @@ UsersController.createUserFromJWT = async function(decoded){
 }
 
 UsersController.getRoleFromJWT = function(decoded){
-	console.log("getRoleFromJWT : " + JSON.stringify(decoded));
+	//console.log("getRoleFromJWT : " + JSON.stringify(decoded));
 	let role = 'norole';
 
 	for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
