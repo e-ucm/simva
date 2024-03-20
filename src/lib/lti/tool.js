@@ -34,7 +34,7 @@ lti.setup(config.LTI.platform.key, // Key used to sign cookies and tokens
       sameSite: 'None' // Set sameSite to 'None' if the testing platform is in a different domain and https is being used
     },
     devMode: false, // Set DevMode to false if running in a production environment with https
-    dynRegRoute: config.api.url + '/lti/register', // Setting up dynamic registration route. Defaults to '/register'
+    dynRegRoute: '/register', // Setting up dynamic registration route. Defaults to '/register'
     dynReg: {
       url: config.api.url + '/lti/tool/', // Tool Provider URL. Required field.
       name: 'SIMVA', // Tool Provider name. Required field.
