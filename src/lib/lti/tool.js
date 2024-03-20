@@ -38,7 +38,7 @@ lti.setup(config.LTI.platform.key, // Key used to sign cookies and tokens
     dynReg: {
       url: config.api.url + '/lti/tool/', // Tool Provider URL. Required field.
       name: 'SIMVA', // Tool Provider name. Required field.
-      logo: config.api.url + '/favicon.ico', // Tool Provider logo URL.
+      logo: config.favicon_url, // Tool Provider logo URL.
       description: 'SIMple VAlidation service for serious game validation and deployment', // Tool Provider description.
       redirectUris: [
         config.api.url,

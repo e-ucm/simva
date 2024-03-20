@@ -4,6 +4,8 @@ let config = {}
 let ignored_ports = [80, 8080, 443];
 
 config.external_url = process.env.EXTERNAL_URL || 'https://simva.external.test'
+config.favicon_file = process.env.SIMVA_FRONT_FAVICON || '/favicon.ico'
+config.favicon_url = config.external_url + config.favicon_file
 
 config.api = {}
 config.api.host = process.env.SIMVA_API_HOST || 'simva-api.simva.external.test'
