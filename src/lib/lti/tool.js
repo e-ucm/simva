@@ -4,6 +4,7 @@ var mongoose = require('mongoose');
 var config = require('../config');
 const lti = require('ltijs').Provider;
 var requireText = require('require-text');
+const jwt = require('jsonwebtoken');
 
 var UsersController = require('../userscontroller');
 var GroupsController = require('../groupscontroller');
@@ -52,7 +53,7 @@ lti.setup(config.LTI.platform.key, // Key used to sign cookies and tokens
 // Set lti launch callback
 lti.onConnect(async (token, req, res) => {
   Log('lib/tool/lti.onConnect(): Started');
-  Log('lib/tool/lti.onConnect(): Token:' + token);
+  Log('lib/tool/lti.onConnect(): Token:' + JSON.stringify(token));
   let response = {};
 
   try{
@@ -96,7 +97,7 @@ lti.onConnect(async (token, req, res) => {
     }
 
     
-    let query = { 'link.type': 'lti_platform', 'link.id': token.platformId + '_' + token.deploymentId };
+    let query = { 'link.type': 'lti_platform', 'link.id': token.platformId };
     let groups = await GroupsController.getGroups(query);
     Log('lib/tool/lti.onConnect(): Groups: ' + JSON.stringify(groups));
 
@@ -105,24 +106,35 @@ lti.onConnect(async (token, req, res) => {
     if(groups.length > 0){
       group = groups[0];
     }else{
-      group = await GroupsController.addGroup({
+      let groupbody = {
         name: 'LTI:' + token.clientId,
         owners: [],
         participants: [],
         link: { 
           type: 'lti_platform',
-          id: token.platformId + '_' + token.deploymentId
+          id: token.platformId
         },
         created: Date.now()
-      });
+      };
+
+      Log('lib/tool/lti.onConnect(): Adding Group: ' + JSON.stringify(groupbody));
+      group = await GroupsController.addGroup(groupbody);
+      Log('lib/tool/lti.onConnect(): Group Added: ' + JSON.stringify(group));
 
       Log('lib/tool/lti.onConnect(): Query: ' + JSON.stringify(req.query));
-      let study = await StudiesController.getStudy(req.query.study);
+      let ltik = jwt.decode(req.query.ltik, { complete: true });
+      Log('lib/tool/lti.onConnect(): LTIK: ' + JSON.stringify(ltik));
+      Log('lib/tool/lti.onConnect(): Body: ' + JSON.stringify(req.body));
+
+
+
+      Log('lib/tool/lti.onConnect(): HOW ARE WE LINKING THE STUDY??');
+      /*let study = await StudiesController.getStudy(req.query.study);
 
 
       study.groups.push(group._id);
 
-      await StudiesController.updateStudy(study._id, study);
+      await StudiesController.updateStudy(study._id, study);*/
     }
 
     if(!group.participants.includes(user.username)){
