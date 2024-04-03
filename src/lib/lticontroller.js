@@ -8,6 +8,7 @@ var LtiController = {};
 
 let lticlientbase = require('./utils/lticlientbase');
 const KeycloakClient = require('./utils/keycloakclient');
+const { CreateOrUpdateKeycloakUser } = require('./userscontroller');
 
 let maxid = 100000;
 let minid = 1;
@@ -132,18 +133,18 @@ LtiController.addClientToKeycloak = async(tool) => {
 	client.clientId = tool.client_id;
 	client.redirectUris[0] = tool.redirect_uri;
 	client.attributes['jwks.url'] = tool.jwks_uri;
-
+	LtiController.Log('LtiController.addClientToKeycloak() : lti-mapper');
 	for (var i = 0; i < client.protocolMappers.length; i++) {
 		if(client.protocolMappers[i].name === 'lti-mapper'){
 			client.protocolMappers[i].config['lti3_platform.url'] = config.external_url + config.LTI.platform.claims_url;
 			client.protocolMappers[i].config['lti3_platform.auth.url'] = config.sso.realmUrl + '/protocol/openid-connect/token';
 		}
 	}
-
+	LtiController.Log('LtiController.addClientToKeycloak() : Auth to Keycloak');
 	await KeycloakClient.AuthClient();
-
+	LtiController.Log('LtiController.addClientToKeycloak() : Creating client :' + JSON.stringify(client));
 	let createdClient = await KeycloakClient.getClient().clients.create(client);
-	LtiController.Log('LtiController.addClientToKeycloak() : Success. ID :' + reatedClient.id);
+	LtiController.Log('LtiController.addClientToKeycloak() : Success. ID :' + createdClient.id);
 	return createdClient.id;
 }
 
