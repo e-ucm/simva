@@ -54,9 +54,10 @@ LtiController.addLtiTool = async (tool) => {
 	tool.extra_data = {};
 	let random_num = Math.floor(Math.random() * (maxid-minid+1)+minid);
 	tool.client_id = "lti-tool-" + random_num;
-
+	LtiController.Log('LtiController.addLtiTool()) : Before Adding client to Keycloak : ' + JSON.stringify(tool));
 	try{
 		tool.extra_data.real_client_id = await LtiController.addClientToKeycloak(tool);
+		LtiController.Log('LtiController.addLtiTool()) : After Adding client to Keycloak : ' + JSON.stringify(tool));
 		await tool.save();
 		LtiController.Log('LtiController.addLtiTool()) : Success');
 	}catch(e){
