@@ -370,7 +370,7 @@ let toPDF = async (title, participants) => {
       console.log("Pdf generated :");
       console.log(pdf);
       resolve(pdf);
-    } catch  {
+    } catch(err) {
       console.log("Error generating Pdf :");
       console.log(err);
       reject(err);
