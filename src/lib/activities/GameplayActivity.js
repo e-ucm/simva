@@ -1,4 +1,4 @@
-aconst ServerError = require('../error');
+const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
 var Minio = require('minio');
