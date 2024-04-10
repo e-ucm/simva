@@ -250,13 +250,20 @@ class GameplayActivity extends Activity {
 	async hasResults(participants, type){
 		let results = await this.getResults(participants, type);
 
+		console.log('RESULTS:');
+		console.log(JSON.stringify(results));
 		if(participants.length === 0){
 			participants = Object.keys(results);
 		}
+
+		console.log('PARTICIPANTS:')
+		console.log(JSON.stringify(participants));
 		
 		for (var i = participants.length - 1; i >= 0; i--) {
 			results[participants[i]] = (results[participants[i]] !== null);
 		}
+
+		console.log(JSON.stringify(results))
 
 		return results;
 	}
