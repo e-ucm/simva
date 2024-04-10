@@ -442,12 +442,6 @@ module.exports.hasResult = async (options) => {
       }
     }
 
-    if(body.status === 200){
-      for (var i = 0; i < participants.length; i++) {
-        body.data[participants[i]] = (body.data[participants[i]] !== null && body.data[participants[i]] !== undefined);
-      }
-    }
-
   }catch(e){
     console.log('GetResult exploded:');
     console.log(e);
