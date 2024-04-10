@@ -1232,14 +1232,22 @@ paths:
           schema:
             type: string
             format: 'user1,user2,user3'
+        - in: query
+          name: type
+          description: |
+            If the activity has multiple types of results, the
+            type of result can be specified here
+          schema:
+            type: string
+            format: 'backup'
     post:
       tags:
         - teachers
         - students
       summary: sets the result for the activity
-      operationId: setCompletion
+      operationId: setResult
       description: |
-        Set the completion status of the activity for a student
+        Set the result of the activity for a student
       responses:
         '200':
           description: if it is openable or not
@@ -1269,7 +1277,7 @@ paths:
         - teachers
         - students
       summary: gets true if has results of the activity
-      operationId: getResult
+      operationId: hasResult
       description: |
         Obtains true or false depending on if the user have results
         or not for the activity.
@@ -1296,6 +1304,14 @@ paths:
           schema:
             type: string
             format: 'user1,user2,user3'
+        - in: query
+          name: type
+          description: |
+            If the activity has multiple types of results, the
+            type of result can be specified here
+          schema:
+            type: string
+            format: 'backup'
   /activities/{id}/test:
     post:
       tags:

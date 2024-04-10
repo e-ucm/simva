@@ -181,8 +181,8 @@ class Activity {
 		}
 
 		return toret;
-	}
 
+	}
 	async saveToFile(filename, content){
 		return new Promise((resolve, reject) => {
 			let activity = this;
@@ -257,7 +257,31 @@ class Activity {
 		});
 	}
 
-	async getResults(participants){
+	async fileExists(filename){
+		return new Promise((resolve, reject) => {
+			let activity = this;
+
+			try{
+				let fullname = config.storage.path + activity._id + '/' + filename;
+
+				fs.stat(fullname, 'utf8', function(error, result) {
+					if (err == null) {
+						resolve(true);
+					} else if (error.code === 'ENOENT') {
+						resolve(false);
+					} else {
+						console.log(error);
+						reject({message: 'Unexpected error', error: error});
+					}
+				});
+			}catch(e){
+				console.log(e);
+				reject({ message: 'Error reading file', error: e });
+			}
+		});
+	}
+
+	async getResults(participants, type){
 		if(!participants || participants.length == 0){
 			participants = Object.keys(this.extra_data.participants);
 		}
@@ -275,6 +299,20 @@ class Activity {
 			for(let i = 0; i < participants.length; i++){
 				results[participants[i]] = null;
 			}
+		}
+
+		return results;
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+		
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
 		}
 
 		return results;

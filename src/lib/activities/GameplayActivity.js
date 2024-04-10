@@ -1,4 +1,4 @@
-const ServerError = require('../error');
+aconst ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
 var Minio = require('minio');
@@ -209,38 +209,53 @@ class GameplayActivity extends Activity {
 		return toret;
 	}
 
-	async getResults(participants){
+	async getResults(participants, type){
 		let results = {};
 
+		/* ########## DISABLED TRACE STORAGE DOWNLOAD ##########
 		if(this.extra_data.config.trace_storage && !participants && (!Array.isArray(participants) || participants.length == 0))
 		{
 			return await GameplayActivity.getTracesFromZip(this.id, this.token, this.res);
-		}
+		}*/
 
-
-		let backupresults = await this.loadBackups(participants);
+		/* ########## DISABLED REALTIME ##########
 		let analyticsresults = {};
-
 		if(this.extra_data.config.realtime){
 			analyticsresults = await RealtimeActivity.getAnalyticsResults(participants, this.extra_data.analytics);
-		}
+		}*/
 
+		let backupresults = await this.loadBackups(participants);
 		participants = Object.keys(backupresults);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
 			results[participants[i]] = null;
 			if( (this.extra_data.config.realtime && analyticsresults[participants[i]] !== null) 
 				|| (this.extra_data.config.backup && backupresults[participants[i]] !== null) ){
-				results[participants[i]] = {};
+				results[participants[i]] = null;
 
+				/* ########## DISABLED REALTIME ##########
 				if(this.extra_data.config.realtime){
 					results[participants[i]].realtime = analyticsresults[participants[i]];
-				}
+				}*/
 
 				if(this.extra_data.config.backup){
-					results[participants[i]].backup = backupresults[participants[i]];
+					results[participants[i]] = backupresults[participants[i]];
 				}
 			}
+		}
+
+		return results;
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants, type);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+		
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
 		}
 
 		return results;
@@ -455,6 +470,27 @@ class GameplayActivity extends Activity {
 					console.log(e);
 				}
 				backups[participants[i]] = null;
+			}
+		}
+
+		return backups;
+	}
+
+	async checkBackups(participants){
+		if(!participants || participants.length == 0){
+			participants = Object.keys(this.extra_data.participants);
+		}
+
+		let backups = [];
+
+		for (var i = 0; i < participants.length; i++) {
+			try {
+				backups[participants[i]] = await super.fileExists(participants[i]);
+			}catch(e){
+				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
+					console.log(e);
+				}
+				backups[participants[i]] = false;
 			}
 		}
 

@@ -224,6 +224,7 @@ router.get('/:id/result', Authenticator.auth, async (req, res, next) => {
     id: req.params['id'],
     user: req.user,
     users: req.query['users'],
+    type: req.query['type'],
     token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
     res: res,
   };
@@ -265,6 +266,7 @@ router.get('/:id/hasresult', Authenticator.auth, async (req, res, next) => {
     id: req.params['id'],
     user: req.user,
     users: req.query['users'],
+    type: req.query['type']
   };
 
   try {

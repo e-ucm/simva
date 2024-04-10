@@ -342,7 +342,7 @@ module.exports.getResult = async (options) => {
     let participants = await StudiesController.getParticipants(study);
 
     if(participants.indexOf(options.user.data.username) !== -1){
-      body.data = await activity.getResults([options.user.data.username]);
+      body.data = await activity.getResults([options.user.data.username], options.type);
     }else{
       if(study.owners.indexOf(options.user.data.username) !== -1){
         let users = [];
@@ -350,7 +350,7 @@ module.exports.getResult = async (options) => {
           users = options.users.split(',');
         }
 
-        body.data = await activity.getResults(users);
+        body.data = await activity.getResults(users, options.type);
       }else{
         body.status = 401;
         body.data.message = 'You do not participate in the activity either as owner or user';
@@ -427,7 +427,7 @@ module.exports.hasResult = async (options) => {
     let participants = await StudiesController.getParticipants(study);
 
     if(participants.indexOf(options.user.data.username) !== -1){
-      body.data = await activity.getResults([options.user.data.username]);
+      body.data = await activity.hasResults([options.user.data.username], options.type);
     }else{
       if(study.owners.indexOf(options.user.data.username) !== -1){
         let users = [];
@@ -435,7 +435,7 @@ module.exports.hasResult = async (options) => {
           users = options.users.split(',');
         }
 
-        body.data = await activity.getResults(users);
+        body.data = await activity.hasResults(users, options.type);
       }else{
         body.status = 401;
         body.data.message = 'You do not participate in the activity either as owner or user';

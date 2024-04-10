@@ -284,7 +284,7 @@ class LimeSurveyActivity extends Activity {
 		return false;
 	}
 
-	async getResults(participants){
+	async getResults(participants, type){
 		return new Promise((resolve, reject) => {
 			let list = {};
 			let s = this;
@@ -336,6 +336,18 @@ class LimeSurveyActivity extends Activity {
 				});
 			}
 		});
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
+		}
 	}
 
 	async setCompletion(participant, status){

@@ -154,8 +154,12 @@ class MinioActivity extends Activity {
 		});
 	}
 
-	async getResults(participants){
-		return super.getResults(participants);
+	async getResults(participants, type){
+		return super.getResults(participants, type);
+	}
+
+	async hasResults(participants, type){
+		return super.getResults(participants, type);
 	}
 
 	async setCompletion(participant, status){

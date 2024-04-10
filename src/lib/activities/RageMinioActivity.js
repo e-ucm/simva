@@ -127,10 +127,10 @@ class RageMinioActivity extends MinioActivity {
 		return toret;
 	}
 
-	async getResults(participants){
+	async getResults(participants, type){
 		let results = {};
 		let analyticsresults = await AnalyticsActivity.getAnalyticsResults(participants, this.extra_data.analytics);
-		let minioresults = await super.getResults(participants);
+		let minioresults = await super.getResults(participants, type);
 
 		participants = Object.keys(analyticsresults);
 
@@ -145,6 +145,18 @@ class RageMinioActivity extends MinioActivity {
 		}
 
 		return results;
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants, type);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
+		}
 	}
 
 	async setCompletion(participant, status){
