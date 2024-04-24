@@ -14,15 +14,15 @@ console.log(isTest);
 
 let createAdminUser = async function(){
   let UsersController = require('../lib/userscontroller');
-
-  let result = await UsersController.getUsers({ username: config.api.adminUsername });
+  let adminUsername = config.api.adminUsername.toLowerCase();
+  let result = await UsersController.getUsers({ username: adminUsername });
 
   if(result.length > 0){
     console.log('## Admin user already exists');
     console.log(result);
   }else{
     let result = await UsersController.addUser({
-      username: config.api.adminUsername,
+      username: adminUsername,
       password: config.api.adminPassword,
       email: config.api.adminEmail,
       role: 'admin'
