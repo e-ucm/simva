@@ -500,22 +500,33 @@ module.exports.addActivityToTest = async (options) => {
         return { status: 400, data: { message: 'You have not included yourself as owner of the activity' } };
       }
     }
-
+    console.log("Adding activity :" + JSON.stringify(test));
     let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(options.body));
-
+    let allocator = await AllocatorsController.loadAllocator(study.allocator);
+    let participants = await allocator.getAllocatedForTest(options.testid);
+    
+    console.log("PARTICIPANTS: " + participants);
+    if(study.tests.indexOf(options.testid) == 0) {
+      if(allocator.type == "default") {
+        let allgroups = study.groups;
+        var loadedgroups = await GroupsController.getGroups({"_id" : {"$in" : allgroups}});
+        let allUsers = loadedgroups.map(g => {return g.participants; }).flat();
+        let pnotallocated = allUsers
+        if(allocator.extra_data && allocator.extra_data.allocations){ 
+          pnotallocated = allUsers.filter(x => !Object.keys(allocator.extra_data.allocations).includes(x));
+        }
+        participants=participants.concat(pnotallocated);
+      } 
+      console.log("PARTICIPANTS UPDATED: " + participants);
+    }
+    await activity.addParticipants(participants);
     test.activities.push(activity.id);
     await TestsController.updateTest(options.testid, test);
-
-    let participants = await StudiesController.getParticipants(study);
-    await activity.addParticipants(participants);
-
     return {status: 200, data: activity.toObject() };
   }catch(e){
     console.log(e);
     return {status: 500, data: e };
   }
-
-  return { status: 200, data: group };
 };
 
 /**
@@ -609,11 +620,13 @@ module.exports.setStudyAllocator = async (options) => {
             if(study.allocator !== allocator.id){
               study.allocator = allocator.id;
               if(await study.save()){
+                await StudiesController.updateStudy(study._id, study);
                 result = { status: 200, data: {message: 'Allocator updated'} };
               }else{
                 result = { status: 500, data: {message: 'Error updating the study'} };
               }
             }else{
+              await StudiesController.updateStudy(study._id, study);
               result = { status: 200, data: {message: 'Allocator updated'} };
             }
           }else{

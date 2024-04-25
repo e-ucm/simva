@@ -46,6 +46,17 @@ class Allocator {
 		return 'This allocator allows you to manually assign the participants to the tests one by one. (If not assigned, it will get the first one)';
 	}
 
+	getAllocator = async (id) => {
+		var res = await mongoose.model('allocator').find({_id: id});
+	
+		if(res.length > 0) {
+			return res[0];
+		}else{
+			return null;
+		}
+	};
+	
+
 	set params(params){
 		for(var p in allocatorschema.properties){
 			if(params[p]){
@@ -156,11 +167,25 @@ class Allocator {
 			this.extra_data.allocations = {};
 		}
 
-		if(!this.extra_data.allocation[participant]){
-			this.extra_data.allocation[participant] = tests;
+		if(!this.extra_data.allocations[participant]){
+			this.extra_data.allocations[participant] = test;
 		}
 
-		return this.extra_data.allocation[participant];
+		return this.extra_data.allocations[participant];
+	}
+
+	async getAllocatedForTest(test) {
+		var allocation = []
+		if(this.extra_data && this.extra_data.allocations) {
+			console.log(this.extra_data.allocations)
+			let participant,value
+			for([participant, value] of Object.entries(this.extra_data.allocations)) {
+				if(value == test) {
+					allocation.push(participant);
+				}
+			}
+		}
+		return allocation;
 	}
 };
 

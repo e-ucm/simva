@@ -141,21 +141,23 @@ class Activity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
 		}
-		
+		console.log("Before adding participants : " + JSON.stringify(this));
+
 		for(let i = 0; i < participants.length; i++){
 			if(!this.extra_data.participants[participants[i]]){
 				this.extra_data.participants[participants[i]] = { completion: false };
 			}
 		}
-
+		console.log("After adding participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 
 	async removeParticipants(participants){
+		console.log("Before delete participants : " + JSON.stringify(this));
 		for (var i = 0; i < participants.length; i++) {
 			delete this.extra_data.participants[participants[i]];
 		}
-
+		console.log("Before delete participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 

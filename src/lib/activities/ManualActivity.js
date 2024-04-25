@@ -85,7 +85,7 @@ class ManualActivity extends Activity {
 	}
 
 	async removeParticipants(participants){
-		return await super.addParticipants(participants);
+		return await super.removeParticipants(participants);
 	}
 
 	async setResult(participant, result){

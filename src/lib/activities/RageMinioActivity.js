@@ -90,7 +90,7 @@ class RageMinioActivity extends MinioActivity {
 	async removeParticipants(participants){
 		this.extra_data.analytics = await this.removeParticipantsFromAnalytics(participants, this.extra_data.analytics);
 		
-		return await super.addParticipants(participants);
+		return await super.removeParticipants(participants);
 	}
 
 	async setResult(participant, result){

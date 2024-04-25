@@ -53,6 +53,18 @@ ActivitiesController.getActivity = async (id) => {
 	}
 };
 
+ActivitiesController.getActivityParticipants = async (id) => {
+	let res = await mongoose.model('activity').find({_id: id});
+
+	if(res.length > 0) {
+		if(res[0].extra_data && res[0].extra_data.participants) {
+			return Object.keys(res[0].extra_data.participants);
+		}
+	}else{
+		return null;
+	}
+};
+
 ActivitiesController.loadActivity = async (id) => {
 	let activity = await ActivitiesController.getActivity(id);
 	

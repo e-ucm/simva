@@ -151,7 +151,7 @@ class GameplayActivity extends Activity {
 			this.extra_data.analytics = await RealtimeActivity.removeParticipantsFromAnalytics(participants, this.extra_data.analytics);
 		}
 
-		return await super.addParticipants(participants);
+		return await super.removeParticipants(participants);
 	}
 
 	async setResult(participant, result){

@@ -98,7 +98,7 @@ class MinioActivity extends Activity {
 	}
 
 	async removeParticipants(participants){
-		return await super.removeParticipants();
+		return await super.removeParticipants(participants);
 	}
 
 	async setResult(participant, result){
