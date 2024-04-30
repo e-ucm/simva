@@ -1,4 +1,5 @@
 const logger = require('../logger');
+import { v4 as uuidv4, v6 as uuidv6 } from 'uuid';
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -117,7 +118,7 @@ class MinioActivity extends Activity {
 				}else{
 					toret = { 
 						actor: {
-							account: { homePage: config.external_url, username: participant },
+							account: { homePage: config.external_url, name: participant },
 							name: participant
 						},
 						playerId: participant,
@@ -139,7 +140,7 @@ class MinioActivity extends Activity {
 
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
-					trace._id = activityId;
+					trace.id = uuidv4();
 					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
