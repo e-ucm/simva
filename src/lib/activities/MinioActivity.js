@@ -1,5 +1,5 @@
 const logger = require('../logger');
-import { v4 as uuidv4, v6 as uuidv6 } from 'uuid';
+const { v4: uuidv4 } = require('uuid');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
