@@ -141,7 +141,6 @@ class MinioActivity extends Activity {
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
 					trace.id = uuidv4();
-					//trace._id = activityId; //TO REMOVE NOT VALID FOR AN LRS INTO AN XAPI STATEMENT
 					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
