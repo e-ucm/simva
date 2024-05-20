@@ -144,7 +144,12 @@ class MinioActivity extends Activity {
 
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
-					var traceid = uuidv4();
+					var traceid
+					if(trace.id == null) {
+						traceid = uuidv4();
+					} else {
+						traceid = trace.id;
+					}
 					while(filter.has(traceid)) {
 						traceid = uuidv4();
 					}
