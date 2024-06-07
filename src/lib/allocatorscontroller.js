@@ -1,3 +1,4 @@
+const logger = require('./logger');
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 
@@ -54,7 +55,7 @@ AllocatorsController.createAllocator = async (type) => {
 AllocatorsController.deleteAllocator = async (id) => {
 	var res = await mongoose.model('allocator').deleteOne({_id: id});
 
-	console.log(res);
+	logger.info(res);
 
 	return res;
 }

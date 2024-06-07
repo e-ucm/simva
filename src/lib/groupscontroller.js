@@ -1,3 +1,4 @@
+const logger = require('./logger');
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 
@@ -42,9 +43,9 @@ GroupsController.removeGroup = async (id) => {
 	let result = await mongoose.model('group').deleteOne({_id: id});
 
 	if(result){
-		console.log('Group removed');
+		logger.info('Group removed');
 	}else{
-		console.log('Error removing the group');
+		logger.info('Error removing the group');
 	}
 
 	return result;

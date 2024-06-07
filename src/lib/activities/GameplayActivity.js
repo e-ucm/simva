@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -197,12 +198,12 @@ class GameplayActivity extends Activity {
 					}
 				}
 			}else{
-				console.log('Unknown case');
-				console.log(result.result);
+				logger.info('Unknown case');
+				logger.info(result.result);
 				throw { message: 'Unknown case setting the result' };
 			}
 		}catch(e){
-			console.log(e);
+			logger.info(e);
 			throw { message: 'Error while setting the result' };
 		}
 
@@ -331,8 +332,8 @@ class GameplayActivity extends Activity {
 			});
 
 			if (response.status !== 200) {
-				console.log('Problems getting temporary credentials');
-				console.log(response.data);
+				logger.info('Problems getting temporary credentials');
+				logger.info(response.data);
 			} else {
 				const parser = new xml2js.Parser({
 					explicitArray: false,
@@ -349,7 +350,7 @@ class GameplayActivity extends Activity {
 				};
 			}
 		} catch (error) {
-			console.error('Error:', error);
+			logger.error('Error:', error);
 		}
 	}
 
@@ -372,7 +373,7 @@ class GameplayActivity extends Activity {
 			"objects": [`_id=${activity_id}/`]
 		};
 	
-		console.log('Starting ZIP request...');
+		logger.info('Starting ZIP request...');
 	
 		try {
 			const response = await axios.post(
@@ -386,14 +387,14 @@ class GameplayActivity extends Activity {
 				}
 			);
 	
-			console.log('ZIP reply received, processing...');
+			logger.info('ZIP reply received, processing...');
 			res.setHeader('Content-Disposition', `attachment; filename="${activity_id}.zip"`);
 
 			let isFirstFile = true;
 			const transformStream = new Transform({
 				writableObjectMode: true,
 				transform(file, encoding, callback) {
-					console.log('Processing file:', file.name);
+					logger.info('Processing file:', file.name);
 					let data = file.contents;
 					if (isFirstFile) {
 						data = "[" + data;
@@ -406,7 +407,7 @@ class GameplayActivity extends Activity {
 				},
 				final(callback) {
 					this.push("]");
-					console.log('Finalizing the transformation stream...');
+					logger.info('Finalizing the transformation stream...');
 					callback();
 				}
 			});
@@ -434,10 +435,10 @@ class GameplayActivity extends Activity {
 				res
 			);
 	
-			console.log('Pipeline completada con éxito.');
+			logger.info('Pipeline completada con éxito.');
 	
 		} catch (error) {
-			console.error("Error al procesar el archivo ZIP:", error);
+			logger.error("Error al procesar el archivo ZIP:", error);
 			res.status(500).send({ error: error.message });
 		}
 	}
@@ -467,7 +468,7 @@ class GameplayActivity extends Activity {
 				backups[participants[i]] = await super.readFromFile(participants[i]);
 			}catch(e){
 				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
-					console.log(e);
+					logger.info(e);
 				}
 				backups[participants[i]] = null;
 			}
@@ -488,7 +489,7 @@ class GameplayActivity extends Activity {
 				backups[participants[i]] = await super.fileExists(participants[i]);
 			}catch(e){
 				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
-					console.log(e);
+					logger.info(e);
 				}
 				backups[participants[i]] = false;
 			}

@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const fs = require('fs');
 const yaml = require('yaml');
 const jwt = require('jsonwebtoken');
@@ -48,9 +49,9 @@ Authenticator.initPaths = function(){
 		}
 	}
 
-	console.log('####################### FINAL TREE OF ALLOWED ROUTES #######################');
-	console.log(JSON.stringify(AllowedRoutes, null, 2));
-	console.log('############################################################################');
+	logger.info('####################### FINAL TREE OF ALLOWED ROUTES #######################');
+	logger.info(JSON.stringify(AllowedRoutes, null, 2));
+	logger.info('############################################################################');
 }
 
 Authenticator.CompareRoutes = function(generic, specific){

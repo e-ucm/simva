@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');

@@ -1,5 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
+const logger = require('../../lib/logger');
 
 var UsersController = require('../../lib/userscontroller');
 
@@ -78,7 +79,7 @@ module.exports.addUser = async (options) => {
         try {
           let keycloakuser = await UsersController.addUserToKeycloak(params);
         }catch(e){
-          console.log(e);
+          logger.info(e);
           return {status: 500, data: e };
         }
         

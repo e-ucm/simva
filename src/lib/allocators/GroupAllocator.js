@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId;
@@ -139,7 +140,7 @@ class GroupAllocator extends Allocator {
 	async getAllocatedForTest(test) {
 		var allocation = []
 		if(this.extra_data && this.extra_data.allocations) {
-			console.log(this.extra_data.allocations)
+			logger.info(this.extra_data.allocations)
 			let group,value
 			for([group, value] of Object.entries(this.extra_data.allocations)) {
 				if(value == test) {

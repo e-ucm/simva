@@ -1,3 +1,4 @@
+const logger = require('../../logger');
 let TrackerAsset = require('xapi-tracker');
 let config = require('../../config');
 
@@ -126,7 +127,7 @@ class TrackerManager {
 					resolve();
 				}
 			}catch(e){
-				console.log(e);
+				logger.info(e);
 				reject({ message: 'Malformed Traces' });
 			}
 		});

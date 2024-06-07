@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -120,7 +121,7 @@ class RageMinioActivity extends MinioActivity {
 				}
 			}
 		}catch(e){
-			console.log(e);
+			logger.info(e);
 			throw { message: 'Error while setting the result' };
 		}
 

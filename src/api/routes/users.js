@@ -1,6 +1,6 @@
 const express = require('express');
 const users = require('../services/users');
-
+const logger = require('../../lib/logger');
 const router = new express.Router();
 
 // Validators
@@ -91,14 +91,14 @@ router.post('/login', async (req, res, next) => {
  * 
  */
 router.post('/role', Authenticator.auth, async (req, res, next) => {
-  console.log(req.jwt);
+  logger.info(req.jwt);
   if(req.jwt && req.jwt.payload.hasOwnProperty('sub')){
     const options = {
       username: req.user.data.username,
       role: req.body.role,
       keycloak_id: req.jwt.payload.sub
     };
-    console.log(options);
+    logger.info(options);
     try {
       const result = await users.setRole(options);
       res.status(result.status || 200).send(result.data);

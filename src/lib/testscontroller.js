@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 
@@ -78,34 +80,34 @@ TestsController.removeActivityToTest = async (id, activity) => {
 
 TestsController.addParticipants = async (id, participants) => {
 	var test = await TestsController.getTest(id);
-	console.log("BEFORE ADD: " + JSON.stringify(test) + " | Participants " + participants);
-	console.log("TestsController.addParticipants started");
+	logger.info("BEFORE ADD: " + JSON.stringify(test) + " | Participants " + participants);
+	logger.info("TestsController.addParticipants started");
 	for (var i = 0; i < test.activities.length; i++) {
 		let activity = await ActivitiesController.loadActivity(test.activities[i]);
-		console.log("Activity: " + JSON.stringify(activity));
+		logger.info("Activity: " + JSON.stringify(activity));
 		if(!await activity.addParticipants(participants)){
 			throw { message: 'Error adding participants to activity: ' + test.activities[i] };
 		}
-		console.log("TestsController.addParticipants finished");
+		logger.info("TestsController.addParticipants finished");
 	}
 	return test;
 }
 
 TestsController.removeParticipants = async (id, participants) => {
 	var test = await TestsController.getTest(id);
-	console.log("BEFORE REMOVE: " + JSON.stringify(test) + " | Participants " + participants);
-	console.log("TestsController.removeParticipants started");
+	logger.info("BEFORE REMOVE: " + JSON.stringify(test) + " | Participants " + participants);
+	logger.info("TestsController.removeParticipants started");
 	try{
 		for (var i = 0; i < test.activities.length; i++) {
 			let activity = await ActivitiesController.loadActivity(test.activities[i]);
-			console.log("Activity: " + JSON.stringify(activity));
+			logger.info("Activity: " + JSON.stringify(activity));
 			if(!await activity.removeParticipants(participants)){
 				throw { message: 'Error removing participants from activity: ' + test.activities[i] };
 			}
 		}
-		console.log("TestsController.removeParticipants finished");
+		logger.info("TestsController.removeParticipants finished");
 	}catch(e){
-		console.log(e);
+		logger.info(e);
 	}
 	return test;
 }

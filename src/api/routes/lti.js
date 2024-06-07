@@ -1,6 +1,7 @@
 const express = require('express');
 const lti = require('../services/lti');
 let tool = require('../../lib/lti/tool');
+const logger = require('../../lib/logger');
 
 const router = new express.Router();
 
@@ -36,9 +37,9 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
  * needed for the tool to work.
  */
 router.get('/claims', async (req, res, next) => {
-  /*console.log('claims get');
-  console.log(req.query);
-  console.log(req.body);*/
+  /*logger.info('claims get');
+  logger.info(req.query);
+  logger.info(req.body);*/
 
   const options = {
     lti_login_hint: req.query['login_hint'],
@@ -63,10 +64,10 @@ router.get('/claims', async (req, res, next) => {
  * needed for the tool to work.
  */
 router.post('/claims', async (req, res, next) => {
-  /*console.log('claims post');
-  console.log(req.query);
-  console.log(req.body);
-  console.log(req.headers.authorization);*/
+  /*logger.info('claims post');
+  logger.info(req.query);
+  logger.info(req.body);
+  logger.info(req.headers.authorization);*/
   
   const options = {
     lti_login_hint: req.body['login_hint'],
@@ -76,17 +77,17 @@ router.post('/claims', async (req, res, next) => {
   try {
     let result = { status: 200, data: { error: 'No message hint received' } };
 
-    console.log('#### Claims post:');
+    logger.info('#### Claims post:');
 
     if(options.lti_message_hint){
       result = await lti.getLtiClaims(options);
     }else{
-      console.log('## Bad Claims request');
-      console.log(req.body);
+      logger.info('## Bad Claims request');
+      logger.info(req.body);
     }
 
 
-    console.log(JSON.stringify(result));
+    logger.info(JSON.stringify(result));
     
     res.status(result.status || 200).send(result.data);
   } catch (err) {
@@ -196,7 +197,7 @@ router.get('/platforms', Authenticator.auth, async (req, res, next) => {
     limit: req.query['limit']
   };
 
-  console.log(options);
+  logger.info(options);
 
   try {
     const result = await lti.getLtiPlatforms(options);

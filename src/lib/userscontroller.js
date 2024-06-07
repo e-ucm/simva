@@ -1,3 +1,4 @@
+const logger = require('./logger');
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
@@ -33,7 +34,7 @@ UsersController.addUser = async (params) => {
 	try{
 		params.password = await cryptPassword(params.password);
 	}catch(e){
-		console.log(e);
+		logger.info(e);
 	}
 	
 	params.username = params.username.toLowerCase();
@@ -49,11 +50,11 @@ UsersController.addUserToKeycloak = async (params) => {
 		return true;
 	}
 
-	console.log('KeyCloak -> Auth');
+	logger.info('KeyCloak -> Auth');
 
 	await KeycloakClient.AuthClient();
 
-	console.log('KeyCloak -> Adding user');
+	logger.info('KeyCloak -> Adding user');
 
 	let user;
 	try{
@@ -64,11 +65,11 @@ UsersController.addUserToKeycloak = async (params) => {
 			enabled: true
 		});
 	}catch(e){
-		console.log(e);
+		logger.info(e);
 		throw { message: 'Failed creating the user into keycloak' };
 	}
 
-	console.log('KeyCloak -> getting Role Mappings');
+	logger.info('KeyCloak -> getting Role Mappings');
 	let roleMappings = await KeycloakClient.getClient().users.listAvailableRealmRoleMappings({id: user.id});
 
 	let selectedRole;
@@ -79,10 +80,10 @@ UsersController.addUserToKeycloak = async (params) => {
 		}
 	}
 
-	console.log('KeyCloak -> Adding Role to User');
+	logger.info('KeyCloak -> Adding Role to User');
 	let result = await KeycloakClient.getClient().users.addRealmRoleMappings({id: user.id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
 
-	console.log('KeyCloak -> Setting up User Password');
+	logger.info('KeyCloak -> Setting up User Password');
 	await KeycloakClient.getClient().users.resetPassword({
 		id: user.id,
 		credential: {
@@ -96,7 +97,7 @@ UsersController.addUserToKeycloak = async (params) => {
 		DISABLED BECAUSE IT MIGHT NOT BE NECESSARY
 	
 
-	console.log('KeyCloak -> Obtaining user to enable it');
+	logger.info('KeyCloak -> Obtaining user to enable it');
 	user = await KeycloakClient.getClient().users.findOne({
       id: user.id,
     });
@@ -104,10 +105,10 @@ UsersController.addUserToKeycloak = async (params) => {
     user.requiredActions = [];
     user.enabled = true;
 
-	console.log('KeyCloak -> Enabling the user and removing pass edit request for it to be able to login');
+	logger.info('KeyCloak -> Enabling the user and removing pass edit request for it to be able to login');
     await KeycloakClient.getClient().users.update({id: user.Id}, { enabled: true });*/
 
-    console.log('KeyCloak -> User Added to Keycloak!');
+    logger.info('KeyCloak -> User Added to Keycloak!');
 	return true;
 }
 
@@ -126,22 +127,22 @@ UsersController.setRole = async (username, role, keycloak_id) => {
 		let users = await UsersController.getUsers({ 'username': username.toLowerCase() });
 		if(users && users.length > 0){
 			let user = users[0];
-			console.log(user);
+			logger.info(user);
 			if(allowedRoles.includes(role)){
 				user.role = role;
 				UsersController.giveRoleToUserInKeycloak(keycloak_id, user)
 					.then((result) => {
-						console.log('Update User to Keycloak > OK');
-						console.log('Update User to database : IN PROGRESS');
+						logger.info('Update User to Keycloak > OK');
+						logger.info('Update User to database : IN PROGRESS');
 						UsersController.updateUser(user._id, user)
 							.then((updateduser) => {
-								console.log('Update User to database > OK');
-								console.log(updateduser);
+								logger.info('Update User to database > OK');
+								logger.info(updateduser);
 								resolve(user);
 							})
 							.catch((error) => {
-								console.log('Update User to database > NOK ERROR');
-								console.log(error);
+								logger.info('Update User to database > NOK ERROR');
+								logger.info(error);
 								reject(error);
 							});
 					})
@@ -160,11 +161,11 @@ UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 		return true;
 	}
 
-	console.log('KeyCloak -> Auth');
+	logger.info('KeyCloak -> Auth');
 
 	await KeycloakClient.AuthClient();
 
-	console.log('KeyCloak -> getting Role Mappings');
+	logger.info('KeyCloak -> getting Role Mappings');
 	let roleMappings = await KeycloakClient.getClient().users.listAvailableRealmRoleMappings({id: id});
 
 	let selectedRole;
@@ -175,10 +176,10 @@ UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 		}
 	}
 
-	console.log('KeyCloak -> Adding Role to User');
+	logger.info('KeyCloak -> Adding Role to User');
 	await KeycloakClient.getClient().users.addRealmRoleMappings({id: id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
 
-    console.log('KeyCloak -> Role Added to User in Keycloak!');
+    logger.info('KeyCloak -> Role Added to User in Keycloak!');
 	return true;
 }
 
@@ -227,7 +228,7 @@ UsersController.linkUser = async (mainjwt, secondaryjwt, domain) => {
 }
 
 UsersController.eventUser = async (options) => {
-	console.log(JSON.stringify(options));
+	logger.info(JSON.stringify(options));
 
 	return;
 }
@@ -275,7 +276,7 @@ var cryptPassword = async (password) => {
 				});
 			});
 		}catch(e){
-			console.log(e);
+			logger.info(e);
 		}
 	});
 };
@@ -313,7 +314,7 @@ UsersController.generateJWT = async (user) => {
 }
 
 UsersController.validateJWT = async (token) => {
-	//console.log("Token : " + token);
+	//logger.info("Token : " + token);
 	return new Promise((resolve, reject) => {
 		let decoded = jwt.decode(token, { complete: true });
 
@@ -355,13 +356,13 @@ UsersController.validateJWT = async (token) => {
 							ValidateToken();
 						})
 						.catch((error) => {
-							console.log('FAILED VALIDATION');
+							logger.info('FAILED VALIDATION');
 							KeycloakKeyManager.reloadKey(decoded.header.kid)
 								.then((publicKey) => {
 									ValidateToken();
 								})
 								.catch((error) => {
-									console.log(error);
+									logger.info(error);
 									reject(error);
 								})
 						})
@@ -372,7 +373,7 @@ UsersController.validateJWT = async (token) => {
 				default:
 					jwt.verify(token, config.JWT.secret, function(err, decoded) {
 						if(err){
-							console.log(JSON.stringify(err));
+							logger.info(JSON.stringify(err));
 							reject('Token is not valid.');
 						}else{
 							resolve(decoded);
@@ -388,7 +389,7 @@ UsersController.validateJWT = async (token) => {
 }
 
 UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
-	//console.log("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
+	//logger.info("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
 	return new Promise((resolve, reject) => {
 		if(!config.sso.enabled){
 			resolve(decoded);
@@ -404,7 +405,7 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 								resolve(UsersController.simplifyUser(result));
 							})
 							.catch((error) => {
-								console.log(error);
+								logger.info(error);
 								reject(error);
 							})
 					}else{
@@ -416,20 +417,20 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 							resolve(UsersController.simplifyUser(result));
 						})
 						.catch((error) => {
-							console.log(error);
+							logger.info(error);
 							reject(error);
 						})
 				}
 			})
 			.catch((error) => {
-				console.log(error);
+				logger.info(error);
 				reject(error);
 			});
 	});
 }
 
 UsersController.simplifyUser = function(user){
-	//console.log("simplifyUser - User : " + JSON.stringify(user));
+	//logger.info("simplifyUser - User : " + JSON.stringify(user));
 	return { data: {
 		_id: user._id,
 		username: user.username,
@@ -439,7 +440,7 @@ UsersController.simplifyUser = function(user){
 }
 
 UsersController.createUserFromJWT = async function(decoded){
-	//console.log("createUserFromJWT : " + JSON.stringify(decoded));
+	//logger.info("createUserFromJWT : " + JSON.stringify(decoded));
 	let user = {
 		username: decoded.preferred_username,
 		password: Math.random().toString(36).slice(-8),
@@ -453,7 +454,7 @@ UsersController.createUserFromJWT = async function(decoded){
 }
 
 UsersController.getRoleFromJWT = function(decoded){
-	//console.log("getRoleFromJWT : " + JSON.stringify(decoded));
+	//logger.info("getRoleFromJWT : " + JSON.stringify(decoded));
 	let role = 'norole';
 
 	for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {

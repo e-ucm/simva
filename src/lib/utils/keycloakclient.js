@@ -1,9 +1,10 @@
+const logger = require('../logger');
 // Using version 18.0.2 instead of 23.0.7
 // https://github.com/keycloak/keycloak/issues/19829
 // https://github.com/keycloak/keycloak-nodejs-admin-client/issues/523
 const KcAdminClient = require('@keycloak/keycloak-admin-client').default;
 
-console.log(KcAdminClient);
+logger.info(KcAdminClient);
  
 var async = require('async');
 var config = require('../config');
@@ -36,24 +37,24 @@ let KeycloakUserCredentials = {
   clientId: 'admin-cli'
 };
 
-console.log('----- KEYCLOAK -----');
-console.log('Keycloak-> Connecting to: ');
-console.log(JSON.stringify(kcconfig, null, 2));
-console.log('Keycloak-> Authentication: ');
-console.log(JSON.stringify(KeycloakUserCredentials, null, 2));
-console.log('--------------------');
+logger.info('----- KEYCLOAK -----');
+logger.info('Keycloak-> Connecting to: ');
+logger.info(JSON.stringify(kcconfig, null, 2));
+logger.info('Keycloak-> Authentication: ');
+logger.info(JSON.stringify(KeycloakUserCredentials, null, 2));
+logger.info('--------------------');
 
 let keycloakStatus = false;
 if(config.sso.enabled){
 	kcAdminClient.auth(KeycloakUserCredentials)
 	.then((result) => {
-		console.log(kcAdminClient.getAccessToken());
-		console.log('Connected to Keycloak!');
+		logger.info(kcAdminClient.getAccessToken());
+		logger.info('Connected to Keycloak!');
 		keycloakStatus = true;
 	})
 	.catch((error) => {
-		console.log('Unable to connect to keycloak');
-		console.info(error);
+		logger.info('Unable to connect to keycloak');
+		logger.info(error);
 		keycloakStatus = false;
 	});
 }
@@ -73,7 +74,7 @@ KeycloakClient.getStatus = function(){
 KeycloakClient.createWebhook = function(){
 	let accessToken = kcAdminClient.getAccessToken();
 
-	console.log('AccesToken: ' + accessToken);
+	logger.info('AccesToken: ' + accessToken);
 
 	options.headers.Authorization = 'Bearer ' + accessToken;
 	options.body = {
@@ -88,16 +89,16 @@ KeycloakClient.createWebhook = function(){
 	request(options, function(error, response, body){
 		try{
 			if (!error && response.statusCode == 200) {
-				console.log(JSON.stringify(response));
+				logger.info(JSON.stringify(response));
 				callback(null);
 			}
 			else {
-				console.log(JSON.stringify(response), JSON.stringify(body));
+				logger.info(JSON.stringify(response), JSON.stringify(body));
 				callback({ message: 'Error on SSO webhook Initialization', error: error});
 			}
 		}catch(e){
-			console.log('online');
-			console.log(JSON.stringify(e));
+			logger.info('online');
+			logger.info(JSON.stringify(e));
 			callback({ message: 'EXCEPTION on SSO webhook Initialization', error: e});
 		}
 	});

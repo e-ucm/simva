@@ -1,5 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
+const logger = require('../../lib/logger');
 
 var GroupsController = require('../../lib/groupscontroller');
 var UsersController = require('../../lib/userscontroller');
@@ -98,7 +99,7 @@ module.exports.getGroup = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    console.log(e);
+    logger.info(e);
     result =  { status: 500, data: e };
   }
 
@@ -156,7 +157,7 @@ module.exports.updateGroup = async (options) => {
                     }
                   }
                 }catch(e){
-                  console.log(e);
+                  logger.info(e);
                   result = { status: 500, data: {message: 'Error notifying the studies about changes in participans.', error: e} };
                 }
               }
@@ -175,7 +176,7 @@ module.exports.updateGroup = async (options) => {
         }
       }
     }catch(e){
-      console.log(e);
+      logger.info(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -211,7 +212,7 @@ module.exports.getGroupStudies = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
   }catch(e){
-    console.log(e);
+    logger.info(e);
     result =  { status: 500, data: e };
   }
 
@@ -268,7 +269,7 @@ module.exports.getGroupParticipants = async (options) => {
         }
       }
     }catch(e){
-      console.log(e);
+      logger.info(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -293,7 +294,7 @@ module.exports.getGroupPrintable = async (options) => {
       if(group !== null){
         if(group.owners.indexOf(options.user.data.username) !== -1 || group.participants.indexOf(options.user.data.username) !== -1){
           let buffer = await toPDF(group.name, group.participants);
-          console.log(buffer);
+          logger.info(buffer);
           result = { status: 200, data: buffer };
         }else{
           result = { status: 401, data: {message: 'User is not authorized to obtain group data.'} };
@@ -303,7 +304,7 @@ module.exports.getGroupPrintable = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    console.log(e);
+    logger.info(e);
     result =  { status: 500, data: e };
   }
 
@@ -320,12 +321,12 @@ async function convertHTMLtoPDF(htmlContent) {
       // Set the HTML content for the page
       await page.setContent(htmlContent, { waitUntil: 'networkidle0' }); // Adjust options as needed
       
-      console.log(await page.content());
+      logger.info(await page.content());
 
       // Generate the PDF
       const pdf = await page.pdf({ format: 'A4' }); // Corrected method name
-      console.log("Pdf generated :");
-      console.log(pdf);
+      logger.info("Pdf generated :");
+      logger.info(pdf);
       await browser.close();
 
       if (pdf) {
@@ -337,7 +338,7 @@ async function convertHTMLtoPDF(htmlContent) {
       }
   } catch (error) {
       // Handle any exceptions or rejections
-      console.error('Error generating PDF:', error);
+      logger.error('Error generating PDF:', error);
       throw error; // Propagate the error further if needed
   }
 }
@@ -367,12 +368,12 @@ let toPDF = async (title, participants) => {
     html += '</table></body></html>';
     try {
       let pdf = await convertHTMLtoPDF(html)
-      console.log("Pdf generated :");
-      console.log(pdf);
+      logger.info("Pdf generated :");
+      logger.info(pdf);
       resolve(pdf);
     } catch(err) {
-      console.log("Error generating Pdf :");
-      console.log(err);
+      logger.info("Error generating Pdf :");
+      logger.info(err);
       reject(err);
     }
   });

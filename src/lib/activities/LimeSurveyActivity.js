@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -139,7 +140,7 @@ class LimeSurveyActivity extends Activity {
 						resolve(result);
 					});
 				}catch(exception){
-					console.log(exception);
+					logger.info(exception);
 				}
 			}
 		})
@@ -164,7 +165,7 @@ class LimeSurveyActivity extends Activity {
 						resolve(result);
 					});
 				}catch(exception){
-					console.log(exception);
+					logger.info(exception);
 				}
 			}
 		})
@@ -188,10 +189,10 @@ class LimeSurveyActivity extends Activity {
 						resolve(result);
 					});
 				}catch(exception){
-					console.log(exception);
+					logger.info(exception);
 				}
 			}else{
-				console.log(this.extra_data);
+				logger.info(this.extra_data);
 				resolve(null);
 			}
 		})

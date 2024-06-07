@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 
@@ -66,49 +68,49 @@ StudiesController.updateStudy = async (id, study) => {
 			}
 		}
 
-		console.log('Actual study: ' + JSON.stringify(study));
+		logger.info('Actual study: ' + JSON.stringify(study));
 		//Getting allocator
 		allocator=await AllocatorsController.getAllocator(study.allocator);
 		OldAllocator=await AllocatorsController.getAllocator(old.allocator);
-		console.log('Allocator: ' + JSON.stringify(allocator));
-		console.log('Previous Allocator: ' + JSON.stringify(OldAllocator));
+		logger.info('Allocator: ' + JSON.stringify(allocator));
+		logger.info('Previous Allocator: ' + JSON.stringify(OldAllocator));
 		
 		allocatorType=allocator.type;
 		previousAllocatorType=OldAllocator.type;
-		console.log('Allocator type: ' + allocatorType + '| Previous Allocator type: ' + previousAllocatorType);
+		logger.info('Allocator type: ' + allocatorType + '| Previous Allocator type: ' + previousAllocatorType);
 		let allgroups = study.groups;
 		var loadedgroups = await GroupsController.getGroups({"_id" : {"$in" : allgroups}});
 		let allUsers = loadedgroups.map(g => {return g.participants; }).flat();
-		console.log("All users :" + allUsers);
+		logger.info("All users :" + allUsers);
 		let pnotallocated = allUsers
 		if(allocator.extra_data && allocator.extra_data.allocations){ 
 			pnotallocated = allUsers.filter(x => !Object.keys(allocator.extra_data.allocations).includes(x));
 		}
 		if(allocatorType == "default") {
-			console.log('Participants not allocated: ' + pnotallocated);
+			logger.info('Participants not allocated: ' + pnotallocated);
 		}
-		console.log(study.tests + " | length :" + study.tests.length)
+		logger.info(study.tests + " | length :" + study.tests.length)
 		for (var i = 0; i < study.tests.length; i++) {
 			var testId = study.tests[i]
 			var test = await TestsController.getTest(testId);
-			console.log('Update participants for test: ' + testId);
+			logger.info('Update participants for test: ' + testId);
 			var actualTestParticipants = await TestsController.getTestParticipants(testId);
-			console.log("ActualTestParticipants : " + actualTestParticipants);
+			logger.info("ActualTestParticipants : " + actualTestParticipants);
 			let allocation = [];
 			if(i == 0) {
 				if(allocatorType == "default") {
 					allocation=allocation.concat(pnotallocated);
 				} else {
 					let updatedAllocator=await AllocatorsController.loadAllocator(allocator._id);
-					console.log('Before adding | Updated Allocator: ' + JSON.stringify(updatedAllocator));
-					console.log("Groups : " + allgroups);
+					logger.info('Before adding | Updated Allocator: ' + JSON.stringify(updatedAllocator));
+					logger.info("Groups : " + allgroups);
 					for (var j = 0; j < allgroups.length; j++) {
 						var gr=allgroups[j];
-						console.log('Updating Allocator: GroupID : '+ gr + "| testId :" + testId);	
+						logger.info('Updating Allocator: GroupID : '+ gr + "| testId :" + testId);	
 						updatedAllocator.allocate(gr,testId);
 					}
 					await updatedAllocator.save();
-					console.log('After adding |Updated Allocator: ' + JSON.stringify(updatedAllocator));
+					logger.info('After adding |Updated Allocator: ' + JSON.stringify(updatedAllocator));
 					allocator=updatedAllocator;
 				}
 			}
@@ -121,7 +123,7 @@ StudiesController.updateStudy = async (id, study) => {
 				}
 				//Change from group to users
 				if(allocatorType == "group") {
-					console.log('Allocation group: ' + allocation);
+					logger.info('Allocation group: ' + allocation);
 					alloc=[]
 					for (var j = 0; j < allocation.length; j++) {
 						var gr=await GroupsController.getGroup(allocation[j]);
@@ -134,7 +136,7 @@ StudiesController.updateStudy = async (id, study) => {
 					}
 				}
 			}
-			console.log('Allocation participants: ' + allocation);
+			logger.info('Allocation participants: ' + allocation);
 			let padded, premoved
 			if(actualTestParticipants == null) {
 				padded=allocation
@@ -143,30 +145,30 @@ StudiesController.updateStudy = async (id, study) => {
 				premoved = actualTestParticipants.filter(x => !allocation.includes(x));
 				padded = allocation.filter(x => !actualTestParticipants.includes(x));
 			}
-			console.log("Test BEFORE ALL :" + JSON.stringify(test));
+			logger.info("Test BEFORE ALL :" + JSON.stringify(test));
 			if(padded.length > 0){
-				console.log('Participants to add: ' + padded);
+				logger.info('Participants to add: ' + padded);
 				test=await TestsController.addParticipants(testId, padded);
-				console.log('Participants added!');
+				logger.info('Participants added!');
 			}
-			console.log("Test AFTER ADDING PARTICIPANTS :" + JSON.stringify(test));
+			logger.info("Test AFTER ADDING PARTICIPANTS :" + JSON.stringify(test));
 			if(premoved.length > 0){
-				console.log('Participants to remove: ' + premoved);
+				logger.info('Participants to remove: ' + premoved);
 				test=await TestsController.removeParticipants(testId, premoved);
-				console.log('Participants removed!');
+				logger.info('Participants removed!');
 			}
-			console.log("Test AFTER ALL :" +  JSON.stringify(test));
+			logger.info("Test AFTER ALL :" +  JSON.stringify(test));
 			await TestsController.updateTest(testId, test);
-			console.log(study.tests);
+			logger.info(study.tests);
 		}
-		console.log("All tests updated!");
+		logger.info("All tests updated!");
 		var result = await Study.updateOne({ _id: id }, study);
 		if(result.ok !== result.n){
 			throw {message: 'There was an error in the study.'};
 		}
-		console.log("Study updated!");
+		logger.info("Study updated!");
 	} catch(e) {
-		console.log(e);
+		logger.info(e);
 	}
 
 	return await mongoose.model('study').findOne({_id: id});

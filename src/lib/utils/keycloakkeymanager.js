@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const KeyCloakCerts = require('keycloak-public-key');
 const jwt = require('jsonwebtoken');
 var config = require('../config');
@@ -75,7 +76,7 @@ KeycloakKeyManager.reloadKey = async function(kid){
 
 KeycloakKeyManager.Log = function(message){
 	if(config.sso.loggerActive){
-		console.log(message);
+		logger.info(message);
 	}
 }
 

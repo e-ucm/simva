@@ -1,3 +1,4 @@
+const logger = require('../logger');
 process.env.DEBUG = '*';
 
 var mongoose = require('mongoose');
@@ -13,7 +14,7 @@ var TestsController = require('../testscontroller');
 
 function Log(message){
 	if(config.LTI.loggerActive){
-		console.info('\x1b[33m%s\x1b[0m', message);
+		logger.info('\x1b[33m%s\x1b[0m', message);
 	}
 }
 
