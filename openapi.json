@@ -320,37 +320,6 @@
         }
       }
     },
-    "/groups/{id}/printable" : {
-      "get" : {
-        "tags" : [ "teachers" ],
-        "summary" : "gets the printable PDF version of the group",
-        "description" : "Usefull for assistance in the classroom, the printable\nversion of the class allows the teacher to cut and\ngive the codes to the students easily to anonymize them.\n",
-        "operationId" : "getGroupPrintable",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The class ID",
-          "required" : true,
-          "style" : "simple",
-          "explode" : false,
-          "schema" : {
-            "type" : "string",
-            "example" : "5d07a0767c1405004bc702af"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "printable version in PDF"
-          },
-          "400" : {
-            "description" : "ID is not a valid ObjectId"
-          },
-          "404" : {
-            "description" : "Group not found"
-          }
-        }
-      }
-    },
     "/studies" : {
       "get" : {
         "tags" : [ "teachers" ],

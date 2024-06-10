@@ -359,36 +359,6 @@ paths:
             type: string
             example: "5d07a0767c1405004bc702af"
           description: The group ID
-  /groups/{id}/printable:
-    get:
-      tags:
-        - teachers
-      summary: gets the printable PDF version of the group
-      operationId: getGroupPrintable
-      description: |
-        Usefull for assistance in the classroom, the printable
-        version of the class allows the teacher to cut and
-        give the codes to the students easily to anonymize them.
-      responses:
-        '200':
-          description: printable version in PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        '400':
-          description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Group not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The class ID
   /studies:
     get:
       tags:
