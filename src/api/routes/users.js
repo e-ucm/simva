@@ -90,7 +90,8 @@ router.post('/login', async (req, res, next) => {
  * Receives the new role to be added to the user.
  * 
  */
-router.post('/role', Authenticator.auth, async (req, res, next) => {
+router.patch('/:id', Authenticator.auth, async (req, res, next) => {
+  logger.info(`Patching user : ${req.params['id']}`);
   logger.info(req.jwt);
   if(req.jwt && req.jwt.payload.hasOwnProperty('sub')){
     const options = {
@@ -100,7 +101,7 @@ router.post('/role', Authenticator.auth, async (req, res, next) => {
     };
     logger.info(options);
     try {
-      const result = await users.setRole(options);
+      const result = await users.patchUser(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       next(err);

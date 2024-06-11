@@ -122,7 +122,8 @@ UsersController.updateUser = async (id, params) => {
 	return params;
 }
 
-UsersController.setRole = async (username, role, keycloak_id) => {
+UsersController.patchUser = async (username, role, keycloak_id) => {
+	logger.debug(`UsersController.patchUser : Patching user`)
 	return new Promise(async (resolve, reject) => {
 		let users = await UsersController.getUsers({ 'username': username.toLowerCase() });
 		if(users && users.length > 0){
@@ -314,7 +315,7 @@ UsersController.generateJWT = async (user) => {
 }
 
 UsersController.validateJWT = async (token) => {
-	//logger.info("Token : " + token);
+	//logger.debug("Token : " + token);
 	return new Promise((resolve, reject) => {
 		let decoded = jwt.decode(token, { complete: true });
 
@@ -389,7 +390,7 @@ UsersController.validateJWT = async (token) => {
 }
 
 UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
-	//logger.info("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
+	//logger.debug("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
 	return new Promise((resolve, reject) => {
 		if(!config.sso.enabled){
 			resolve(decoded);
@@ -430,7 +431,7 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 }
 
 UsersController.simplifyUser = function(user){
-	//logger.info("simplifyUser - User : " + JSON.stringify(user));
+	//logger.debug("simplifyUser - User : " + JSON.stringify(user));
 	return { data: {
 		_id: user._id,
 		username: user.username,
@@ -440,7 +441,7 @@ UsersController.simplifyUser = function(user){
 }
 
 UsersController.createUserFromJWT = async function(decoded){
-	//logger.info("createUserFromJWT : " + JSON.stringify(decoded));
+	//logger.debug("createUserFromJWT : " + JSON.stringify(decoded));
 	let user = {
 		username: decoded.preferred_username,
 		password: Math.random().toString(36).slice(-8),
@@ -454,7 +455,7 @@ UsersController.createUserFromJWT = async function(decoded){
 }
 
 UsersController.getRoleFromJWT = function(decoded){
-	//logger.info("getRoleFromJWT : " + JSON.stringify(decoded));
+	//logger.debug("getRoleFromJWT : " + JSON.stringify(decoded));
 	let role = 'norole';
 
 	for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {

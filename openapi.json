@@ -100,6 +100,29 @@
             "description" : "an existing item already exists"
           }
         }
+      },
+      "patch" : {
+        "summary" : "Modify a user.",
+        "description" : "Modifies the logged user, for exemple it's role.\n",
+        "operationId" : "patchUser",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/user"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "User updated"
+          },
+          "400" : {
+            "description" : "invalid input, object invalid"
+          }
+        }
       }
     },
     "/users/login" : {

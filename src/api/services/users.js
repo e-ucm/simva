@@ -141,10 +141,12 @@ module.exports.linkUser = async (options) => {
  * @throws {Error}
  * @return {Promise}
  */
-module.exports.setRole = async (options) => {
+module.exports.patchUser = async (options) => {
   var result = { status: 200, data: {} };
   try{
-    result.data = await UsersController.setRole(options.username, options.role, options.keycloak_id);
+    logger.info(`module.exports.patchUser : Patching user`);
+    result.data = await UsersController.patchUser(options.username, options.role, options.keycloak_id);
+    logger.info(`module.exports.patchUser : Patching user done`);
   }catch(e){
     result = { status: 400, data: e };
   }
