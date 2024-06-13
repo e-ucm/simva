@@ -84,7 +84,7 @@ paths:
             schema:
               $ref: '#/components/schemas/user'
         required: true
-  /users/{id}:
+  /users/{username}:
     patch:
       summary: Modifies the logged user, for exemple it's role.
       tags:
@@ -94,12 +94,12 @@ paths:
       description: |
         Modifies the logged user, for exemple it new role to be added to the user
       parameters:
-        - name: id
+        - name: username
           in: path
           required: true
           type: string
-          format: id
-          description: The id of a specific user
+          format: username
+          description: The username of a specific user
         - name : JSONPatch
           in: body
           required: true

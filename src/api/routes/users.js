@@ -90,12 +90,12 @@ router.post('/login', async (req, res, next) => {
  * Receives the new role to be added to the user.
  * 
  */
-router.patch('/:id', Authenticator.auth, async (req, res, next) => {
-  logger.info(`Patching user : ${req.params['id']}`);
+router.patch('/:username', Authenticator.auth, async (req, res, next) => {
+  logger.info(`Patching user : ${req.params['username']}`);
   logger.info(req.jwt);
   if(req.jwt && req.jwt.payload.hasOwnProperty('sub')){
     const options = {
-      username: req.user.data.username,
+      username: req.params['username'],
       role: req.body.role,
       keycloak_id: req.jwt.payload.sub
     };
