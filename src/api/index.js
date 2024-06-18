@@ -8,7 +8,7 @@ const logger = require('../lib/logger');
 const AppManager = require('../lib/utils/appmanager');
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
 
-var isTest = (process.env.NODE_ENV === 'test');
+var isTest = (process.env.NODE_ENV !== 'production');
 
 logger.info(isTest);
 
