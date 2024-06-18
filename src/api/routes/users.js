@@ -91,14 +91,14 @@ router.post('/login', async (req, res, next) => {
  * 
  */
 router.post('/role', Authenticator.auth, async (req, res, next) => {
-  logger.info(req.jwt);
+  logger.debug(req.jwt);
   if(req.jwt && req.jwt.payload.hasOwnProperty('sub')){
     const options = {
       username: req.user.data.username,
       role: req.body.role,
       keycloak_id: req.jwt.payload.sub
     };
-    logger.info(options);
+    logger.debug(options);
     try {
       const result = await users.setRole(options);
       res.status(result.status || 200).send(result.data);

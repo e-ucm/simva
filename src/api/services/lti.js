@@ -56,7 +56,7 @@ module.exports.getLtiClaims = async (options) => {
     delete context._id;
     delete context.__v;
   }catch(e){
-    logger.info(e);
+    logger.error(e);
   }
   
 
@@ -165,7 +165,7 @@ module.exports.getLtiTool = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    logger.info(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -209,27 +209,27 @@ module.exports.deleteLtiTool = async (options) => {
 };
 
 module.exports.getLtiLineItems = async (options) => {
-  logger.info(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.getLtiLineItem = async (options) => {
-  logger.info(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.putLtiLineItem = async (options) => {
-  logger.info(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.setLtiLineItemScore = async (options) => {
-  logger.info(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.getLtiLineItemResults = async (options) => {
-  logger.info(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
@@ -259,7 +259,7 @@ module.exports.getLtiMemberships = async (options) => {
       "members" : members
     };
   }catch(e){
-    logger.info(e);
+    logger.error(e);
     return { message: 'Error getting the memberships', error: e };
   }
 
@@ -283,7 +283,7 @@ module.exports.getLtiPlatforms = async (options) => {
       try{
         query = JSON.parse(options.searchString);
       }catch(e){
-        logger.info(e);
+        logger.error(e);
         return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
       }
     }
@@ -343,7 +343,7 @@ module.exports.getLtiPlatform = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    logger.info(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -377,40 +377,40 @@ module.exports.deleteLtiPlatform = async (options) => {
       if(platform !== null){
 
         if(platform.studyId && platform.studyId !== ''){
-          logger.info('1');
+          logger.debug('1');
           let query = { 'link.type': 'lti_platform', 'link.id': platform._id };
-          logger.info(query);
+          logger.debug(query);
           let groups = await GroupsController.getGroups(query);
 
           if(groups.length !== 0){
             await GroupsController.removeGroup(groups[0]._id);
 
-            logger.info(groups);
+            logger.debug(groups);
 
-            logger.info('2');
+            logger.debug('2');
             let study = await StudiesController.getStudy(platform.studyId);
-            logger.info(study);
+            logger.debug(study);
 
-            logger.info('3');
+            logger.debug('3');
             let todelete = -1;
             for (var i = 0; i < study.groups.length; i++) {
-              logger.info('4');
+              logger.debug('4');
               if(study.groups[i].toString() === groups[0]._id.toString()){
                 todelete = i;
-                logger.info('5');
+                logger.debug('5');
                 break;
               }
             }
 
-            logger.info('6');
+            logger.debug('6');
 
             if(todelete >= 0){
               study.groups.splice(todelete, 1);
             }
 
-            logger.info('7');
+            logger.debug('7');
 
-            logger.info(study);
+            logger.debug(study);
 
             await StudiesController.updateStudy(study._id, study);
           }

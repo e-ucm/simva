@@ -99,7 +99,7 @@ module.exports.getGroup = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    logger.info(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -157,7 +157,7 @@ module.exports.updateGroup = async (options) => {
                     }
                   }
                 }catch(e){
-                  logger.info(e);
+                  logger.error(e);
                   result = { status: 500, data: {message: 'Error notifying the studies about changes in participans.', error: e} };
                 }
               }
@@ -176,7 +176,7 @@ module.exports.updateGroup = async (options) => {
         }
       }
     }catch(e){
-      logger.info(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -212,7 +212,7 @@ module.exports.getGroupStudies = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
   }catch(e){
-    logger.info(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -269,7 +269,7 @@ module.exports.getGroupParticipants = async (options) => {
         }
       }
     }catch(e){
-      logger.info(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{

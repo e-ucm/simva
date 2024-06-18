@@ -140,7 +140,7 @@ class LimeSurveyActivity extends Activity {
 						resolve(result);
 					});
 				}catch(exception){
-					logger.info(exception);
+					logger.error(exception);
 				}
 			}
 		})
@@ -165,7 +165,7 @@ class LimeSurveyActivity extends Activity {
 						resolve(result);
 					});
 				}catch(exception){
-					logger.info(exception);
+					logger.error(exception);
 				}
 			}
 		})
@@ -189,7 +189,7 @@ class LimeSurveyActivity extends Activity {
 						resolve(result);
 					});
 				}catch(exception){
-					logger.info(exception);
+					logger.error(exception);
 				}
 			}else{
 				logger.info(this.extra_data);

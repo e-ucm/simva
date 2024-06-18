@@ -41,7 +41,7 @@ var Activity = require('./activity');
 	)
 
 	lti.onConnect((token, req, res) => {
-	  logger.info(token)
+	  logger.debug(token)
 	  return res.send('It\'s alive!')
 	})
 

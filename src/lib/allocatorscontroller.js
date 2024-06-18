@@ -55,7 +55,7 @@ AllocatorsController.createAllocator = async (type) => {
 AllocatorsController.deleteAllocator = async (id) => {
 	var res = await mongoose.model('allocator').deleteOne({_id: id});
 
-	logger.info(res);
+	logger.debug(res);
 
 	return res;
 }

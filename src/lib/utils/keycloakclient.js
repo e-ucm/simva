@@ -54,7 +54,7 @@ if(config.sso.enabled){
 	})
 	.catch((error) => {
 		logger.info('Unable to connect to keycloak');
-		logger.info(error);
+		logger.error(error);
 		keycloakStatus = false;
 	});
 }

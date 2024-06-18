@@ -142,23 +142,23 @@ class Activity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
 		}
-		logger.info("Before adding participants : " + JSON.stringify(this));
+		logger.debug("Before adding participants : " + JSON.stringify(this));
 
 		for(let i = 0; i < participants.length; i++){
 			if(!this.extra_data.participants[participants[i]]){
 				this.extra_data.participants[participants[i]] = { completion: false };
 			}
 		}
-		logger.info("After adding participants : " + JSON.stringify(this));
+		logger.debug("After adding participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 
 	async removeParticipants(participants){
-		logger.info("Before delete participants : " + JSON.stringify(this));
+		logger.debug("Before delete participants : " + JSON.stringify(this));
 		for (var i = 0; i < participants.length; i++) {
 			delete this.extra_data.participants[participants[i]];
 		}
-		logger.info("Before delete participants : " + JSON.stringify(this));
+		logger.debug("Before delete participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 
@@ -233,7 +233,7 @@ class Activity {
 					}
 				})
 			}catch(e){
-				logger.info(e);
+				logger.error(e);
 				reject({ message: 'error saving to file', error: e });
 			}
 		});
@@ -254,7 +254,7 @@ class Activity {
 					}
 				});
 			}catch(e){
-				logger.info(e);
+				logger.error(e);
 				reject({ message: 'Error reading file', error: e });
 			}
 		});
@@ -273,12 +273,12 @@ class Activity {
 					} else if (error.code === 'ENOENT') {
 						resolve(false);
 					} else {
-						logger.info(error);
+						logger.error(error);
 						reject({message: 'Unexpected error', error: error});
 					}
 				});
 			}catch(e){
-				logger.info(e);
+				logger.error(e);
 				reject({ message: 'Error reading file', error: e });
 			}
 		});

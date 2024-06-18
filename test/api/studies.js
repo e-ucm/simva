@@ -29,18 +29,18 @@ var should = require('should'),
 var CompareStoredObject = function(id, object, callback){
     Study.find({_id: id}, function(error, docs){
         if(docs.length !== 1 ){
-            logger.info('ID: ' + id + ' NOT FOUND');
+            logger.debug('ID: ' + id + ' NOT FOUND');
             callback({message: 'id not found'}, false);
         }else{
             let o1 = JSON.parse(JSON.stringify(docs[0]));
             let o2 = JSON.parse(JSON.stringify(object));
 
             if(!Comparator.deepCompare(o1, o2)){
-                logger.info('############## OBJECT 1 ##############')
-                logger.info(JSON.stringify(o1, null, 2));
-                logger.info('############## OBJECT 2 ##############')
-                logger.info(JSON.stringify(o2, null, 2));
-                logger.info('######################################')
+                logger.debug('############## OBJECT 1 ##############')
+                logger.debug(JSON.stringify(o1, null, 2));
+                logger.debug('############## OBJECT 2 ##############')
+                logger.debug(JSON.stringify(o2, null, 2));
+                logger.debug('######################################')
                 callback({message: 'objects are not equal'}, false);
             }else{
                 callback(null, true);

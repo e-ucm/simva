@@ -10,7 +10,7 @@ const SchemaValidationError = require('express-body-schema/SchemaValidationError
 
 var isTest = (process.env.NODE_ENV !== 'production');
 
-logger.info(isTest);
+logger.debug(isTest);
 
 let createAdminUser = async function(){
   let UsersController = require('../lib/userscontroller');
@@ -39,7 +39,7 @@ mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlPars
 var db = mongoose.connection;
 db.on('error', logger.error.bind(console, 'connection error:'));
 db.once('open', function() {
-  logger.info('connected');
+  logger.debug('connected');
 
   	const fs = require('fs');
 	const yaml = require('yaml');
@@ -88,12 +88,12 @@ app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: tr
   function(req, res, next){
     if((req.method === 'POST' || req.method === 'PUT') && (!req.body || Object.keys(req.body).length === 0)){
       if(req.files){
-        logger.info(req.files);
+        logger.debug(req.files);
         let filekeys = Object.keys(req.files);
-        logger.info(filekeys);
+        logger.debug(filekeys);
         for (var i = 0; i < filekeys.length; i++) {
           if(req.files[filekeys[i]].mimetype === 'application/json'){
-            logger.info(req.files[filekeys[i]].data);
+            logger.debug(req.files[filekeys[i]].data);
             req.body = JSON.parse(req.files[filekeys[i]].data);
           }
         }
@@ -127,7 +127,7 @@ app.use('/lti', require('./routes/lti'));
 // catch 404
 app.use((req, res, next) => {
   logger.error(`Error 404 on ${req.url}.`);
-  logger.info(req.url);
+  logger.error(req.url);
   res.status(404).send({ message: 'Not found' });
 });
 
@@ -137,7 +137,7 @@ app.use((err, req, res, next) => {
     logger.error(`Bad request (${err.message}) on ${req.method} ${req.url} with payload ${req.body}.`);
     res.status(400).send({ message: err.message });
   }else{
-    logger.info(err);
+    logger.error(err);
     const status = err.status || 500;
     const msg = err.error || err.message;
     logger.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${req.body}.`);
