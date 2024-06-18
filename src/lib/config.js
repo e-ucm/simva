@@ -36,7 +36,7 @@ config.mongo.db = process.env.MONGO_DB || '/simva'
 config.mongo.ltidb = process.env.LTI_MONGO_DB || '/lti_simva'
 config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
 config.mongo.ltiurl = 'mongodb://'+config.mongo.host+config.mongo.ltidb
-config.mongo.test = 'mongodb://localhost:1234/tests'
+config.mongo.test = config.mongo.url
 
 config.kafka = {}
 config.kafka.host = process.env.KAFKA_HOST || 'kafka'
