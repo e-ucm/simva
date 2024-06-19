@@ -1,7 +1,7 @@
 {
   "name": "simva-api",
   "description": "Simva, AKA Simple Validator, AKA SurveyManager is the evolution of a tool created to integrate and ease the task of validating serious games using pre-post surveys as a control point. This version allows to create more complex studies with more variety of activities and different allocations.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "start": "node src/bin/www",
     "dev": "nodemon --inspect=0.0.0.0:9229 src/bin/www | bunyan",
@@ -9,28 +9,28 @@
   },
   "dependencies": {
     "async": "^3.1.0",
-    "axios": "^0.18.0",
-    "bcrypt": "3.0.x",
+    "axios": "^0.26.1",
+    "bcrypt": "5.1.1",
     "body-parser": "1.13.2",
     "bunyan": "1.5.1",
     "cookie-parser": "1.3.5",
     "express": "4.13.1",
     "express-body-schema": "github:Synpheros/express-body-schema#master",
     "express-fileupload": "1.2.1",
-    "get-keycloak-public-key": "1.0.3",
-    "html-pdf": "2.2.0",
+    "keycloak-public-key": "github:e-ucm/keycloak-public-key#master",
     "jsonwebtoken": "8.5.1",
     "kafka-node": "5.0.0",
-    "keycloak-admin": "1.13.0",
+    "@keycloak/keycloak-admin-client": "18.0.2",
     "ltijs": "5.6.6",
     "minio": "7.0.16",
+    "pino": "^8.16.2",
     "mongoose": "^5.7.8",
     "multiparty-express": "^0.1.9",
     "node-yaml-config": "0.0.3",
     "request": "2.88.0",
     "require-text": "0.0.1",
     "ssl-root-cas": "1.3.x",
-    "swagger-mongoose": "github:Synpheros/swagger-mongoose#master",
+    "swagger-mongoose": "github:e-ucm/swagger-mongoose#master",
     "unzipper": "0.10.14",
     "xapi-tracker": "0.9.2",
     "xml2js": "0.6.2",
@@ -40,6 +40,7 @@
     "mocha": "*",
     "nodemon": "^2.0.4",
     "should": "*",
-    "supertest": "*"
+    "supertest": "*",
+    "pino-pretty": "^10.2.3"
   }
 }

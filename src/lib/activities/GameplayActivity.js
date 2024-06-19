@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -151,7 +152,7 @@ class GameplayActivity extends Activity {
 			this.extra_data.analytics = await RealtimeActivity.removeParticipantsFromAnalytics(participants, this.extra_data.analytics);
 		}
 
-		return await super.addParticipants(participants);
+		return await super.removeParticipants(participants);
 	}
 
 	async setResult(participant, result){
@@ -197,50 +198,65 @@ class GameplayActivity extends Activity {
 					}
 				}
 			}else{
-				console.log('Unknown case');
-				console.log(result.result);
+				logger.info('Unknown case');
+				logger.info(result.result);
 				throw { message: 'Unknown case setting the result' };
 			}
 		}catch(e){
-			console.log(e);
+			logger.error(e);
 			throw { message: 'Error while setting the result' };
 		}
 
 		return toret;
 	}
 
-	async getResults(participants){
+	async getResults(participants, type){
 		let results = {};
 
+		/* ########## DISABLED TRACE STORAGE DOWNLOAD ##########
 		if(this.extra_data.config.trace_storage && !participants && (!Array.isArray(participants) || participants.length == 0))
 		{
 			return await GameplayActivity.getTracesFromZip(this.id, this.token, this.res);
-		}
+		}*/
 
-
-		let backupresults = await this.loadBackups(participants);
+		/* ########## DISABLED REALTIME ##########
 		let analyticsresults = {};
-
 		if(this.extra_data.config.realtime){
 			analyticsresults = await RealtimeActivity.getAnalyticsResults(participants, this.extra_data.analytics);
-		}
+		}*/
 
+		let backupresults = await this.loadBackups(participants);
 		participants = Object.keys(backupresults);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
 			results[participants[i]] = null;
 			if( (this.extra_data.config.realtime && analyticsresults[participants[i]] !== null) 
 				|| (this.extra_data.config.backup && backupresults[participants[i]] !== null) ){
-				results[participants[i]] = {};
+				results[participants[i]] = null;
 
+				/* ########## DISABLED REALTIME ##########
 				if(this.extra_data.config.realtime){
 					results[participants[i]].realtime = analyticsresults[participants[i]];
-				}
+				}*/
 
 				if(this.extra_data.config.backup){
-					results[participants[i]].backup = backupresults[participants[i]];
+					results[participants[i]] = backupresults[participants[i]];
 				}
 			}
+		}
+
+		return results;
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants, type);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+		
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
 		}
 
 		return results;
@@ -316,8 +332,8 @@ class GameplayActivity extends Activity {
 			});
 
 			if (response.status !== 200) {
-				console.log('Problems getting temporary credentials');
-				console.log(response.data);
+				logger.info('Problems getting temporary credentials');
+				logger.info(response.data);
 			} else {
 				const parser = new xml2js.Parser({
 					explicitArray: false,
@@ -334,7 +350,7 @@ class GameplayActivity extends Activity {
 				};
 			}
 		} catch (error) {
-			console.error('Error:', error);
+			logger.error('Error:', error);
 		}
 	}
 
@@ -352,12 +368,12 @@ class GameplayActivity extends Activity {
 		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
 	
 		const requestBody = {
-			"bucketName": "traces",
-			"prefix": "kafka-topics/traces/",
+			"bucketName": `${config.minio.bucket}`,
+			"prefix":  `${config.minio.topics_dir}/${config.minio.traces_topic}/`,
 			"objects": [`_id=${activity_id}/`]
 		};
 	
-		console.log('Iniciando solicitud de ZIP...');
+		logger.info('Starting ZIP request...');
 	
 		try {
 			const response = await axios.post(
@@ -371,14 +387,14 @@ class GameplayActivity extends Activity {
 				}
 			);
 	
-			console.log('Respuesta del ZIP recibida, procesando...');
+			logger.info('ZIP reply received, processing...');
 			res.setHeader('Content-Disposition', `attachment; filename="${activity_id}.zip"`);
 
 			let isFirstFile = true;
 			const transformStream = new Transform({
 				writableObjectMode: true,
 				transform(file, encoding, callback) {
-					console.log('Procesando archivo:', file.name);
+					logger.info('Processing file:', file.name);
 					let data = file.contents;
 					if (isFirstFile) {
 						data = "[" + data;
@@ -391,7 +407,7 @@ class GameplayActivity extends Activity {
 				},
 				final(callback) {
 					this.push("]");
-					console.log('Finalizando el stream de transformación...');
+					logger.info('Finalizing the transformation stream...');
 					callback();
 				}
 			});
@@ -419,10 +435,10 @@ class GameplayActivity extends Activity {
 				res
 			);
 	
-			console.log('Pipeline completada con éxito.');
+			logger.info('Pipeline completada con éxito.');
 	
 		} catch (error) {
-			console.error("Error al procesar el archivo ZIP:", error);
+			logger.error("Error al procesar el archivo ZIP:", error);
 			res.status(500).send({ error: error.message });
 		}
 	}
@@ -452,9 +468,30 @@ class GameplayActivity extends Activity {
 				backups[participants[i]] = await super.readFromFile(participants[i]);
 			}catch(e){
 				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
-					console.log(e);
+					logger.error(e);
 				}
 				backups[participants[i]] = null;
+			}
+		}
+
+		return backups;
+	}
+
+	async checkBackups(participants){
+		if(!participants || participants.length == 0){
+			participants = Object.keys(this.extra_data.participants);
+		}
+
+		let backups = [];
+
+		for (var i = 0; i < participants.length; i++) {
+			try {
+				backups[participants[i]] = await super.fileExists(participants[i]);
+			}catch(e){
+				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
+					logger.error(e);
+				}
+				backups[participants[i]] = false;
 			}
 		}
 

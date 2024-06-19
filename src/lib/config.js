@@ -3,10 +3,19 @@ let config = {}
 
 let ignored_ports = [80, 8080, 443];
 
-config.external_url = process.env.EXTERNAL_URL || 'https://simva.e-ucm.es'
+config.external_url = process.env.EXTERNAL_URL || 'https://simva.external.test'
+config.favicon_file = process.env.SIMVA_FRONT_FAVICON || '/favicon.ico'
+config.favicon_url = config.external_url + config.favicon_file
 
 config.api = {}
-config.api.port  = process.env.PORT || 3000
+config.api.host = process.env.SIMVA_API_HOST || 'simva-api.simva.external.test'
+config.api.port  = process.env.SIMVA_API_PORT || 443
+config.api.protocol = process.env.SIMVA_API_PROTOCOL
+config.api.url = config.api.protocol + '://' + config.api.host
+			+ ( (ignored_ports.indexOf(config.api.port) !== -1) ? '' : (':' + config.api.port) );
+config.api.webhookPath = process.env.SIMVA_API_WEBHOOK_PATH || '/users/events'
+config.api.webhookSecret = process.env.SIMVA_API_WEBHOOK_SECRET || 'w3bh00k_s3cr3t'
+config.api.webhookUrl = config.api.url + config.api.webhookPath
 config.api.adminUsername = process.env.ADMIN_USERNAME || 'admin'
 config.api.adminEmail = process.env.ADMIN_EMAIL || 'admin@simva.admin'
 config.api.adminPassword = process.env.ADMIN_PASSWORD || 'password'
@@ -27,21 +36,21 @@ config.mongo.db = process.env.MONGO_DB || '/simva'
 config.mongo.ltidb = process.env.LTI_MONGO_DB || '/lti_simva'
 config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
 config.mongo.ltiurl = 'mongodb://'+config.mongo.host+config.mongo.ltidb
-config.mongo.test = 'mongodb://localhost:1234/tests'
+config.mongo.test = config.mongo.url
 
 config.kafka = {}
 config.kafka.host = process.env.KAFKA_HOST || 'kafka'
 config.kafka.port = process.env.KAFKA_PORT || 9092
-config.kafka.topic = process.env.KAFKA_TOPIC || 'traces'
 config.kafka.url = config.kafka.host + ':' + config.kafka.port
 
 config.minio = {}
 config.minio.url = process.env.MINIO_URL || 'minio.external.test'
-config.minio.access_key = process.env.SIMVA_MINIO_ACCESS_KEY
-config.minio.secret_key = process.env.SIMVA_MINIO_SECRET_KEY
-config.minio.port = process.env.SIMVA_MINIO_PORT || 80
+config.minio.access_key = process.env.MINIO_ACCESS_KEY
+config.minio.secret_key = process.env.MINIO_SECRET_KEY
+config.minio.port = process.env.MINIO_PORT || 80
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces'
 config.minio.topics_dir = process.env.MINIO_TOPICS_DIR || 'kafka-topics'
+config.minio.traces_topic = process.env.MINIO_TRACES_TOPIC || 'traces'
 config.minio.users_dir = process.env.MINIO_USERS_DIR || 'users'
 config.minio.traces_file = process.env.MINIO_TRACES_FILE || 'traces.json'
 
@@ -66,10 +75,12 @@ config.sso.protocol = process.env.SSO_PROTOCOL || 'https'
 config.sso.port = parseInt(process.env.SSO_PORT || '443')
 config.sso.url = config.sso.protocol + '://' + config.sso.host
 			+ ( (ignored_ports.indexOf(config.sso.port) !== -1) ? '' : (':' + config.sso.port) );
-config.sso.authPath = process.env.SSO_AUTH_PATH || '/auth'
-config.sso.authUrl = config.sso.url + config.sso.authPath
-config.sso.realmUrl = config.sso.authUrl + '/realms/' + config.sso.realm
+config.sso.webhookPath = process.env.SSO_WEBHOOK_PATH || '/webhook'
+config.sso.realmUrl = config.sso.url + '/realms/' + config.sso.realm
+config.sso.webhookUrl = config.sso.realmUrl + config.sso.webhookPath
 config.sso.publicKey = "-----BEGIN PUBLIC KEY----- \n" + process.env.SSO_PUBLIC_KEY + "\n-----END PUBLIC KEY-----\n";
+config.sso.allowedRoles = process.env.SSO_ALLOWED_ROLES || 'teacher,teaching-assistant,student,researcher'
+config.sso.loggerActive = process.env.SSO_LOGGER_ACTIVE || false;
 
 config.sso.adminUser = process.env.SSO_ADMIN_USER || 'admin';
 config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'password';
@@ -93,6 +104,7 @@ config.analyticsbackend.url =  config.analyticsbackend.protocol + '://' + config
 
 config.LTI = {}
 config.LTI.platform = {}
+config.LTI.platform.client_id = process.env.LTI_PLATFORM_CLIENT_ID || 'lti-platform'
 config.LTI.platform.key = process.env.LTI_PLATFORM_SIGNING_KEY || 'LTISIGNINGKEY';
 config.LTI.platform.mongo = {}
 config.LTI.platform.mongo.db = process.env.LTI_PLATFORM_DB_NAME || '/lti'
@@ -100,6 +112,7 @@ config.LTI.platform.mongo.url = 'mongodb://'+config.mongo.host+config.LTI.platfo
 config.LTI.platform.mongo.user = process.env.LTI_PLATFORM_DB_USER || 'root'
 config.LTI.platform.mongo.password = process.env.LTI_PLATFORM_DB_PASSWORD || ''
 config.LTI.platform.claims_url = '/lti/claims';
+config.LTI.loggerActive = process.env.LTI_LOGGER_ACTIVE || true;
 
 config.storage = {}
 config.storage.path = process.env.SIMVA_STORAGE_PATH || 'storage/'

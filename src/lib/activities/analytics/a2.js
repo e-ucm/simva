@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+const logger = require('../../logger');
 var request = require('request');
 var async = require('async');
 var session_timestamp;
@@ -44,7 +44,7 @@ function Log(line){
 		if(typeof line === 'object'){
 			log = JSON.stringify(line, null, 2);
 		}
-		console.info('\x1b[35m%s\x1b[0m', log);
+		logger.info('\x1b[35m%s\x1b[0m', log);
 	}
 }
 

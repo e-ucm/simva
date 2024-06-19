@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -90,7 +91,7 @@ class RageMinioActivity extends MinioActivity {
 	async removeParticipants(participants){
 		this.extra_data.analytics = await this.removeParticipantsFromAnalytics(participants, this.extra_data.analytics);
 		
-		return await super.addParticipants(participants);
+		return await super.removeParticipants(participants);
 	}
 
 	async setResult(participant, result){
@@ -120,17 +121,17 @@ class RageMinioActivity extends MinioActivity {
 				}
 			}
 		}catch(e){
-			console.log(e);
+			logger.error(e);
 			throw { message: 'Error while setting the result' };
 		}
 
 		return toret;
 	}
 
-	async getResults(participants){
+	async getResults(participants, type){
 		let results = {};
 		let analyticsresults = await AnalyticsActivity.getAnalyticsResults(participants, this.extra_data.analytics);
-		let minioresults = await super.getResults(participants);
+		let minioresults = await super.getResults(participants, type);
 
 		participants = Object.keys(analyticsresults);
 
@@ -145,6 +146,18 @@ class RageMinioActivity extends MinioActivity {
 		}
 
 		return results;
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants, type);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
+		}
 	}
 
 	async setCompletion(participant, status){

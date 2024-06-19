@@ -17,7 +17,7 @@
  */
 
 'use strict';
-
+const logger = require('../src/lib/logger');
 var request = require('supertest'),
     app = require('../src/api/index'),
     config = require('../src/lib/config');
@@ -28,16 +28,16 @@ describe('API Test', function (done) {
     this.timeout(20000);
     /**Initialize MongoDB**/
     before(function (done) {
-        console.log('##### CONNECTING TO API #####');
+        logger.info('##### CONNECTING TO API #####');
         app.listen(config.api.port, function (err) {
             if (err) {
-                console.log('##### error connecting to api #####');
+                logger.info('##### error connecting to api #####');
                 done(err);
             } else {
                 request = request(app);
-                console.log('##### WAITING FOR MONGO #####');
+                logger.info('##### WAITING FOR MONGO #####');
                 setTimeout(function () {
-                    console.log('##### CONNECTED TO MONGO #####');
+                    logger.info('##### CONNECTED TO MONGO #####');
                     done();
                 }, 2500);
             }

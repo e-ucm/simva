@@ -1,3 +1,4 @@
+const logger = require('./logger');
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 
@@ -48,6 +49,18 @@ ActivitiesController.getActivity = async (id) => {
 
 	if(res.length > 0) {
 		return res[0];
+	}else{
+		return null;
+	}
+};
+
+ActivitiesController.getActivityParticipants = async (id) => {
+	let res = await mongoose.model('activity').find({_id: id});
+
+	if(res.length > 0) {
+		if(res[0].extra_data && res[0].extra_data.participants) {
+			return Object.keys(res[0].extra_data.participants);
+		}
 	}else{
 		return null;
 	}

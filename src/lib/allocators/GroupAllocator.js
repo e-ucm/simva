@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId;
@@ -129,11 +130,26 @@ class GroupAllocator extends Allocator {
 			this.extra_data.allocations = {};
 		}
 
-		if(!this.extra_data.allocation[group]){
-			this.extra_data.allocation[group] = tests;
+		if(!this.extra_data.allocations[group]){
+			this.extra_data.allocations[group] = test;
 		}
 
-		return this.extra_data.allocation[group];
+		return this.extra_data.allocations[group];
+	}
+
+	async getAllocatedForTest(test) {
+		var allocation = []
+		if(this.extra_data && this.extra_data.allocations) {
+			logger.info(this.extra_data.allocations)
+			let group,value
+			for([group, value] of Object.entries(this.extra_data.allocations)) {
+				if(value == test) {
+					var gr=await GroupsController.getGroup(group);
+					allocation=allocation.concat(gr.participants);
+				}
+			}
+		}
+		return allocation;
 	}
 };
 

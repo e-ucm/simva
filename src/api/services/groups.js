@@ -1,5 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
+const logger = require('../../lib/logger');
 
 var GroupsController = require('../../lib/groupscontroller');
 var UsersController = require('../../lib/userscontroller');
@@ -98,7 +99,7 @@ module.exports.getGroup = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -156,7 +157,7 @@ module.exports.updateGroup = async (options) => {
                     }
                   }
                 }catch(e){
-                  console.log(e);
+                  logger.error(e);
                   result = { status: 500, data: {message: 'Error notifying the studies about changes in participans.', error: e} };
                 }
               }
@@ -175,7 +176,7 @@ module.exports.updateGroup = async (options) => {
         }
       }
     }catch(e){
-      console.log(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -211,7 +212,7 @@ module.exports.getGroupStudies = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -268,7 +269,7 @@ module.exports.getGroupParticipants = async (options) => {
         }
       }
     }catch(e){
-      console.log(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -277,70 +278,3 @@ module.exports.getGroupParticipants = async (options) => {
   
   return result;
 };
-
-/**
- * @param {Object} options
- * @param {String} options.id The class ID
- * @throws {Error}
- * @return {Promise}
- */
-module.exports.getGroupPrintable = async (options) => {
-  var result = { status: 404, data: {message: 'Not found'} };
-
-  try{
-    if(mongoose.Types.ObjectId.isValid(options.id)){
-      var group = await GroupsController.getGroup(options.id);
-      if(group !== null){
-        if(group.owners.indexOf(options.user.data.username) !== -1 || group.participants.indexOf(options.user.data.username) !== -1){
-          let buffer = await toPDF(group.name, group.participants);
-          result = { status: 200, data: buffer };
-        }else{
-          result = { status: 401, data: {message: 'User is not authorized to obtain group data.'} };
-        }
-      }
-    }else{
-      result = { status: 400, data: {message: 'ObjectId is not valid.'} };
-    }
-  }catch(e){
-    console.log(e);
-    result =  { status: 500, data: e };
-  }
-
-  return result;
-};
-
-
-let toPDF = async (title, participants) => {
-  return new Promise((resolve, reject) => {
-    var pdf = require('html-pdf');
-
-    var colspan = 6;
-    var html = '<!DOCTYPE html><html><head><title></title><style type="text/css">body{padding:10px} table{font-size: 18px;font-family: "DejaVu Sans Mono"; border: solid 2px black;border-collapse: collapse;}table td{border: solid 2px black;text-align: center;}</style></head>';
-    html += '<body><table width="100%" style=""><tr><th colspan="' + colspan + '" style="text-align:left">Group: ' + title + ':</th></tr><tr><td width="5%">No.</td><td width="45%">Nombre</td>';
-
-    html += '<td width="40%" colspan="4">Código</td></tr>';
-    html += '<tr><td>'+ (1) + '</td><td></td>';
-
-    let token = participants[0].toUpperCase();
-    html += '<td>'+token+'</td><td>'+token+'</td><td>'+token+'</td><td>'+token+'</td></tr>';
-
-    for(var i = 1; i < participants.length; i++){
-      token = participants[i].toUpperCase();
-      if((i%30)==0){
-        html += '</table><br><br><table width="100%" style=""><tr><th colspan="6" style="text-align:left">Group: ' + title + ':</th></tr><tr><td width="5%">No.</td><td width="45%">Nombre</td><td width="40%" colspan="4">Código</td></tr>';
-      }
-      html += '<tr><td>'+ (i+1) + '</td><td></td>';
-      html += '<td>'+token+'</td><td>'+token+'</td><td>'+token+'</td><td>'+token+'</td></tr>';
-    }
-
-    html += '</table></body></html>';
-
-    pdf.create(html, { format: 'A4' }).toBuffer(function(err, buffer){
-      if(err){
-        reject(err);
-      }else{
-        resolve(buffer);
-      }
-    });
-  });
-}

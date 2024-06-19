@@ -1,5 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
+const logger = require('../../lib/logger');
 
 var UsersController = require('../../lib/userscontroller');
 
@@ -78,7 +79,7 @@ module.exports.addUser = async (options) => {
         try {
           let keycloakuser = await UsersController.addUserToKeycloak(params);
         }catch(e){
-          console.log(e);
+          logger.error(e);
           return {status: 500, data: e };
         }
         
@@ -125,6 +126,44 @@ module.exports.linkUser = async (options) => {
   var result = { status: 200, data: {} };
   try{
     result.data = await UsersController.linkUser(options.body.main, options.body.secondary, options.body.domain);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.main JWT of the main account
+ * @param {String} options.secondary JWT of the secondary account
+ * @param {String} options.domain domain name
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.patchUser = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    logger.info(`module.exports.patchUser : Patching user`);
+    result.data = await UsersController.patchUser(options.username, options.role, options.keycloak_id);
+    logger.info(`module.exports.patchUser : Patching user done`);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};
+
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.eventUser = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.eventUser(options);
   }catch(e){
     result = { status: 400, data: e };
   }

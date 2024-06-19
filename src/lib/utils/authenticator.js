@@ -1,5 +1,7 @@
+const logger = require('../logger');
 const fs = require('fs');
 const yaml = require('yaml');
+const jwt = require('jsonwebtoken');
 var UsersController = require('../userscontroller');
 
 var Authenticator = {};
@@ -47,9 +49,9 @@ Authenticator.initPaths = function(){
 		}
 	}
 
-	console.log('####################### FINAL TREE OF ALLOWED ROUTES #######################');
-	console.log(JSON.stringify(AllowedRoutes, null, 2));
-	console.log('############################################################################');
+	logger.info('####################### FINAL TREE OF ALLOWED ROUTES #######################');
+	logger.info(JSON.stringify(AllowedRoutes, null, 2));
+	logger.info('############################################################################');
 }
 
 Authenticator.CompareRoutes = function(generic, specific){
@@ -97,7 +99,8 @@ Authenticator.auth = async (req, res, next) => {
 		}
 
 		req.user = result;
-		
+		req.jwt = jwt.decode(token, { complete: true });
+
 		return Authenticator.roleAllowed(req, res, next);
 	}
 };

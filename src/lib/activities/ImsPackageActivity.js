@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 
 let config = require('../config');
@@ -88,8 +89,12 @@ class ImsPackageActivity extends GameplayActivity {
 		return await super.setResult(participant, result);
 	}
 
-	async getResults(participants){
-		return await super.getResults(participants);
+	async getResults(participants, type){
+		return await super.getResults(participants, type);
+	}
+
+	async hasResults(participants, type){
+		return await super.hasResults(participants, type);
 	}
 
 	async setCompletion(participant, status){

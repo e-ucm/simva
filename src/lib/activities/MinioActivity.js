@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -12,15 +13,15 @@ var kafka = require('kafka-node'),
     client = new kafka.KafkaClient({kafkaHost: config.kafka.url}),
     producer = new HighLevelProducer(client);
 
-console.log('## MinioActivity: Connecting to Kafka: ' + config.kafka.url);
+logger.info('## MinioActivity: Connecting to Kafka: ' + config.kafka.url);
 
 producer.on('ready', function () {
-	console.log('Kafka producer ready!')
+	logger.info('Kafka producer ready!')
 });
  
 producer.on('error', function (err) {
-	console.log(err);
-	console.log('Unable to connect to kafka');
+	logger.info(err);
+	logger.info('Unable to connect to kafka');
 })
 
 class MinioActivity extends Activity {
@@ -53,8 +54,8 @@ class MinioActivity extends Activity {
 		return {
 			minio_url: config.minio.url,
 			minio_bucket: config.minio.bucket,
-			kafka_topic: config.kafka.topic,
 			topics_dir: config.minio.topics_dir,
+			trace_topic: config.minio.traces_topic,
 			users_dir: config.minio.users_dir,
 			user_folder: username,
 			file_name: config.minio.file_name
@@ -98,7 +99,7 @@ class MinioActivity extends Activity {
 	}
 
 	async removeParticipants(participants){
-		return await super.removeParticipants();
+		return await super.removeParticipants(participants);
 	}
 
 	async setResult(participant, result){
@@ -125,7 +126,7 @@ class MinioActivity extends Activity {
 				}
 			}
 		}catch(e){
-			console.log(e);
+			logger.error(e);
 			throw { message: 'Error while setting the result' };
 		}
 
@@ -139,23 +140,27 @@ class MinioActivity extends Activity {
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
 					trace._id = activityId;
-					payloads.push({ topic: config.kafka.topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
+					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
 				producer.send(payloads, function (err, data) {
 					if(err){
-						console.log("Error in Kafka enqueue: " + err);
+						logger.info("Error in Kafka enqueue: " + err);
 						reject(err);
 					}else{
-						console.log("Trace enqueued ok! Data: " + JSON.stringify(data));
+						logger.info("Trace enqueued ok! Data: " + JSON.stringify(data));
 						resolve(data);
 					}
 				});
 		});
 	}
 
-	async getResults(participants){
-		return super.getResults(participants);
+	async getResults(participants, type){
+		return super.getResults(participants, type);
+	}
+
+	async hasResults(participants, type){
+		return super.getResults(participants, type);
 	}
 
 	async setCompletion(participant, status){

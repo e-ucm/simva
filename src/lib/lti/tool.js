@@ -1,14 +1,22 @@
+const logger = require('../logger');
 process.env.DEBUG = '*';
 
 var mongoose = require('mongoose');
 var config = require('../config');
 const lti = require('ltijs').Provider;
 var requireText = require('require-text');
+const jwt = require('jsonwebtoken');
 
 var UsersController = require('../userscontroller');
 var GroupsController = require('../groupscontroller');
 var StudiesController = require('../studiescontroller');
 var TestsController = require('../testscontroller');
+
+function Log(message){
+	if(config.LTI.loggerActive){
+		logger.info('\x1b[33m%s\x1b[0m', message);
+	}
+}
 
 // #################################################################
 // ######################## LTI TOOL SERVER ########################
@@ -29,14 +37,14 @@ lti.setup(config.LTI.platform.key, // Key used to sign cookies and tokens
     devMode: false, // Set DevMode to false if running in a production environment with https
     dynRegRoute: '/register', // Setting up dynamic registration route. Defaults to '/register'
     dynReg: {
-      url: 'https://simva-api.simva.e-ucm.es/lti/tool/', // Tool Provider URL. Required field.
+      url: config.api.url + '/lti/tool/', // Tool Provider URL. Required field.
       name: 'SIMVA', // Tool Provider name. Required field.
-      logo: 'https://simva.e-ucm.es/favicon.ico', // Tool Provider logo URL.
+      logo: config.favicon_url, // Tool Provider logo URL.
       description: 'SIMple VAlidation service for serious game validation and deployment', // Tool Provider description.
       redirectUris: [
-        'https://simva-api.simva.e-ucm.es',
-        'https://simva-api.simva.e-ucm.es/lti/tool/',
-        'https://simva-api.simva.e-ucm.es/lti/tool/*'
+        config.api.url,
+        config.api.url + '/lti/tool/',
+        config.api.url + '/lti/tool/*'
       ],
       autoActivate: true // Whether or not dynamically registered Platforms should be automatically activated. Defaults to false.
     }
@@ -45,10 +53,11 @@ lti.setup(config.LTI.platform.key, // Key used to sign cookies and tokens
 
 // Set lti launch callback
 lti.onConnect(async (token, req, res) => {
+  Log('lib/tool/lti.onConnect(): Started');
+  Log('lib/tool/lti.onConnect(): Token:' + JSON.stringify(token));
   let response = {};
 
   try{
-    console.log('trying');
     let user = null;
     let platform = null;
 
@@ -60,10 +69,10 @@ lti.onConnect(async (token, req, res) => {
     );
 
     if(users.length > 0){
-      console.log('user exists');
+      Log('lib/tool/lti.onConnect(): user exists');
       user = users[0];
     }else{
-      console.log('new user');
+      Log('lib/tool/lti.onConnect(): new user');
       let username = token.user + '_' + token.platformId;
       let email = null;
 
@@ -88,81 +97,110 @@ lti.onConnect(async (token, req, res) => {
       });
     }
 
-    console.log('getting group');
-    let query = { 'link.type': 'lti_platform', 'link.id': token.platformId + '_' + token.deploymentId };
+    
+    let query = { 'link.type': 'lti_platform', 'link.id': token.platformId };
     let groups = await GroupsController.getGroups(query);
-    console.log(groups);
+    Log('lib/tool/lti.onConnect(): Groups: ' + JSON.stringify(groups));
 
     let group = null;
 
     if(groups.length > 0){
       group = groups[0];
     }else{
-      group = await GroupsController.addGroup({
-        name: 'LTI:' + options.body.name,
+      let groupbody = {
+        name: 'LTI:' + token.clientId,
         owners: [],
         participants: [],
         link: { 
           type: 'lti_platform',
-          id: token.platformId + '_' + token.deploymentId
+          id: token.platformId
         },
         created: Date.now()
-      });
+      };
 
-      let study = await StudiesController.getStudy(req.query.study);
+      Log('lib/tool/lti.onConnect(): Adding Group: ' + JSON.stringify(groupbody));
+      group = await GroupsController.addGroup(groupbody);
+      Log('lib/tool/lti.onConnect(): Group Added: ' + JSON.stringify(group));
+
+      Log('lib/tool/lti.onConnect(): Query: ' + JSON.stringify(req.query));
+      let ltik = jwt.decode(req.query.ltik, { complete: true });
+      Log('lib/tool/lti.onConnect(): LTIK: ' + JSON.stringify(ltik));
+      Log('lib/tool/lti.onConnect(): Body: ' + JSON.stringify(req.body));
+
+
+
+      Log('lib/tool/lti.onConnect(): HOW ARE WE LINKING THE STUDY??');
+      /*let study = await StudiesController.getStudy(req.query.study);
+
 
       study.groups.push(group._id);
 
-      await StudiesController.updateStudy(study._id, study);
+      await StudiesController.updateStudy(study._id, study);*/
     }
 
     if(!group.participants.includes(user.username)){
-      console.log('user not in group');
+      Log('lib/tool/lti.onConnect(): user not in group');
       group.participants.push(user.username);
 
-      console.log('updating group');
+      Log('lib/tool/lti.onConnect(): updating group');
       await GroupsController.updateGroup(group._id, group);
 
-      console.log('obtaining study');
+      Log('lib/tool/lti.onConnect(): obtaining study');
       let study = await StudiesController.getStudy(platform.studyId.toString());
 
       for (var i = 0; i < study.tests.length; i++) {
-        console.log('updating participants for test ' + study.tests[i]);
+        Log('lib/tool/lti.onConnect(): updating participants for test ' + study.tests[i]);
         await TestsController.addParticipants(study.tests[i], [ user.username ]);
       }
     }
 
-    console.log('getting jwt');
+    Log('lib/tool/lti.onConnect(): getting jwt');
     let jwt = await UsersController.generateJWT(user);
 
-    let redirection = 'https://simva.e-ucm.es/users/login'
+    let redirection = config.external_url + '/users/login'
       + '?jwt=' + jwt
-      + '&next=' + encodeURI('https://simva.e-ucm.es/scheduler/' + platform.studyId);
+      + '&next=' + encodeURI(config.external_url + '/scheduler/' + platform.studyId);
 
-    console.log(redirection);
+      Log('lib/tool/lti.onConnect(): Redirection URL: ' + redirection);
     return res.redirect(redirection);
   }catch(e){
-    console.log(e);
+    Log('lib/tool/lti.onConnect(): Error: ' + JSON.stringify(e));
   }
   
   return res.send(response);
 })
 
 lti.onDynamicRegistration(async (req, res, next) => {
+  Log('lib/tool/lti.onDynamicRegistration(): Started');
   try {
-    if (!req.query.openid_configuration) return res.status(400).send({ status: 400, error: 'Bad Request', details: { message: 'Missing parameter: "openid_configuration".' } })
-    const message = await lti.DynamicRegistration.register(req.query.openid_configuration, req.query.registration_token)
+    if (!req.query.openid_configuration){
+      let err = { message: 'Missing parameter: "openid_configuration".' };
+
+      Log('lib/tool/lti.onDynamicRegistration(): Error : ' + JSON.stringify(err));
+      return res.status(400).send({ status: 400, error: 'Bad Request', details: err })
+    }
+      
+    const message = await lti.DynamicRegistration.register(req.query.openid_configuration, req.query.registration_token);
+
+    Log('lib/tool/lti.onDynamicRegistration(): Success');
     res.setHeader('Content-type', 'text/html')
     res.send(message)
   } catch (err) {
-    if (err.message === 'PLATFORM_ALREADY_REGISTERED') return res.status(403).send({ status: 403, error: 'Forbidden', details: { message: 'Platform already registered.' } })
+    Log('lib/tool/lti.onDynamicRegistration(): Error: ' + JSON.stringify(err));
+
+    if (err.message === 'PLATFORM_ALREADY_REGISTERED'){
+      return res.status(403).send({ status: 403, error: 'Forbidden', details: { message: 'Platform already registered.' } })
+    }
     return res.status(500).send({ status: 500, error: 'Internal Server Error', details: { message: err.message } })
   }
 })
 
 lti.onDeepLinking(async (token, req, res) => {
+  Log('lib/tool/lti.onDeepLinking(): Started');
+  Log('lib/tool/lti.onDeepLinking(): Token:' + JSON.stringify(token));
+
   let content = requireText('./base.html', require);
-  let baseurl = 'https://simva.e-ucm.es/scheduler/';
+  let baseurl = config.external_url + '/scheduler/';
   let toreplace = '';
 
   let users = await UsersController.getUsers(
@@ -173,10 +211,10 @@ lti.onDeepLinking(async (token, req, res) => {
   );
 
   if(users.length > 0){
-    console.log('user exists');
+    Log('lib/tool/lti.onDeepLinking(): user exists');
     user = users[0];
   }else{
-    console.log('new user');
+    Log('lib/tool/lti.onDeepLinking(): new user');
     let username = token.user + '_' + token.platformId;
     let email = null;
 
@@ -221,13 +259,13 @@ lti.onDeepLinking(async (token, req, res) => {
         }
       }];
 
-      console.log(item);
-      console.log(token);
+      Log('lib/tool/lti.onDeepLinking(): Item: ' + JSON.stringify(item));
 
       try{
+        Log('lib/tool/lti.onDeepLinking(): Successfully registered');
         let message = await lti.DeepLinking.createDeepLinkingMessage(token, item, { message: 'Successfully registered resource!' });
       }catch(e){
-        console.log(e);
+        Log('lib/tool/lti.onDeepLinking(): Error: ' + JSON.stringify(e));
       }
 
       toreplace += '<form id="ltijs_submit" class="submitable" action="' + token.platformContext.deepLinkingSettings.deep_link_return_url + '" method="post">'
@@ -246,13 +284,12 @@ lti.onDeepLinking(async (token, req, res) => {
 });
 
 const setup = async () => {
-  console.log('LTIJS: started');
+  Log('lib/tool/lti.setup(): started');
   try{
     await lti.deploy({ serverless: true });
-    console.log("LTIJS: deployed");
+    Log('lib/tool/lti.setup(): Success! Deployed');
   }catch(e){
-    console.log('LTIJS: error deploying the server');
-    console.log(e);
+    Log('lib/tool/lti.setup(): error deploying the server');
   }
 }
 
@@ -260,5 +297,6 @@ module.exports = {
   provider: lti,
   setup: setup
 };
+
 
 // #################################################################

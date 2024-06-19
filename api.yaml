@@ -24,6 +24,8 @@ tags:
     description: Operations available to teachers
   - name: students
     description: Operations available to students
+  - name: noroles
+    description: Operations available to users with no role
 paths:
   /users:
     get:
@@ -43,27 +45,9 @@ paths:
                 items: 
                   $ref: '#/components/schemas/user'
       parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for result filtering
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
     post:
       summary: adds a user.
       operationId: addUser
@@ -82,6 +66,29 @@ paths:
             schema:
               $ref: '#/components/schemas/user'
         required: true
+  /users/{username}:
+    patch:
+      summary: Modifies the logged user, for exemple it's role.
+      tags:
+        - admins
+        - noroles
+      operationId: patchUser
+      description: |
+        Modifies the logged user, for exemple it new role to be added to the user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userBody'
+      parameters:
+        - $ref: '#/components/parameters/username'
+      responses:
+        '200':
+          description: User updated
+          schema:
+              $ref: '#/components/schemas/user'
+        '400':
+          description: 'invalid input, object invalid'
   /users/login:
     post:
       summary: logs in the user obtaining an auth token
@@ -138,6 +145,26 @@ paths:
             schema:
               $ref: '#/components/schemas/link_accounts'
         required: true
+  /users/events:
+    post:
+      summary: Receives the events of the SSO to sync the users
+      operationId: eventUser
+      description: |
+        Receives the SSO events and updates the users, both creating
+        the users and updating their roles and permissions 
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/events'
+        required: true
   /groups:
     get:
       tags:
@@ -158,27 +185,9 @@ paths:
                 items: 
                   $ref: '#/components/schemas/group'
       parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for result filtering
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
     post:
       tags:
         - teachers
@@ -225,13 +234,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
+        - $ref: '#/components/parameters/groupId'
     put:
       tags:
         - teachers
@@ -246,13 +249,7 @@ paths:
         '400':
           description: 'invalid input'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
+        - $ref: '#/components/parameters/groupId'
       requestBody:
         content:
           application/json:
@@ -281,13 +278,7 @@ paths:
         '404':
           description: 'Group not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
+        - $ref: '#/components/parameters/groupId'
   /groups/{id}/participants:
     get:
       tags:
@@ -310,43 +301,7 @@ paths:
         '404':
           description: 'Group not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The group ID
-  /groups/{id}/printable:
-    get:
-      tags:
-        - teachers
-      summary: gets the printable PDF version of the group
-      operationId: getGroupPrintable
-      description: |
-        Usefull for assistance in the classroom, the printable
-        version of the class allows the teacher to cut and
-        give the codes to the students easily to anonymize them.
-      responses:
-        '200':
-          description: printable version in PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-        '400':
-          description: 'ID is not a valid ObjectId'
-        '404':
-          description: 'Group not found'
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The class ID
+        - $ref: '#/components/parameters/groupId'
   /studies:
     get:
       tags:
@@ -367,27 +322,9 @@ paths:
                 items: 
                   $ref: '#/components/schemas/study'
       parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for result filtering
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
     post:
       tags:
         - teachers
@@ -434,13 +371,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
     put:
       tags:
         - teachers
@@ -457,13 +388,7 @@ paths:
         '404':
           description: 'Requested study does not exist'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
       requestBody:
         content:
           application/json:
@@ -485,13 +410,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
   /studies/{id}/schedule:
     get:
       tags:
@@ -523,13 +442,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
   /studies/{id}/groups:
     get:
       tags:
@@ -552,13 +465,7 @@ paths:
         '404':
           description: 'Study not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
   /studies/{id}/tests:
     get:
       tags:
@@ -581,13 +488,7 @@ paths:
         '404':
           description: 'Study not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
     post:
       tags:
         - teachers
@@ -605,13 +506,7 @@ paths:
         '400':
           description: 'invalid input, object invalid'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
       requestBody:
         content:
           application/json:
@@ -640,13 +535,7 @@ paths:
         '404':
           description: 'study not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
   /studies/{studyid}/tests/{testid}:
     get:
       tags:
@@ -667,20 +556,8 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: studyid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
-        - in: path
-          name: testid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/testId'
     put:
       tags:
         - teachers
@@ -697,20 +574,8 @@ paths:
         '404':
           description: 'Requested study does not exist'
       parameters:
-        - in: path
-          name: studyid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
-        - in: path
-          name: testid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/testId'
       requestBody:
         content:
           application/json:
@@ -732,20 +597,8 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: studyid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
-        - in: path
-          name: testid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/testId'
   /studies/{studyid}/tests/{testid}/activities:
     get:
       tags:
@@ -764,20 +617,8 @@ paths:
                 items: 
                   $ref: '#/components/schemas/activity'
       parameters:
-        - in: path
-          name: studyid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
-        - in: path
-          name: testid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/testId'
     post:
       tags:
         - teachers
@@ -797,20 +638,8 @@ paths:
         '409':
           description: an existing item already exists
       parameters:
-        - in: path
-          name: studyid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702as"
-          description: The Study ID
-        - in: path
-          name: testid
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702at"
-          description: The test ID
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/testId'
       requestBody:
         required: true
         content:
@@ -839,13 +668,7 @@ paths:
         '404':
           description: 'Study not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
     put:
       tags:
         - teachers
@@ -859,13 +682,7 @@ paths:
         '400':
           description: 'invalid input, object invalid'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
       requestBody:
         content:
           application/json:
@@ -891,27 +708,9 @@ paths:
                 items: 
                   $ref: '#/components/schemas/activity'
       parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for result filtering
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
     post:
       tags:
         - teachers
@@ -958,13 +757,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
+        - $ref: '#/components/parameters/testId'
     put:
       tags:
         - teachers
@@ -981,13 +774,7 @@ paths:
         '404':
           description: 'Requested study does not exist'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The study ID
+        - $ref: '#/components/parameters/studyId'
       requestBody:
         content:
           application/json:
@@ -1009,13 +796,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
+        - $ref: '#/components/parameters/testId'
   /activities/{id}/openable:
     get:
       tags:
@@ -1038,13 +819,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
+        - $ref: '#/components/parameters/testId'
   /activities/{id}/open:
     get:
       tags:
@@ -1063,13 +838,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
+        - $ref: '#/components/parameters/testId'
   /activities/{id}/target:
     get:
       tags:
@@ -1088,13 +857,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
+        - $ref: '#/components/parameters/testId'
   /activities/{id}/completion:
     get:
       tags:
@@ -1112,21 +875,8 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
-        - in: query
-          name: users
-          description: |
-            the list of users comma separated or none for all
-            (if logged in student , user is not needed)
-          schema:
-            type: string
-            format: 'user1,user2,user3'
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
     post:
       tags:
         - teachers
@@ -1143,21 +893,8 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
-        - in: query
-          name: user
-          description: |
-            the user to get its completion status
-            (if logged in student , user is not needed)
-          schema:
-            type: string
-            format: 'user1'
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
   /activities/{id}/result:
     get:
       tags:
@@ -1175,29 +912,17 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
-        - in: query
-          name: users
-          description: |
-            the list of users comma separated or none for all
-            (if logged in student , user is not needed)
-          schema:
-            type: string
-            format: 'user1,user2,user3'
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
     post:
       tags:
         - teachers
         - students
       summary: sets the result for the activity
-      operationId: setCompletion
+      operationId: setResult
       description: |
-        Set the completion status of the activity for a student
+        Set the result of the activity for a student
       responses:
         '200':
           description: if it is openable or not
@@ -1206,28 +931,15 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
-        - in: query
-          name: user
-          description: |
-            the user to set its result
-            (if logged in student , user is not needed)
-          schema:
-            type: string
-            format: 'user1'
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
   /activities/{id}/hasresult:
     get:
       tags:
         - teachers
         - students
       summary: gets true if has results of the activity
-      operationId: getResult
+      operationId: hasResult
       description: |
         Obtains true or false depending on if the user have results
         or not for the activity.
@@ -1239,21 +951,9 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The activity ID
-        - in: query
-          name: users
-          description: |
-            the list of users comma separated or none for all
-            (if logged in student , user is not needed)
-          schema:
-            type: string
-            format: 'user1,user2,user3'
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
   /activities/{id}/test:
     post:
       tags:
@@ -1271,28 +971,9 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The test ID
-        - in: query
-          name: time
-          description: |
-            milliseconds to return
-          schema:
-            type: integer
-            format: '2000'
-        - in: query
-          name: user
-          description: |
-            the user to set its result
-            (if logged in student , user is not needed)
-          schema:
-            type: string
-            format: 'user1'
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/time'
+        - $ref: '#/components/parameters/user'
   /activitytypes:
     get:
       tags:
@@ -1378,18 +1059,8 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: query
-          name: lti_login_hint
-          description: simva signed JWT token with LTI-login data
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: lti_message_hint
-          description: simva signed JWT token with LTI-related data
-          required: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/lti_login_hint'
+        - $ref: '#/components/parameters/lti_message_hint'
     post:
       tags:
         - admins
@@ -1410,18 +1081,8 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: query
-          name: lti_login_hint
-          description: simva signed JWT token with LTI-login data
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: lti_message_hint
-          description: simva signed JWT token with LTI-related data
-          required: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/lti_login_hint'
+        - $ref: '#/components/parameters/lti_message_hint'
   /lti/context/{id}/lineitems/:
     get:
       tags:
@@ -1440,13 +1101,7 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The context id
+        - $ref: '#/components/parameters/contextId'
   /lti/context/{id}/lineitems/{lineitem}/:
     get:
       tags:
@@ -1465,20 +1120,8 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The context id
-        - in: path
-          name: lineitem
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The id of the line item
+        - $ref: '#/components/parameters/contextId'
+        - $ref: '#/components/parameters/lineItem'
     put:
       tags:
         - admins
@@ -1496,20 +1139,8 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The context id
-        - in: path
-          name: lineitem
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The id of the line item
+        - $ref: '#/components/parameters/contextId'
+        - $ref: '#/components/parameters/lineItem'
   /lti/context/{id}/lineitems/{lineitem}/results:
     get:
       tags:
@@ -1528,20 +1159,8 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The context id
-        - in: path
-          name: lineitem
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The id of the line item
+        - $ref: '#/components/parameters/contextId'
+        - $ref: '#/components/parameters/lineItem'
   /lti/context/{id}/lineitems/{lineitem}/score:
     post:
       tags:
@@ -1560,20 +1179,8 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The context id
-        - in: path
-          name: lineitem
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The id of the line item
+        - $ref: '#/components/parameters/contextId'
+        - $ref: '#/components/parameters/lineItem'
   /lti/context/{id}/memberships:
     get:
       tags:
@@ -1593,13 +1200,7 @@ paths:
               schema:
                 type: object
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The context id
+        - $ref: '#/components/parameters/contextId'
   /lti/tools:
     get:
       tags:
@@ -1618,27 +1219,9 @@ paths:
                 items: 
                   $ref: '#/components/schemas/lti_tool'
       parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for result filtering
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
     post:
       tags:
         - teachers
@@ -1683,13 +1266,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702b2"
-          description: The lti_tool ID
+        - $ref: '#/components/parameters/ltiToolId'
     put:
       tags:
         - teachers
@@ -1704,13 +1281,7 @@ paths:
         '400':
           description: 'invalid input'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702b2"
-          description: The lti tool ID
+        - $ref: '#/components/parameters/ltiToolId'
       requestBody:
         content:
           application/json:
@@ -1732,13 +1303,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The LTI tool ID
+        - $ref: '#/components/parameters/ltiToolId'
   /lti/platforms:
     get:
       tags:
@@ -1757,27 +1322,9 @@ paths:
                 items: 
                   $ref: '#/components/schemas/lti_platform'
       parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for result filtering
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
     post:
       tags:
         - teachers
@@ -1822,13 +1369,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702b2"
-          description: The lti_tool ID
+        - $ref: '#/components/parameters/ltiToolId'
     put:
       tags:
         - teachers
@@ -1843,13 +1384,7 @@ paths:
         '400':
           description: 'invalid input'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702b2"
-          description: The lti platform ID
+        - $ref: '#/components/parameters/ltiPlatformId'
       requestBody:
         content:
           application/json:
@@ -1871,13 +1406,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            example: "5d07a0767c1405004bc702af"
-          description: The LTI platform ID
+        - $ref: '#/components/parameters/ltiPlatformId'
   /uploads:
     post:
       tags:
@@ -1918,6 +1447,217 @@ components:
           scopes:
             read: Grants read access
             write: Grants write access
+  parameters:
+    groupId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702af"
+      description: The group ID
+    username:
+      name: username
+      in: path
+      required: true
+      schema:
+        type: string
+        example: "peter"
+      format: username
+      description: The username of a specific user
+    studyId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702af"
+      description: The study ID
+    studyStudyId:
+      in: path
+      name: studyid
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702af"
+      description: The study ID
+    testId:
+      in: path
+      name: testid
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702at"
+      description: The test ID
+    searchString:
+      in: query
+      name: searchString
+      description: pass an optional search string for result filtering
+      required: false
+      schema:
+        type: string
+    skip:
+      in: query
+      name: skip
+      description: number of records to skip for pagination
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+    limit:
+      in: query
+      name: limit
+      description: maximum number of records to return
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 50
+    user:
+      in: query
+      name: user
+      description: |
+        the user to get its completion status
+        (if logged in student , user is not needed)
+      schema:
+        type: string
+        format: 'user1'
+    users:
+      in: query
+      name: users
+      description: |
+        the list of users comma separated or none for all
+        (if logged in student , user is not needed)
+      schema:
+        type: string
+        format: 'user1,user2,user3'
+    activityId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702af"
+      description: The activity ID
+    type:
+      in: query
+      name: type
+      description: |
+        If the activity has multiple types of results, the
+        type of result can be specified here
+      schema:
+        type: string
+        format: 'backup'
+    time:
+      in: query
+      name: time
+      description: |
+        milliseconds to return
+      schema:
+        type: integer
+        format: '2000'
+    lti_login_hint:
+      in: query
+      name: lti_login_hint
+      description: simva signed JWT token with LTI-login data
+      required: false
+      schema:
+        type: string
+    lti_message_hint:
+      in: query
+      name: lti_message_hint
+      description: simva signed JWT token with LTI-related data
+      required: false
+      schema:
+        type: string
+    contextId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702af"
+      description: The context id
+    lineItem:
+      in: path
+      name: lineitem
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702af"
+      description: The id of the line item
+    ltiToolId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702b2"
+      description: The lti_tool ID
+    ltiPlatformId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702b2"
+      description: The lti platform ID
+  properties:
+    username:
+      type: string
+      example: "username_unique"
+    email:
+      type: string
+      example: "email"
+    password:
+      type: string
+      example: "Pass12345"
+    role:
+      type: string
+      description: |
+        The role for the user to have. Some
+        examples include teacher, student 
+        teaching-assistant or researcher
+      enum:
+       - "norole"
+       - "student"
+       - "teacher"
+       - "teaching-assistant"
+       - "researcher"
+       - "admin"
+    external_entity:
+      type: array
+      items:
+        type: object
+        properties:
+          domain:
+            type: string
+            example: keycloak
+          id:
+            type: string
+            example: whateveruuidusedthere_12321
+    id:
+      type: string
+      example: ObjectId("5d07a0767c1405004bc702af")
+    name:
+      type: string
+      example: "Test group for School"
+    owners:
+      type: array
+      items:
+        type: string
+        example: ObjectId("5d07a0767c1405004bc702af")
+    participants:
+      type: array
+      items:
+        type: string
+        example: ObjectId("5d07a0767c1405004bc702af")
+    link:
+      type: object
+    created:
+      type: string
+      format: date-time
+      example: "2017-07-21T17:32:28Z"
   schemas:
     user:
       type: object
@@ -1938,7 +1678,53 @@ components:
           example: "Pass12345"
         role:
           type: string
-          example: "teacher"
+          description: |
+            The role for the user to have. Some
+            examples include teacher, student 
+            teaching-assistant or researcher
+          enum:
+           - "norole"
+           - "student"
+           - "teacher"
+           - "teaching-assistant"
+           - "researcher"
+           - "admin"
+        external_entity:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+                example: keycloak
+              id:
+                type: string
+                example: whateveruuidusedthere_12321
+    userBody:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "username_unique"
+        email:
+          type: string
+          example: "email"
+        password:
+          type: string
+          example: "Pass12345"
+        role:
+          type: string
+          description: |
+            The role for the user to have. Some
+            examples include teacher, student 
+            teaching-assistant or researcher
+          enum:
+           - "norole"
+           - "student"
+           - "teacher"
+           - "teaching-assistant"
+           - "researcher"
+           - "admin"
         external_entity:
           type: array
           items:
@@ -2217,6 +2003,18 @@ components:
         file:
           type: string
           format: binary
+      x-swagger-mongoose:
+        exclude-schema: true
+    events:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: eventname
+          description: |
+            The event name.
       x-swagger-mongoose:
         exclude-schema: true
     add_group_body:

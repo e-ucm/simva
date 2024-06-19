@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -319,8 +320,20 @@ class RageAnalyticsActivity extends Activity {
 		return { message: 'Traces Added' };
 	}
 
-	async getResults(participants){
+	async getResults(participants, type){
 		return await this.getAnalyticsResults(participants, this.extra_data);
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants, type);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
+		}
 	}
 
 	async getAnalyticsResults(participants, analytics){
@@ -354,7 +367,7 @@ class RageAnalyticsActivity extends Activity {
 
 			return results;
 		}catch(e){
-			console.log(e);
+			logger.error(e);
 			throw { message: 'Error getting results', error: e };
 		}
 	}

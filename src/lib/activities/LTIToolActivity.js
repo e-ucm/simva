@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 
 let config = require('../config');
@@ -40,7 +41,7 @@ var Activity = require('./activity');
 	)
 
 	lti.onConnect((token, req, res) => {
-	  console.log(token)
+	  logger.debug(token)
 	  return res.send('It\'s alive!')
 	})
 
@@ -52,10 +53,10 @@ var Activity = require('./activity');
 
 
 let lticonfig = {
-	client_id: 'lti-platform',
-	client_password: 'e30c49da-5d2b-401e-919c-0d483161dac2',
-	claims_url: "https://simva.e-ucm.es/activities/",
-	auth_url: "https://4b8ab6ba9bba.ngrok.io/auth/realms/master/protocol/openid-connect/token",
+	client_id: config.LTI.platform.client_id,
+	client_password: config.LTI.platform.key,
+	claims_url: config.external_url + "/activities/",
+	auth_url: config.sso.realmUrl + "/protocol/openid-connect/token",
 }
 
 class LTIToolActivity extends Activity {
@@ -144,8 +145,12 @@ class LTIToolActivity extends Activity {
 		return await super.setResult(participant, result);
 	}
 
-	async getResults(participants){
-		return await super.getResults(participants);
+	async getResults(participants, type){
+		return await super.getResults(participants, type);
+	}
+
+	async hasResults(participants, type){
+		return await super.hasResults(participants, type);
 	}
 
 	async setCompletion(participant, status){
@@ -210,7 +215,7 @@ class LTIToolActivity extends Activity {
 			}
 
 			context = await LtiController.addLtiContext({
-				org: 'https://simva.e-ucm.es/',
+				org: config.external_url + '/',
 				type: [ "http://purl.imsglobal.org/vocab/lis/v2/course#CourseOffering" ],
 				label: label,
 				title: title,

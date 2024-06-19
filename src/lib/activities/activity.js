@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 let fs = require('fs');
@@ -141,21 +142,23 @@ class Activity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
 		}
-		
+		logger.debug("Before adding participants : " + JSON.stringify(this));
+
 		for(let i = 0; i < participants.length; i++){
 			if(!this.extra_data.participants[participants[i]]){
 				this.extra_data.participants[participants[i]] = { completion: false };
 			}
 		}
-
+		logger.debug("After adding participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 
 	async removeParticipants(participants){
+		logger.debug("Before delete participants : " + JSON.stringify(this));
 		for (var i = 0; i < participants.length; i++) {
 			delete this.extra_data.participants[participants[i]];
 		}
-
+		logger.debug("Before delete participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 
@@ -181,8 +184,8 @@ class Activity {
 		}
 
 		return toret;
-	}
 
+	}
 	async saveToFile(filename, content){
 		return new Promise((resolve, reject) => {
 			let activity = this;
@@ -202,7 +205,7 @@ class Activity {
 				let checkSubfolder = function(){
 					fs.stat(config.storage.path + activity._id, function(error, stats){
 						if(error){
-							console.log('Folder does not exist');
+							logger.info('Folder does not exist');
 							fs.mkdir(config.storage.path + activity._id, function(error){
 								if(error){
 									reject({ message: 'Unable to create the subdirectory.', error: error })
@@ -230,7 +233,7 @@ class Activity {
 					}
 				})
 			}catch(e){
-				console.log(e);
+				logger.error(e);
 				reject({ message: 'error saving to file', error: e });
 			}
 		});
@@ -251,13 +254,37 @@ class Activity {
 					}
 				});
 			}catch(e){
-				console.log(e);
+				logger.error(e);
 				reject({ message: 'Error reading file', error: e });
 			}
 		});
 	}
 
-	async getResults(participants){
+	async fileExists(filename){
+		return new Promise((resolve, reject) => {
+			let activity = this;
+
+			try{
+				let fullname = config.storage.path + activity._id + '/' + filename;
+
+				fs.stat(fullname, 'utf8', function(error, result) {
+					if (err == null) {
+						resolve(true);
+					} else if (error.code === 'ENOENT') {
+						resolve(false);
+					} else {
+						logger.error(error);
+						reject({message: 'Unexpected error', error: error});
+					}
+				});
+			}catch(e){
+				logger.error(e);
+				reject({ message: 'Error reading file', error: e });
+			}
+		});
+	}
+
+	async getResults(participants, type){
 		if(!participants || participants.length == 0){
 			participants = Object.keys(this.extra_data.participants);
 		}
@@ -275,6 +302,20 @@ class Activity {
 			for(let i = 0; i < participants.length; i++){
 				results[participants[i]] = null;
 			}
+		}
+
+		return results;
+	}
+
+	async hasResults(participants, type){
+		let results = await this.getResults(participants);
+
+		if(participants.length === 0){
+			participants = Object.keys(results);
+		}
+		
+		for (var i = participants.length - 1; i >= 0; i--) {
+			results[participants[i]] = (results[participants[i]] !== null);
 		}
 
 		return results;

@@ -1,6 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
-
+const logger = require('../../lib/logger');
 var StudiesController = require('../../lib/studiescontroller');
 var UsersController = require('../../lib/userscontroller');
 var GroupsController = require('../../lib/groupscontroller');
@@ -76,7 +76,7 @@ module.exports.addStudy = async (options) => {
 
     var study = await StudiesController.addStudy(rawstudy);
   }catch(e){
-    console.log(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -256,7 +256,7 @@ module.exports.getSchedule = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -353,7 +353,7 @@ module.exports.addTestToStudy = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -425,7 +425,7 @@ module.exports.updateTest = async (options) => {
         result = { status: 200, data: { message: 'Test updated.'} };
       }
     }catch(e){
-      console.log(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -500,22 +500,33 @@ module.exports.addActivityToTest = async (options) => {
         return { status: 400, data: { message: 'You have not included yourself as owner of the activity' } };
       }
     }
-
+    logger.debug("Adding activity :" + JSON.stringify(test));
     let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(options.body));
-
+    let allocator = await AllocatorsController.loadAllocator(study.allocator);
+    let participants = await allocator.getAllocatedForTest(options.testid);
+    
+    logger.debug("PARTICIPANTS: " + participants);
+    if(study.tests.indexOf(options.testid) == 0) {
+      if(allocator.type == "default") {
+        let allgroups = study.groups;
+        var loadedgroups = await GroupsController.getGroups({"_id" : {"$in" : allgroups}});
+        let allUsers = loadedgroups.map(g => {return g.participants; }).flat();
+        let pnotallocated = allUsers
+        if(allocator.extra_data && allocator.extra_data.allocations){ 
+          pnotallocated = allUsers.filter(x => !Object.keys(allocator.extra_data.allocations).includes(x));
+        }
+        participants=participants.concat(pnotallocated);
+      } 
+      logger.debug("PARTICIPANTS UPDATED: " + participants);
+    }
+    await activity.addParticipants(participants);
     test.activities.push(activity.id);
     await TestsController.updateTest(options.testid, test);
-
-    let participants = await StudiesController.getParticipants(study);
-    await activity.addParticipants(participants);
-
     return {status: 200, data: activity.toObject() };
   }catch(e){
-    console.log(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
-
-  return { status: 200, data: group };
 };
 
 /**
@@ -609,11 +620,13 @@ module.exports.setStudyAllocator = async (options) => {
             if(study.allocator !== allocator.id){
               study.allocator = allocator.id;
               if(await study.save()){
+                await StudiesController.updateStudy(study._id, study);
                 result = { status: 200, data: {message: 'Allocator updated'} };
               }else{
                 result = { status: 500, data: {message: 'Error updating the study'} };
               }
             }else{
+              await StudiesController.updateStudy(study._id, study);
               result = { status: 200, data: {message: 'Allocator updated'} };
             }
           }else{
@@ -655,7 +668,7 @@ module.exports.getStudyParticipants = async (options) => {
         }
       }
     }catch(e){
-      console.log(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -675,7 +688,7 @@ module.exports.getAllocatorTypes = async (options) => {
   try{
     result.data = await AllocatorsController.getAllocatorTypes(options.user.data.username);
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result = { status: 500, data: e };
   }
   
