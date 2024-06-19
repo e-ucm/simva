@@ -37,13 +37,7 @@ paths:
         Obtains the list of groups owned by current user.
       responses:
         '200':
-          description: the list of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/user'
+          $ref: '#/components/responses/userList'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -61,11 +55,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/user'
-        required: true
+        $ref: '#/components/requestBodies/user'
   /users/{username}:
     patch:
       summary: Modifies the logged user, for exemple it's role.
@@ -76,10 +66,7 @@ paths:
       description: |
         Modifies the logged user, for exemple it new role to be added to the user
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/userBody'
+        $ref: '#/components/requestBodies/userBody'
       parameters:
         - $ref: '#/components/parameters/username'
       responses:
@@ -101,11 +88,7 @@ paths:
         '400':
           description: 'invalid input'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/login_body'
-        required: true
+        $ref: '#/components/requestBodies/login_body'
   /users/me:
     get:
       tags:
@@ -118,11 +101,7 @@ paths:
         Based on the current auth header obtains the user
       responses:
         '200':
-          description: The user
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/user'
+          $ref: '#/components/responses/user'
         '400':
           description: 'invalid input'
   /users/link:
@@ -140,11 +119,7 @@ paths:
         '401':
           description: 'One or both of the JWT are not valid'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/link_accounts'
-        required: true
+        $ref: '#/components/requestBodies/link_accounts'
   /users/events:
     post:
       summary: Receives the events of the SSO to sync the users
@@ -160,11 +135,7 @@ paths:
         '401':
           description: 'One or both of the JWT are not valid'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/events'
-        required: true
+        $ref: '#/components/requestBodies/events'
   /groups:
     get:
       tags:
@@ -177,13 +148,7 @@ paths:
         Obtains the list of groups owned by current user.
       responses:
         '200':
-          description: the list of groups for this user
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/group'
+          $ref: '#/components/responses/groupList'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -207,11 +172,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/add_group_body'
-        required: true
+        $ref: '#/components/requestBodies/add_group_body'
   /groups/{id}:
     get:
       tags:
@@ -251,11 +212,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/groupId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/group'
-        description: Group to be modified
+        $ref: '#/components/requestBodies/group'
   /groups/{id}/studies:
     get:
       tags:
@@ -344,12 +301,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/add_study_body'
-        description: Study to be created
+        $ref: '#/components/requestBodies/add_study_body'
   /studies/{id}:
     get:
       tags:
@@ -390,11 +342,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/studyId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/study'
-        description: study to be modified
+        $ref: '#/components/requestBodies/study'
     delete:
       tags:
         - teachers
@@ -508,11 +456,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/studyId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/test'
-        required: true
+        $ref: '#/components/requestBodies/test'
   /studies/{id}/participants:
     get:
       tags:
@@ -577,11 +521,7 @@ paths:
         - $ref: '#/components/parameters/studyStudyId'
         - $ref: '#/components/parameters/testId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/test'
-        description: test to be modified
+        $ref: '#/components/requestBodies/test'
     delete:
       tags:
         - teachers
@@ -641,11 +581,7 @@ paths:
         - $ref: '#/components/parameters/studyStudyId'
         - $ref: '#/components/parameters/testId'
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/activity'
+        $ref: '#/components/requestBodies/activity'
   /studies/{id}/allocator:
     get:
       tags:
@@ -684,11 +620,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/studyId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/allocator'
-        description: study to be modified
+        $ref: '#/components/requestBodies/allocator'
   /activities:
     get:
       tags:
@@ -730,12 +662,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/activity'
-        description: Activity to be created
+        $ref: '#/components/requestBodies/activity'
   /activities/{id}:
     get:
       tags:
@@ -776,11 +703,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/studyId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/activity'
-        description: activity to be modified
+        $ref: '#/components/requestBodies/activity'
     delete:
       tags:
         - teachers
@@ -1241,11 +1164,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/lti_tool'
-        required: true
+        $ref: '#/components/requestBodies/lti_tool'
   /lti/tools/{id}:
     get:
       tags:
@@ -1283,11 +1202,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ltiToolId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/lti_tool'
-        description: LTI tool to be modified
+        $ref: '#/components/requestBodies/lti_tool'
     delete:
       tags:
         - teachers
@@ -1344,11 +1259,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/lti_platform'
-        required: true
+        $ref: '#/components/requestBodies/lti_platform'
   /lti/platforms/{id}:
     get:
       tags:
@@ -1386,11 +1297,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ltiPlatformId'
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/lti_platform'
-        description: LTI platform to be modified
+        $ref: '#/components/requestBodies/lti_platform'
     delete:
       tags:
         - teachers
@@ -1427,11 +1334,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/lti_tool'
-        required: true
+        $ref: '#/components/requestBodies/lti_tool_form-data'
 security:
   - OAuth2:
       - read
@@ -2139,3 +2042,115 @@ components:
 #        }'
 #      x-swagger-mongoose:
 #        exclude-schema: true
+  requestBodies:
+    user:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/user'
+      required: true
+    userBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/userBody'
+    login_body:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login_body'
+        required: true
+    link_accounts:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/link_accounts'
+        required: true
+    events:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/events'
+        required: true
+    add_group_body:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/add_group_body'
+    group:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/group'
+        description: Group to be modified
+        required: true
+    add_study_body:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/add_study_body'
+        description: Study to be created
+    study:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/study'
+        description: study to be modified
+    test:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/test'
+        required: true
+    activity:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activity'
+    allocator:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/allocator'
+    lti_tool:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        required: true
+    lti_platform:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lti_platform'
+        required: true
+    lti_tool_form-data:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/lti_tool'
+        required: true
+  responses:
+    userList:
+      description: the list of users
+      content:
+        application/json:
+          schema:
+            type: array
+            items: 
+              $ref: '#/components/schemas/user'
+    user:
+      description: The user
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/user'
+    groupList:
+      description: the list of groups for this user
+      content:
+        application/json:
+          schema:
+            type: array
+            items: 
+              $ref: '#/components/schemas/group'
