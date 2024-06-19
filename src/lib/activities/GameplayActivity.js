@@ -203,7 +203,7 @@ class GameplayActivity extends Activity {
 				throw { message: 'Unknown case setting the result' };
 			}
 		}catch(e){
-			logger.info(e);
+			logger.error(e);
 			throw { message: 'Error while setting the result' };
 		}
 
@@ -468,7 +468,7 @@ class GameplayActivity extends Activity {
 				backups[participants[i]] = await super.readFromFile(participants[i]);
 			}catch(e){
 				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
-					logger.info(e);
+					logger.error(e);
 				}
 				backups[participants[i]] = null;
 			}
@@ -489,7 +489,7 @@ class GameplayActivity extends Activity {
 				backups[participants[i]] = await super.fileExists(participants[i]);
 			}catch(e){
 				if(!e.error || !e.error.code || e.error.code != 'ENOENT'){
-					logger.info(e);
+					logger.error(e);
 				}
 				backups[participants[i]] = false;
 			}

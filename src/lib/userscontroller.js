@@ -34,7 +34,7 @@ UsersController.addUser = async (params) => {
 	try{
 		params.password = await cryptPassword(params.password);
 	}catch(e){
-		logger.info(e);
+		logger.error(e);
 	}
 	
 	params.username = params.username.toLowerCase();
@@ -65,7 +65,7 @@ UsersController.addUserToKeycloak = async (params) => {
 			enabled: true
 		});
 	}catch(e){
-		logger.info(e);
+		logger.error(e);
 		throw { message: 'Failed creating the user into keycloak' };
 	}
 
@@ -143,7 +143,7 @@ UsersController.patchUser = async (username, role, keycloak_id) => {
 							})
 							.catch((error) => {
 								logger.info('Update User to database > NOK ERROR');
-								logger.info(error);
+								logger.error(error);
 								reject(error);
 							});
 					})
@@ -277,7 +277,7 @@ var cryptPassword = async (password) => {
 				});
 			});
 		}catch(e){
-			logger.info(e);
+			logger.error(e);
 		}
 	});
 };
@@ -363,7 +363,7 @@ UsersController.validateJWT = async (token) => {
 									ValidateToken();
 								})
 								.catch((error) => {
-									logger.info(error);
+									logger.error(error);
 									reject(error);
 								})
 						})
@@ -406,7 +406,7 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 								resolve(UsersController.simplifyUser(result));
 							})
 							.catch((error) => {
-								logger.info(error);
+								logger.error(error);
 								reject(error);
 							})
 					}else{
@@ -418,20 +418,20 @@ UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
 							resolve(UsersController.simplifyUser(result));
 						})
 						.catch((error) => {
-							logger.info(error);
+							logger.error(error);
 							reject(error);
 						})
 				}
 			})
 			.catch((error) => {
-				logger.info(error);
+				logger.error(error);
 				reject(error);
 			});
 	});
 }
 
 UsersController.simplifyUser = function(user){
-	//logger.debug("simplifyUser - User : " + JSON.stringify(user));
+	logger.debug("simplifyUser - User : " + JSON.stringify(user));
 	return { data: {
 		_id: user._id,
 		username: user.username,
@@ -441,7 +441,7 @@ UsersController.simplifyUser = function(user){
 }
 
 UsersController.createUserFromJWT = async function(decoded){
-	//logger.debug("createUserFromJWT : " + JSON.stringify(decoded));
+	logger.debug("createUserFromJWT : " + JSON.stringify(decoded));
 	let user = {
 		username: decoded.preferred_username,
 		password: Math.random().toString(36).slice(-8),
@@ -455,7 +455,7 @@ UsersController.createUserFromJWT = async function(decoded){
 }
 
 UsersController.getRoleFromJWT = function(decoded){
-	//logger.debug("getRoleFromJWT : " + JSON.stringify(decoded));
+	logger.debug("getRoleFromJWT : " + JSON.stringify(decoded));
 	let role = 'norole';
 
 	for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {

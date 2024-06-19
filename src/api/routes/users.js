@@ -92,14 +92,14 @@ router.post('/login', async (req, res, next) => {
  */
 router.patch('/:username', Authenticator.auth, async (req, res, next) => {
   logger.info(`Patching user : ${req.params['username']}`);
-  logger.info(req.jwt);
+  logger.debug(req.jwt);
   if(req.jwt && req.jwt.payload.hasOwnProperty('sub')){
     const options = {
       username: req.params['username'],
       role: req.body.role,
       keycloak_id: req.jwt.payload.sub
     };
-    logger.info(options);
+    logger.debug(options);
     try {
       const result = await users.patchUser(options);
       res.status(result.status || 200).send(result.data);

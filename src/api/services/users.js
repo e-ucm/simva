@@ -79,7 +79,7 @@ module.exports.addUser = async (options) => {
         try {
           let keycloakuser = await UsersController.addUserToKeycloak(params);
         }catch(e){
-          logger.info(e);
+          logger.error(e);
           return {status: 500, data: e };
         }
         

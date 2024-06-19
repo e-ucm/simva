@@ -80,34 +80,34 @@ TestsController.removeActivityToTest = async (id, activity) => {
 
 TestsController.addParticipants = async (id, participants) => {
 	var test = await TestsController.getTest(id);
-	logger.info("BEFORE ADD: " + JSON.stringify(test) + " | Participants " + participants);
-	logger.info("TestsController.addParticipants started");
+	logger.debug("BEFORE ADD: " + JSON.stringify(test) + " | Participants " + participants);
+	logger.debug("TestsController.addParticipants started");
 	for (var i = 0; i < test.activities.length; i++) {
 		let activity = await ActivitiesController.loadActivity(test.activities[i]);
-		logger.info("Activity: " + JSON.stringify(activity));
+		logger.debug("Activity: " + JSON.stringify(activity));
 		if(!await activity.addParticipants(participants)){
 			throw { message: 'Error adding participants to activity: ' + test.activities[i] };
 		}
-		logger.info("TestsController.addParticipants finished");
+		logger.debug("TestsController.addParticipants finished");
 	}
 	return test;
 }
 
 TestsController.removeParticipants = async (id, participants) => {
 	var test = await TestsController.getTest(id);
-	logger.info("BEFORE REMOVE: " + JSON.stringify(test) + " | Participants " + participants);
-	logger.info("TestsController.removeParticipants started");
+	logger.debug("BEFORE REMOVE: " + JSON.stringify(test) + " | Participants " + participants);
+	logger.debug("TestsController.removeParticipants started");
 	try{
 		for (var i = 0; i < test.activities.length; i++) {
 			let activity = await ActivitiesController.loadActivity(test.activities[i]);
-			logger.info("Activity: " + JSON.stringify(activity));
+			logger.debug("Activity: " + JSON.stringify(activity));
 			if(!await activity.removeParticipants(participants)){
 				throw { message: 'Error removing participants from activity: ' + test.activities[i] };
 			}
 		}
-		logger.info("TestsController.removeParticipants finished");
+		logger.debug("TestsController.removeParticipants finished");
 	}catch(e){
-		logger.info(e);
+		logger.error(e);
 	}
 	return test;
 }

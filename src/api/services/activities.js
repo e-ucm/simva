@@ -150,7 +150,7 @@ module.exports.deleteActivity = async (options) => {
       result = { status: 404, data: { message: 'Activity not found.' } };
     }
   }catch(e){
-    logger.info(e);
+    logger.debug(e);
     return {status: 500, data: e };
   }
 
@@ -229,7 +229,7 @@ module.exports.getTarget = async (options) => {
 
   }catch(e){
     logger.info('GetTarget exploded:');
-    logger.info(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -272,7 +272,7 @@ module.exports.getCompletion = async (options) => {
 
   }catch(e){
     logger.info('GetCompletion exploded:');
-    logger.info(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -359,7 +359,7 @@ module.exports.getResult = async (options) => {
 
   }catch(e){
     logger.info('GetResult exploded:');
-    logger.info(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -444,7 +444,7 @@ module.exports.hasResult = async (options) => {
 
   }catch(e){
     logger.info('GetResult exploded:');
-    logger.info(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -461,7 +461,7 @@ module.exports.getActivityTypes = async (options) => {
   try{
     result.data = await ActivitiesController.getActivityTypes(options.user.data.username);
   }catch(e){
-    logger.info(e);
+    logger.error(e);
     result = { status: 500, data: e };
   }
   

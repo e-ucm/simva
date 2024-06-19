@@ -121,7 +121,7 @@ class RageMinioActivity extends MinioActivity {
 				}
 			}
 		}catch(e){
-			logger.info(e);
+			logger.error(e);
 			throw { message: 'Error while setting the result' };
 		}
 

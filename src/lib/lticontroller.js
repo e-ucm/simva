@@ -249,19 +249,19 @@ LtiController.addLtiPlatform = async (platform) => {
 		throw { message: 'Error creating the Platform in ltijs', error: err };
 	}
 
-	/*logger.info('loading lib');
+	/*logger.debug('loading lib');
 
 	var LtiPlatform = mongoose.model('lti_platform');
 
 	var created_platform = new LtiPlatform(platform);
 	created_platform.internal_id = internal_id;
 
-	logger.info(created_platform);
+	logger.debug(created_platform);
 
 	try{
 		await created_platform.save();
 	}catch(e){
-		logger.info(e);
+		logger.debug(e);
 		throw { message: 'Error creating the Platform', error: e };
 	}*/
 

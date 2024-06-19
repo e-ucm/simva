@@ -367,7 +367,7 @@ class RageAnalyticsActivity extends Activity {
 
 			return results;
 		}catch(e){
-			logger.info(e);
+			logger.error(e);
 			throw { message: 'Error getting results', error: e };
 		}
 	}

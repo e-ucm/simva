@@ -37,9 +37,9 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
  * needed for the tool to work.
  */
 router.get('/claims', async (req, res, next) => {
-  /*logger.info('claims get');
-  logger.info(req.query);
-  logger.info(req.body);*/
+  logger.debug('claims get');
+  logger.debug(req.query);
+  logger.debug(req.body);
 
   const options = {
     lti_login_hint: req.query['login_hint'],
@@ -64,10 +64,10 @@ router.get('/claims', async (req, res, next) => {
  * needed for the tool to work.
  */
 router.post('/claims', async (req, res, next) => {
-  /*logger.info('claims post');
-  logger.info(req.query);
-  logger.info(req.body);
-  logger.info(req.headers.authorization);*/
+  logger.debug('claims post');
+  logger.debug(req.query);
+  logger.debug(req.body);
+  logger.debug(req.headers.authorization);
   
   const options = {
     lti_login_hint: req.body['login_hint'],
@@ -77,17 +77,17 @@ router.post('/claims', async (req, res, next) => {
   try {
     let result = { status: 200, data: { error: 'No message hint received' } };
 
-    logger.info('#### Claims post:');
+    logger.debug('#### Claims post:');
 
     if(options.lti_message_hint){
       result = await lti.getLtiClaims(options);
     }else{
-      logger.info('## Bad Claims request');
-      logger.info(req.body);
+      logger.debug('## Bad Claims request');
+      logger.debug(req.body);
     }
 
 
-    logger.info(JSON.stringify(result));
+    logger.debug(JSON.stringify(result));
     
     res.status(result.status || 200).send(result.data);
   } catch (err) {
@@ -197,7 +197,7 @@ router.get('/platforms', Authenticator.auth, async (req, res, next) => {
     limit: req.query['limit']
   };
 
-  logger.info(options);
+  logger.debug(options);
 
   try {
     const result = await lti.getLtiPlatforms(options);
