@@ -107,8 +107,8 @@ app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: tr
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.header('Allow', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
 });
 
@@ -134,13 +134,13 @@ app.use((req, res, next) => {
 // catch errors
 app.use((err, req, res, next) => {
   if(err instanceof SchemaValidationError){
-    logger.error(`Bad request (${err.message}) on ${req.method} ${req.url} with payload ${req.body}.`);
+    logger.error(`Bad request (${err.message}) on ${req.method} ${req.url} with payload ${JSON.stringify(req.body)}.`);
     res.status(400).send({ message: err.message });
   }else{
     logger.error(err);
     const status = err.status || 500;
     const msg = err.error || err.message;
-    logger.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${req.body}.`);
+    logger.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${JSON.stringify(req.body)}.`);
     res.status(status).send({ message: msg });
   }
 });

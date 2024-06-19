@@ -122,7 +122,8 @@ UsersController.updateUser = async (id, params) => {
 	return params;
 }
 
-UsersController.setRole = async (username, role, keycloak_id) => {
+UsersController.patchUser = async (username, role, keycloak_id) => {
+	logger.debug(`UsersController.patchUser : Patching user`)
 	return new Promise(async (resolve, reject) => {
 		let users = await UsersController.getUsers({ 'username': username.toLowerCase() });
 		if(users && users.length > 0){
@@ -314,7 +315,7 @@ UsersController.generateJWT = async (user) => {
 }
 
 UsersController.validateJWT = async (token) => {
-	//logger.info("Token : " + token);
+	//logger.debug("Token : " + token);
 	return new Promise((resolve, reject) => {
 		let decoded = jwt.decode(token, { complete: true });
 
@@ -389,7 +390,7 @@ UsersController.validateJWT = async (token) => {
 }
 
 UsersController.CreateOrUpdateKeycloakUser = async function (decoded){
-	//logger.info("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
+	//logger.debug("CreateOrUpdateKeycloakUser - Decoded : " + JSON.stringify(decoded));
 	return new Promise((resolve, reject) => {
 		if(!config.sso.enabled){
 			resolve(decoded);
