@@ -5,7 +5,7 @@ var async = require('async');
 
 var Activity = require('./activity');
 
-var config = require('..//config');
+var config = require('../config');
 
 let timeout = function(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
