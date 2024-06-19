@@ -10,7 +10,7 @@ const filter = new ScalableBloomFilter()
 
 var Activity = require('./activity');
 
-var config = require('..//config');
+var config = require('../config');
 
 var kafka = require('kafka-node'),
     HighLevelProducer = kafka.HighLevelProducer,
@@ -135,7 +135,21 @@ class MinioActivity extends Activity {
 			throw { message: 'Error while setting the result' };
 		}
 
+
 		return toret;
+	}
+
+	generateStatementId(trace) {
+		var traceid
+		if(trace.id == null) {
+			traceid = uuidv4();
+		} else {
+			traceid = trace.id;
+		}
+		while(filter.has(traceid)) {
+			traceid = uuidv4();
+		}
+		return traceid;
 	}
 
 	async sendTracesToKafka(traces, activityId){
@@ -144,16 +158,7 @@ class MinioActivity extends Activity {
 
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
-					var traceid
-					if(trace.id == null) {
-						traceid = uuidv4();
-					} else {
-						traceid = trace.id;
-					}
-					while(filter.has(traceid)) {
-						traceid = uuidv4();
-					}
-					trace.id=traceid;
+					var traceid = this.generateId(trace);
 					filter.add(traceid);
 					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
