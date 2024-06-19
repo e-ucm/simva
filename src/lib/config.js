@@ -113,6 +113,7 @@ config.LTI.platform.mongo.user = process.env.LTI_PLATFORM_DB_USER || 'root'
 config.LTI.platform.mongo.password = process.env.LTI_PLATFORM_DB_PASSWORD || ''
 config.LTI.platform.claims_url = '/lti/claims';
 config.LTI.loggerActive = process.env.LTI_LOGGER_ACTIVE || true;
+config.LTI.debug= process.env.LTI_DEBUG || false;
 
 config.storage = {}
 config.storage.path = process.env.SIMVA_STORAGE_PATH || 'storage/'

@@ -286,7 +286,7 @@ lti.onDeepLinking(async (token, req, res) => {
 const setup = async () => {
   Log('lib/tool/lti.setup(): started');
   try{
-    await lti.deploy({ serverless: true, debug: true });
+    await lti.deploy({ serverless: true, debug: config.LTI.debug });
     Log('lib/tool/lti.setup(): Success! Deployed');
   }catch(e){
     Log('lib/tool/lti.setup(): error deploying the server');
