@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const fs = require('fs');
 const yaml = require('yaml');
 const validate = require("express-body-schema");
@@ -31,7 +32,7 @@ validator.addValidations = function(base, router){
 					reducedPath = reducedPath.replace('}', '');
 					reducedPath = reducedPath === '' ? '/' : reducedPath;
 
-					console.log('Added validation to: ' + method + ' - ' + base + reducedPath);
+					logger.info('Added validation to: ' + method + ' - ' + base + reducedPath);
 
 					router[method](reducedPath, validate.schema(schema));
 				}

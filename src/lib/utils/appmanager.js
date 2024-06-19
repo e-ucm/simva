@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const express = require('express');
 
 AppManager = {};

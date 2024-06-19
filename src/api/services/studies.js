@@ -1,6 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
-
+const logger = require('../../lib/logger');
 var StudiesController = require('../../lib/studiescontroller');
 var UsersController = require('../../lib/userscontroller');
 var GroupsController = require('../../lib/groupscontroller');
@@ -76,7 +76,7 @@ module.exports.addStudy = async (options) => {
 
     var study = await StudiesController.addStudy(rawstudy);
   }catch(e){
-    console.log(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -256,7 +256,7 @@ module.exports.getSchedule = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -353,7 +353,7 @@ module.exports.addTestToStudy = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -425,7 +425,7 @@ module.exports.updateTest = async (options) => {
         result = { status: 200, data: { message: 'Test updated.'} };
       }
     }catch(e){
-      console.log(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -500,12 +500,12 @@ module.exports.addActivityToTest = async (options) => {
         return { status: 400, data: { message: 'You have not included yourself as owner of the activity' } };
       }
     }
-    console.log("Adding activity :" + JSON.stringify(test));
+    logger.debug("Adding activity :" + JSON.stringify(test));
     let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(options.body));
     let allocator = await AllocatorsController.loadAllocator(study.allocator);
     let participants = await allocator.getAllocatedForTest(options.testid);
     
-    console.log("PARTICIPANTS: " + participants);
+    logger.debug("PARTICIPANTS: " + participants);
     if(study.tests.indexOf(options.testid) == 0) {
       if(allocator.type == "default") {
         let allgroups = study.groups;
@@ -517,14 +517,14 @@ module.exports.addActivityToTest = async (options) => {
         }
         participants=participants.concat(pnotallocated);
       } 
-      console.log("PARTICIPANTS UPDATED: " + participants);
+      logger.debug("PARTICIPANTS UPDATED: " + participants);
     }
     await activity.addParticipants(participants);
     test.activities.push(activity.id);
     await TestsController.updateTest(options.testid, test);
     return {status: 200, data: activity.toObject() };
   }catch(e){
-    console.log(e);
+    logger.error(e);
     return {status: 500, data: e };
   }
 };
@@ -668,7 +668,7 @@ module.exports.getStudyParticipants = async (options) => {
         }
       }
     }catch(e){
-      console.log(e);
+      logger.error(e);
       result = { status: 500, data: e };
     }
   }else{
@@ -688,7 +688,7 @@ module.exports.getAllocatorTypes = async (options) => {
   try{
     result.data = await AllocatorsController.getAllocatorTypes(options.user.data.username);
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result = { status: 500, data: e };
   }
   

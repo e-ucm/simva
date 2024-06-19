@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+const logger = require('../../logger');
 var request = require('request');
 var async = require('async');
 var session_timestamp;
@@ -39,7 +40,7 @@ function setDebug(_debug){
 
 function Log(line){
 	if(debug){
-		console.info('\x1b[32m%s\x1b[0m', line);
+		logger.info('\x1b[32m%s\x1b[0m', line);
 	}
 }
 
@@ -132,7 +133,7 @@ function online(callback){
 	request(options, function(error, response, body){
 		try{
 			if (!error && response.statusCode == 200) {
-				console.log('Limesurvey ONLINE')
+				logger.info('Limesurvey ONLINE')
 				callback(null);
 			}
 			else {
@@ -286,7 +287,7 @@ function insertOrCopy(name, options, callback){
 						return callback({ message: 'Unable to obtain the new survey id from body.'});
 					}
 				}else{
-					console.log(body);
+					logger.info(body);
 					Log('LimesurveyController.' + name + ' -> Error');
 					return callback({ message: 'Malformed body received from LimeSurvey'});
 				}
@@ -523,7 +524,7 @@ function participants(survey, participants){
 						return NotifyRCError('participants', error, response, body, callback);
 					}
 
-					console.log(body);
+					logger.info(body);
 
 					participants[0] = body.results;
 
@@ -859,7 +860,7 @@ function getResponseByToken(survey, token){
 			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1});
 
 			request(options, function(error, response, body){
-				console.log(body);
+				logger.info(body);
 				if (!error && response.statusCode == 200) {
 					try{
 						body = JSON.parse(body);
@@ -867,7 +868,7 @@ function getResponseByToken(survey, token){
 						return NotifyRCError('getResponseByToken', error, response, body, callback);
 					}
 
-					console.log(body);
+					logger.info(body);
 
 					var response = null;
 

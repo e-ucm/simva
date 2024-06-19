@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+const logger = require('../../logger');
 var request = require('request');
 var async = require('async');
 var session_timestamp;
@@ -44,7 +44,7 @@ class AnalyticsBackendController {
 			if(typeof line === 'object'){
 				log = JSON.stringify(line, null, 2);
 			}
-			console.info('\x1b[31m%s\x1b[0m', log);
+			logger.info('\x1b[31m%s\x1b[0m', log);
 		}
 	}
 
@@ -136,7 +136,7 @@ class AnalyticsBackendController {
 						self.Log("AnalyticsBackendController.addGame -> Completed");
 						resolve(parsedbody);
 					}catch(e){
-						console.log("AnalyticsBackendController.addGame -> Error: Malformed body");
+						logger.info("AnalyticsBackendController.addGame -> Error: Malformed body");
 						reject({ message: 'Malformed body received from Analytics Backend' });
 					}
 				}else{
@@ -235,7 +235,7 @@ class AnalyticsBackendController {
 						self.Log("AnalyticsBackendController.createClass -> Completed");
 						resolve(parsedbody);
 					}catch(e){
-						console.log("AnalyticsBackendController.createClass -> Error: Malformed body");
+						logger.info("AnalyticsBackendController.createClass -> Error: Malformed body");
 						reject({ message: 'Malformed body received from Analytics Backend' });
 					}
 				}else{

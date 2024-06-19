@@ -1,5 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
+const logger = require('../../lib/logger');
 
 var LtiController = require('../../lib/lticontroller');
 
@@ -55,7 +56,7 @@ module.exports.getLtiClaims = async (options) => {
     delete context._id;
     delete context.__v;
   }catch(e){
-    console.log(e);
+    logger.error(e);
   }
   
 
@@ -164,7 +165,7 @@ module.exports.getLtiTool = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -208,27 +209,27 @@ module.exports.deleteLtiTool = async (options) => {
 };
 
 module.exports.getLtiLineItems = async (options) => {
-  console.log(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.getLtiLineItem = async (options) => {
-  console.log(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.putLtiLineItem = async (options) => {
-  console.log(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.setLtiLineItemScore = async (options) => {
-  console.log(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
 module.exports.getLtiLineItemResults = async (options) => {
-  console.log(options);
+  logger.debug(options);
 
   return { status: 200, data: {} };
 };
@@ -258,7 +259,7 @@ module.exports.getLtiMemberships = async (options) => {
       "members" : members
     };
   }catch(e){
-    console.log(e);
+    logger.error(e);
     return { message: 'Error getting the memberships', error: e };
   }
 
@@ -282,7 +283,7 @@ module.exports.getLtiPlatforms = async (options) => {
       try{
         query = JSON.parse(options.searchString);
       }catch(e){
-        console.log(e);
+        logger.error(e);
         return { status: 400, data: { message: 'searchString is not a valid JSON object.' } };
       }
     }
@@ -342,7 +343,7 @@ module.exports.getLtiPlatform = async (options) => {
       result = { status: 400, data: {message: 'ObjectId is not valid.'} };
     }
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result =  { status: 500, data: e };
   }
 
@@ -376,40 +377,40 @@ module.exports.deleteLtiPlatform = async (options) => {
       if(platform !== null){
 
         if(platform.studyId && platform.studyId !== ''){
-          console.log('1');
+          logger.debug('1');
           let query = { 'link.type': 'lti_platform', 'link.id': platform._id };
-          console.log(query);
+          logger.debug(query);
           let groups = await GroupsController.getGroups(query);
 
           if(groups.length !== 0){
             await GroupsController.removeGroup(groups[0]._id);
 
-            console.log(groups);
+            logger.debug(groups);
 
-            console.log('2');
+            logger.debug('2');
             let study = await StudiesController.getStudy(platform.studyId);
-            console.log(study);
+            logger.debug(study);
 
-            console.log('3');
+            logger.debug('3');
             let todelete = -1;
             for (var i = 0; i < study.groups.length; i++) {
-              console.log('4');
+              logger.debug('4');
               if(study.groups[i].toString() === groups[0]._id.toString()){
                 todelete = i;
-                console.log('5');
+                logger.debug('5');
                 break;
               }
             }
 
-            console.log('6');
+            logger.debug('6');
 
             if(todelete >= 0){
               study.groups.splice(todelete, 1);
             }
 
-            console.log('7');
+            logger.debug('7');
 
-            console.log(study);
+            logger.debug(study);
 
             await StudiesController.updateStudy(study._id, study);
           }

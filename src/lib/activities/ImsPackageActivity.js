@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 
 let config = require('../config');

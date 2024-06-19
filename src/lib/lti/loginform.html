@@ -1,11 +1,12 @@
 <script type="text/javascript">
+	const logger = require('../logger');
 	let fuseaccounts = function(){
 		let username = $('#user_name').val();
 		let pass = $('#user_pass').val();
 		let baseurl = "https://simva-api.simva.e-ucm.es/";
 
 		$.post( baseurl + 'users/login' , { username: username, password: pass }, function(data){
-			console.log(data);
+			logger.info(data);
 			$.post( baseurl + 'users/link' , { main: data.token, secondary: token }, function(data){
 				location.reload();
 			}).fail(function(error) {

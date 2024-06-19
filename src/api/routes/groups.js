@@ -139,32 +139,4 @@ router.get('/:id/participants', Authenticator.auth, async (req, res, next) => {
   }
 });
 
-/**
- * Usefull for assistance in the classroom, the printable
- * 
- * version of the class allows the teacher to cut and
- * 
- * give the codes to the students easily to anonymize them.
- * 
- */
-router.get('/:id/printable', Authenticator.auth, async (req, res, next) => {
-  const options = {
-    id: req.params['id'],
-    user: req.user
-  };
-
-  try {
-    const result = await groups.getGroupPrintable(options);
-
-    if(result.status === 200){
-      res.setHeader('Content-Type', 'application/pdf');
-      res.status(200).send(Buffer.from(result.data, 'base64'));
-    }else{
-      res.status(result.status).send(result.data);
-    }
-  } catch (err) {
-    next(err);
-  }
-});
-
 module.exports = router;

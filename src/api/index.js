@@ -8,9 +8,9 @@ const logger = require('../lib/logger');
 const AppManager = require('../lib/utils/appmanager');
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
 
-var isTest = (process.env.NODE_ENV === 'test');
+var isTest = (process.env.NODE_ENV !== 'production');
 
-console.log(isTest);
+logger.debug(isTest);
 
 let createAdminUser = async function(){
   let UsersController = require('../lib/userscontroller');
@@ -18,8 +18,8 @@ let createAdminUser = async function(){
   let result = await UsersController.getUsers({ username: adminUsername });
 
   if(result.length > 0){
-    console.log('## Admin user already exists');
-    console.log(result);
+    logger.info('## Admin user already exists');
+    logger.info(result);
   }else{
     let result = await UsersController.addUser({
       username: adminUsername,
@@ -28,18 +28,18 @@ let createAdminUser = async function(){
       role: 'admin'
     });
 
-    console.log('## Admin user created:');
-    console.log(result);
-    console.log('######################');
+    logger.info('## Admin user created:');
+    logger.info(result);
+    logger.info('######################');
   }
 }
 
 var mongoose = require('mongoose');
 mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true});
 var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
+db.on('error', logger.error.bind(console, 'connection error:'));
 db.once('open', function() {
-  console.log('connected');
+  logger.debug('connected');
 
   	const fs = require('fs');
 	const yaml = require('yaml');
@@ -52,8 +52,6 @@ db.once('open', function() {
 });
 
 let multipartwith
-
-const log = logger(config.logger);
 
 const app = AppManager.InitApp();
 app.use(bodyParser.json({limit: config.api.maxUploadFileSize}));
@@ -90,12 +88,12 @@ app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: tr
   function(req, res, next){
     if((req.method === 'POST' || req.method === 'PUT') && (!req.body || Object.keys(req.body).length === 0)){
       if(req.files){
-        console.log(req.files);
+        logger.debug(req.files);
         let filekeys = Object.keys(req.files);
-        console.log(filekeys);
+        logger.debug(filekeys);
         for (var i = 0; i < filekeys.length; i++) {
           if(req.files[filekeys[i]].mimetype === 'application/json'){
-            console.log(req.files[filekeys[i]].data);
+            logger.debug(req.files[filekeys[i]].data);
             req.body = JSON.parse(req.files[filekeys[i]].data);
           }
         }
@@ -109,8 +107,8 @@ app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: tr
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.header('Allow', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
 });
 
@@ -128,21 +126,21 @@ app.use('/lti', require('./routes/lti'));
 
 // catch 404
 app.use((req, res, next) => {
-  log.error(`Error 404 on ${req.url}.`);
-  console.log(req.url);
+  logger.error(`Error 404 on ${req.url}.`);
+  logger.error(req.url);
   res.status(404).send({ message: 'Not found' });
 });
 
 // catch errors
 app.use((err, req, res, next) => {
   if(err instanceof SchemaValidationError){
-    log.error(`Bad request (${err.message}) on ${req.method} ${req.url} with payload ${req.body}.`);
+    logger.error(`Bad request (${err.message}) on ${req.method} ${req.url} with payload ${JSON.stringify(req.body)}.`);
     res.status(400).send({ message: err.message });
   }else{
-    console.log(err);
+    logger.error(err);
     const status = err.status || 500;
     const msg = err.error || err.message;
-    log.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${req.body}.`);
+    logger.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${JSON.stringify(req.body)}.`);
     res.status(status).send({ message: msg });
   }
 });

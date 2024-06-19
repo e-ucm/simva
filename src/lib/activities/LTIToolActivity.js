@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 
 let config = require('../config');
@@ -40,7 +41,7 @@ var Activity = require('./activity');
 	)
 
 	lti.onConnect((token, req, res) => {
-	  console.log(token)
+	  logger.debug(token)
 	  return res.send('It\'s alive!')
 	})
 

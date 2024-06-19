@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -12,15 +13,15 @@ var kafka = require('kafka-node'),
     client = new kafka.KafkaClient({kafkaHost: config.kafka.url}),
     producer = new HighLevelProducer(client);
 
-console.log('## MinioActivity: Connecting to Kafka: ' + config.kafka.url);
+logger.info('## MinioActivity: Connecting to Kafka: ' + config.kafka.url);
 
 producer.on('ready', function () {
-	console.log('Kafka producer ready!')
+	logger.info('Kafka producer ready!')
 });
  
 producer.on('error', function (err) {
-	console.log(err);
-	console.log('Unable to connect to kafka');
+	logger.info(err);
+	logger.info('Unable to connect to kafka');
 })
 
 class MinioActivity extends Activity {
@@ -125,7 +126,7 @@ class MinioActivity extends Activity {
 				}
 			}
 		}catch(e){
-			console.log(e);
+			logger.error(e);
 			throw { message: 'Error while setting the result' };
 		}
 
@@ -144,10 +145,10 @@ class MinioActivity extends Activity {
 
 				producer.send(payloads, function (err, data) {
 					if(err){
-						console.log("Error in Kafka enqueue: " + err);
+						logger.info("Error in Kafka enqueue: " + err);
 						reject(err);
 					}else{
-						console.log("Trace enqueued ok! Data: " + JSON.stringify(data));
+						logger.info("Trace enqueued ok! Data: " + JSON.stringify(data));
 						resolve(data);
 					}
 				});

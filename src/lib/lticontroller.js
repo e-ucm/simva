@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 var config = require('./config');
@@ -247,19 +249,19 @@ LtiController.addLtiPlatform = async (platform) => {
 		throw { message: 'Error creating the Platform in ltijs', error: err };
 	}
 
-	/*console.log('loading lib');
+	/*logger.debug('loading lib');
 
 	var LtiPlatform = mongoose.model('lti_platform');
 
 	var created_platform = new LtiPlatform(platform);
 	created_platform.internal_id = internal_id;
 
-	console.log(created_platform);
+	logger.debug(created_platform);
 
 	try{
 		await created_platform.save();
 	}catch(e){
-		console.log(e);
+		logger.debug(e);
 		throw { message: 'Error creating the Platform', error: e };
 	}*/
 
@@ -300,7 +302,7 @@ LtiController.removeLtiPlatform = async (id) => {
 
 LtiController.Log = function(message){
 	if(config.LTI.loggerActive){
-		console.info('\x1b[33m%s\x1b[0m', message);
+		logger.info('\x1b[33m%s\x1b[0m', message);
 	}
 }
 

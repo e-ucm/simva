@@ -1,3 +1,4 @@
+const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 let fs = require('fs');
@@ -141,23 +142,23 @@ class Activity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
 		}
-		console.log("Before adding participants : " + JSON.stringify(this));
+		logger.debug("Before adding participants : " + JSON.stringify(this));
 
 		for(let i = 0; i < participants.length; i++){
 			if(!this.extra_data.participants[participants[i]]){
 				this.extra_data.participants[participants[i]] = { completion: false };
 			}
 		}
-		console.log("After adding participants : " + JSON.stringify(this));
+		logger.debug("After adding participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 
 	async removeParticipants(participants){
-		console.log("Before delete participants : " + JSON.stringify(this));
+		logger.debug("Before delete participants : " + JSON.stringify(this));
 		for (var i = 0; i < participants.length; i++) {
 			delete this.extra_data.participants[participants[i]];
 		}
-		console.log("Before delete participants : " + JSON.stringify(this));
+		logger.debug("Before delete participants : " + JSON.stringify(this));
 		return await this.save();
 	}
 
@@ -204,7 +205,7 @@ class Activity {
 				let checkSubfolder = function(){
 					fs.stat(config.storage.path + activity._id, function(error, stats){
 						if(error){
-							console.log('Folder does not exist');
+							logger.info('Folder does not exist');
 							fs.mkdir(config.storage.path + activity._id, function(error){
 								if(error){
 									reject({ message: 'Unable to create the subdirectory.', error: error })
@@ -232,7 +233,7 @@ class Activity {
 					}
 				})
 			}catch(e){
-				console.log(e);
+				logger.error(e);
 				reject({ message: 'error saving to file', error: e });
 			}
 		});
@@ -253,7 +254,7 @@ class Activity {
 					}
 				});
 			}catch(e){
-				console.log(e);
+				logger.error(e);
 				reject({ message: 'Error reading file', error: e });
 			}
 		});
@@ -272,12 +273,12 @@ class Activity {
 					} else if (error.code === 'ENOENT') {
 						resolve(false);
 					} else {
-						console.log(error);
+						logger.error(error);
 						reject({message: 'Unexpected error', error: error});
 					}
 				});
 			}catch(e){
-				console.log(e);
+				logger.error(e);
 				reject({ message: 'Error reading file', error: e });
 			}
 		});

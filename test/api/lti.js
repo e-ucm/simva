@@ -17,7 +17,7 @@
  */
 
 'use strict';
-
+const logger = require('../src/lib/logger');
 var should = require('should'),
     mongoose = require('mongoose'),
     User = mongoose.model('user'),
@@ -28,18 +28,18 @@ var should = require('should'),
 var CompareStoredObject = function(id, object, callback){
     LtiTool.find({_id: id}, function(error, docs){
         if(docs.length !== 1 ){
-            console.log('ID: ' + id + ' NOT FOUND');
+            logger.debug('ID: ' + id + ' NOT FOUND');
             callback({message: 'id not found'}, false);
         }else{
             let o1 = JSON.parse(JSON.stringify(docs[0]));
             let o2 = JSON.parse(JSON.stringify(object));
 
             if(!Comparator.deepCompare(o1, o2)){
-                console.log('############## OBJECT 1 ##############')
-                console.log(JSON.stringify(o1, null, 2));
-                console.log('############## OBJECT 2 ##############')
-                console.log(JSON.stringify(o2, null, 2));
-                console.log('######################################')
+                logger.debug('############## OBJECT 1 ##############')
+                logger.debug(JSON.stringify(o1, null, 2));
+                logger.debug('############## OBJECT 2 ##############')
+                logger.debug(JSON.stringify(o2, null, 2));
+                logger.debug('######################################')
                 callback({message: 'objects are not equal'}, false);
             }else{
                 callback(null, true);
@@ -95,7 +95,7 @@ module.exports = function (request) {
                         .set('Accept', 'application/json')
                         .end(function (err, res) {
                             if(err){
-                                console.log(err, res);
+                                logger.info(err, res);
                             }
 
                             should.not.exist(err);
@@ -108,7 +108,7 @@ module.exports = function (request) {
                                 .set('Accept', 'application/json')
                                 .end(function (err, res) {
                                     if(err){
-                                        console.log(err, res);
+                                        logger.info(err, res);
                                     }
 
                                     should.not.exist(err);
@@ -148,7 +148,7 @@ module.exports = function (request) {
                                                 .send({username: 'teacher', password: 'pass1'})
                                                 .end(function (err, res) {
                                                     if(err){
-                                                        console.log(err, res);
+                                                        logger.info(err, res);
                                                     }
                                                     should(res.body).be.Object();
                                                     should.exist(res.body.token);
@@ -180,7 +180,7 @@ module.exports = function (request) {
                 .set('Authorization', 'Bearer ' + authToken)
                 .end(function (err, res) {
                     if(err){
-                        console.log(err, res);
+                        logger.info(err, res);
                     }
                     should.not.exist(err);
                     should(res.body).be.Object();
@@ -197,7 +197,7 @@ module.exports = function (request) {
                 .set('Accept', 'application/json')
                 .end(function (err, res) {
                     if(err){
-                        console.log(err, res);
+                        logger.info(err, res);
                     }
                     should.not.exist(err);
                     should(res.body).be.Object();
@@ -227,7 +227,7 @@ module.exports = function (request) {
                 .set('Accept', 'application/json')
                 .end(function (err, res) {
                     if(err){
-                        console.log(err, res);
+                        logger.info(err, res);
                     }
                     should.not.exist(err);
                     should(res.body).be.Object();
@@ -254,7 +254,7 @@ module.exports = function (request) {
                 .set('Authorization', 'Bearer ' + authToken)
                 .end(function (err, res) {
                     if(err){
-                        console.log(err, res);
+                        logger.info(err, res);
                     }
 
                     should.not.exist(err);
@@ -278,7 +278,7 @@ module.exports = function (request) {
                 .set('Authorization', 'Bearer ' + authToken)
                 .end(function (err, res) {
                     if(err){
-                        console.log(err, res);
+                        logger.info(err, res);
                     }
 
                     should.not.exist(err);
@@ -296,7 +296,7 @@ module.exports = function (request) {
                 .set('Authorization', 'Bearer ' + authToken)
                 .end(function (err, res) {
                     if(err){
-                        console.log(err, res);
+                        logger.info(err, res);
                     }
 
                     should.not.exist(err);
@@ -327,11 +327,11 @@ module.exports = function (request) {
                 .set('Accept', 'application/json')
                 .end(function (err, res) {
                     if(err){
-                        console.log(err, res);
+                        logger.info(err, res);
                     }
                     should.not.exist(err);
                     should(res.body).be.Object();
-                    console.log(res.body);
+                    logger.info(res.body);
 
                     done();
                 });

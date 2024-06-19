@@ -8,7 +8,6 @@ const http = require('http');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 
-const log = logger(config.logger);
 process.env.DEBUG = '*';
 
 //XXX
@@ -61,17 +60,17 @@ function onError (error) {
 
   const bind = typeof port === 'string' ? `Pipe ${port}` : `Port ${port}`;
 
-  console.log(error.code);
-  console.log(error);
+  logger.info(error.code);
+  logger.error(error);
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
   case 'EACCES':
-    log.fatal(`${bind} requires elevated privileges`);
+    logger.fatal(`${bind} requires elevated privileges`);
     process.exit(1);
     break;
   case 'EADDRINUSE':
-    log.fatal(`${bind} is already in use`);
+    logger.fatal(`${bind} is already in use`);
     process.exit(1);
     break;
   default:
@@ -85,16 +84,16 @@ let ltijs = require('../lib/lti/tool');
  * Event listener for HTTP server "listening" event.
  */
 async function onListening () {
-  console.log("SERVER STARTED");
+  logger.info("SERVER STARTED");
   
   const addr = server.address();
   const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`;
-  log.debug(`Listening on ${bind}`);
+  logger.debug(`Listening on ${bind}`);
 
   await ltijs.setup();
 
-  console.log(ltijs.provider.appRoute());
-  console.log(ltijs.provider.loginRoute());
-  console.log(ltijs.provider.keysetRoute());
-  console.log(ltijs.provider.dynRegRoute());
+  logger.info(ltijs.provider.appRoute());
+  logger.info(ltijs.provider.loginRoute());
+  logger.info(ltijs.provider.keysetRoute());
+  logger.info(ltijs.provider.dynRegRoute());
 }

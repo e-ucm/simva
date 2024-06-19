@@ -1,6 +1,6 @@
 const ServerError = require('../../lib/error');
 var mongoose = require('mongoose');
-
+const logger = require('../../lib/logger');
 var ActivitiesController = require('../../lib/activitiescontroller');
 var StudiesController = require('../../lib/studiescontroller');
 var TestsController = require('../../lib/testscontroller');
@@ -150,7 +150,7 @@ module.exports.deleteActivity = async (options) => {
       result = { status: 404, data: { message: 'Activity not found.' } };
     }
   }catch(e){
-    console.log(e);
+    logger.debug(e);
     return {status: 500, data: e };
   }
 
@@ -228,8 +228,8 @@ module.exports.getTarget = async (options) => {
     }
 
   }catch(e){
-    console.log('GetTarget exploded:');
-    console.log(e);
+    logger.info('GetTarget exploded:');
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -271,8 +271,8 @@ module.exports.getCompletion = async (options) => {
     }
 
   }catch(e){
-    console.log('GetCompletion exploded:');
-    console.log(e);
+    logger.info('GetCompletion exploded:');
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -358,8 +358,8 @@ module.exports.getResult = async (options) => {
     }
 
   }catch(e){
-    console.log('GetResult exploded:');
-    console.log(e);
+    logger.info('GetResult exploded:');
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -443,8 +443,8 @@ module.exports.hasResult = async (options) => {
     }
 
   }catch(e){
-    console.log('GetResult exploded:');
-    console.log(e);
+    logger.info('GetResult exploded:');
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -461,7 +461,7 @@ module.exports.getActivityTypes = async (options) => {
   try{
     result.data = await ActivitiesController.getActivityTypes(options.user.data.username);
   }catch(e){
-    console.log(e);
+    logger.error(e);
     result = { status: 500, data: e };
   }
   
