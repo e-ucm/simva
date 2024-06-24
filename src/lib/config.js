@@ -79,7 +79,13 @@ config.sso.webhookPath = process.env.SSO_WEBHOOK_PATH || '/webhook'
 config.sso.realmUrl = config.sso.url + '/realms/' + config.sso.realm
 config.sso.webhookUrl = config.sso.realmUrl + config.sso.webhookPath
 config.sso.publicKey = "-----BEGIN PUBLIC KEY----- \n" + process.env.SSO_PUBLIC_KEY + "\n-----END PUBLIC KEY-----\n";
-config.sso.allowedRoles = process.env.SSO_ALLOWED_ROLES || 'teacher,teaching-assistant,student,researcher'
+config.sso.studentAllowedRole = (process.env.SSO_STUDENT_ALLOWED_ROLE === "true") ? "student" : null
+config.sso.teachingAssistantAllowedRole = (process.env.SSO_TEACHING_ASSISTANT_ALLOWED_ROLE === "true") ? "teaching-assistant" :  null
+config.sso.teacherAllowedRole = (process.env.SSO_TEACHER_ALLOWED_ROLE === "true") ? "teacher" :  null
+config.sso.researcherAllowedRole = (process.env.SSO_RESEARCHER_ALLOWED_ROLE === "true") ? "researcher" :  null
+config.sso.allowedRoles = [config.sso.researcherAllowedRole, config.sso.teacherAllowedRole, config.sso.teachingAssistantAllowedRole, config.sso.studentAllowedRole ]
+	.filter(role => role !== null)
+	.join(',');
 config.sso.loggerActive = process.env.SSO_LOGGER_ACTIVE || false;
 
 config.sso.adminUser = process.env.SSO_ADMIN_USER || 'admin';
@@ -113,6 +119,7 @@ config.LTI.platform.mongo.user = process.env.LTI_PLATFORM_DB_USER || 'root'
 config.LTI.platform.mongo.password = process.env.LTI_PLATFORM_DB_PASSWORD || ''
 config.LTI.platform.claims_url = '/lti/claims';
 config.LTI.loggerActive = process.env.LTI_LOGGER_ACTIVE || true;
+config.LTI.debug= process.env.LTI_DEBUG || false;
 
 config.storage = {}
 config.storage.path = process.env.SIMVA_STORAGE_PATH || 'storage/'

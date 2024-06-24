@@ -7,7 +7,7 @@ var Activity = require('./activity');
 
 var UsersController = require('../userscontroller');
 
-var config = require('..//config');
+var config = require('../config');
 
 class ManualActivity extends Activity {
 
