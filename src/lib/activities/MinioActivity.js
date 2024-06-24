@@ -1,11 +1,16 @@
 const logger = require('../logger');
+const { v4: uuidv4 } = require('uuid');
+const {ScalableBloomFilter} = require('bloom-filters')
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
 
+// by default it creates an ideally scalable bloom filter for 8 elements with an error rate of 0.01 and a load factor of 0.5
+const filter = new ScalableBloomFilter()
+
 var Activity = require('./activity');
 
-var config = require('..//config');
+var config = require('../config');
 
 var kafka = require('kafka-node'),
     HighLevelProducer = kafka.HighLevelProducer,
@@ -117,7 +122,7 @@ class MinioActivity extends Activity {
 				}else{
 					toret = { 
 						actor: {
-							account: { homePage: config.external_url, username: participant },
+							account: { homePage: config.external_url, name: participant },
 							name: participant
 						},
 						playerId: participant,
@@ -130,7 +135,21 @@ class MinioActivity extends Activity {
 			throw { message: 'Error while setting the result' };
 		}
 
+
 		return toret;
+	}
+
+	generateStatementId(trace) {
+		var traceid
+		if(trace.id == null) {
+			traceid = uuidv4();
+		} else {
+			traceid = trace.id;
+		}
+		while(filter.has(traceid)) {
+			traceid = uuidv4();
+		}
+		return traceid;
 	}
 
 	async sendTracesToKafka(traces, activityId){
@@ -139,7 +158,8 @@ class MinioActivity extends Activity {
 
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
-					trace._id = activityId;
+					var traceid = this.generateId(trace);
+					filter.add(traceid);
 					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 

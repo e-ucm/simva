@@ -187,7 +187,7 @@ class GameplayActivity extends Activity {
 					if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
 						toret = { 
 							actor: {
-								account: { homePage: config.external_url, username: participant },
+								account: { homePage: config.external_url, name: participant },
 								name: participant
 							},
 							playerId: participant,

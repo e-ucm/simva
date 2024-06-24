@@ -112,7 +112,7 @@ class RageMinioActivity extends MinioActivity {
 				}else{
 					toret = { 
 						actor: {
-							account: { homePage: config.external_url, username: participant },
+							account: { homePage: config.external_url, name: participant },
 							name: participant
 						},
 						playerId: participant,
