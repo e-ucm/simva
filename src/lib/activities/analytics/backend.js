@@ -89,31 +89,50 @@ class AnalyticsBackendController {
 		return new Promise((resolve, reject) => {
 			let self = this;
 			this.Log("AnalyticsBackendController.loadGames -> Started");
-
 			let options = this.cloneOptions();
 			options.url += url;
-			options.method = 'GET';
-			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
+			
+			// Ensure headers are set correctly
+			options.headers = {
+			  'Authorization': `Bearer ${this.AuthToken}`
+			};
 
-			request.get(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
-					try{
-						body = JSON.parse(body);
-						for(var i in body){
-							games.push(body[i]);
-						}
-
-						self.Log("AnalyticsBackendController.loadGames -> Completed");
-						resolve(body);
-					}catch(e){
-						self.Log("AnalyticsBackendController.loadGames -> Error");
-						reject({ message: 'Malformed body received from backend' });
-					}
-				}else{
-					self.Log('AnalyticsBackendController.loadGames -> Error creating the class');
-					self.LogMultiple({error: error, response: response, body: body});
-					reject({ message: 'Error creating the game', error: error });  
+			axios.get(options.url, {
+			  headers: options.headers
+			})
+			.then(response => {
+			  if (response.status === 200) {
+				try {
+				  const body = response.data;
+				  for (let i in body) {
+					games.push(body[i]);
+				  }
+			
+				  self.Log("AnalyticsBackendController.loadGames -> Completed");
+				  resolve(body);
+				} catch (e) {
+				  self.Log("AnalyticsBackendController.loadGames -> Error");
+				  reject({ message: 'Malformed body received from backend' });
 				}
+			  } else {
+				self.Log('AnalyticsBackendController.loadGames -> Error creating the class');
+				self.LogMultiple({ error: null, response: response, body: response.data });
+				reject({ message: 'Error creating the game', error: null });
+			  }
+			})
+			.catch(error => {
+			  self.Log('AnalyticsBackendController.loadGames -> Error creating the class');
+			  if (error.response) {
+				// Request made and server responded
+				self.LogMultiple({ error: error, response: error.response, body: error.response.data });
+			  } else if (error.request) {
+				// The request was made but no response was received
+				self.LogMultiple({ error: error, response: null, body: null });
+			  } else {
+				// Something happened in setting up the request that triggered an Error
+				self.LogMultiple({ error: error, response: null, body: null });
+			  }
+			  reject({ message: 'Error creating the game', error: error });
 			});
 		});
 	}
@@ -123,28 +142,51 @@ class AnalyticsBackendController {
 			let self = this;
 			this.Log("AnalyticsBackendController.addGame -> Started");
 
+			const axios = require('axios');
+
 			let options = this.cloneOptions();
-			options.body = JSON.stringify({title: name});
+			const requestBody = { title: name };
 			options.url += '/games/bundle';
-			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
-
-			request.post(options, function(error, response, body){
-				if(!error && response.statusCode == 200){
-					try{
-						let parsedbody = JSON.parse(body);
-
-						self.Log("AnalyticsBackendController.addGame -> Completed");
-						resolve(parsedbody);
-					}catch(e){
-						logger.info("AnalyticsBackendController.addGame -> Error: Malformed body");
-						reject({ message: 'Malformed body received from Analytics Backend' });
-					}
-				}else{
-					self.Log('AnalyticsBackendController.addGame -> Error creating the class');
-					self.LogMultiple({error: error, response: response, body: body});
-					reject({ message: 'Error creating the game', error: error });  
+			options.headers['Authorization'] = `Bearer ${this.AuthToken}`;
+			
+			axios.post(options.url, requestBody, {
+			  headers: {
+				'Content-Type': 'application/json',
+				...options.headers // Include any additional headers from options.headers
+			  }
+			})
+			.then(response => {
+			  if (response.status === 200) {
+				try {
+				  let parsedbody = response.data;
+			
+				  self.Log("AnalyticsBackendController.addGame -> Completed");
+				  resolve(parsedbody);
+				} catch (e) {
+				  logger.info("AnalyticsBackendController.addGame -> Error: Malformed body");
+				  reject({ message: 'Malformed body received from Analytics Backend' });
 				}
+			  } else {
+				self.Log('AnalyticsBackendController.addGame -> Error creating the class');
+				self.LogMultiple({ error: null, response: response, body: response.data });
+				reject({ message: 'Error creating the game', error: null });
+			  }
+			})
+			.catch(error => {
+			  self.Log('AnalyticsBackendController.addGame -> Error creating the class');
+			  if (error.response) {
+				// Request made and server responded
+				self.LogMultiple({ error: error, response: error.response, body: error.response.data });
+			  } else if (error.request) {
+				// The request was made but no response was received
+				self.LogMultiple({ error: error, response: null, body: null });
+			  } else {
+				// Something happened in setting up the request that triggered an Error
+				self.LogMultiple({ error: error, response: null, body: null });
+			  }
+			  reject({ message: 'Error creating the game', error: error });
 			});
+			
 		});
 	}
 
@@ -222,28 +264,50 @@ class AnalyticsBackendController {
 		return new Promise((resolve, reject) => {
 			let self = this;
 			this.Log("AnalyticsBackendController.createClass -> Started");
+			const axios = require('axios');
 
 			let options = this.cloneOptions();
-			options.body = JSON.stringify({name: name});
+			const requestBody = { name: name };
 			options.url += '/classes';
-			options.headers['Authorization'] = 'Bearer ' + this.AuthToken;
-
-			request.post(options, function(error, response, body){
-				if(!error && response.statusCode == 200){
-					try{
-						let parsedbody = JSON.parse(body);
-						self.Log("AnalyticsBackendController.createClass -> Completed");
-						resolve(parsedbody);
-					}catch(e){
-						logger.info("AnalyticsBackendController.createClass -> Error: Malformed body");
-						reject({ message: 'Malformed body received from Analytics Backend' });
-					}
-				}else{
-					self.Log('AnalyticsBackendController.createClass -> Error creating the class');
-					self.LogMultiple({error: error, response: response, body: body});
-					reject({ message: 'Error creating the class', error: error });  
+			options.headers['Authorization'] = `Bearer ${this.AuthToken}`;
+			
+			axios.post(options.url, requestBody, {
+			  headers: {
+				'Content-Type': 'application/json',
+				...options.headers // Include any additional headers from options.headers
+			  }
+			})
+			.then(response => {
+			  if (response.status === 200) {
+				try {
+				  let parsedbody = response.data;
+				  self.Log("AnalyticsBackendController.createClass -> Completed");
+				  resolve(parsedbody);
+				} catch (e) {
+				  logger.info("AnalyticsBackendController.createClass -> Error: Malformed body");
+				  reject({ message: 'Malformed body received from Analytics Backend' });
 				}
+			  } else {
+				self.Log('AnalyticsBackendController.createClass -> Error creating the class');
+				self.LogMultiple({ error: null, response: response, body: response.data });
+				reject({ message: 'Error creating the class', error: null });
+			  }
+			})
+			.catch(error => {
+			  self.Log('AnalyticsBackendController.createClass -> Error creating the class');
+			  if (error.response) {
+				// Request made and server responded
+				self.LogMultiple({ error: error, response: error.response, body: error.response.data });
+			  } else if (error.request) {
+				// The request was made but no response was received
+				self.LogMultiple({ error: error, response: null, body: null });
+			  } else {
+				// Something happened in setting up the request that triggered an Error
+				self.LogMultiple({ error: error, response: null, body: null });
+			  }
+			  reject({ message: 'Error creating the class', error: error });
 			});
+			
 		});
 	}
 
