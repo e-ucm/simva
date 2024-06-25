@@ -21,7 +21,7 @@
     "jsonwebtoken": "9.0.0",
     "kafka-node": "5.0.0",
     "@keycloak/keycloak-admin-client": "18.0.2",
-    "ltijs": "5.6.6",
+    "ltijs": "5.9.5",
     "minio": "7.0.16",
     "pino": "^8.16.2",
     "mongoose": "^5.7.8",
