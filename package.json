@@ -18,7 +18,7 @@
     "express-body-schema": "github:Synpheros/express-body-schema#master",
     "express-fileupload": "1.2.1",
     "keycloak-public-key": "github:e-ucm/keycloak-public-key#master",
-    "jsonwebtoken": "8.5.1",
+    "jsonwebtoken": "9.0.0",
     "kafka-node": "5.0.0",
     "@keycloak/keycloak-admin-client": "18.0.2",
     "ltijs": "5.6.6",
