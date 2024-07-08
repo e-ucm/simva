@@ -84,9 +84,9 @@ class TrackerManager {
 			tracker.settings.trackingCode = activity.trackingCode;
 			tracker.settings.debug = false;
 
-			tracker.Login(user, password, function(data,error){
+			tracker.Login(user, password, function(error,data){
 				if(!error){
-					tracker.Start(function(result, error){
+					tracker.Start(function(error, result){
 						if(!error){
 							self.setTracker(activity._id, user, tracker);
 							resolve(tracker);
@@ -160,7 +160,7 @@ class TrackerManager {
 					}
 
 					for (let j = users.length - 1; j >= 0; j--) {
-						self.trackers[activityId][users[j]].tracker.Flush(function(result, error){
+						self.trackers[activityId][users[j]].tracker.Flush(function(error, result){
 							userscompleted();
 						});
 					}
