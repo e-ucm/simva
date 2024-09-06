@@ -974,6 +974,25 @@ paths:
         - $ref: '#/components/parameters/testId'
         - $ref: '#/components/parameters/time'
         - $ref: '#/components/parameters/user'
+  /activities/{id}/presignedurl:
+    get:
+      tags:
+        - teachers
+      summary: gets the presigned minio url
+      operationId: getPresignedFileUrl
+      description: |
+        Obtains the presigned minio url of the activity data result.
+      responses:
+        '200':
+          description: the presigned minio url of the activity data result
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
   /activitytypes:
     get:
       tags:

@@ -217,6 +217,27 @@ router.post('/:id/completion', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Set the completion status of the activity for a student
+ * 
+ */
+router.get('/:id/presignedurl', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+  logger.info("/presignedurl")
+  try {
+    const result = await activities.getPresignedFileUrl(options);
+    logger.info(result);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Obtains the completion status of the activity
  * 
  */
