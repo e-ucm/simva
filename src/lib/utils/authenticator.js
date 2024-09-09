@@ -126,14 +126,14 @@ Authenticator.roleAllowed = async (req, res, next) => {
 	}
 
 	let url = req.originalUrl.split('?')[0];
-	console.log(url);
-	console.log(method);
-	console.log(req.user.data.role);
-
+	logger.debug(url);
+	logger.debug(method);
+	logger.debug(req.user.data.role);
+	
 	let allowedlist = AllowedRoutes[req.user.data.role][method];
 	for (var i = 0; i < allowedlist.length; i++) {
 		if(Authenticator.CompareRoutes(allowedlist[i], url)){
-			console.log("Allowed");
+			logger.debug("Allowed");
 			return next();
 		}
 	}
