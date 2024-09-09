@@ -54,8 +54,7 @@ config.minio.port = process.env.MINIO_PORT || 80
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces'
 config.minio.topics_dir = process.env.MINIO_TOPICS_DIR || 'kafka-topics'
 config.minio.traces_topic = process.env.MINIO_TRACES_TOPIC || 'traces'
-config.minio.users_dir = process.env.MINIO_USERS_DIR || 'users'
-config.minio.outputs_dir = process.env.MINIO_OUTPUT_DIR || 'output2'
+config.minio.outputs_dir = process.env.MINIO_OUTPUTS_DIR || 'outputs'
 config.minio.presigned_url_expiration_time = process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME !== undefined ? parseInt(process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME) : Number(60*60)
 config.minio.traces_file = process.env.MINIO_TRACES_FILE || 'traces.json'
 
