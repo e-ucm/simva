@@ -105,18 +105,35 @@ Authenticator.auth = async (req, res, next) => {
 	}
 };
 
+Authenticator.getRoleFromRealmAccessRoles = function(userdata){
+	let role = 'norole';
+	if(userdata.realm_access.roles.includes('teacher') || userdata.realm_access.roles.includes('researcher')){
+		role = 'teacher';
+	} else if(userdata.realm_access.roles.includes('teaching-assistant') || userdata.realm_access.roles.includes('student')){
+		role = 'student';
+	};
+	return role;
+},
+
+
 Authenticator.roleAllowed = async (req, res, next) => {
 	let method = req.method.toLowerCase();
+	//if(!req.user.data.role) {
+	//	req.user.data.role=Authenticator.getRoleFromRealmAccessRoles(req.user.data);
+	//}
 	if(!AllowedRoutes[req.user.data.role] || !AllowedRoutes[req.user.data.role][method]){
 		return res.status(404).send({message: 'The route you are trying to access does not exist.'});
 	}
 
 	let url = req.originalUrl.split('?')[0];
-
+	logger.debug(url);
+	logger.debug(method);
+	logger.debug(req.user.data.role);
+	
 	let allowedlist = AllowedRoutes[req.user.data.role][method];
-
 	for (var i = 0; i < allowedlist.length; i++) {
 		if(Authenticator.CompareRoutes(allowedlist[i], url)){
+			logger.debug("Allowed");
 			return next();
 		}
 	}

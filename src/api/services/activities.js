@@ -81,6 +81,35 @@ module.exports.getActivity = async (options) => {
 
 /**
  * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getPresignedFileUrl = async (options) => {
+  let result = { status: 200, data: {} };
+
+  try {
+    logger.info("getPresignedFileUrl");
+    logger.info(options);
+    presignedurl = await ActivitiesController.getPresignedFileUrl(options.id);
+    logger.info(presignedurl);
+    if(options.user.data.role === 'teacher'){
+      let activity = await ActivitiesController.loadActivity(options.id);
+      if(activity.owners.indexOf(options.user.data.username) !== -1){
+        result.data.url = presignedurl;
+      }else{
+        result = { status: 401, data: { message: 'You are not owner of the activity' } };
+      }
+    }
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return result;
+};
+
+/**
+ * @param {Object} options
  * @param {String} options.id The study ID
  * @throws {Error}
  * @return {Promise}

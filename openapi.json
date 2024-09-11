@@ -1,5 +1,11 @@
 {
   "openapi": "3.0.0",
+  "servers": [
+    {
+      "description": "SwaggerHub API Auto Mocking",
+      "url": "https://virtserver.swaggerhub.com/Synpheros/Simva/1.0.0"
+    }
+  ],
   "info": {
     "description": "Simva, AKA Simple Validator, AKA SurveyManager is the evolution of a tool created to integrate and ease the task of validating serious games using pre-post surveys as a control point. This version allows to create more complex studies with more variety of activities and different allocations.",
     "version": "1.0.0",
@@ -119,12 +125,8 @@
         "responses": {
           "200": {
             "description": "User updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/user"
-                }
-              }
+            "schema": {
+              "$ref": "#/components/schemas/user"
             }
           },
           "400": {
@@ -1507,6 +1509,38 @@
         ]
       }
     },
+    "/activities/{id}/presignedurl": {
+      "get": {
+        "tags": [
+          "teachers"
+        ],
+        "summary": "gets the presigned minio url",
+        "operationId": "getPresignedFileUrl",
+        "description": "Obtains the presigned minio url of the activity data result.\n",
+        "responses": {
+          "200": {
+            "description": "the presigned minio url of the activity data result"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/activityId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      }
+    },
     "/activitytypes": {
       "get": {
         "tags": [
@@ -2250,6 +2284,7 @@
           "type": "string",
           "example": "peter"
         },
+        "format": "username",
         "description": "The username of a specific user"
       },
       "studyId": {
