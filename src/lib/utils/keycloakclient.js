@@ -1,107 +1,125 @@
 const logger = require('../logger');
-var async = require('async');
-var config = require('../config');
-var request = require('request');
-var KeycloakClient = {};
+const request = require('request');
+const config = require('../config');
 
-async () => {
-	const KcAdminClient = (await import('@keycloak/keycloak-admin-client')).default;
-	// Your code using KcAdminClient goes here
+class KeycloakClient {
+    constructor() {
+        this.KcAdminClient = null;
+        this.client = null;
+        this.KeycloakUserCredentials = null;
+        this.keycloakStatus = false;
 
-	logger.info(KcAdminClient);
-	
-	
-	var options = {
-		url: config.sso.webhookUrl,
-		method: "POST",
-		headers: {
-			'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
-			'connection': 'keep-alive',
-			'content-type': 'application/json'
-		}
-	}
+        // Initialize request options as a class property
+        this.options = {
+            url: config.sso.webhookUrl,
+            method: "POST",
+            headers: {
+                'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
+                'connection': 'keep-alive',
+                'content-type': 'application/json'
+            }
+        };
+    }
 
-	let kcconfig = {
-		baseUrl: config.sso.url,
-		realmName: config.sso.realm
-	};
+    static async getClient() {
+        if (!this.KcAdminClient) {
+            const module = await import('@keycloak/keycloak-admin-client');
+            this.KcAdminClient = module.default;
+        }
+        return this.KcAdminClient;
+    }
 
-	let kcAdminClient = new KcAdminClient(kcconfig);
+    async initialize() {
+        try {
+            const KcAdminClient = await KeycloakClient.getClient(); // Use static method
+            logger.info(KcAdminClient);
 
+            let kcconfig = {
+                baseUrl: config.sso.url,
+                realmName: config.sso.realm
+            };
+            logger.info(kcconfig);
 
-	let KeycloakUserCredentials = {
-	username: config.sso.adminUser,
-	password: config.sso.adminPassword,
-	grantType: 'password',
-	clientId: 'admin-cli'
-	};
+            // Instantiate the Keycloak client
+            this.client = new KcAdminClient(kcconfig);
 
-	logger.info('----- KEYCLOAK -----');
-	logger.info('Keycloak-> Connecting to: ');
-	logger.info(JSON.stringify(kcconfig, null, 2));
-	logger.info('Keycloak-> Authentication: ');
-	logger.info(JSON.stringify(KeycloakUserCredentials, null, 2));
-	logger.info('--------------------');
+            this.KeycloakUserCredentials = {
+                username: config.sso.adminUser,
+                password: config.sso.adminPassword,
+                grantType: 'password',
+                clientId: 'admin-cli'
+            };
 
-	let keycloakStatus = false;
-	if(config.sso.enabled){
-		kcAdminClient.auth(KeycloakUserCredentials)
-		.then((result) => {
-			logger.info(kcAdminClient.getAccessToken());
-			logger.info('Connected to Keycloak!');
-			keycloakStatus = true;
-		})
-		.catch((error) => {
-			logger.info('Unable to connect to keycloak');
-			logger.error(error);
-			keycloakStatus = false;
-		});
-	}
+            logger.info('----- KEYCLOAK -----');
+            logger.info('Keycloak-> Connecting to: ');
+            logger.info(JSON.stringify(kcconfig, null, 2));
+            logger.info('Keycloak-> Authentication: ');
+            logger.info(JSON.stringify(this.KeycloakUserCredentials, null, 2));
+            logger.info('--------------------');
 
-	KeycloakClient.AuthClient = async () => {
-		await kcAdminClient.auth(KeycloakUserCredentials);
-	}
+            if (config.sso.enabled) {
+                try {
+                    await this.client.auth(this.KeycloakUserCredentials);
+                    logger.info(this.client.getAccessToken());
+                    logger.info('Connected to Keycloak!');
+                    this.keycloakStatus = true;
+                } catch (error) {
+                    logger.info('Unable to connect to Keycloak');
+                    logger.error(error);
+                    this.keycloakStatus = false;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to initialize Keycloak client:', error);
+        }
+    }
 
-	KeycloakClient.getClient = function(){
-		return kcAdminClient;
-	}
+    async AuthClient() {
+        await this.client.auth(this.KeycloakUserCredentials);
+    }
 
-	KeycloakClient.getStatus = function(){
-		return keycloakStatus;
-	}
+    getClient() {
+        return this.client;
+    }
 
-	KeycloakClient.createWebhook = function(){
-		let accessToken = kcAdminClient.getAccessToken();
+    getStatus() {
+        return this.keycloakStatus;
+    }
 
-		logger.info('AccesToken: ' + accessToken);
+    createWebhook(callback) {
+        if (!this.client) {
+            callback({ message: 'Client is not initialized' });
+            return;
+        }
 
-		options.headers.Authorization = 'Bearer ' + accessToken;
-		options.body = {
-		"enabled": "true",
-		"url": config.api.webhookPath,
-		"secret": config.api.webhookSecret,
-		"eventTypes": [
-			"*"
-		]
-		};
+        let accessToken = this.client.getAccessToken();
+        logger.info('AccessToken: ' + accessToken);
+        
+        this.options.headers.Authorization = 'Bearer ' + accessToken;
+        this.options.body = {
+            "enabled": "true",
+            "url": config.api.webhookPath,
+            "secret": config.api.webhookSecret,
+            "eventTypes": ["*"]
+        };
 
-		request(options, function(error, response, body){
-			try{
-				if (!error && response.statusCode == 200) {
-					logger.info(JSON.stringify(response));
-					callback(null);
-				}
-				else {
-					logger.info(JSON.stringify(response), JSON.stringify(body));
-					callback({ message: 'Error on SSO webhook Initialization', error: error});
-				}
-			}catch(e){
-				logger.info('online');
-				logger.info(JSON.stringify(e));
-				callback({ message: 'EXCEPTION on SSO webhook Initialization', error: e});
-			}
-		});
-	}();
+        request(this.options, function (error, response, body) {
+            try {
+                if (!error && response.statusCode == 200) {
+                    logger.info(JSON.stringify(response));
+                    callback(null);
+                } else {
+                    logger.info(JSON.stringify(response));
+                    logger.info(JSON.stringify(body));
+                    callback({ message: 'Error on SSO webhook Initialization', error: error });
+                }
+            } catch (e) {
+                logger.error('Exception on SSO webhook Initialization');
+                logger.error(JSON.stringify(e));
+                callback({ message: 'Exception on SSO webhook Initialization', error: e });
+            }
+        });
+    }
 }
 
 module.exports = KeycloakClient;
