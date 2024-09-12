@@ -1,6 +1,6 @@
 const logger = require('../logger');
 const { v4: uuidv4 } = require('uuid');
-const {ScalableBloomFilter, BloomFilter} = require('bloom-filters')
+const {ScalableBloomFilter, BloomFilter, PartitionedBloomFilter} = require('bloom-filters')
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
