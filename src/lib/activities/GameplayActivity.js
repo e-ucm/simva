@@ -2,7 +2,7 @@ const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
-var Minio = require('minio');
+const { Client } = require('minio');
 
 const axios = require('axios');
 const xml2js = require('xml2js');
@@ -262,60 +262,6 @@ class GameplayActivity extends Activity {
 		return results;
 	}
 
-	
-	async getMinioObjects(minioClient, bucket, prefix){
-		var objectsList = await this.listMinioObjects(minioClient, bucket, prefix);
-		var objectPromises = [];
-		for(var obj in objectsList){
-			objectPromises.push(this.getObject(minioClient, bucket, obj.name));
-		}
-
-		return Promise.all(objectPromises)
-			.then(contents => {
-				return "[" + contents.concat(",") + "]";
-			})
-	}
-
-	async getObject(minioClient, bucket, name){
-		return new Promise((resolve, reject) => {
-			var chunks = [];
-			const stream = minioClient.getObject(bucket, name, function (e, dataStream) {
-				stream.on('data', function(chunk) {
-					chunks.push(chunk);
-				});
-		
-				stream.on('error', function(err) {
-					reject(err);
-				});
-		
-				stream.on('end', function() {
-					const buffer = Buffer.concat(chunks);
-					const string = buffer.toString('utf8');
-					resolve(string);
-				});
-			});
-		});
-	}
-
-	async listMinioObjects(minioClient, bucket, prefix){
-		return new Promise((resolve, reject) => {
-			const objectsList = [];
-			const stream =  minioClient.listObjects(bucket, prefix);
-	  
-			stream.on('data', function(obj) {
-				objectsList.push(obj);
-			});
-	  
-			stream.on('error', function(err) {
-				reject(err);
-			});
-	  
-			stream.on('end', function() {
-				resolve(objectsList);
-		    });
-		});
-	}
-
 	static async getTemporaryCredentials(minio_endpoint, access_token, ca_file) {
 		const data = {
 			Action: 'AssumeRoleWithWebIdentity',
@@ -443,19 +389,6 @@ class GameplayActivity extends Activity {
 		}
 	}
 
-	static async initializeMinioClient(access_token, ca_file = "") {
-		var utils = await GameplayActivity.getUtils("");
-		var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
-		var minioClient = new Minio.Client({
-			endPoint: new URL(utils.minio_url).hostname,
-			useSSL: true,
-			accessKey: temporaryCredentials.access_key_id,
-			secretKey: temporaryCredentials.secret_access_key,
-			sessionToken: temporaryCredentials.session_token
-		});
-		return minioClient;
-	}
-
 	async loadBackups(participants){
 		if(!participants || participants.length == 0){
 			participants = Object.keys(this.extra_data.participants);
@@ -573,6 +506,122 @@ class GameplayActivity extends Activity {
 
 	getCodeFromError(error) {
 		return error.substr(3, error.indexOf('<<')-3);
+	}
+
+
+	// ##########################################
+	// Minio
+	// ##########################################
+	//static async initializeMinioClient(access_token, ca_file = "") {
+	//	var utils = await GameplayActivity.getUtils("");
+	//	var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
+	//	var minioClient = new Minio.Client({
+	//		endPoint: new URL(utils.minio_url).hostname,
+	//		useSSL: true,
+	//		accessKey: temporaryCredentials.access_key_id,
+	//		secretKey: temporaryCredentials.secret_access_key,
+	//		sessionToken: temporaryCredentials.session_token
+	//	});
+	//	return minioClient;
+	//}
+
+	initializeMinioClient() {
+		logger.info("MinioClient");
+		logger.info(`Minio Config - Host: ${config.minio.api_host}, Port: ${config.minio.port}, SSL: ${config.minio.useSSL}`);
+		try {
+			const minioClient = new Client({
+				endPoint: config.minio.api_host,
+				port: Number(config.minio.port),
+				accessKey: config.minio.access_key,
+				secretKey: config.minio.secret_key,
+				useSSL: config.minio.useSSL
+			});
+			logger.info("MinioClient connected");
+			return minioClient;
+		} catch (error) {
+			logger.error("Error initializing MinioClient: ");
+			logger.error(error);
+			throw error;
+		}
+	}
+
+	async generatePresignedFileUrl() {
+		let path = `${config.minio.outputs_dir}/${this._id}/${config.minio.traces_file}`;
+		logger.info(path);
+		let minioClient = this.initializeMinioClient();
+		if (await this.fileExists(minioClient, path)) {
+			let presignedUrl = null;	
+			let time_before_expiration=config.minio.presigned_url_expiration_time;
+			presignedUrl = await this.getPresignedUrl(minioClient, path, time_before_expiration);
+			const now=new Date().toJSON();
+			this.extra_data.miniotrace={
+				presignedUrl:presignedUrl,
+				generated_at:now,
+				expire_on_seconds:time_before_expiration
+			};
+		} else {
+			throw `Error the file ${path} don't exist in minio`;
+		}
+	}
+
+	/**
+	 * Retrieve file content from Minio
+	 * @param {Object} minioClient - Minio Client object
+	 * @param {string} file - File path
+	 * @returns {Promise<string>}
+	 */
+	async getFile(minioClient, file) {
+		try {
+			const objectStream = await minioClient.getObject(config.minio.bucket, file);
+			objectStream.setEncoding('utf-8');
+	
+			let content = '';
+			for await (const chunk of objectStream) {
+				content += chunk;
+			}
+	
+			return content;
+		} catch (err) {
+			logger.error(`Error fetching file: ${err.message}`);
+			throw err;
+		}
+	}
+	
+	/**
+	 * Check if the file exists in Minio bucket
+	 * @param {Object} minioClient - Minio Client object
+	 * @param {string} path - File path
+	 * @returns {Promise<boolean>}
+	 */
+	async fileExists(minioClient, path) {
+		logger.debug("Minio : fileExists");
+		try {
+			const objectsStream = await minioClient.listObjectsV2(config.minio.bucket, path);
+			const iterator = objectsStream[Symbol.asyncIterator]();
+			const nextValue = await iterator.next();
+			return !nextValue.done;
+		} catch (err) {
+			logger.error(`Error checking file existence: ${err.message}`);
+			return false;
+		}
+	}
+	
+	/**
+	 * Generate a presigned URL for a file in Minio
+	 * @param {Object} minioClient - Minio Client object
+	 * @param {string} path - File path
+	 * @returns {Promise<string>}
+	 */
+	async getPresignedUrl(minioClient, path, time) {
+		logger.info("Minio : getPresignedUrl");
+		try {
+			const presignedUrl = await minioClient.presignedGetObject(config.minio.bucket, path, time);
+			logger.info(presignedUrl);
+			return presignedUrl;
+		} catch (err) {
+			logger.error(`Error generating presigned URL: ${err.message}`);
+			throw err;
+		}
 	}
 };
 
