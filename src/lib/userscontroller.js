@@ -51,14 +51,15 @@ UsersController.addUserToKeycloak = async (params) => {
 	}
 
 	logger.info('KeyCloak -> Auth');
-
-	await KeycloakClient.AuthClient();
+	const keycloakClient = new KeycloakClient();
+	await keycloakClient.initialize();
+	await keycloakClient.AuthClient();
 
 	logger.info('KeyCloak -> Adding user');
 
 	let user;
 	try{
-		user = await KeycloakClient.getClient().users.create({
+		user = await keycloakClient.getClient().users.create({
 			/*realm: config.sso.realm,*/
 			username: params.username.toLowerCase(),
 			email: params.email,
@@ -70,7 +71,7 @@ UsersController.addUserToKeycloak = async (params) => {
 	}
 
 	logger.info('KeyCloak -> getting Role Mappings');
-	let roleMappings = await KeycloakClient.getClient().users.listAvailableRealmRoleMappings({id: user.id});
+	let roleMappings = await keycloakClient.getClient().users.listAvailableRealmRoleMappings({id: user.id});
 
 	let selectedRole;
 	for (var i = roleMappings.length - 1; i >= 0; i--) {
@@ -81,10 +82,10 @@ UsersController.addUserToKeycloak = async (params) => {
 	}
 
 	logger.info('KeyCloak -> Adding Role to User');
-	let result = await KeycloakClient.getClient().users.addRealmRoleMappings({id: user.id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
+	let result = await keycloakClient.getClient().users.addRealmRoleMappings({id: user.id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
 
 	logger.info('KeyCloak -> Setting up User Password');
-	await KeycloakClient.getClient().users.resetPassword({
+	await keycloakClient.getClient().users.resetPassword({
 		id: user.id,
 		credential: {
 			temporary: false,
@@ -98,7 +99,7 @@ UsersController.addUserToKeycloak = async (params) => {
 	
 
 	logger.info('KeyCloak -> Obtaining user to enable it');
-	user = await KeycloakClient.getClient().users.findOne({
+	user = await keycloakClient.getClient().users.findOne({
       id: user.id,
     });
 
@@ -106,7 +107,7 @@ UsersController.addUserToKeycloak = async (params) => {
     user.enabled = true;
 
 	logger.info('KeyCloak -> Enabling the user and removing pass edit request for it to be able to login');
-    await KeycloakClient.getClient().users.update({id: user.Id}, { enabled: true });*/
+    await keycloakClient.getClient().users.update({id: user.Id}, { enabled: true });*/
 
     logger.info('KeyCloak -> User Added to Keycloak!');
 	return true;
@@ -164,10 +165,12 @@ UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 
 	logger.info('KeyCloak -> Auth');
 
-	await KeycloakClient.AuthClient();
+	const keycloakClient = new KeycloakClient();
+	await keycloakClient.initialize();
+	await keycloakClient.AuthClient();
 
 	logger.info('KeyCloak -> getting Role Mappings');
-	let roleMappings = await KeycloakClient.getClient().users.listAvailableRealmRoleMappings({id: id});
+	let roleMappings = await keycloakClient.getClient().users.listAvailableRealmRoleMappings({id: id});
 
 	let selectedRole;
 	for (var i = roleMappings.length - 1; i >= 0; i--) {
@@ -178,7 +181,7 @@ UsersController.giveRoleToUserInKeycloak = async (id, params) => {
 	}
 
 	logger.info('KeyCloak -> Adding Role to User');
-	await KeycloakClient.getClient().users.addRealmRoleMappings({id: id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
+	await keycloakClient.getClient().users.addRealmRoleMappings({id: id, roles: [{id: selectedRole.id, name: selectedRole.name}]});
 
     logger.info('KeyCloak -> Role Added to User in Keycloak!');
 	return true;

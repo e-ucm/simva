@@ -143,9 +143,11 @@ LtiController.addClientToKeycloak = async(tool) => {
 		}
 	}
 	LtiController.Log('LtiController.addClientToKeycloak() : Auth to Keycloak');
-	await KeycloakClient.AuthClient();
+	const keycloakClient = new KeycloakClient();
+	await keycloakClient.initialize();
+	await keycloakClient.AuthClient();
 	LtiController.Log('LtiController.addClientToKeycloak() : Creating client :' + JSON.stringify(client));
-	let createdClient = await KeycloakClient.getClient().clients.create(client);
+	let createdClient = await keycloakClient.getClient().clients.create(client);
 	LtiController.Log('LtiController.addClientToKeycloak() : Success. ID :' + createdClient.id);
 	return createdClient.id;
 }
@@ -153,9 +155,10 @@ LtiController.addClientToKeycloak = async(tool) => {
 LtiController.removeClientFromKeycloak = async(id) => {
 	try{
 		LtiController.Log('LtiController.removeClientFromKeycloak(' + id + ') : Start');
-		await KeycloakClient.AuthClient();
-
-		let result = await KeycloakClient.getClient().clients.del({ id: id });
+		const keycloakClient = new KeycloakClient();
+		await keycloakClient.initialize();
+		await keycloakClient.AuthClient();
+		let result = await keycloakClient.getClient().clients.del({ id: id });
 		LtiController.Log('LtiController.removeClientFromKeycloak(' + id + ') : Success');
 	}catch(e){
 		LtiController.Log('LtiController.removeClientFromKeycloak(' + id + ') : ERROR :' + e);
