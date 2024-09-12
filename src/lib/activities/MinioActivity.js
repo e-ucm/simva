@@ -23,7 +23,7 @@ function exportFilter() {
   		if (err) {
     		throw err;
   		}
-  		console.log('JSON data is saved.');
+  		logger.info('JSON data is saved.');
 	});
 }
 
@@ -39,15 +39,36 @@ function importFilter() {
 			try {
 				// Parse the JSON data
 				const jsonObject = JSON.parse(data);
-				console.log('JSON Object:', jsonObject);
+				logger.info('JSON Object:', jsonObject);
+				// Log each filter within the "_filters" array
+				jsonObject._filters.forEach((filterObj, index) => {
+					logger.info(`Filter ${index + 1}:`, filterObj);
+					
+					// Log details of each filter
+					logger.info('Type:', filterObj.type);
+					logger.info('Size:', filterObj._size);
+					logger.info('Number of Hashes:', filterObj._nbHashes);
+					logger.info('Filter Array:', filterObj._filter);
+					// Now let's specifically log and decode the _filter array
+					filterObj._filter.forEach((filterItem, filterIndex) => {
+						logger.info(`Filter Item ${filterIndex + 1}:`, filterItem);
+						// Decode the base64 content
+						const decodedContent = Buffer.from(filterItem.content, 'base64').toString('utf-8');
+						logger.info(`Size: ${filterItem.size}, Decoded Content: ${decodedContent}`);
+					});
+				});
+
+				
+
 				// Convert JSON object to a bloom Filter
+
 				filter = ScalableBloomFilter.fromJSON(data);
 			} catch (parseErr) {
 				console.error('Error parsing JSON:', parseErr);
 			}
 		});
 	} else {
-		console.log('File does not exist.');
+		logger.info('File does not exist.');
 	}
 }
 
