@@ -1,13 +1,77 @@
 const logger = require('../logger');
+const { v4: uuidv4 } = require('uuid');
+const {ScalableBloomFilter, BloomFilter, PartitionedBloomFilter} = require('bloom-filters')
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
+var Activity = require('./activity');
+var config = require('../config');
+const fs = require('fs');
 
 var generateStatementId = require('../utils/statementIdGenerator');
+// by default it creates an ideally scalable bloom filter for 8 elements with an error rate of 0.01 and a load factor of 0.5
+const filter = new ScalableBloomFilter();
+const filterFilePath = `${config.storage.filterFolderPath}/filter.json`;
+importFilter();
 
-var Activity = require('./activity');
+//IMPORT EXPORT FILTER FUNCTIONS
+function exportFilter() {
+	// Convert JSON object to string
+	const data = filter.saveAsJSON();
+	const myJSON = JSON.stringify(data);
+	// Write JSON string to a file
+	fs.writeFile(filterFilePath, myJSON, (err) => {
+  		if (err) {
+    		throw err;
+  		}
+  		logger.info('JSON data is saved.');
+	});
+}
 
-var config = require('../config');
+function importFilter() {
+	// Check if the file exists
+	if (fs.existsSync(filterFilePath)) {
+		// Read the file
+		fs.readFile(filterFilePath, 'utf-8', (err, data) => {
+			if (err) {
+				console.error('Error reading the file:', err);
+				return;
+			}
+			try {
+				// Parse the JSON data
+				const jsonObject = JSON.parse(data);
+				logger.info('JSON Object:', jsonObject);
+				// Log each filter within the "_filters" array
+				jsonObject._filters.forEach((filterObj, index) => {
+					logger.info(`Filter ${index + 1}:`, filterObj);
+					
+					// Log details of each filter
+					logger.info('Type:', filterObj.type);
+					logger.info('Size:', filterObj._size);
+					logger.info('Number of Hashes:', filterObj._nbHashes);
+					logger.info('Filter Array:', filterObj._filter);
+					// Now let's specifically log and decode the _filter array
+					filterObj._filter.forEach((filterItem, filterIndex) => {
+						logger.info(`Filter Item ${filterIndex + 1}:`, filterItem);
+						// Decode the base64 content
+						const decodedContent = Buffer.from(filterItem.content, 'base64').toString('utf-8');
+						logger.info(`Size: ${filterItem.size}, Decoded Content: ${decodedContent}`);
+					});
+				});
+
+				
+
+				// Convert JSON object to a bloom Filter
+
+				filter = ScalableBloomFilter.fromJSON(data);
+			} catch (parseErr) {
+				console.error('Error parsing JSON:', parseErr);
+			}
+		});
+	} else {
+		logger.info('File does not exist.');
+	}
+}
 
 var Kafka = require('../kafka')
 logger.info('## MinioActivity: Connecting to Kafka: ' + config.kafka.url + " to topic : " + config.minio.traces_topic + " : " + config.kafka.traceClientId + " : " + config.kafka.traceGroupId);
@@ -139,9 +203,11 @@ class MinioActivity extends Activity {
 		for (var i = traces.length - 1; i >= 0; i--) {
 			let trace = traces[i];
 			trace.id = generateStatementId(trace);
+			filter.add(trace.id);
 			responses.push(trace.id);
-			payloads.push(JSON.stringify(trace));
+			payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 		}
+		exportFilter();
 		await kafkaClient.sendMessages(payloads, 0, JSON.stringify({ _id: activityId }));
 		return responses;
 	}
