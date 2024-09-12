@@ -18,6 +18,7 @@
 
 const logger = require('../../logger');
 var request = require('request');
+var axios= require('axios')
 var async = require('async');
 var session_timestamp;
 var SESSIONKEY = '';
@@ -646,68 +647,186 @@ function getResponseId(sid, token, rid){
  * @param sid
  * @param r 
  */
-function getResponses(sid, participants){
+function getResponses(sid, participants, type){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponses -> Started');
-			options.body = JSON.stringify({ method: 'export_responses', params: [SESSIONKEY, sid, 'json'/*, 'es', 'all', 'code', 'short'*/], id:1 });
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			let headingType, responseType;
+			if(type === 'full') {
+				headingType='full';
+				responseType='long';
+				if(participants) {
+					const responses = {};
+					let completedRequests = 0;
+					participants.forEach(participant => {
+						options.data = {
+							method: 'export_responses_by_token',
+							params: [
+								SESSIONKEY,
+								sid,
+								'json',
+								participant,
+								null,
+								'all',
+								headingType,
+								responseType
+							],
+							id: 1
+						};
 
-					try{
-						body = JSON.parse(body);
-					}catch(e){
-						return NotifyRCError('getResponses', error, response, body, callback);
-					}
+						axios(options)
+							.then(response => {
+								const body = response.data;
 
-					let responses = {};
-
-					if(body && body.result){
-						if(body.result.length > 0){
-							var raw = null;
-							
+								if (body && body.result && body.result.length > 0) {
+									const decodedResult = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+									for (var rid in decodedResult){
+										for (var res in decodedResult[rid]){
+											responses[participant] = decodedResult[rid][res];
+										}
+									}
+								} else {
+									responses[participant] = null;
+								}
+							})
+							.catch(error => {
+								console.error(`Error processing participant ${participant}:`, error.message);
+								responses[participant] = null;
+							})
+							.finally(() => {
+								completedRequests++;
+								if (completedRequests === participants.length) {
+									console.log('LimesurveyController.getResponses -> Completed');
+									callback(null, responses);
+								}
+							});
+					});
+				} else {
+					options.body = JSON.stringify({
+						method: 'export_responses',
+						params: [
+							SESSIONKEY,      // Auth credentials
+							sid,             // Survey ID
+							'json',          // Document Type (e.g., json, pdf, csv)
+							null,            // Language code (skip by setting null or omit)
+							'all', 		     // Completion Status (optional)
+							headingType,     // Heading Type (optional)
+							responseType   	 // Response Type (optional)
+						],
+						id: 1
+					});
+					request(options, function(error, response, body){
+						if (!error && response.statusCode == 200) {
 							try{
-								raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
-
+								body = JSON.parse(body);
 							}catch(e){
-								Log('LimesurveyController.getResponses -> Error');
-								Log(e);
-								return callback({ message: 'Error transforming LimeSurvey result' });
+								return NotifyRCError('getResponses', error, response, body, callback);
 							}
-
-							if(participants){
-								for (var rid in raw){
-									for (var res in raw[rid]){
-										if(participants.indexOf(raw[rid][res].token) > -1){
+							let responses = {};
+							if(body && body.result){
+								if(body.result.length > 0){
+									var raw = null;
+									try{
+										raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+									}catch(e){
+										Log('LimesurveyController.getResponses -> Error');
+										Log(e);
+										return callback({ message: 'Error transforming LimeSurvey result' });
+									}
+									if(participants){
+										for (var rid in raw){
+											for (var res in raw[rid]){
+												if(participants.indexOf(raw[rid][res].token) > -1){
+													if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+														responses[raw[rid][res].token] = raw[rid][res];
+													}
+												}
+											}
+										}
+									}else{
+										responses=raw;
+									}
+								}
+								Log('LimesurveyController.getResponses -> Completed');
+								callback(null, responses);
+							}else{
+								Log('LimesurveyController.getResponses -> Error');
+								callback({ message: 'Malformed body received from LimeSurvey'});
+							}
+						}else{
+							Log('LimesurveyController.getResponses -> error exporting the responses');
+							LogMultiple({ error: error, response: response, body: body });
+							callback({ message: 'Error exporting the responses from LimeSurvey', error: error });
+						}
+					});
+				}
+			} else {
+				headingType='code';
+				responseType='short';
+				options.body = JSON.stringify({
+					method: 'export_responses',
+					params: [
+						SESSIONKEY,      // Auth credentials
+						sid,             // Survey ID
+						'json',          // Document Type (e.g., json, pdf, csv)
+						null,            // Language code (skip by setting null or omit)
+						'all', 		     // Completion Status (optional)
+						headingType,     // Heading Type (optional)
+						responseType   	 // Response Type (optional)
+					],
+					id: 1
+				});
+				request(options, function(error, response, body){
+					if (!error && response.statusCode == 200) {
+						try{
+							body = JSON.parse(body);
+						}catch(e){
+							return NotifyRCError('getResponses', error, response, body, callback);
+						}
+						let responses = {};
+						if(body && body.result){
+							if(body.result.length > 0){
+								var raw = null;
+								try{
+									raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+								}catch(e){
+									Log('LimesurveyController.getResponses -> Error');
+									Log(e);
+									return callback({ message: 'Error transforming LimeSurvey result' });
+								}
+								if(participants){
+									for (var rid in raw){
+										for (var res in raw[rid]){
+											if(participants.indexOf(raw[rid][res].token) > -1){
+												if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+													responses[raw[rid][res].token] = raw[rid][res];
+												}
+											}
+										}
+									}
+								}else{
+									for (var rid in raw){
+										for (var res in raw[rid]){
 											if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
 												responses[raw[rid][res].token] = raw[rid][res];
 											}
 										}
 									}
 								}
-							}else{
-								for (var rid in raw){
-									for (var res in raw[rid]){
-										if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-											responses[raw[rid][res].token] = raw[rid][res];
-										}
-									}
-								}
 							}
+							Log('LimesurveyController.getResponses -> Completed');
+							callback(null, responses);
+						}else{
+							Log('LimesurveyController.getResponses -> Error');
+							callback({ message: 'Malformed body received from LimeSurvey'});
 						}
-
-						Log('LimesurveyController.getResponses -> Completed');
-						callback(null, responses);
 					}else{
-						Log('LimesurveyController.getResponses -> Error');
-						callback({ message: 'Malformed body received from LimeSurvey'});
+						Log('LimesurveyController.getResponses -> error exporting the responses');
+						LogMultiple({ error: error, response: response, body: body });
+						callback({ message: 'Error exporting the responses from LimeSurvey', error: error });
 					}
-				}else{
-					Log('LimesurveyController.getResponses -> error exporting the responses');
-					LogMultiple({ error: error, response: response, body: body });
-					callback({ message: 'Error exporting the responses from LimeSurvey', error: error });
-				}
-			});
+				});
+			}
 		}catch(e){
 			LogBigError('getResponses', e, callback);
 		}
@@ -853,22 +972,37 @@ function tokenHasCompleted(survey, token, rid){
  * @param token
  * @param rid 
  */
-function getResponseByToken(survey, token){
+function getResponseByToken(survey, token, type){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponseByToken -> Started');
-			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1});
-
+			let headingType='code'
+			let responseType='short'
+			if(type === 'full') {
+				headingType='full'
+				responseType='long'
+			}
+			options.body = JSON.stringify({
+				method: 'export_responses_by_token',
+				params: [
+					SESSIONKEY,      // Auth credentials
+					survey,             // Survey ID
+					'json',          // Document Type (e.g., json, pdf, csv)
+					token, 			 // token for which responses needed
+					null,            // Language code (skip by setting null or omit)
+					'all', 		     // Completion Status (optional)
+					headingType,     // Heading Type (optional)
+					responseType    // Response Type (optional)
+				],
+				id: 1
+			});
 			request(options, function(error, response, body){
-				logger.info(body);
 				if (!error && response.statusCode == 200) {
 					try{
 						body = JSON.parse(body);
 					}catch(e){
 						return NotifyRCError('getResponseByToken', error, response, body, callback);
 					}
-
-					logger.info(body);
 
 					var response = null;
 

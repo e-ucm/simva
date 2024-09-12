@@ -305,7 +305,7 @@ class LimeSurveyActivity extends Activity {
 				async.waterfall([
 					controller.online,
 					controller.auth,
-					controller.getResponses(s.extra_data.surveyId, participants),
+					controller.getResponses(s.extra_data.surveyId, participants, type),
 				], function (err, responses) {
 					if(err){
 						reject(err);
@@ -325,7 +325,7 @@ class LimeSurveyActivity extends Activity {
 				async.waterfall([
 					controller.online,
 					controller.auth,
-					controller.getResponseByToken(s.extra_data.surveyId,participants[0])
+					controller.getResponseByToken(s.extra_data.surveyId,participants[0], type)
 				], function (err, response) {
 					if(err){
 						reject(err);
