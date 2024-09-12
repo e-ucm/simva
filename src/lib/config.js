@@ -126,6 +126,7 @@ config.LTI.loggerActive = process.env.LTI_LOGGER_ACTIVE || true;
 config.LTI.debug= process.env.LTI_DEBUG || false;
 
 config.storage = {}
-config.storage.path = process.env.SIMVA_STORAGE_PATH || 'storage/'
+config.storage.path = process.env.SIMVA_STORAGE_PATH || '/storage/'
+config.storage.filterFolderPath = process.env.SIMVA_FILTER_PATH || '/filter/'
 
 module.exports = config;

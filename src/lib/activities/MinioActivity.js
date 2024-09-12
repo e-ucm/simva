@@ -4,13 +4,51 @@ const {ScalableBloomFilter} = require('bloom-filters')
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
+var Activity = require('./activity');
+var config = require('../config');
+const fs = require('fs');
 
 // by default it creates an ideally scalable bloom filter for 8 elements with an error rate of 0.01 and a load factor of 0.5
-const filter = new ScalableBloomFilter()
+const filter = new ScalableBloomFilter();
+const filterFilePath = `${config.storage.filterFolderPath}/filter.json`;
+importFilter();
 
-var Activity = require('./activity');
+//IMPORT EXPORT FILTER FUNCTIONS
+function exportFilter() {
+	// Convert JSON object to string
+	const data = filter.saveAsJSON();
+	// Write JSON string to a file
+	fs.writeFile(filterFilePath, data, (err) => {
+  		if (err) {
+    		throw err;
+  		}
+  		console.log('JSON data is saved.');
+	});
+}
 
-var config = require('../config');
+function importFilter() {
+	// Check if the file exists
+	if (fs.existsSync(filterFilePath)) {
+		// Read the file
+		fs.readFile(filterFilePath, 'utf-8', (err, data) => {
+			if (err) {
+				console.error('Error reading the file:', err);
+				return;
+			}
+			try {
+				// Parse the JSON data
+				const jsonObject = JSON.parse(data);
+				console.log('JSON Object:', jsonObject);
+				// Convert JSON object to a bloom Filter
+				filter = BloomFilter.fromJSON(data);
+			} catch (parseErr) {
+				console.error('Error parsing JSON:', parseErr);
+			}
+		});
+	} else {
+		console.log('File does not exist.');
+	}
+}
 
 var kafka = require('kafka-node'),
     HighLevelProducer = kafka.HighLevelProducer,
@@ -162,7 +200,7 @@ class MinioActivity extends Activity {
 					filter.add(trace.id);
 					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
-
+				exportFilter();
 				producer.send(payloads, function (err, data) {
 					if(err){
 						logger.info("Error in Kafka enqueue: " + err);
