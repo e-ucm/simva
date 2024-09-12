@@ -1,6 +1,6 @@
 const logger = require('../logger');
 const { v4: uuidv4 } = require('uuid');
-const {ScalableBloomFilter} = require('bloom-filters')
+const {ScalableBloomFilter, BloomFilter} = require('bloom-filters')
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -41,7 +41,7 @@ function importFilter() {
 				const jsonObject = JSON.parse(data);
 				console.log('JSON Object:', jsonObject);
 				// Convert JSON object to a bloom Filter
-				filter = ScalableBloomFilter.fromJSON(data);
+				filter = BloomFilter.fromJSON(data);
 			} catch (parseErr) {
 				console.error('Error parsing JSON:', parseErr);
 			}
