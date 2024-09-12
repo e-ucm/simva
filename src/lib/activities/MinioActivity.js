@@ -158,8 +158,8 @@ class MinioActivity extends Activity {
 
 				for (var i = traces.length - 1; i >= 0; i--) {
 					let trace = traces[i];
-					var traceid = this.generateStatementId(trace);
-					filter.add(traceid);
+					trace.id = this.generateStatementId(trace);
+					filter.add(trace.id);
 					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
 				}
 
