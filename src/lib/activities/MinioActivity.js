@@ -41,7 +41,7 @@ function importFilter() {
 				const jsonObject = JSON.parse(data);
 				console.log('JSON Object:', jsonObject);
 				// Convert JSON object to a bloom Filter
-				filter = BloomFilter.fromJSON(data);
+				filter = ScalableBloomFilter.fromJSON(data);
 			} catch (parseErr) {
 				console.error('Error parsing JSON:', parseErr);
 			}
