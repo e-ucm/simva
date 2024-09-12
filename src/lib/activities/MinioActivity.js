@@ -17,8 +17,9 @@ importFilter();
 function exportFilter() {
 	// Convert JSON object to string
 	const data = filter.saveAsJSON();
+	const myJSON = JSON.stringify(data);
 	// Write JSON string to a file
-	fs.writeFile(filterFilePath, data, (err) => {
+	fs.writeFile(filterFilePath, myJSON, (err) => {
   		if (err) {
     		throw err;
   		}
