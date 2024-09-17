@@ -28,7 +28,6 @@
     "multiparty-express": "^0.1.9",
     "node-yaml-config": "1.0.0",
     "pino": "^8.16.2",
-    "request": "2.88.2",
     "require-text": "0.0.1",
     "ssl-root-cas": "1.3.x",
     "swagger-mongoose": "github:e-ucm/swagger-mongoose#1.1.2-eucm",
