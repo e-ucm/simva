@@ -17,7 +17,6 @@
  */
 
 const logger = require('../../logger');
-var request = require('request');
 var axios= require('axios')
 var async = require('async');
 var session_timestamp;
