@@ -323,6 +323,27 @@ router.post('/:id/statements', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Set the completion status of the activity for a student
+ * 
+ */
+router.put('/:id/statements', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+  logger.info(options);
+
+  try {
+    const result = await activities.setResult(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Obtains if has result or not
  * 
  */
