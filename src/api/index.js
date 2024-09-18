@@ -35,21 +35,57 @@ let createAdminUser = async function(){
 }
 
 var mongoose = require('mongoose');
+const sendSimvaEventsToKafka = require('../lib/utils/SimvaEventsToKafka');
+const getActivityFromSurveyId = require('../lib/activities/limesurvey/getActivityFromSurveyId');
 mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true});
 var db = mongoose.connection;
 db.on('error', logger.error.bind(console, 'connection error:'));
 db.once('open', function() {
   logger.debug('connected');
-
-  	const fs = require('fs');
+  const fs = require('fs');
 	const yaml = require('yaml');
-	const swaggerMongoose = require('swagger-mongoose');
 
-	const descriptor = yaml.parse(fs.readFileSync('./api.yaml', 'utf8'));
-	swaggerMongoose.compile(JSON.stringify(descriptor));
+  try {
+    const swaggerMongoose = require('swagger-mongoose');
+    //const descriptor = fs.readFileSync('./openapi-test.json', 'utf8');
+    const descriptor = yaml.parse(fs.readFileSync('./api.yaml', 'utf8'));
+    // Compile the models and schemas from the YAML descriptor
+    const { models, schemas } = swaggerMongoose.compile(JSON.stringify(descriptor));
+    // Compile the models and schemas from the YAML descriptor
+    //const {models, schemas} = swaggerMongoose.compile(JSON.parse(descriptor));
+    // Register the models in Mongoose
+    Object.entries(models).forEach(([modelName, model]) => {
+      mongoose.model(modelName, model.schema);
+    });
+    logger.info('Swagger models and schemas compiled successfully.');
+    createAdminUser();
+    let StudiesController = require('../lib/studiescontroller');
+    StudiesController.updateStudyIdInTestsAndActivitiesMigration().then(() => {
+      logger.info('Migration completed.');
+    }).catch(err => {
+      logger.error('Migration failed: ' + err);
+    });
+  } catch(e) {
+    logger.error(e.message);
+  }
 
-  createAdminUser();
+  // Apply `strict: false` to all schemas
+  //Object.values(schemas).forEach((schema) => {
+  //  schema.set('strict', false);
+  //});
+  //
+  //// Apply the custom extension for Mixed types
+  //Object.values(schemas).forEach((schema) => {
+  //  schema.eachPath((path, schemaType) => {
+  //    const mongooseType = schemaType.options['x-mongoose-type'];
+  //    if (mongooseType === 'Mixed') {
+  //      schema.path(path, mongoose.Schema.Types.Mixed);
+  //    }
+  //  });
+  //});
 });
+
+
 
 let multipartwith
 
@@ -106,7 +142,7 @@ app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: tr
 // ALLOW CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
+    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method, x-experience-api-version');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.header('Allow', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
@@ -123,6 +159,77 @@ app.use('/activitytypes', require('./routes/activitytypes'));
 app.use('/allocatortypes', require('./routes/allocatortypes'));
 app.use('/lti', require('./routes/lti'));
 
+verifyHookdeckSignature = async function(
+  req,
+  res,
+  next
+) {
+  if (!config.limesurvey.SECRET) {
+    console.warn(
+      "No Hookdeck Signing Secret: Skipping webhook verification. Do not do this in production!"
+    );
+    return next();
+  }
+
+  const headers= {};
+  const incomingHeaders = req.headers;
+
+  for (const [key, value] of Object.entries(incomingHeaders)) {
+    headers[key] = value;
+  }
+
+  // logger.info({ headers });
+
+  const rawBody = req.rawBody.toString();
+  // logger.info({ rawBody });
+
+  const result = await verifyWebhookSignature({
+    headers,
+    rawBody,
+    signingSecret: SECRET,
+    config: {
+      checkSourceVerification: false,
+    },
+  });
+
+  if (!result.isValidSignature) {
+    logger.info("Signature is invalid, rejected");
+    res.sendStatus(401);
+  } else {
+    logger.info("Signature is valid, accepted");
+    next();
+  }
+};
+
+app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req, res) => {
+  logger.info(req.body);
+  var type;
+  if(req.body.event == "survey_initialized") {
+    type='activity_initialized';
+  } else if(req.body.event == "survey_completed") {
+    type='activity_completed';
+  } else {
+    type=req.body.event;
+  };
+  let surveyId = req.body.surveyId;
+  let activities = await getActivityFromSurveyId(surveyId);
+  let messages = [];
+  for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
+      const message = {
+          type: type,
+          activityType: "limesurvey",
+          surveyId: surveyId,
+          activityId: activity._id,
+          studyId: activity.study,
+          user: req.body.token
+      };
+      logger.info(message);
+      messages.push(message);
+  }
+  sendSimvaEventsToKafka(messages);
+  res.status(200).send({ message: 'Tested and treated' });
+});
 
 // catch 404
 app.use((req, res, next) => {

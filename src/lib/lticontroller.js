@@ -78,7 +78,7 @@ LtiController.updateLtiTool = async (id, tool) => {
 
 	var result = await LtiTool.updateOne({ _id: id }, tool);
 	LtiController.Log('LtiController.updateLtiTool(' + id + ')) : Success');
-	return result.ok > 0;
+	return result.matchedCount > 0;
 }
 
 LtiController.removeLtiTool = async (id) => {

@@ -45,7 +45,7 @@ if (process.env.NODE_ENV !== 'production') {
 const options = {
     level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
     redact: {
-        paths: ['password', 'api.adminPassword', 'JWT.secret', 'limesurvey.adminPassword', 'sso.clientSecret', 'sso.adminPassword', 'a2.adminPassword', 'LTI.platform.mongo.password', 'LTI.platform.key'],
+        paths: ['config.password', 'config.api.adminPassword', 'config.JWT.secret', 'config.limesurvey.adminPassword', 'config.sso.clientSecret', 'config.sso.adminPassword', 'config.a2.adminPassword', 'config.LTI.platform.mongo.password', 'config.LTI.platform.key'],
         censor: '**REDACTED**'
     },
     customLevels: { log: 30 },

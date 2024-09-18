@@ -75,8 +75,10 @@ ActivitiesController.loadActivity = async (id) => {
 	return ActivitiesController.castToClass(activity);
 }
 
-
-
+ActivitiesController.exportActivity = async (id, complete) => {
+	let activity = await ActivitiesController.loadActivity(id);
+	return await activity.export(complete);
+}
 
 ActivitiesController.addActivity = async (params, files) => {
 	for (var i = 0; i < types.length; i++) {
@@ -197,16 +199,32 @@ ActivitiesController.getPresignedFileUrl = async (id) => {
 	}
 };
 
-ActivitiesController.addActivityToTest = async (id, activity) => {
-	
+ActivitiesController.addOwnersToActivity = async (id, owners) => {
+	let activity = await ActivitiesController.loadActivity(id);
+	await activity.addOwners(owners);
 }
 
-ActivitiesController.removeActivityFromTest = async (activity, test) => {
-	
+ActivitiesController.removeOwnersFromActivity = async (id, owners) => {
+	let activity = await ActivitiesController.loadActivity(id);
+	await activity.removeOwners(owners);
 }
 
-ActivitiesController.addParticipants = async (id, participant) => {
+ActivitiesController.addParticipantsToActivity = async (id, participants) => {
+	let activity = await ActivitiesController.loadActivity(id);
+	logger.debug("Activity: " + JSON.stringify(activity));
+	if(!await activity.addParticipants(participants)){
+		throw { message: 'Error adding participants to activity: ' + id};
+	}
+	logger.debug("ActivitiesController.addParticipants finished");
+}
 
+ActivitiesController.removeParticipantsFromActivity = async (id, participants) => {
+	let activity = await ActivitiesController.loadActivity(id);
+	logger.debug("Activity: " + JSON.stringify(activity));
+	if(!await activity.removeParticipants(participants)){
+		throw { message: 'Error removing participants from activity: ' + id };
+	}
+	logger.debug("ActivitiesController.removeParticipants finished");
 }
 
 ActivitiesController.castToClass = function(activity){

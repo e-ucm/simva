@@ -23,7 +23,12 @@ class Activity {
 		if(ObjectId.isValid(params)){
 			this._id = params;
 		}else if(typeof params == 'object'){
-			this.params = params;
+			for(var p in activityschema.properties){
+				if(params[p]){
+					this[p] = params[p];
+				}
+			}
+			this._id = params._id;
 		}
 	}
 
@@ -95,6 +100,12 @@ class Activity {
 		return false;
 	}
 
+	patch(params) {
+		if(typeof params.name !== 'undefined') {
+			this.name = params.name;
+		}
+	}
+
 	async save(){
 		var params = {};
 
@@ -108,7 +119,7 @@ class Activity {
 
 		if(params._id){
 			var result = await mongoose.model('activity').updateOne({ _id: this.id }, params);
-			if(result.ok !== result.n){
+			if(result.matchedCount == 0){
 				throw { message: 'Error saving the activity' };
 			}
 		}else{
@@ -161,6 +172,21 @@ class Activity {
 		logger.debug("Before delete participants : " + JSON.stringify(this));
 		return await this.save();
 	}
+
+	async addOwners(owners) {
+		for(var i = 0; i < owners.length; i++) {
+			this.owners.push(owners[i]);       
+		}
+		return await this.save();
+	}
+	
+	async removeOwners(owners) {
+		for(var i = 0; i < owners.length; i++) {
+			this.owners.pop(owners[i]);
+		}
+		return await this.save();
+	}
+	
 
 	async setResult(participant, result){
 		if(!this.extra_data){
@@ -285,7 +311,7 @@ class Activity {
 	}
 
 	async getResults(participants, type){
-		if(!participants || participants.length == 0){
+		if(!participants || ! participants.length === 0){
 			participants = Object.keys(this.extra_data.participants);
 		}
 
@@ -321,6 +347,47 @@ class Activity {
 		return results;
 	}
 
+	async getProgress(participants){
+		if(!participants || ! participants.length === 0){
+			participants = Object.keys(this.extra_data.participants);
+		}
+
+		let results = {};
+		if(this.extra_data && this.extra_data.participants){
+			for(let i = 0; i < participants.length; i++){
+				if(this.extra_data.participants[participants[i]] && this.extra_data.participants[participants[i]].progress){
+					results[participants[i]] = this.extra_data.participants[participants[i]].progress;
+				}else{
+					results[participants[i]] = 0;
+				}
+			}
+		}else{
+			for(let i = 0; i < participants.length; i++){
+				results[participants[i]] = 0;
+			}
+		}
+
+		return results;
+	}
+
+	async setProgress(participant, progress){
+		if(!this.extra_data){
+			this.extra_data = {}
+		}
+
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
+		}
+
+		if(!this.extra_data.participants[participant]){
+			this.extra_data.participants[participant] = {}
+		}
+		if(progress <= 1) {
+			this.extra_data.participants[participant].progress = progress;
+		}
+		return await this.save();
+	}
+
 	async setCompletion(participant, status){
 		if(!this.extra_data){
 			this.extra_data = {}
@@ -340,7 +407,7 @@ class Activity {
 	}
 
 	async getCompletion(participants){
-		if(!participants || participants.length == 0){
+		if(!participants || ! participants.length === 0){
 			participants = Object.keys(this.extra_data.participants);
 		}
 
@@ -383,6 +450,18 @@ class Activity {
 		}
 
 		return res;
+	}
+
+	export() {
+		var activity = {};
+		activity.name = this.name;
+		activity.type = this.type;
+		activity.owners = this.owners;
+		activity.extra_data = this.extra_data;
+		delete activity.extra_data;
+		delete activity._id;
+		delete activity.id;
+		return activity;
 	}
 };
 

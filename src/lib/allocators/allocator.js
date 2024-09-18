@@ -106,7 +106,7 @@ class Allocator {
 
 		if(params._id){
 			var result = await mongoose.model('allocator').updateOne({ _id: this.id }, params);
-			if(result.ok !== result.n){
+			if(result.matchedCount == 0){
 				throw { message: 'Error saving the allocator' };
 			}
 		}else{

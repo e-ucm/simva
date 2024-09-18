@@ -36,7 +36,7 @@ GroupsController.updateGroup = async (id, group) => {
 
 	var result = await Group.updateOne({ _id: id }, group);
 
-	return result.ok > 0;
+	return result.matchedCount > 0;
 }
 
 GroupsController.removeGroup = async (id) => {

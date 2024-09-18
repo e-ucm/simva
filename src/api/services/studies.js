@@ -83,6 +83,72 @@ module.exports.addStudy = async (options) => {
   return { status: 200, data: study };
 };
 
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.addStudyFromImport = async (options) => {
+  let newStudy = JSON.parse(atob(options.file));
+  try {
+    var allocator = await AllocatorsController.createAllocator(AllocatorsController.getTypes()[0].getType());
+    let rawstudy = {
+      name: newStudy.name,
+      owners: [options.user.data.username],
+      tests: [],
+      allocator: allocator.id,
+      created: Date.now()
+    };
+
+    var study = await StudiesController.addStudy(rawstudy);
+    for(var i=0; i< newStudy.tests.length; i++) {
+      var newtest = newStudy.tests[i];
+      var rawTest = {
+        name : newtest.name,
+        study : study._id
+      };
+      var test = await StudiesController.addTestToStudy(study._id, rawTest);
+      await TestsController.importTest(test, newtest, options.user.data.username);
+    }
+  }catch(e){
+    logger.error(e);
+    return {status: 500, data: e };
+  }
+
+  return { status: 200, data: study };
+};
+
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The study ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getStudyExport = async (options) => {
+  var result = { status: 404, data: {message: 'Not found'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var study = await StudiesController.getStudyExport(options.id);
+      if(study !== null){
+        if(options.user.data.role === 'admin' || study.owners.indexOf(options.user.data.username) !== -1){
+          result = { status: 200, data: study };
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the study' } };
+        }
+      } 
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
+};
+
 /**
  * @param {Object} options
  * @param {String} options.id The study ID
@@ -125,17 +191,25 @@ module.exports.updateStudy = async (options) => {
     try{
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           if(options.body.owners.indexOf(options.user.data.username) !== -1){
-
             let ownersadded = options.body.owners.filter(x => !study.owners.includes(x));
             var loadedownersadded = await UsersController.getUsers({"username" : {"$in" : ownersadded}});
-
+            let ownersremoved = study.owners.filter(x => !options.body.owners.includes(x));
             if(loadedownersadded.length !== ownersadded.length){
               result = { status: 404, data: {message: 'An owner added does not exist'} };
             }else{
-              await StudiesController.updateStudy(options.id, options.body);
+              let newStudy = await StudiesController.updateStudy(options.id, options.body);
+              if(ownersadded.length > 0) {
+                if(!await StudiesController.addOwners(newStudy, ownersadded)) {
+                  result = { status : 400, data : {message: "Error adding owners!"}}
+                }
+              }
+              if(ownersremoved.length > 0) {
+                if(!await StudiesController.removeOwners(newStudy, ownersremoved)) {
+                  result = { status : 400, data : {message: "Error removing owners!"}}
+                }
+              }
             }
           }else{
             result = { status: 400, data: {message: 'Teacher cannot remove itself from the study'} };
@@ -167,7 +241,7 @@ module.exports.deleteStudy = async (options) => {
     try{
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           if(!await StudiesController.deleteStudy(options.id)){
             result = { status: 500, data: { message: 'Error deleting the study' } };
           }
@@ -236,7 +310,7 @@ module.exports.getSchedule = async (options) => {
             data: schedule
           };
         }else{
-          if(study.owners.indexOf(options.user.data.username) !== -1){
+          if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
             result =  {
               status: 400,
               data: { message: 'You are owner of the study but not participant' }
@@ -276,7 +350,7 @@ module.exports.getStudyGroups = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           var groups = await GroupsController.getGroups({"_id" : {"$in" : study.groups}});
           result = { status: 200, data: groups };
         }else{
@@ -308,7 +382,7 @@ module.exports.getStudyTests = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           var groups = await TestsController.getTests({"_id" : {"$in" : study.tests}});
           result = { status: 200, data: groups };
         }else{
@@ -340,7 +414,8 @@ module.exports.addTestToStudy = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
+          options.body.owner=options.user.data.username;
           let test = await StudiesController.addTestToStudy(options.id, options.body);
           result = { status: 200, data: test };
         }else{
@@ -373,7 +448,7 @@ module.exports.getTest = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           var test = await TestsController.getTest(options.testid);
           if(test !== null){
             result = { status: 200, data: test };
@@ -437,6 +512,33 @@ module.exports.updateTest = async (options) => {
 
 /**
  * @param {Object} options
+ * @param {String} options.id The activity ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateTestName = async (options) => {
+  var result = { status: 200, data: {message: 'Test updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
+    try{
+      var test = await TestsController.getTest(options.testid);
+      if(test !== null){
+        test.name = options.body.name;
+        test.save();
+        result = { status: 200, data: test };
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load test.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
  * @param {String} options.id The study ID
  * @throws {Error}
  * @return {Promise}
@@ -448,7 +550,7 @@ module.exports.deleteTest = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           let ntest = study.tests.indexOf(options.testid);
           if(ntest !== -1){
             study.tests.splice(ntest,1);
@@ -471,7 +573,6 @@ module.exports.deleteTest = async (options) => {
   
   return result;
 };
-
 
 /**
  * @param {Object} options
@@ -500,8 +601,7 @@ module.exports.addActivityToTest = async (options) => {
         return { status: 400, data: { message: 'You have not included yourself as owner of the activity' } };
       }
     }
-    logger.debug("Adding activity :" + JSON.stringify(test));
-    let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(options.body));
+
     let allocator = await AllocatorsController.loadAllocator(study.allocator);
     let participants = await allocator.getAllocatedForTest(options.testid);
     
@@ -519,10 +619,8 @@ module.exports.addActivityToTest = async (options) => {
       } 
       logger.debug("PARTICIPANTS UPDATED: " + participants);
     }
-    await activity.addParticipants(participants);
-    test.activities.push(activity.id);
-    await TestsController.updateTest(options.testid, test);
-    return {status: 200, data: activity.toObject() };
+    let activity = await TestsController.addActivityToTest(options.testid, options.body, participants);
+    return {status: 200, data: activity };
   }catch(e){
     logger.error(e);
     return {status: 500, data: e };
@@ -542,7 +640,7 @@ module.exports.getTestActivities = async (options) => {
     if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           var test = await TestsController.getTest(options.testid);
           if(test !== null){
             var activities = await ActivitiesController.getActivities({"_id" : {"$in" : test.activities}});
@@ -661,7 +759,7 @@ module.exports.getStudyParticipants = async (options) => {
     try{
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
-        if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(study.owners.indexOf(options.user.data.username) !== -1 || options.user.data.role == "admin"){
           result.data = await UsersController.getUsers({"username" : {"$in" : await StudiesController.getParticipants(study)}});
         }else{
           result = { status: 401, data: {message: 'User is not authorized to access this study.'} };
