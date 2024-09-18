@@ -492,7 +492,7 @@ class GameplayActivity extends Activity {
 					customUri = customUri.replace('{authToken}', authToken);
 				}
 
-				customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.id}/result`));
+				customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.id}`));
 				customUri = customUri.replace('{activityId}', this.id);
 				customUri = customUri.replace('{username}', participants[i]);
 

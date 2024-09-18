@@ -1437,6 +1437,67 @@
         ]
       }
     },
+    "/activities/{id}/statements": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the results of the activity",
+        "operationId": "getResult",
+        "description": "Obtains the completion status of the activity\n",
+        "responses": {
+          "200": {
+            "description": "the result of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "sets the result for the activity",
+        "operationId": "setResult",
+        "description": "Set the result of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "if it is openable or not"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      }
+    },
     "/activities/{id}/hasresult": {
       "get": {
         "tags": [
