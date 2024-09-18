@@ -76,6 +76,7 @@ module.exports.addUser = async (options) => {
       if(users.length > 0){
         result = { status: 400, data: { message: 'Email already exists.' } };
       }else{
+        params = UsersController.updateParamToken(params);
         try {
           let keycloakuser = await UsersController.addUserToKeycloak(params);
         }catch(e){

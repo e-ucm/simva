@@ -3,3 +3,6 @@
 
 # Config files
 config-test.js
+*.log
+*.heapsnapshot
+*.crt

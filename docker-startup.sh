@@ -7,9 +7,8 @@ if [[ ! -d "./node_modules" ]]; then
 fi
 
 if [[ "${NODE_ENV:-production}" == "development" ]]; then
-  npm install -g nodemon
-  npm install -g bunyan
   npm run dev
+  #perf record -e cycles:u -g -- npm run dev > perf.out
 else
   npm start
 fi

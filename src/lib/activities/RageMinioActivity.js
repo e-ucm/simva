@@ -8,7 +8,7 @@ var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 
 var AnalyticsActivity = new RageAnalyticsActivity({});
 
-var config = require('..//config');
+var config = require('../config');
 
 class RageMinioActivity extends MinioActivity {
 
@@ -23,6 +23,11 @@ class RageMinioActivity extends MinioActivity {
 			this.extra_data.participants = [];
 			this.extra_data.analytics = {};
 		}
+	}
+
+	async export(complete) {
+		let activity = super.export();
+		return activity;
 	}
 
 	static getType(){
@@ -54,6 +59,9 @@ class RageMinioActivity extends MinioActivity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
 		}
+	}
+	patch(params) {
+		super.patch(params);
 	}
 
 	async save(){

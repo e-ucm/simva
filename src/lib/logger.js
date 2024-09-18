@@ -1,9 +1,9 @@
 const pino = require('pino');
 const config = require('./config.js');
 const path = require('path');
-const logsFolder = path.join(__dirname, '../logs');
+const logsFolder =process.env.LOG_FOLDER || path.join(__dirname, '../../logs');
 var now = new Date();
-const logFile = `${logsFolder.pathname}/${now.toISOString()}.log`;
+const logFile = `${logsFolder}/${now.toISOString()}.log`;
 
 /** @type {{targets:import('pino').TransportTargetOptions[]}} */
 let transport = {
@@ -38,14 +38,14 @@ if (process.env.NODE_ENV !== 'production') {
                 ignore: 'pid,hostname'
             }
         }
-);   
+    );   
 }
 
 /** @type {import('pino').LoggerOptions} */
 const options = {
     level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
     redact: {
-        paths: ['password', 'api.adminPassword', 'JWT.secret', 'limesurvey.adminPassword', 'sso.clientSecret', 'sso.adminPassword', 'a2.adminPassword', 'LTI.platform.mongo.password', 'LTI.platform.key'],
+        paths: ['config.password', 'config.api.adminPassword', 'config.JWT.secret', 'config.limesurvey.adminPassword', 'config.sso.clientSecret', 'config.sso.adminPassword', 'config.a2.adminPassword', 'config.LTI.platform.mongo.password', 'config.LTI.platform.key'],
         censor: '**REDACTED**'
     },
     customLevels: { log: 30 },
@@ -58,7 +58,7 @@ const options = {
 }
 
 
-const logger = pino.pino(options);
+const logger = pino(options);
 
 
 process.on('uncaughtException', err => {

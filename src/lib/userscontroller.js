@@ -36,13 +36,60 @@ UsersController.addUser = async (params) => {
 	}catch(e){
 		logger.error(e);
 	}
-	
-	params.username = params.username.toLowerCase();
+
 	let user = new User(params);
 
 	await user.save();
 
 	return user;
+}
+
+UsersController.updateParamToken = (params) => {
+	if(params.isToken) {
+		params.token=params.username;
+		if(params.useNewGeneration) {
+			params.username= params.groupid + "_" + params.username;
+		}
+	}
+	return params;
+}
+
+UsersController.removeUsersToKeycloak = async (group, usernameList) => {
+	for(var i = 0; i < usernameList.length; i++) {
+		UsersController.removeUserToKeycloak(group, usernameList[i]);
+	}
+}
+
+UsersController.removeUserToKeycloak = async (group, username) => {
+	logger.info(username);
+	var user =  await UsersController.getUsers({ "username" : username });
+	logger.info(user);
+	if(user.length > 0 && user[0].role != "student" && user[0].isToken != "true") {
+		return true;
+	} else {
+		logger.info('KeyCloak -> Auth');
+		const keycloakClient = new KeycloakClient();
+		await keycloakClient.initialize();
+		await keycloakClient.AuthClient();
+		var userid = await keycloakClient.findUserIdByUsername(username);
+		logger.info('KeyCloak -> Remove user from group');
+		try {
+			await keycloakClient.removeUserFromGroup(userid, group);
+		} catch(e) {
+			logger.error(e);
+			//throw { message: 'Failed removing the user from keycloak group' };
+		}
+		logger.info('KeyCloak -> Remove user from keycloak');
+		try {
+			await keycloakClient.removeUser(userid);
+		} catch(e) {
+			logger.error(e);
+			throw { message: 'Failed removing the user into keycloak' };
+		}
+
+		logger.info('KeyCloak -> User removed from Keycloak!');
+		return true;
+	}
 }
 
 UsersController.addUserToKeycloak = async (params) => {
@@ -56,19 +103,17 @@ UsersController.addUserToKeycloak = async (params) => {
 	await keycloakClient.AuthClient();
 
 	logger.info('KeyCloak -> Adding user');
-
 	let user;
+
 	try{
-		user = await keycloakClient.getClient().users.create({
-			/*realm: config.sso.realm,*/
-			username: params.username.toLowerCase(),
-			email: params.email,
-			enabled: true
-		});
+		user = await keycloakClient.addUser(params);
 	}catch(e){
 		logger.error(e);
 		throw { message: 'Failed creating the user into keycloak' };
 	}
+
+	logger.info('KeyCloak -> Adding user to Keycloak Group');
+	await keycloakClient.addUserToGroup(user.id, params.groupid);
 
 	logger.info('KeyCloak -> getting Role Mappings');
 	let roleMappings = await keycloakClient.getClient().users.listAvailableRealmRoleMappings({id: user.id});
@@ -93,21 +138,6 @@ UsersController.addUserToKeycloak = async (params) => {
 			value: params.password,
 		}
 	});
-
-	/* 
-		DISABLED BECAUSE IT MIGHT NOT BE NECESSARY
-	
-
-	logger.info('KeyCloak -> Obtaining user to enable it');
-	user = await keycloakClient.getClient().users.findOne({
-      id: user.id,
-    });
-
-    user.requiredActions = [];
-    user.enabled = true;
-
-	logger.info('KeyCloak -> Enabling the user and removing pass edit request for it to be able to login');
-    await keycloakClient.getClient().users.update({id: user.Id}, { enabled: true });*/
 
     logger.info('KeyCloak -> User Added to Keycloak!');
 	return true;

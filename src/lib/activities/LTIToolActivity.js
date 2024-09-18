@@ -73,6 +73,11 @@ class LTIToolActivity extends Activity {
 		}
 	}
 
+	async export(complete) {
+		let activity = super.export();
+		return activity;
+	}
+
 	toObject(){
 		var params = {};
 		for(var p in activityschema.properties){
@@ -109,6 +114,10 @@ class LTIToolActivity extends Activity {
 
 	async load(){
 		return super.load();
+	}
+
+	patch(params) {
+		super.patch(params);
 	}
 
 	async save(){

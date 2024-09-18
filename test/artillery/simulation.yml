@@ -1,0 +1,37 @@
+config:
+  target: "https://api.external.test"  # API endpoint base URL
+  phases:
+    - duration: 5 #300         # Run the simulation for 5 minutes
+      arrivalRate: 5       # 10 new virtual users per second
+      maxVusers: 10       # no more than 10 concurrent virtual users at any given time
+  payload:
+    path: "./users.csv"
+    fields:
+    - username
+  processor: './functions.js'
+
+scenarios:
+  - name: "Fetch Auth Token"
+    flow:
+      - function: setURL
+      - post:
+          url: "{{ sso_url }}/realms/{{ sso_realm }}/protocol/openid-connect/token"
+          form:
+            grant_type: password
+            client_id: "{{ client_id }}"
+            username: "{{ username }}"
+            password: "{{ username }}"
+            login_hint: "{{ study_id }}"
+          capture:
+            json: access_token
+            as: token
+      - function: getToken
+      - post:
+          url: "{{ api_url }}/activities/{{ activity_id }}/statements"
+          headers:
+            Authorization: Bearer {{ token }}
+            Content-Type: application/json
+          body: "[]"
+          capture:
+            json: ids
+            as: ids
