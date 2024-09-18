@@ -280,6 +280,48 @@ router.post('/:id/result', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Obtains the completion status of the activity
+ * 
+ */
+router.get('/:id/statements', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+    type: req.query['type'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
+  };
+
+  try {
+    const result = await activities.getResult(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Set the completion status of the activity for a student
+ * 
+ */
+router.post('/:id/statements', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.setResult(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Obtains if has result or not
  * 
  */
