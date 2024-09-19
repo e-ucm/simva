@@ -1,5 +1,5 @@
 const logger = require('../logger');
-const request = require('request');
+const axios = require('axios');
 const config = require('../config');
 
 class KeycloakClient {
@@ -96,29 +96,28 @@ class KeycloakClient {
         logger.info('AccessToken: ' + accessToken);
         
         this.options.headers.Authorization = 'Bearer ' + accessToken;
-        this.options.body = {
+        this.options.data = {
             "enabled": "true",
             "url": config.api.webhookPath,
             "secret": config.api.webhookSecret,
             "eventTypes": ["*"]
         };
 
-        request(this.options, function (error, response, body) {
-            try {
-                if (!error && response.statusCode == 200) {
-                    logger.info(JSON.stringify(response));
-                    callback(null);
-                } else {
-                    logger.info(JSON.stringify(response));
-                    logger.info(JSON.stringify(body));
-                    callback({ message: 'Error on SSO webhook Initialization', error: error });
-                }
-            } catch (e) {
+        axios(this.options)
+			.then(response => {
+					if (response.statusCode == 200) {
+						logger.info(JSON.stringify(response));
+						callback(null);
+					} else {
+						logger.info(JSON.stringify(response));
+						callback({ message: 'Error on SSO webhook Initialization', error: error });
+					}
+				})
+			.catch(error => {
                 logger.error('Exception on SSO webhook Initialization');
-                logger.error(JSON.stringify(e));
+                logger.error(JSON.stringify(error));
                 callback({ message: 'Exception on SSO webhook Initialization', error: e });
-            }
-        });
+            });
     }
 }
 
