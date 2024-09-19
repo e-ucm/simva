@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 const logger = require('../../logger');
-var request = require('request');
+var axios = require('axios');
 var async = require('async');
 var session_timestamp;
 var AUTH_TOKEN = "";
@@ -106,7 +106,7 @@ function update_auth_token(callback){
 		login(user, pass, function(error, user){
 			if(error){
 				Log('A2Controller.update_auth_token -> Error');
-				LogMultiple({error: error, response: response, body: body});
+				LogMultiple({error: error});
 				callback({ message: 'Error trying to auth'});
 			}else{
 				Log('A2Controller.update_auth_token -> New key: ' + user.token);
@@ -126,26 +126,24 @@ function update_auth_token(callback){
 
 function login(username, password, callback){
 	Log('A2Controller.login -> Started');
-	try{
+	try {
 		this.options = cloneOptions();
 		this.options.url += "/login";
-		this.options.body = JSON.stringify({ username: username, password: password});
+		this.options.data = { username: username, password: password};
 		this.options.method = "POST";
-
-		request(this.options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
-				body = JSON.parse(body);
-
+	
+		axios(this.options)
+			.then(response => {
+				body = response.data;
 				Log('A2Controller.login -> Completed');
 				callback(null, body.user);
-			}else{
+			}).catch(error => {
 				Log('A2Controller.login -> error on auth');
-				LogMultiple({error: error, response: response, body: body});
-				callback({ message: 'Error trying to auth', error: error });  
-			}
-		});
-	}catch(e){
-		LogBigError('login', e, callback);
+				LogMultiple({error: error});
+				callback({ message: 'Error trying to auth', error: error });
+			});
+	}catch(error) {
+		LogBigError('login', error, callback);
 	}
 }
 
@@ -159,18 +157,16 @@ function signup(user) {
 		try{
 			this.options = cloneOptions();
 			this.options.url += "/signup";
-			this.options.body = JSON.stringify(user);
+			this.options.data = user;
 			this.options.method = "POST";
 
-			request.post(this.options, function(error, response, body){
-				if(error){
-					Log('A2Controller.signup -> Error');
-					Log(error);
-					callback({ message: 'Error creating the user', error: error });
-				}else{
-					Log('A2Controller.signup -> Completed');
-					callback(null);
-				}
+			axios(this.options).then(response => {
+				Log('A2Controller.signup -> Completed');
+				callback(null);
+			}).catch(error => {
+				Log('A2Controller.signup -> Error');
+				Log(error);
+				callback({ message: 'Error creating the user', error: error });
 			});
 		}catch(e){
 			LogBigError('signup', e, callback);
@@ -193,19 +189,17 @@ function signupMassive(participants) {
 
 			this.options = cloneOptions();
 			this.options.url += "/signup/massive";
-			this.options.body = JSON.stringify({users: users});
+			this.options.data = {users: users};
 			this.options.method = "POST";
 
-			request.post(this.options, function(error, response, body){
-				if(error){
-					Log('A2Controller.signupMassive -> Error');
-					Log(error);
-					callback({ message: 'Error adding the participants', error: error });
-				}else{
-					Log('A2Controller.signupMassive -> Completed');
-					callback(null);
-				}
-			});
+			axios(this.options).then(response => {
+				Log('A2Controller.signupMassive -> Completed');
+				callback(null);
+			}).catch(error => {
+				Log('A2Controller.signupMassive -> Error');
+				Log(error);
+				callback({ message: 'Error adding the participants', error: error });
+			})
 		}catch(e){
 			LogBigError('signupMassive', e, callback);
 		}
@@ -220,30 +214,28 @@ function getUsers(participants) {
 	return function (callback) {
 		Log('A2Controller.getUsers -> Started');
 		try{
-			let query = JSON.stringify({
+			let query = {
 				username: participants
-			});
+			};
 
 			this.options = cloneOptions();
 			this.options.url += "/users?limit=" + participants.length + '&query=' + encodeURI(query);
 			this.options.method = "GET";
 
-			request.get(this.options, function(error, response, body){
-				if(error){
-					Log('A2Controller.getUsers -> Error');
-					Log(error);
-					callback({ message: 'Error obtaining the users', error: error });
-				}else{
-					try{
-						Log('A2Controller.getUsers -> Completed');
-						let parsedbody = JSON.parse(body);
-						callback(null, parsedbody);
-					}catch(e){
-						LogMultiple({error: error, response: response, body: body});
-						callback({ message: 'Malformed body received from A2.' });
-					}
+			axios(this.options).then(response => {
+				try{
+					Log('A2Controller.getUsers -> Completed');
+					let parsedbody = response.data;
+					callback(null, parsedbody);
+				}catch(e){
+					LogMultiple({error: error});
+					callback({ message: 'Malformed body received from A2.' });
 				}
-			});
+			}).catch(error=> {
+				Log('A2Controller.getUsers -> Error');
+				Log(error);
+				callback({ message: 'Error obtaining the users', error: error });
+			})
 		}catch(e){
 			LogBigError('getUsers', e, callback);
 		}

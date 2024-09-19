@@ -17,7 +17,7 @@
  */
 
 const logger = require('../../logger');
-var request = require('request');
+var axios= require('axios')
 var async = require('async');
 var session_timestamp;
 var SESSIONKEY = '';
@@ -60,7 +60,7 @@ function LogBigError(name, error, callback){
 
 function NotifyRCError(name, error, response, body, callback){
 	Log('LimesurveyController.' + name + ' -> Error parsing body');
-	LogMultiple({error: error, response: response, body: body});
+	LogMultiple({error: error});
 	Log('LimesurveyController.' + name + ' -> Probably RemoteControl'
 		+ ' API is not configured, check '
 		+ 'https://manual.limesurvey.org/RemoteControl_2_API#How_to_configure_LSRC2');
@@ -128,23 +128,19 @@ function clone(surveyId) {
 
 function online(callback){
 	Log('LimesurveyController.online -> Started');
-	options.body = JSON.stringify({});
-
-	request(options, function(error, response, body){
-		try{
-			if (!error && response.statusCode == 200) {
-				logger.info('Limesurvey ONLINE')
-				callback(null);
-			}
-			else {
-				Log('LimesurveyController.online -> Unable to reach service')
-				LogMultiple({error: error, response: response, body: body});
-				callback({ message: 'LimeSurvey service unreachable.', error: error});
-			}
-		}catch(e){
-			LogBigError('online', e, callback);
-		}
-	});
+	options.data = {};
+	try{
+		axios(options).then(response => {
+			logger.info('Limesurvey ONLINE')
+			callback(null);
+		}).catch(error => {
+			Log('LimesurveyController.online -> Unable to reach service')
+			LogMultiple({error: error});
+			callback({ message: 'LimeSurvey service unreachable.', error: error});
+		})
+	}catch(e){
+		LogBigError('online', e, callback);
+	}
 }
 
 function auth(callback) {
@@ -179,24 +175,23 @@ function reauth(callback) {
 
 function release_session_token(callback){
 	Log('LimesurveyController.release_session_token -> Started');
-	options.body = JSON.stringify({method:'release_session_key',params:[SESSIONKEY],id:1});
+	options.data = {method:'release_session_key',params:[SESSIONKEY],id:1};
 	try{
-		request(options, function(error, response, body){
-		  if (!error && response.statusCode == 200) {
+		axios(options).then(response => {
+			let body;
 		  	try{
-				body = JSON.parse(body);
-			}catch(e){
+				body = response.data;
+			}catch(error){
 				return NotifyRCError('release_session_token', error, response, body, callback);
 			}
 			Log('LimesurveyController.release_session_token -> Key released:');
 			LogMultiple({result: body.result});
 			callback(null);
-		  }else{
+		  }).catch(error => {
 		  	Log('LimesurveyController.release_session_token -> ERROR:');
-		  	LogMultiple({error: error, response: response, body: body});
+		  	LogMultiple({error: error});
 		  	callback({ message: 'Error releasing session token', error: error });
-		  }
-		});
+		  });
 	}catch(e){
 		LogBigError('release_session_token', e, callback);
 	}
@@ -205,14 +200,15 @@ function release_session_token(callback){
 
 function update_auth_token(callback){
 	Log('LimesurveyController.update_auth_token -> Started');
-	options.body = JSON.stringify({method:'get_session_key',params:[user,pass],id:1});
+	options.data = {method:'get_session_key',params:[user,pass],id:1};
 
 	try{
-		request(options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
+		Log(JSON.stringify(options));
+		axios(options).then(response => {
+				let body;
 				try{
-					body = JSON.parse(body);
-				}catch(e){
+					body = response.data;
+				}catch(error){
 					return NotifyRCError('update_auth_token', error, response, body, callback);
 				}
 
@@ -223,12 +219,11 @@ function update_auth_token(callback){
 
 				Log('LimesurveyController.update_auth_token -> Completed');
 				callback(null);
-			}else{
+			}).catch(error => {
 				Log('LimesurveyController.update_auth_token -> error on auth');
-				LogMultiple({error: error, response: response, body: body});
+				LogMultiple({error: error});
 				callback({ message: 'Error trying to auth', error: error });
-			}
-		});
+			});
 	}catch(e){
 		LogBigError('update_auth_token', e, callback);
 	}
@@ -241,7 +236,7 @@ function update_auth_token(callback){
 function insert(survey) {
 	return function(callback) {
 		Log('LimesurveyController.insert -> Started');
-		options.body = JSON.stringify({method:'import_survey',params:[SESSIONKEY, survey, 'lss'],id:1});
+		options.data = {method:'import_survey',params:[SESSIONKEY, survey, 'lss'],id:1};
 
 		insertOrCopy('insert', options, callback);
 	}
@@ -254,11 +249,11 @@ function insert(survey) {
 function copy(surveyId, name) {
 	return function(callback) {
 		Log('LimesurveyController.copy -> Started');
-		options.body = JSON.stringify(
-			{method:'copy_survey',
+		options.data = {
+			method:'copy_survey',
 			params:[SESSIONKEY, surveyId, name, ['copysurveyexcludepermissions','copysurveyresetstartenddate']],
 			id:1
-		});
+		};
 
 		insertOrCopy('copy', options, callback);
 	}
@@ -266,11 +261,11 @@ function copy(surveyId, name) {
 
 function insertOrCopy(name, options, callback){
 	try{
-		request(options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
+		axios(options).then(response => {
+			let body;
 				try{
-					body = JSON.parse(body);
-				}catch(e){
+					body = response.data;
+				}catch(error){
 					return NotifyRCError(name, error, response, body, callback);
 				}
 
@@ -296,12 +291,11 @@ function insertOrCopy(name, options, callback){
 				Log('LimesurveyController.' + name + ' -> Completed');
 			
 				callback(null, surveyid);
-			}else{
+			}).catch(error => {
 				Log('LimesurveyController.' + name + ' -> error creating the survey');
-				LogMultiple({error: error, response: response, body: body});
+				LogMultiple({error: error});
 				callback({ message: 'Error trying to ' + name + ' the survey into LS', error: error });
-			}  
-		});
+			});
 	}catch(e){
 		LogBigError(name, e, callback);
 	}
@@ -316,13 +310,13 @@ function getSurvey(sid,survey) {
 	return function(callback) {
 		try{
 			Log('LimesurveyController.getSurvey -> Started');
-			options.body = JSON.stringify({method:'list_surveys',params:[SESSIONKEY],id:1});
+			options.data = {method:'list_surveys',params:[SESSIONKEY],id:1};
 
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('getSurvey', error, response, body, callback);
 					}
 
@@ -339,12 +333,11 @@ function getSurvey(sid,survey) {
 						Log('LimesurveyController.getSurvey -> Completed');
 						callback(null, survey[0]);
 					}
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.getSurvey -> error obtaining the list of surveys');
-					LogMultiple({error: error, response: response, body: body});
+					LogMultiple({error: error});
 					callback({ message: 'Error obtaining survey list from limesurvey', error: error });
-				}  
-			});
+				});
 		}catch(e){
 			LogBigError('getSurvey', e, callback);
 		}
@@ -359,23 +352,22 @@ function getSurvey(sid,survey) {
 function getSurveyList(callback) {
 	try{
 		Log('LimesurveyController.getSurveyList -> Started');
-		options.body = JSON.stringify({method:'list_surveys',params:[SESSIONKEY],id:1});
+		options.data = {method:'list_surveys',params:[SESSIONKEY],id:1};
 
-		request(options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
+		axios(options).then(response => {
+			let body;
 				try{
-					body = JSON.parse(body);
-				}catch(e){
+					body = response.data;
+				}catch(error){
 					return NotifyRCError('getSurveyList', error, response, body, callback);
 				}
 
 				callback(body.result);
-			}else{
+			}).catch(error => {
 				Log('LimesurveyController.getSurveyList -> error obtaining the list of surveys');
-				LogMultiple({error: error, response: response, body: body});
+				LogMultiple({error: error});
 				callback({ message: 'Error obtaining survey list from Limesurvey', error: error });
-			}  
-		});
+			});
 	}catch(e){
 		LogBigError('getSurveyList', e, callback);
 	}
@@ -390,23 +382,22 @@ function getSurveysFromUser(username) {
 	return function(callback) {
 		try{
 			Log('LimesurveyController.getSurveyList -> Started');
-			options.body = JSON.stringify({method:'list_surveys',params:[SESSIONKEY, username],id:1});
+			options.data = {method:'list_surveys',params:[SESSIONKEY, username],id:1};
 
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('getSurveysFromUser', error, response, body, callback);
 					}
 
 					callback(null, body.result);
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.getSurveysFromUser -> error obtaining the list of surveys');
-					LogMultiple({error: error, response: response, body: body});
+					LogMultiple({error: error});
 					callback({ message: 'Error obtaining survey list from Limesurvey', error: error });
-				}  
-			});
+				});
 		}catch(e){
 			LogBigError('getSurveysFromUser', e, callback);
 		}
@@ -420,25 +411,24 @@ function getSurveysFromUser(username) {
 function start(surveyId, callback) {
 	try{
 		Log('LimesurveyController.start -> Started');
-		options.body = JSON.stringify({ method: 'activate_survey', params: [SESSIONKEY, surveyId], id:1 });
+		options.data = { method: 'activate_survey', params: [SESSIONKEY, surveyId], id:1 };
 		Log('LimesurveyController.start -> Starting survey: ' + surveyId);
 
-		request(options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
+		axios(options).then(response => {
+			let body;
 				try{
-					body = JSON.parse(body);
-				}catch(e){
+					body = response.data;
+				}catch(error){
 					return NotifyRCError('start', error, response, body, callback);
 				}
 
 				Log('LimesurveyController.start -> Survey started: ' + surveyId);
 				callback(null, surveyId);
-			}else{
+			}).catch(error => {
 				Log('LimesurveyController.start -> error starting the survey');
-				LogMultiple({error: error, response: response, body: body});
+				LogMultiple({error: error});
 				callback({ message: 'Error starting the survey in LimeSurvey', error: error });
-			}
-		});
+			});
 	}catch(e){
 		LogBigError('start', e, callback);
 	}
@@ -452,25 +442,24 @@ function remove(surveyId) {
 	return function(callback){
 		try{
 			Log('LimesurveyController.remove -> Started');
-			options.body = JSON.stringify({ method: 'delete_survey', params: [SESSIONKEY, surveyId], id:1 });
+			options.data = { method: 'delete_survey', params: [SESSIONKEY, surveyId], id:1 };
 			Log('LimesurveyController.remove -> Deleting: ' + surveyId);
 
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('remove', error, response, body, callback);
 					}
 
 					Log('LimesurveyController.remove -> deleted');
 					callback(null);
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.remove -> error removing the survey');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error removing the survey from LimeSurvey', error: error });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('remove', e, callback);
 		}
@@ -514,13 +503,13 @@ function participants(survey, participants){
 	return function(callback){
 		try{
 			Log('LimesurveyController.participants -> Started');
-			options.body = JSON.stringify({ method: 'list_participants', params: [SESSIONKEY, survey], id:1 });
+			options.data = { method: 'list_participants', params: [SESSIONKEY, survey], id:1 };
 
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('participants', error, response, body, callback);
 					}
 
@@ -535,12 +524,11 @@ function participants(survey, participants){
 						Log('LimesurveyController.participants -> Completed');
 						callback(null, participants[0]);
 					}
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.participants -> error obtaining the participants');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error obtaining the participants from LimeSurvey', error: error });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('participants', e, callback);
 		}
@@ -556,13 +544,13 @@ function hasToken(survey, token){
 	return function(callback){
 		try{
 			Log('LimesurveyController.hasToken -> Started');
-			options.body = JSON.stringify({ method:'list_participants', params: [SESSIONKEY, survey, 0, 100000], id:1 });
+			options.data = { method:'list_participants', params: [SESSIONKEY, survey, 0, 100000], id:1 };
 
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('hasToken', error, response, body, callback);
 					}
 
@@ -582,12 +570,11 @@ function hasToken(survey, token){
 						Log('LimesurveyController.hasToken -> Not found');
 						callback({ message: 'Token not found for this survey' });
 					}
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.hasToken -> error obtaining the participants');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error obtaining the participants from LimeSurvey', error: error });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('hasToken', e, callback);
 		}
@@ -605,13 +592,13 @@ function getResponseId(sid, token, rid){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponseId -> Started');
-			options.body = JSON.stringify({ method: 'get_response_ids', params: [SESSIONKEY, sid, token], id:1 });
+			options.data = { method: 'get_response_ids', params: [SESSIONKEY, sid, token], id:1 };
 
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('getResponseId', error, response, body, callback);
 					}
 
@@ -631,10 +618,9 @@ function getResponseId(sid, token, rid){
 						Log('LimesurveyController.getResponseId -> Error found in body');
 						callback({ message: 'Error in LimeSurvey when obtaining responses', error: body.error });
 					}
-				}else{
+				}).catch(error => {
 					callback({ message: 'LimeSurvey table not initialized' });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('getResponseId', e, callback);
 		}
@@ -646,68 +632,184 @@ function getResponseId(sid, token, rid){
  * @param sid
  * @param r 
  */
-function getResponses(sid, participants){
+function getResponses(sid, participants, type){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponses -> Started');
-			options.body = JSON.stringify({ method: 'export_responses', params: [SESSIONKEY, sid, 'json'/*, 'es', 'all', 'code', 'short'*/], id:1 });
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			let headingType, responseType;
+			if(type === 'full') {
+				headingType='full';
+				responseType='long';
+				if(participants) {
+					const responses = {};
+					let completedRequests = 0;
+					participants.forEach(participant => {
+						options.data = {
+							method: 'export_responses_by_token',
+							params: [
+								SESSIONKEY,
+								sid,
+								'json',
+								participant,
+								null,
+								'all',
+								headingType,
+								responseType
+							],
+							id: 1
+						};
 
-					try{
-						body = JSON.parse(body);
-					}catch(e){
-						return NotifyRCError('getResponses', error, response, body, callback);
-					}
+						axios(options)
+							.then(response => {
+								const body = response.data;
 
-					let responses = {};
-
-					if(body && body.result){
-						if(body.result.length > 0){
-							var raw = null;
-							
+								if (body && body.result && body.result.length > 0) {
+									const decodedResult = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+									for (var rid in decodedResult){
+										for (var res in decodedResult[rid]){
+											responses[participant] = decodedResult[rid][res];
+										}
+									}
+								} else {
+									responses[participant] = null;
+								}
+							})
+							.catch(error => {
+								console.error(`Error processing participant ${participant}:`, error.message);
+								responses[participant] = null;
+							})
+							.finally(() => {
+								completedRequests++;
+								if (completedRequests === participants.length) {
+									Log('LimesurveyController.getResponses -> Completed');
+									callback(null, responses);
+								}
+							});
+					});
+				} else {
+					options.data = {
+						method: 'export_responses',
+						params: [
+							SESSIONKEY,      // Auth credentials
+							sid,             // Survey ID
+							'json',          // Document Type (e.g., json, pdf, csv)
+							null,            // Language code (skip by setting null or omit)
+							'all', 		     // Completion Status (optional)
+							headingType,     // Heading Type (optional)
+							responseType   	 // Response Type (optional)
+						],
+						id: 1
+					};
+					axios(options).then(response => {
+						let body;
 							try{
-								raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
-
-							}catch(e){
-								Log('LimesurveyController.getResponses -> Error');
-								Log(e);
-								return callback({ message: 'Error transforming LimeSurvey result' });
+								body = response.data;
+							}catch(error){
+								return NotifyRCError('getResponses', error, response, body, callback);
 							}
-
-							if(participants){
-								for (var rid in raw){
-									for (var res in raw[rid]){
-										if(participants.indexOf(raw[rid][res].token) > -1){
+							let responses = {};
+							if(body && body.result){
+								if(body.result.length > 0){
+									var raw = null;
+									try{
+										raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+									}catch(e){
+										Log('LimesurveyController.getResponses -> Error');
+										Log(e);
+										return callback({ message: 'Error transforming LimeSurvey result' });
+									}
+									if(participants){
+										for (var rid in raw){
+											for (var res in raw[rid]){
+												if(participants.indexOf(raw[rid][res].token) > -1){
+													if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+														responses[raw[rid][res].token] = raw[rid][res];
+													}
+												}
+											}
+										}
+									}else{
+										responses=raw;
+									}
+								}
+								Log('LimesurveyController.getResponses -> Completed');
+								callback(null, responses);
+							}else{
+								Log('LimesurveyController.getResponses -> Error');
+								callback({ message: 'Malformed body received from LimeSurvey'});
+							}
+						}).catch(error => {
+							Log('LimesurveyController.getResponses -> error exporting the responses');
+							LogMultiple({ error: error });
+							callback({ message: 'Error exporting the responses from LimeSurvey', error: error });
+						});
+				}
+			} else {
+				headingType='code';
+				responseType='short';
+				options.data = {
+					method: 'export_responses',
+					params: [
+						SESSIONKEY,      // Auth credentials
+						sid,             // Survey ID
+						'json',          // Document Type (e.g., json, pdf, csv)
+						null,            // Language code (skip by setting null or omit)
+						'all', 		     // Completion Status (optional)
+						headingType,     // Heading Type (optional)
+						responseType   	 // Response Type (optional)
+					],
+					id: 1
+				};
+				axios(options).then(response => {
+					let body;
+						try{
+							body = response.data;
+						}catch(error){
+							return NotifyRCError('getResponses', error, response, body, callback);
+						}
+						let responses = {};
+						if(body && body.result){
+							if(body.result.length > 0){
+								var raw = null;
+								try{
+									raw = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
+								}catch(e){
+									Log('LimesurveyController.getResponses -> Error');
+									Log(e);
+									return callback({ message: 'Error transforming LimeSurvey result' });
+								}
+								if(participants){
+									for (var rid in raw){
+										for (var res in raw[rid]){
+											if(participants.indexOf(raw[rid][res].token) > -1){
+												if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+													responses[raw[rid][res].token] = raw[rid][res];
+												}
+											}
+										}
+									}
+								}else{
+									for (var rid in raw){
+										for (var res in raw[rid]){
 											if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
 												responses[raw[rid][res].token] = raw[rid][res];
 											}
 										}
 									}
 								}
-							}else{
-								for (var rid in raw){
-									for (var res in raw[rid]){
-										if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-											responses[raw[rid][res].token] = raw[rid][res];
-										}
-									}
-								}
 							}
+							Log('LimesurveyController.getResponses -> Completed');
+							callback(null, responses);
+						}else{
+							Log('LimesurveyController.getResponses -> Error');
+							callback({ message: 'Malformed body received from LimeSurvey'});
 						}
-
-						Log('LimesurveyController.getResponses -> Completed');
-						callback(null, responses);
-					}else{
-						Log('LimesurveyController.getResponses -> Error');
-						callback({ message: 'Malformed body received from LimeSurvey'});
-					}
-				}else{
-					Log('LimesurveyController.getResponses -> error exporting the responses');
-					LogMultiple({ error: error, response: response, body: body });
-					callback({ message: 'Error exporting the responses from LimeSurvey', error: error });
-				}
-			});
+					}).catch(error => {
+						Log('LimesurveyController.getResponses -> error exporting the responses');
+						LogMultiple({ error: error });
+						callback({ message: 'Error exporting the responses from LimeSurvey', error: error });
+					});
+			}
 		}catch(e){
 			LogBigError('getResponses', e, callback);
 		}
@@ -725,13 +827,12 @@ function getClassResponses(sid, classroom, r){
 		try{
 			Log('LimesurveyController.getClassResponses -> Started');
 			r['content'] = '';
-			options.body = JSON.stringify({method:'export_responses',params:[SESSIONKEY,sid,'csv',null,'complete','code','short'],id:1});
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
-					
+			options.data = {method:'export_responses',params:[SESSIONKEY,sid,'csv',null,'complete','code','short'],id:1};
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('getClassResponses', error, response, body, callback);
 					}
 
@@ -767,12 +868,11 @@ function getClassResponses(sid, classroom, r){
 						Log('LimesurveyController.getClassResponses -> Error');
 						callback({ message: 'Malformed body received from LimeSurvey'});
 					}
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.getClassResponses -> error exporting the filtered responses');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error exporting the responses from LimeSurvey', error: error });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('getClassResponses', e, callback);
 		}
@@ -789,13 +889,13 @@ function tokenHasCompleted(survey, token, rid){
 	return function(callback){
 		try{
 			Log('LimesurveyController.tokenHasCompleted -> Started');
-			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1});
+			options.data = {method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1};
 
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('tokenHasCompleted', error, response, body, callback);
 					}
 
@@ -835,12 +935,11 @@ function tokenHasCompleted(survey, token, rid){
 						Log('LimesurveyController.tokenHasCompleted -> Error');
 						callback({ message: 'Malformed body received from LimeSurvey'});
 					}
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.tokenHasCompleted -> error exporting the responses by token');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error obtaining the participants from LimeSurvey', error: error });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('tokenHasCompleted', e, callback);
 		}
@@ -853,22 +952,37 @@ function tokenHasCompleted(survey, token, rid){
  * @param token
  * @param rid 
  */
-function getResponseByToken(survey, token){
+function getResponseByToken(survey, token, type){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponseByToken -> Started');
-			options.body = JSON.stringify({method:'export_responses_by_token',params:[SESSIONKEY,survey,'json',token],id:1});
-
-			request(options, function(error, response, body){
-				logger.info(body);
-				if (!error && response.statusCode == 200) {
+			let headingType='code'
+			let responseType='short'
+			if(type === 'full') {
+				headingType='full'
+				responseType='long'
+			}
+			options.data = {
+				method: 'export_responses_by_token',
+				params: [
+					SESSIONKEY,      // Auth credentials
+					survey,             // Survey ID
+					'json',          // Document Type (e.g., json, pdf, csv)
+					token, 			 // token for which responses needed
+					null,            // Language code (skip by setting null or omit)
+					'all', 		     // Completion Status (optional)
+					headingType,     // Heading Type (optional)
+					responseType    // Response Type (optional)
+				],
+				id: 1
+			};
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('getResponseByToken', error, response, body, callback);
 					}
-
-					logger.info(body);
 
 					var response = null;
 
@@ -916,12 +1030,11 @@ function getResponseByToken(survey, token){
 						Log('LimesurveyController.getResponseByToken -> Error');
 						callback({ message: 'Malformed body received from LimeSurvey'});
 					}
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.getResponseByToken -> error exporting the responses by token');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error obtaining the participants from LimeSurvey', error: error });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('getResponseByToken', e, callback);
 		}
@@ -935,24 +1048,22 @@ function getResponseByToken(survey, token){
 function startTokensSurvey(surveyId, callback) {
 	try{
 		Log('LimesurveyController.startTokensSurvey -> Started');
-		options.body = JSON.stringify({ method: 'activate_tokens', params: [SESSIONKEY, surveyId], id:1 });
-
-		request(options, function(error, response, body){
-			if (!error && response.statusCode == 200) {
+		options.data = { method: 'activate_tokens', params: [SESSIONKEY, surveyId], id:1 };
+		axios(options).then(response => {
+			let body;
 				try{
-					body = JSON.parse(body);
-				}catch(e){
+					body = response.data;
+				}catch(error){
 					return NotifyRCError('startTokensSurvey', error, response, body, callback);
 				}
 
 				Log('LimesurveyController.startTokensSurvey -> Completed: ' + surveyId);
 				callback(null,surveyId);
-			}else{
+			}).catch(error => {
 				Log('LimesurveyController.startTokensSurvey -> error activating the tokens');
-				LogMultiple({ error: error, response: response, body: body });
+				LogMultiple({ error: error });
 				callback({ message: 'Error activating the tokens on LimeSurvey', error: error });
-			}
-		});
+			});
 	}catch(e){
 		LogBigError('startTokensSurvey', e, callback);
 	}
@@ -973,12 +1084,12 @@ function addParticipants(participants, survey){
 			}
 
 			
-			options.body = JSON.stringify({ method:'add_participants', params: [SESSIONKEY, survey, tokens, false], id:1 });
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			options.data = { method:'add_participants', params: [SESSIONKEY, survey, tokens, false], id:1 };
+			axios(options).then(response => {
+				let body;
 					try{
-						body = JSON.parse(body);
-					}catch(e){
+						body = response.data;
+					}catch(error){
 						return NotifyRCError('startTokensSurvey', error, response, body, callback);
 					}
 
@@ -986,12 +1097,11 @@ function addParticipants(participants, survey){
 					Log('LimesurveyController.addParticipants -> Completed: ' + survey);
 
 					callback(null, body.result);
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.addParticipants -> error adding the participants');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error adding the participants to LimeSurvey', error: error });
-				}
-			});
+				});
 		}catch(e){
 			LogBigError('addParticipants', e, callback);
 		}
@@ -1008,18 +1118,22 @@ function delParticipants(participants, survey){
 	return function(callback){
 		try{
 			Log('LimesurveyController.delParticipants -> Started: ' + survey);
-			options.body = JSON.stringify({method:'delete_participants',params:[SESSIONKEY,survey,participants],id:1});
-			request(options, function(error, response, body){
-				if (!error && response.statusCode == 200) {
+			options.data = {method:'delete_participants',params:[SESSIONKEY,survey,participants],id:1};
+			axios(options).then(response => {
+					let body; 
+					try {
+						body = response.data;
+					} catch(error) {
+						Log(error);
+					}
 					Log('LimesurveyController.delParticipants -> completed: ' + survey);
-					Log(response.body);
+					Log(body);
 					callback(null, body);
-				}else{
+				}).catch(error => {
 					Log('LimesurveyController.delParticipants -> error removing the participants');
-					LogMultiple({ error: error, response: response, body: body });
+					LogMultiple({ error: error });
 					callback({ message: 'Error removing the participants from LimeSurvey', error: error });
-				} 
-			});
+				});
 		}catch(e){
 			LogBigError('delParticipants', e, callback);
 		}
