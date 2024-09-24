@@ -114,6 +114,7 @@ Authenticator.getRoleFromRealmAccessRoles = function(userdata){
 	} else if(userdata.realm_access.roles.includes('teaching-assistant') || userdata.realm_access.roles.includes('student')){
 		role = 'student';
 	};
+	console.log(role);
 	return role;
 },
 
