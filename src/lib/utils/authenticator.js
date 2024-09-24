@@ -107,7 +107,9 @@ Authenticator.auth = async (req, res, next) => {
 
 Authenticator.getRoleFromRealmAccessRoles = function(userdata){
 	let role = 'norole';
-	if(userdata.realm_access.roles.includes('teacher') || userdata.realm_access.roles.includes('researcher')){
+	if(userdata.realm_access.roles.includes('administrator')){
+		role = 'administrator';
+	} else if(userdata.realm_access.roles.includes('teacher') || userdata.realm_access.roles.includes('researcher')){
 		role = 'teacher';
 	} else if(userdata.realm_access.roles.includes('teaching-assistant') || userdata.realm_access.roles.includes('student')){
 		role = 'student';
