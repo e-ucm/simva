@@ -493,6 +493,7 @@ class GameplayActivity extends Activity {
 				}
 
 				customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.id}`));
+				customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`));
 				customUri = customUri.replace('{activityId}', this.id);
 				customUri = customUri.replace('{username}', participants[i]);
 
