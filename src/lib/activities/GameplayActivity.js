@@ -160,7 +160,47 @@ class GameplayActivity extends Activity {
 
 		try{
 			if(Array.isArray(result)){
-				// If we're receiving an array, we're receiving traces
+				for(var traceId in result) {
+					var trace = result[traceId];
+					if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
+						console.log(trace);
+						const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+						const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+						const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+						const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
+						if(trace.verb) {
+							switch(trace.verb.id) {
+								case initializedVerb:
+									logger.info("INITIALIZED GAME");
+									logger.info(trace.object.id);
+									//this.setResultPercentage(participant, "started", 0);
+								  break;
+								case progressedVerb:
+									logger.info("PROGRESSED THROUGH GAME");
+									logger.info(trace.object.id);
+									logger.info(trace.result);
+									if(trace.result && trace.result.extensions[resultExtensionProgress]) {
+										var value = trace.result.extensions[resultExtensionProgress];
+										logger.info(value);
+										//this.setResultPercentage(participant, "progress", value);
+									}
+								  break;
+								case completedVerb:
+									logger.info("COMPLETED GAME");
+									logger.info(trace.object.id);
+									logger.info(trace.result);
+									if(trace.result.completion == "true") {
+										this.setCompletion(participant, "true");
+										//this.setResultPercentage(participant, "completed", 1);
+									}
+								  break;
+								default:
+									logger.info("OTHER VERB");
+							  }
+						}
+					}
+				}
+ 				// If we're receiving an array, we're receiving traces
 				if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
 					if(this.extra_data.config.trace_storage){
 						await TraceStorageActivity.sendTracesToKafka(result, this.id);
