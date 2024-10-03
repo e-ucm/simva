@@ -312,7 +312,6 @@ router.post('/:id/statements', Authenticator.auth, async (req, res, next) => {
     postuser: req.query['user'],
     body: req.body
   };
-  logger.info(options);
 
   try {
     const result = await activities.setResult(options);
