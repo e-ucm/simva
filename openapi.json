@@ -1318,6 +1318,36 @@
         ]
       }
     },
+    "/activities/{id}/progress": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the progress status of the activity",
+        "operationId": "getCompletion",
+        "description": "Obtains the progress status of the activity\n",
+        "responses": {
+          "200": {
+            "description": "if it is openable or not"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          }
+        ]
+      }
+    },
     "/activities/{id}/completion": {
       "get": {
         "tags": [

@@ -271,6 +271,49 @@ module.exports.getTarget = async (options) => {
  * @throws {Error}
  * @return {Promise}
  */
+module.exports.getProgress = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data = await activity.getProgress([options.user.data.username]);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        let users = [];
+        if(options.users && options.users !== ''){
+          users = options.users.split(',');
+        }
+
+        body.data = await activity.getProgress(users);
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    logger.info('GetProgress exploded:');
+    logger.error(e);
+    return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
 module.exports.getCompletion = async (options) => {
   let body = {
     status: 200,

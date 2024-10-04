@@ -181,6 +181,25 @@ router.get('/:id/open', Authenticator.auth, async (req, res, next) => {
  * Obtains the completion status of the activity
  * 
  */
+router.get('/:id/progress', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users']
+  };
+
+  try {
+    const result = await activities.getProgress(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Obtains the completion status of the activity
+ * 
+ */
 router.get('/:id/completion', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id'],

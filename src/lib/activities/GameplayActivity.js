@@ -173,7 +173,7 @@ class GameplayActivity extends Activity {
 								case initializedVerb:
 									logger.info("INITIALIZED GAME");
 									logger.info(trace.object.id);
-									//this.setResultPercentage(participant, "started", 0);
+									this.setProgress(participant, 0);
 								  break;
 								case progressedVerb:
 									logger.info("PROGRESSED THROUGH GAME");
@@ -182,7 +182,7 @@ class GameplayActivity extends Activity {
 									if(trace.result && trace.result.extensions[resultExtensionProgress]) {
 										var value = trace.result.extensions[resultExtensionProgress];
 										logger.info(value);
-										//this.setResultPercentage(participant, "progress", value);
+										this.setProgress(participant, value);
 									}
 								  break;
 								case completedVerb:
@@ -191,7 +191,7 @@ class GameplayActivity extends Activity {
 									logger.info(trace.result);
 									if(trace.result.completion == "true") {
 										this.setCompletion(participant, "true");
-										//this.setResultPercentage(participant, "completed", 1);
+										this.setProgress(participant, 1);
 									}
 								  break;
 								default:
