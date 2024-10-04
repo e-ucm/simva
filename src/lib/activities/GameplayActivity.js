@@ -186,11 +186,11 @@ class GameplayActivity extends Activity {
 									}
 								  break;
 								case completedVerb:
-									logger.info("COMPLETED GAME");
-									logger.info(trace.object.id);
-									logger.info(trace.result);
-									if(trace.result.completion == "true") {
-										this.setCompletion(participant, "true");
+									if(trace.result.completion == true) {
+										logger.info("COMPLETED GAME");
+										logger.info(trace.object.id);
+										logger.info(trace.result);
+										this.setCompletion(participant, true);
 										this.setProgress(participant, 1);
 									}
 								  break;
