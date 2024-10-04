@@ -191,7 +191,6 @@ class GameplayActivity extends Activity {
 										logger.info(trace.object.id);
 										logger.info(trace.result);
 										this.setCompletion(participant, true);
-										this.setProgress(participant, 1);
 									}
 								  break;
 								default:

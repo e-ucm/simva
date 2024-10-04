@@ -376,6 +376,7 @@ class Activity {
 		}
 
 		this.extra_data.participants[participant].completion = status;
+		this.extra_data.participants[participant].progress = 1;
 
 		return await this.save();
 	}
