@@ -163,7 +163,7 @@ class GameplayActivity extends Activity {
 				for(var traceId in result) {
 					var trace = result[traceId];
 					if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
-						console.log(trace);
+						//console.log(trace);
 						const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
 						const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
 						const completedVerb='http://adlnet.gov/expapi/verbs/completed';
@@ -172,13 +172,13 @@ class GameplayActivity extends Activity {
 							switch(trace.verb.id) {
 								case initializedVerb:
 									logger.info("INITIALIZED GAME");
-									logger.info(trace.object.id);
+									//logger.info(trace.object.id);
 									this.setProgress(participant, 0);
 								  break;
 								case progressedVerb:
 									logger.info("PROGRESSED THROUGH GAME");
-									logger.info(trace.object.id);
-									logger.info(trace.result);
+									//logger.info(trace.object.id);
+									//logger.info(trace.result);
 									if(trace.result && trace.result.extensions[resultExtensionProgress]) {
 										var value = trace.result.extensions[resultExtensionProgress];
 										logger.info(value);
@@ -188,8 +188,8 @@ class GameplayActivity extends Activity {
 								case completedVerb:
 									if(trace.result.completion == true) {
 										logger.info("COMPLETED GAME");
-										logger.info(trace.object.id);
-										logger.info(trace.result);
+										//logger.info(trace.object.id);
+										//logger.info(trace.result);
 										this.setCompletion(participant, true);
 									}
 								  break;
