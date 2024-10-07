@@ -356,8 +356,10 @@ class Activity {
 		if(!this.extra_data.participants[participant]){
 			this.extra_data.participants[participant] = {}
 		}
-
-		this.extra_data.participants[participant].progress = progress;
+		if(! this.extra_data.participants[participant].progress == 1) {
+			this.extra_data.participants[participant].progress = progress;
+		}
+		
 
 		return await this.save();
 	}
