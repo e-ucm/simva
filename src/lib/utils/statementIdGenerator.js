@@ -17,4 +17,5 @@ function generateStatementId(trace) {
 	filter.add(traceid);
 	return traceid;
 }
+
 module.exports = generateStatementId;

@@ -539,6 +539,48 @@ module.exports.setResult = async (options) => {
 /**
  * @param {Object} options
  * @param {String} options.id The test ID
+ * @param {String} options.user the user to check its completion status
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.setStatement = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data = await activity.setStatement(options.user.data.username, options.body);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(participants.indexOf(options.postuser) !== -1){
+          body.data = await activity.setStatement(options.postuser, options.body);
+        }else{
+          body.status = 400;
+          body.data.message = 'The user you are trying to set statement to is not a participant';
+        }
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
  * @throws {Error}
  * @return {Promise}
  */

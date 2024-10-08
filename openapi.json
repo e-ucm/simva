@@ -3527,6 +3527,141 @@
           }
         }
       },
+      "actor": {
+        "type": "object",
+        "properties": {
+          "objectType": {
+            "type": "string",
+            "example": "Actor"
+          },
+          "mbox": {
+            "type": "string",
+            "example": "mailto:email@example.com"
+          },
+          "mbox_sha1sum": {
+            "type": "string"
+          },
+          "member": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "openid": {
+            "type": "string"
+          },
+          "stored": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-10-05T14:48:00.000Z"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-10-05T14:48:00.000Z"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "homePage": {
+                "type": "string",
+                "example": "https://example.com/"
+              }
+            }
+          }
+        }
+      },
+      "activitie": {
+        "type": "object",
+        "properties": {
+          "hasCompletion": {
+            "type": "string"
+          },
+          "hasSuccess": {
+            "type": "string"
+          },
+          "objectType": {
+            "type": "string",
+            "example": "Activity"
+          },
+          "id": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "object"
+          },
+          "stored": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-10-05T14:48:00.000Z"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-10-05T14:48:00.000Z"
+          },
+          "count": {
+            "type": "integer"
+          }
+        }
+      },
+      "statement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426655440000"
+          },
+          "actor": {
+            "type": "object"
+          },
+          "verb": {
+            "type": "object"
+          },
+          "object": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-10-05T14:48:00.000Z"
+          },
+          "stored": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-10-05T14:48:00.000Z"
+          },
+          "authority": {
+            "type": "object"
+          },
+          "meta": {
+            "type": "object"
+          },
+          "result": {
+            "type": "object"
+          },
+          "context": {
+            "type": "object"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
       "lti_platform": {
         "type": "object",
         "required": [

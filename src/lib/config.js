@@ -32,10 +32,12 @@ config.logger.name = 'SIMVA'
 
 config.mongo = {}
 config.mongo.host = process.env.MONGO_HOST || 3000
-config.mongo.db = process.env.MONGO_DB || '/simva'
-config.mongo.ltidb = process.env.LTI_MONGO_DB || '/lti_simva'
-config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
-config.mongo.ltiurl = 'mongodb://'+config.mongo.host+config.mongo.ltidb
+config.mongo.db = process.env.MONGO_DB || 'simva'
+config.mongo.lrsdb = process.env.MONGO_LRS_DB || 'simva_lrs'
+config.mongo.ltidb = process.env.LTI_MONGO_DB || 'lti_simva'
+config.mongo.url = 'mongodb://'+config.mongo.host+'/'+config.mongo.db
+config.mongo.ltiurl = 'mongodb://'+config.mongo.host+'/'+config.mongo.ltidb
+config.mongo.lrsurl = 'mongodb://'+config.mongo.host+'/'+config.mongo.lrsdb
 config.mongo.test = config.mongo.url
 
 config.kafka = {}

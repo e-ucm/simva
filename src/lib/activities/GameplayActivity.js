@@ -12,9 +12,11 @@ const { pipeline, Transform } = require('stream');
 const { promisify } = require('util');
 const unzipper = require('unzipper');
 const pipelineAsync = promisify(pipeline);
+const { v4: uuidv4 } = require('uuid');
 
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
+var generateStatementId = require('../utils/statementIdGenerator');
 var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 var generateStatementId = require('../utils/statementIdGenerator');
 
@@ -30,10 +32,9 @@ class GameplayActivity extends Activity {
 	// ##########################################
 	// Constructor and basic set of functions
 	// ##########################################
-
 	constructor(params){
 		super(params);
-
+		this.connected=false;
 		if(!this.id){
 			if(!this.extra_data.config){
 				this.extra_data.config = {
@@ -45,6 +46,7 @@ class GameplayActivity extends Activity {
 
 			if(params.trace_storage && params.trace_storage === true){
 				this.extra_data.config.trace_storage = true;
+				this.connectToLRSMongo();
 			}
 
 			if(params.realtime && params.realtime === true){
@@ -156,6 +158,86 @@ class GameplayActivity extends Activity {
 		return await super.removeParticipants(participants);
 	}
 
+	async createIndex(model, index) {
+		if(! await this.checkIndexExists(model, index.name)) {
+			// Get native MongoDB collection
+			try {
+				const collection = model.collection;
+				await collection.createIndexes([index]);
+				console.log('Index created:', result);
+			} catch(error) {
+				console.error('Error creating index:', error);
+			}
+		}
+	}
+
+	async checkIndexExists(model, indexName) {
+		try {
+		// Get native MongoDB collection
+		const collection = model.collection;
+		// Get the list of indexes
+		const indexes = await collection.indexes();
+	  
+		// Check if the index with the given name exists
+		const indexExists = indexes.some(index => index.name === indexName);
+	  
+		if (indexExists) {
+			console.log(`Index '${indexName}' exists.`);
+			return true;
+		} else {
+			console.log(`Index '${indexName}' does not exist.`);
+			return false;
+		}
+	} catch (error) {
+		console.error('Error checking index:', error);
+	}
+	  }
+	
+	async connectToLRSMongo() {
+		if(!this.connected) {
+			var lrs_db=config.mongo.lrsdb + "_" + this.id;
+			mongoose.set('debug', true);
+			this.db = mongoose.connection.useDb( lrs_db, {useCache: true});
+			this.Statement=this.db.model('statement');
+			await this.createIndex(this.Statement, {key : { id : 1 }, name : "id" , unique: true });
+			await this.createIndex(this.Statement, {key : { "actor.name" : 1 }, name : "actor.name" });
+			await this.createIndex(this.Statement, {key : { "verb.id" : 1 }, name : "verb.id" });
+			await this.createIndex(this.Statement, {key : { "object.id" : 1 }, name : "object.id" });
+			await this.createIndex(this.Statement, {key : { "timestamp" : 1 }, name : "timestamp" });
+			await this.createIndex(this.Statement, {key : { "context.registration" : 1 }, name : "context.registration" });
+			this.Actor=this.db.model('actor');
+			await this.createIndex(this.Actor, {key : { name : 1 }, name : "name" , unique: true });
+			this.Activitie=this.db.model('activitie');
+			await this.createIndex(this.Activitie, {key : { id : 1 }, name : "id" , unique: true });
+			await this.createIndex(this.Activitie, {key : { "definition.type" : 1 }, name : "definition.type" });
+			console.log('connected to ' + lrs_db);
+			this.connected=true;
+		}
+	}
+
+	replaceDots(obj, toMongo) {
+		const newObj = {};
+		
+		for (const key in obj) {
+		  // Replace '.' with '%2E'
+		  var newKey;
+		  if(toMongo) {
+			newKey = key.replace(/\./g, '%2E');
+		  } else {
+			newKey= key.replace('%2E', /\./g);
+		  }
+		  
+		  // If value is an object, recursively replace dots in keys
+		  if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+			newObj[newKey] = this.replaceDots(obj[key], toMongo);
+		  } else {
+			newObj[newKey] = obj[key];
+		  }
+		}
+		
+		return newObj;
+	}
+
 	updateMissingTraceElements(participant, trace) {
 		const now = new Date();
 		if(!trace.id) {
@@ -180,6 +262,91 @@ class GameplayActivity extends Activity {
 		return trace;
 	}
 
+	async addTraceToLRS(trace) {
+		const now = new Date();
+		try {
+			// Check if the traceId already exists
+			const existingTrace = await this.Statement.findOne({ id: trace.id });
+			if (existingTrace) {
+			  // Conflict: trace.id already exists
+			  var err = `Conflict: trace.id '${trace.id}' already exists in the database.`
+			  logger.info(err);
+			  throw new Error(err);
+			} else {
+				var tr = this.replaceDots(trace, true);
+				var statement = new this.Statement(tr);
+				// Validate before saving (optional)
+				const validationError = statement.validateSync();
+				if (validationError) {
+					console.error('Validation Error:', validationError);
+				}
+				await statement.save();
+			}
+			
+		} catch(e) {
+			console.log("Error treating this statement for trace : " + trace.id);
+			console.log(e);
+		}
+		try {
+			var act = trace.actor;
+			act.stored=now.toISOString();
+			const existingActor = await this.Actor.findOne({ name: act.name });
+			if (existingActor) {
+				existingActor.updated = now.toISOString();
+				existingActor.count+=1;
+				await existingActor.save();
+			} else {
+				act.count = 1;
+				const actor = this.Actor(act);
+				// Validate before saving (optional)
+				const validationError = actor.validateSync();
+				if (validationError) {
+					console.error('Validation Error:', validationError);
+				}
+				await actor.save();
+			}
+		} catch(e) {
+			console.log("Error treating this actor:" + trace.actor.name);
+			console.log(e);
+		}
+		try {
+			var act = trace.object;
+			act.stored = now.toISOString();
+			const existingActivity = await this.Activitie.findOne({ id: act.id });
+			if (existingActivity) {
+				existingActivity.updated = now.toISOString();
+				existingActivity.count+=1;
+				if(trace.result && trace.result.completion == true) {
+					existingActivity.hasCompletion=true;
+				}
+				if(trace.result && trace.result.success == true) {
+					existingActivity.hasSuccess=true;
+				}
+				await existingActivity.save();
+			} else {
+				act.hasCompletion=false;
+				if(trace.result && trace.result.completion == true) {
+					act.hasCompletion=true;
+				}
+				act.hasSuccess=false;
+				if(trace.result && trace.result.success == true) {
+					act.hasSuccess=true;
+				}
+				act.count=1;
+				const activity = this.Activitie(act);
+				// Validate before saving (optional)
+				const validationError = activity.validateSync();
+				if (validationError) {
+					console.error('Validation Error:', validationError);
+				}
+				await activity.save();
+			}
+		} catch(e) {
+			console.log("Error treating this activity Id :"  + trace.object.id);
+			console.log(e);
+		}
+	}
+
 	sendProgressOrCompletionOfGame(trace, participant) {
 		if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
 			const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
@@ -191,7 +358,6 @@ class GameplayActivity extends Activity {
 					case initializedVerb:
 						logger.info("INITIALIZED GAME");
 						this.setProgress(participant, 0);
-					  break;
 					case progressedVerb:
 						logger.info("PROGRESSED THROUGH GAME");
 						if(trace.result && trace.result.extensions[resultExtensionProgress]) {
@@ -199,13 +365,11 @@ class GameplayActivity extends Activity {
 							logger.info(value);
 							this.setProgress(participant, value);
 						}
-					  break;
 					case completedVerb:
 						if(trace.result.completion == true) {
 							logger.info("COMPLETED GAME");
 							this.setCompletion(participant, true);
 						}
-					  break;
 					default: 
 						logger.info("OTHER VERB");
 				}
@@ -224,6 +388,7 @@ class GameplayActivity extends Activity {
 						var trace = result[traceId];
 						this.sendProgressOrCompletionOfGame(trace, participant);
 						traces.push(this.updateMissingTraceElements(participant, trace));
+						await this.addTraceToLRS(trace);
 					}
 					response = await TraceStorageActivity.sendTracesToKafka(traces, this.id);
 					toret =  { ids: response };
@@ -273,7 +438,58 @@ class GameplayActivity extends Activity {
 				}else{
 					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
 				}
-			}else if(!result || typeof result === 'object'){
+			} else if(!result || typeof result === 'object'){
+				if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
+					if(this.extra_data.config.trace_storage){
+						await TraceStorageActivity.sendTracesToKafka([result], this.id);
+						await this.connectToLRSMongo();
+						response.push(await this.addTraceToLRS(result));
+						toret =  { ids: response };
+					}
+					if(this.extra_data.config.realtime){
+						await RealtimeActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
+						toret =  { ids: response };
+					}
+				} else {
+					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
+				}
+			} else {
+				logger.info('Unknown case');
+				logger.info(result.result);
+				throw { message: 'Unknown case setting the statements' };
+			}
+		}catch(e){
+			logger.error(e);
+			throw { message: 'Error while setting the statements' };
+		}
+	
+		return toret;
+	}
+
+
+	async setResult(participant, result){
+		let toret = 0;
+		let response=[]
+		try{
+			if(Array.isArray(result)){
+				if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
+					if(this.extra_data.config.trace_storage){
+						await TraceStorageActivity.sendTracesToKafka(result, this.id);
+						await this.connectToLRSMongo();
+						for(let traceId = 0; traceId < result.length; traceId++) {
+							var trace = result[traceId];
+							response.push(await this.addTraceToLRS(trace));
+						}
+						toret =  { ids: response };
+					}
+					if(this.extra_data.config.realtime){
+						await RealtimeActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
+						toret =  { ids: response };
+					}
+				} else {
+					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
+				}
+			} else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start or backup
 				if(result && result.result){
 					if(this.extra_data.config.backup){
