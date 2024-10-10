@@ -13,7 +13,7 @@ var GameplayActivity = require('./activities/GameplayActivity');
 var ManualActivity = require('./activities/ManualActivity');
 var LTIToolActivity = require('./activities/LTIToolActivity');
 var ImsPackageActivity = require('./activities/ImsPackageActivity');
-const wsManager = require('./wsManager');  // Import WebSocketManager
+const wsManager = require('./utils/wsManager');  // Import WebSocketManager
 
 var types = [
 	Activity,
