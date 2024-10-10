@@ -26,7 +26,7 @@ var types = [
 ];
 
 // Function to notify a specific client when an activity is completed
-ActivitiesController.notifyActivityCompletion(clientId, activityId) {
+ActivitiesController.notifyActivityCompletion = (clientId, activityId) => {
     const message = {
         type: 'activity_completed',
         activityId: activityId,

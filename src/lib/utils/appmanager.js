@@ -7,7 +7,6 @@ AppManager = {};
 
 AppManager.app = null;
 AppManager.server = null;
-wsManager.init(AppManager.server);
 
 AppManager.InitApp = function(){
 	AppManager.app = express();
