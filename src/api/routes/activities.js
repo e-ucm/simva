@@ -299,68 +299,6 @@ router.post('/:id/result', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
- * Obtains the completion status of the activity
- * 
- */
-router.get('/:id/statements', Authenticator.auth, async (req, res, next) => {
-  const options = {
-    id: req.params['id'],
-    user: req.user,
-    users: req.query['users'],
-    type: req.query['type'],
-    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
-    res: res,
-  };
-
-  try {
-    const result = await activities.getResult(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * Set the completion status of the activity for a student
- * 
- */
-router.post('/:id/statements', Authenticator.auth, async (req, res, next) => {
-  const options = {
-    id: req.params['id'],
-    user: req.user,
-    postuser: req.query['user'],
-    body: req.body
-  };
-
-  try {
-    const result = await activities.setResult(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * Set the completion status of the activity for a student
- * 
- */
-router.put('/:id/statements', Authenticator.auth, async (req, res, next) => {
-  const options = {
-    id: req.params['id'],
-    user: req.user,
-    postuser: req.query['user'],
-    body: req.body
-  };
-
-  try {
-    const result = await activities.setResult(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
  * Obtains if has result or not
  * 
  */
@@ -374,6 +312,407 @@ router.get('/:id/hasresult', Authenticator.auth, async (req, res, next) => {
 
   try {
     const result = await activities.hasResult(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+///////////////////////////////////////////
+/////////////// LRS METHOD ////////////////
+///////////////////////////////////////////
+
+/**
+ * Get statements object
+ */
+router.get('/:id/statements', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+    type: req.query['type'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Set statements object
+ * 
+ */
+router.post('/:id/statements', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.setStatement(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Put statement object
+ * 
+ */
+router.put('/:id/statements', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.setStatement(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Get Agent object
+ * 
+ */
+router.get('/:id/agents', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+    type: req.query['type'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Get Agent Profile object
+ * 
+ */
+router.get('/:id/agents/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+    type: req.query['type'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Set Agent Profile object
+ * 
+ */
+router.post('/:id/agents/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Put Agent Profile object
+ * 
+ */
+router.put('/:id/agents/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Delete Agent Profile object
+ * 
+ */
+router.delete('/:id/agents/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Get Activities object
+ * 
+ */
+router.get('/:id/activities', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+    type: req.query['type'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Get Activities Profile object
+ * 
+ */
+router.get('/:id/activities/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+    type: req.query['type'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Set Activities Profile object
+ * 
+ */
+router.post('/:id/activities/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Put Activities Profile object
+ * 
+ */
+router.put('/:id/activities/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Delete Activities Profile object
+ * 
+ */
+router.delete('/:id/activities/profile', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Get Activities State object
+ * 
+ */
+router.get('/:id/activities/state', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    users: req.query['users'],
+    type: req.query['type'],
+    token: (req.headers.authorization ? req.headers.authorization.split(" ")[1] : req.query.token),
+    res: res,
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Set Activities State object
+ * 
+ */
+router.post('/:id/activities/state', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Put Activities State object
+ * 
+ */
+router.put('/:id/activities/state', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Delete Activities State object
+ * 
+ */
+router.delete('/:id/activities/state', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Get LRS Information
+ * 
+ */
+router.get('/:id/about', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Get LRS Extensions Information
+ * 
+ */
+router.get('/:id/extensions/:extensionid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    extensionid: req.params['extensionid'],
+    user: req.user,
+    postuser: req.query['user'],
+    body: req.body
+  };
+
+  try {
+    const result = await activities.NotImplemented(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);

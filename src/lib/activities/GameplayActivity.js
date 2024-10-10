@@ -16,6 +16,7 @@ const pipelineAsync = promisify(pipeline);
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
 var RageAnalyticsActivity = require('./RageAnalyticsActivity');
+var generateStatementId = require('../utils/statementIdGenerator');
 
 var RealtimeActivity = new RageAnalyticsActivity({});
 var TraceStorageActivity = new MinioActivity({});
@@ -155,55 +156,119 @@ class GameplayActivity extends Activity {
 		return await super.removeParticipants(participants);
 	}
 
+	updateMissingTraceElements(participant, trace) {
+		const now = new Date();
+		if(!trace.id) {
+			trace.id = generateStatementId(trace);
+		}
+		if(!trace.stored) {
+			trace.stored = now.toISOString();
+		}
+		if(!trace.timestamp) {
+			trace.timestamp = now.toISOString();
+		}
+		if(!trace.version) {
+			trace.version = "1.0.3";
+			//trace.version = "2.0.0";
+		}
+		if(!trace.authority) {
+			trace.authority = {
+				homePage: config.external_url,
+				name: participant
+			};
+		}
+		return trace;
+	}
+
+	sendProgressOrCompletionOfGame(trace, participant) {
+		if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
+			const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+			const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+			const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+			const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
+			if(trace.verb) {
+				switch(trace.verb.id) {
+					case initializedVerb:
+						logger.info("INITIALIZED GAME");
+						this.setProgress(participant, 0);
+					  break;
+					case progressedVerb:
+						logger.info("PROGRESSED THROUGH GAME");
+						if(trace.result && trace.result.extensions[resultExtensionProgress]) {
+							var value = trace.result.extensions[resultExtensionProgress];
+							logger.info(value);
+							this.setProgress(participant, value);
+						}
+					  break;
+					case completedVerb:
+						if(trace.result.completion == true) {
+							logger.info("COMPLETED GAME");
+							this.setCompletion(participant, true);
+						}
+					  break;
+					default: 
+						logger.info("OTHER VERB");
+				}
+			}
+		}
+	}
+
+	async setStatement(participant, result){
+		let toret = 0;
+		let response=[];
+		try {
+			if(Array.isArray(result)){
+				if(this.extra_data.config.trace_storage){
+					var traces= [];
+					for(let traceId = 0; traceId < result.length; traceId++) {
+						var trace = result[traceId];
+						this.sendProgressOrCompletionOfGame(trace, participant);
+						traces.push(this.updateMissingTraceElements(participant, trace));
+					}
+					response = await TraceStorageActivity.sendTracesToKafka(traces, this.id);
+					toret =  { ids: response };
+				} else {
+					throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
+				}
+			} else if(!result || typeof result === 'object'){
+				if(this.extra_data.config.trace_storage){
+					trace = this.updateMissingTraceElements(participant, result);
+					this.sendProgressOrCompletionOfGame(trace, participant);
+					await TraceStorageActivity.sendTracesToKafka([trace], this.id);
+					toret =  { ids: response };
+				} else {
+					throw { message: 'Trace Storage is not enabled. No xAPI collector.' };
+				}
+			} else {
+				logger.info('Unknown case');
+				logger.info(result.result);
+				throw { message: 'Unknown case setting the statements' };
+			}
+		}catch(e){
+			logger.error(e);
+			throw { message: 'Error while setting the statements' };
+		}
+		return toret;
+	}
+
 	async setResult(participant, result){
 		let toret = 0;
-
 		try{
 			if(Array.isArray(result)){
-				for(var traceId in result) {
-					var trace = result[traceId];
-					if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
-						//console.log(trace);
-						const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
-						const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
-						const completedVerb='http://adlnet.gov/expapi/verbs/completed';
-						const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
-						if(trace.verb) {
-							switch(trace.verb.id) {
-								case initializedVerb:
-									logger.info("INITIALIZED GAME");
-									this.setProgress(participant, 0);
-								  break;
-								case progressedVerb:
-									logger.info("PROGRESSED THROUGH GAME");
-									if(trace.result && trace.result.extensions[resultExtensionProgress]) {
-										var value = trace.result.extensions[resultExtensionProgress];
-										logger.info(value);
-										this.setProgress(participant, value);
-									}
-								  break;
-								case completedVerb:
-									if(trace.result.completion == true) {
-										logger.info("COMPLETED GAME");
-										this.setCompletion(participant, true);
-									}
-								  break;
-								default:
-									logger.info("OTHER VERB");
-							  }
-						}
-					}
-				}
  				// If we're receiving an array, we're receiving traces
 				if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
 					if(this.extra_data.config.trace_storage){
-						await TraceStorageActivity.sendTracesToKafka(result, this.id);
+						var traces= [];
+						for(let traceId = 0; traceId < result.length; traceId++) {
+							var trace = result[traceId];
+							this.sendProgressOrCompletionOfGame(trace, participant);
+							traces.push(this.updateMissingTraceElements(participant, trace));
+						}
+						await TraceStorageActivity.sendTracesToKafka(traces, this.id);
 					}
-
-					if(this.extra_data.config.realtime){
-						await RealtimeActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
-					}
-					
+					//if(this.extra_data.config.realtime){
+					//	await RealtimeActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
+					//}
 					toret =  { message: 'Traces Received' };
 				}else{
 					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
@@ -217,7 +282,7 @@ class GameplayActivity extends Activity {
 					}else{
 						throw { message: 'Backup is not enabled for this activity' };
 					}
-				}else{
+				} else {
 					if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
 						toret = { 
 							actor: {
@@ -227,7 +292,7 @@ class GameplayActivity extends Activity {
 							playerId: participant,
 							objectId: config.external_url + '/activities/' + this.id,
 						}
-					}else{
+					} else {
 						throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
 					}
 				}

@@ -40,8 +40,7 @@ var db = mongoose.connection;
 db.on('error', logger.error.bind(console, 'connection error:'));
 db.once('open', function() {
   logger.debug('connected');
-
-  	const fs = require('fs');
+  const fs = require('fs');
 	const yaml = require('yaml');
 	const swaggerMongoose = require('swagger-mongoose');
 

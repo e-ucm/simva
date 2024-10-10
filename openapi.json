@@ -1467,95 +1467,6 @@
         ]
       }
     },
-    "/activities/{id}/statements": {
-      "get": {
-        "tags": [
-          "teachers",
-          "students"
-        ],
-        "summary": "gets the results of the activity",
-        "operationId": "getResult",
-        "description": "Obtains the completion status of the activity\n",
-        "responses": {
-          "200": {
-            "description": "the result of the students required"
-          },
-          "400": {
-            "description": "ID is not a valid ObjectId"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/testId"
-          },
-          {
-            "$ref": "#/components/parameters/users"
-          },
-          {
-            "$ref": "#/components/parameters/type"
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "teachers",
-          "students"
-        ],
-        "summary": "sets the result for the activity",
-        "operationId": "setResult",
-        "description": "Set the result of the activity for a student\n",
-        "responses": {
-          "200": {
-            "description": "if it is openable or not"
-          },
-          "400": {
-            "description": "ID is not a valid ObjectId"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/testId"
-          },
-          {
-            "$ref": "#/components/parameters/user"
-          }
-        ]
-      },
-      "put": {
-        "tags": [
-          "teachers",
-          "students"
-        ],
-        "summary": "put the result for the activity",
-        "operationId": "putResult",
-        "description": "Put the result of the activity for a student\n",
-        "responses": {
-          "200": {
-            "description": "if it is openable or not"
-          },
-          "400": {
-            "description": "ID is not a valid ObjectId"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/testId"
-          },
-          {
-            "$ref": "#/components/parameters/user"
-          }
-        ]
-      }
-    },
     "/activities/{id}/hasresult": {
       "get": {
         "tags": [
@@ -1644,6 +1555,626 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/activityId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/statements": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the statement of the activity",
+        "operationId": "getStatement",
+        "description": "Get the statement object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the result of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "Post the statement for the activity",
+        "operationId": "setStatement",
+        "description": "Post the statement object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the traces has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict in statementId"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "put the statement for the activity",
+        "operationId": "putStatement",
+        "description": "Put the statement object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the traces has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict in statementId"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/agents": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the agent object of the activity",
+        "operationId": "getAgent",
+        "description": "Get the  agent object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the agents of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/agents/profile": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the agent profile object of the activity",
+        "operationId": "getAgentProfile",
+        "description": "Get the agent profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the agent profile of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "Post the agent profile for the activity",
+        "operationId": "setAgentProfile",
+        "description": "Post the agent profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the agent profile has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "put the agent profile for the activity",
+        "operationId": "putAgentProfile",
+        "description": "Put the agent profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the agent profile has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "delete the agent profile for the activity",
+        "operationId": "deleteAgentProfile",
+        "description": "delete the agent profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the agent profile has been deleted"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/activities": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the activities object of the activity",
+        "operationId": "getActivities",
+        "description": "Get the  activities object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/activities/profile": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the activities profile object of the activity",
+        "operationId": "getActivitiesProfile",
+        "description": "Get the activities profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities profile of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "Post the activities profile for the activity",
+        "operationId": "setActivitiesProfile",
+        "description": "Post the activities profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities profile has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "put the activities profile for the activity",
+        "operationId": "putActivitiesProfile",
+        "description": "Put the activities profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities profile has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "delete the activities profile for the activity",
+        "operationId": "deleteActivitiesProfile",
+        "description": "delete the activities profile object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities profile has been deleted"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/activities/status": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the activities status object of the activity",
+        "operationId": "getActivitiesStatus",
+        "description": "Get the activities status object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities status of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "Post the activities status for the activity",
+        "operationId": "setActivitiesStatus",
+        "description": "Post the activities status object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities status has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "put the activities status for the activity",
+        "operationId": "putActivitiesStatus",
+        "description": "Put the activities status object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities status has been stocked"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "delete the activities status for the activity",
+        "operationId": "deleteActivitiesStatus",
+        "description": "delete the activities status object of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the activities status has been deleted"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/about": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the LRS Information of the activity",
+        "operationId": "getAbout",
+        "description": "Get the LRS Information of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the LRS Information of the activity of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/users"
+          },
+          {
+            "$ref": "#/components/parameters/type"
+          }
+        ]
+      }
+    },
+    "/activities/{id}/extensions/{extensionId}": {
+      "get": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "gets the extension Information",
+        "operationId": "getExtension",
+        "description": "Get the LRS extension Information of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "the LRS extension Information of the activity of the students required"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "501": {
+            "description": "Not implemented"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
           },
           {
             "$ref": "#/components/parameters/users"
