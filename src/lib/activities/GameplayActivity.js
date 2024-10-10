@@ -17,6 +17,7 @@ var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
 var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 var generateStatementId = require('../utils/statementIdGenerator');
+var sseManager = require('../utils/sseManager');
 
 var RealtimeActivity = new RageAnalyticsActivity({});
 var TraceStorageActivity = new MinioActivity({});
@@ -190,6 +191,15 @@ class GameplayActivity extends Activity {
 				switch(trace.verb.id) {
 					case initializedVerb:
 						logger.info("INITIALIZED GAME");
+						const message = {
+							type: 'activity_initialized',
+							user: participant,
+							activityId: this.id,
+							message: `Activity ${this.id} has been initialized!`
+						};
+					
+						// Broadcast the message to all clients
+						sseManager.broadcast(message);
 						this.setProgress(participant, 0);
 					  break;
 					case progressedVerb:
@@ -198,12 +208,31 @@ class GameplayActivity extends Activity {
 							var value = trace.result.extensions[resultExtensionProgress];
 							logger.info(value);
 							this.setProgress(participant, value);
+							const message = {
+								type: 'activity_progressed',
+								activityId: this.id,
+								user: participant,
+								val: value,
+								message: `Activity ${this.id} has a progressed!`
+							};
+						
+							// Broadcast the message to all clients
+							sseManager.broadcast(message);
 						}
 					  break;
 					case completedVerb:
 						if(trace.result.completion == true) {
 							logger.info("COMPLETED GAME");
 							this.setCompletion(participant, true);
+							const message = {
+								type: 'activity_completed',
+								activityId: this.id,
+								user: participant,
+								message: `Activity ${this.id} has been completed!`
+							};
+						
+							// Broadcast the message to all clients
+							sseManager.broadcast(message);
 						}
 					  break;
 					default: 

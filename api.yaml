@@ -23,6 +23,25 @@ tags:
   - name: noroles
     description: Operations available to users with no role
 paths:
+  /events:
+    get:
+      summary: send Server Side Events to Client
+      operationId: GetEvent
+      description: |
+        send Server Side Events to Client
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/events'
+        required: true
   /users:
     get:
       tags:
