@@ -1,6 +1,7 @@
 const logger = require('./logger');
 const ServerError = require('./error');
 var mongoose = require('mongoose');
+const WebSocket = require('ws');
 
 var ActivitiesController = {};
 var Activity = require('./activities/activity');
@@ -12,6 +13,7 @@ var GameplayActivity = require('./activities/GameplayActivity');
 var ManualActivity = require('./activities/ManualActivity');
 var LTIToolActivity = require('./activities/LTIToolActivity');
 var ImsPackageActivity = require('./activities/ImsPackageActivity');
+const wsManager = require('./wsManager');  // Import WebSocketManager
 
 var types = [
 	Activity,
@@ -22,6 +24,18 @@ var types = [
 	LTIToolActivity,
 	ImsPackageActivity
 ];
+
+// Function to notify a specific client when an activity is completed
+ActivitiesController.notifyActivityCompletion(clientId, activityId) {
+    const message = {
+        type: 'activity_completed',
+        activityId: activityId,
+        message: `Activity ${activityId} has been completed!`
+    };
+
+    // Send the message to the specific client
+    wsManager.sendMessageToClient(clientId, message);
+}
 
 ActivitiesController.getStudy = async (id) => {
 	let res = null;
@@ -74,9 +88,6 @@ ActivitiesController.loadActivity = async (id) => {
 	}
 	return ActivitiesController.castToClass(activity);
 }
-
-
-
 
 ActivitiesController.addActivity = async (params, files) => {
 	for (var i = 0; i < types.length; i++) {
