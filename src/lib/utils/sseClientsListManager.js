@@ -13,7 +13,9 @@ class SSEClientsListManager {
     }
 
 
-    async getClientList(activityId, participant) {
+    async getClientList(id, participant) {
+        // If id is an ObjectID, convert it to a string
+        const activityId = (id && typeof id.toHexString === 'function') ? id.toHexString() : id;
         let clientsToSend = [];
         for (let [clientId, clientData] of this.clients) {
             let client = JSON.parse(clientData); // Parse the stored client data
@@ -33,7 +35,6 @@ class SSEClientsListManager {
                 console.log(`Client ${clientId} is not authorized.`);
             }
         }
-        console.log(this.clients);
         return clientsToSend;
     }
 

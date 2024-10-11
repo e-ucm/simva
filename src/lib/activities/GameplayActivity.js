@@ -203,7 +203,7 @@ class GameplayActivity extends Activity {
 						var clients=await sseSimvaClientManager.getClientList(this.id, participant);
 						sseManager.sendMessageToClientList(clients, message);
 						// Broadcast the message to all clients
-						sseManager.broadcast(message);
+						//sseManager.broadcast(message);
 						this.setProgress(participant, 0);
 					  break;
 					case progressedVerb:
@@ -224,7 +224,7 @@ class GameplayActivity extends Activity {
 							var clients=await sseSimvaClientManager.getClientList(this.id, participant);
 							sseManager.sendMessageToClientList(clients, message);
 							// Broadcast the message to all clients
-							sseManager.broadcast(message);
+							//sseManager.broadcast(message);
 						}
 					  break;
 					case completedVerb:
@@ -241,7 +241,7 @@ class GameplayActivity extends Activity {
 							var clients=await sseSimvaClientManager.getClientList(this.id, participant);
 							sseManager.sendMessageToClientList(clients, message);
 							// Broadcast the message to all clients
-							sseManager.broadcast(message);
+							//sseManager.broadcast(message);
 						}
 					  break;
 					default: 
