@@ -182,7 +182,7 @@ class GameplayActivity extends Activity {
 		return trace;
 	}
 
-	sendProgressOrCompletionOfGame(trace, participant) {
+	async sendProgressOrCompletionOfGame(trace, participant) {
 		if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
 			const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
 			const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
@@ -200,7 +200,7 @@ class GameplayActivity extends Activity {
 						};
 					
 						// Broadcast the message to client list
-						var clients=sseSimvaClientManager.getClientList(this.id, participant);
+						var clients=await sseSimvaClientManager.getClientList(this.id, participant);
 						sseManager.sendMessageToClientList(clients, message);
 						// Broadcast the message to all clients
 						sseManager.broadcast(message);
@@ -221,7 +221,7 @@ class GameplayActivity extends Activity {
 							};
 						
 							// Broadcast the message to client list
-							var clients=sseSimvaClientManager.getClientList(this.id, participant);
+							var clients=await sseSimvaClientManager.getClientList(this.id, participant);
 							sseManager.sendMessageToClientList(clients, message);
 							// Broadcast the message to all clients
 							sseManager.broadcast(message);
@@ -238,7 +238,7 @@ class GameplayActivity extends Activity {
 								message: `Activity ${this.id} has been completed!`
 							};
 							// Broadcast the message to client list
-							var clients=sseSimvaClientManager.getClientList(this.id, participant);
+							var clients=await sseSimvaClientManager.getClientList(this.id, participant);
 							sseManager.sendMessageToClientList(clients, message);
 							// Broadcast the message to all clients
 							sseManager.broadcast(message);
@@ -260,7 +260,7 @@ class GameplayActivity extends Activity {
 					var traces= [];
 					for(let traceId = 0; traceId < result.length; traceId++) {
 						var trace = result[traceId];
-						this.sendProgressOrCompletionOfGame(trace, participant);
+						await this.sendProgressOrCompletionOfGame(trace, participant);
 						traces.push(this.updateMissingTraceElements(participant, trace));
 					}
 					response = await TraceStorageActivity.sendTracesToKafka(traces, this.id);
@@ -271,7 +271,7 @@ class GameplayActivity extends Activity {
 			} else if(!result || typeof result === 'object'){
 				if(this.extra_data.config.trace_storage){
 					trace = this.updateMissingTraceElements(participant, result);
-					this.sendProgressOrCompletionOfGame(trace, participant);
+					await this.sendProgressOrCompletionOfGame(trace, participant);
 					await TraceStorageActivity.sendTracesToKafka([trace], this.id);
 					toret =  { ids: response };
 				} else {
@@ -299,7 +299,7 @@ class GameplayActivity extends Activity {
 						var traces= [];
 						for(let traceId = 0; traceId < result.length; traceId++) {
 							var trace = result[traceId];
-							this.sendProgressOrCompletionOfGame(trace, participant);
+							await this.sendProgressOrCompletionOfGame(trace, participant);
 							traces.push(this.updateMissingTraceElements(participant, trace));
 						}
 						await TraceStorageActivity.sendTracesToKafka(traces, this.id);

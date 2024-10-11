@@ -245,9 +245,15 @@ StudiesController.addTestToStudy = async (id, params) => {
 }
 
 StudiesController.getActivitiesInStudy = async (id) => {
-	let study = await this.getStudy(id);
-	let tests= study.getStudyTests();
-	return []
+	let study = await StudiesController.getStudy(id);
+	var tests = await TestsController.getTests({"_id" : {"$in" : study.tests}});
+	var activities = [];
+	for(var i=0; i< tests.length; i++)  {
+		for(var j=0; j< tests[i].activities.length; j++)  {
+			activities.push(tests[i].activities[j]);
+		}
+	}
+	return activities;
 }
 
 
