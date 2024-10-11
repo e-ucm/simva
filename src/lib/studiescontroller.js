@@ -244,4 +244,11 @@ StudiesController.addTestToStudy = async (id, params) => {
 	return test;
 }
 
+StudiesController.getActivitiesInStudy = async (id) => {
+	let study = await this.getStudy(id);
+	let tests= study.getStudyTests();
+	return []
+}
+
+
 module.exports = StudiesController;

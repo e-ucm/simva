@@ -200,7 +200,8 @@ class GameplayActivity extends Activity {
 						};
 					
 						// Broadcast the message to client list
-						sseManager.sendMessageToClientList(sseSimvaClientManager.getClientList(this.id, participant), message);
+						var clients=sseSimvaClientManager.getClientList(this.id, participant);
+						sseManager.sendMessageToClientList(clients, message);
 						// Broadcast the message to all clients
 						sseManager.broadcast(message);
 						this.setProgress(participant, 0);
@@ -220,7 +221,8 @@ class GameplayActivity extends Activity {
 							};
 						
 							// Broadcast the message to client list
-							sseManager.sendMessageToClientList(sseSimvaClientManager.getClientList(this.id, participant), message);
+							var clients=sseSimvaClientManager.getClientList(this.id, participant);
+							sseManager.sendMessageToClientList(clients, message);
 							// Broadcast the message to all clients
 							sseManager.broadcast(message);
 						}
@@ -236,7 +238,8 @@ class GameplayActivity extends Activity {
 								message: `Activity ${this.id} has been completed!`
 							};
 							// Broadcast the message to client list
-							sseManager.sendMessageToClientList(sseSimvaClientManager.getClientList(this.id, participant), message);
+							var clients=sseSimvaClientManager.getClientList(this.id, participant);
+							sseManager.sendMessageToClientList(clients, message);
 							// Broadcast the message to all clients
 							sseManager.broadcast(message);
 						}
