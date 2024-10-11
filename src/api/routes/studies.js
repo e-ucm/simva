@@ -131,28 +131,27 @@ router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
  * To send Server Side Event to Client
  * 
  */
-router.get('/:id/events', async (req, res) => {
-   // Extract the token from the query parameters
-   const token = req.query.token;
+router.get('/:id/events', async (req, res, next) => {
+  // Extract the token from the query parameters
+  const token = req.query.token;
 
-   if (!token) {
-       return res.status(401).json({ message: 'No token provided' });
-   }
+  if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+  }
 
-   // Verify the JWT token
-   try{
-		  user = await UsersController.validateJWT(token);
-      logger.info(user);
-      const options = {
-        id: req.params['id'],
-        authToken: req.query['token'],
-        user: user
-      };
-      logger.info(options);
-      sseManager.addClient(req, res, options);
-   } catch(e) {
-
-   }
+  // Verify the JWT token
+  try{
+     let user = await UsersController.validateJWT(token);
+     logger.info(user);
+     const options = {
+       id: req.params['id'],
+       user: user
+     };
+     logger.info(JSON.stringify(options));
+     sseManager.addClient(req, res, options);
+  } catch(e) {
+     next(err);
+  }
 });
 
 /**
