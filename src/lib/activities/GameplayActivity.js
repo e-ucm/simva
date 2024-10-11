@@ -18,6 +18,7 @@ var MinioActivity = require('./MinioActivity');
 var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 var generateStatementId = require('../utils/statementIdGenerator');
 var sseSimvaClientManager = require('../utils/sseClientsListManager');
+var sseManager = require('../utils/sseManager');
 
 var RealtimeActivity = new RageAnalyticsActivity({});
 var TraceStorageActivity = new MinioActivity({});
@@ -198,8 +199,10 @@ class GameplayActivity extends Activity {
 							message: `Activity ${this.id} has been initialized!`
 						};
 					
+						// Broadcast the message to client list
+						sseManager.sendMessageToClientList(sseSimvaClientManager.getClientList(this.id, participant), message);
 						// Broadcast the message to all clients
-						sseSimvaClientManager.sendMessageToClient(this.id, participant, message);
+						sseManager.broadcast(message);
 						this.setProgress(participant, 0);
 					  break;
 					case progressedVerb:
@@ -216,8 +219,10 @@ class GameplayActivity extends Activity {
 								message: `Activity ${this.id} has a progressed!`
 							};
 						
+							// Broadcast the message to client list
+							sseManager.sendMessageToClientList(sseSimvaClientManager.getClientList(this.id, participant), message);
 							// Broadcast the message to all clients
-							sseSimvaClientManager.sendMessageToClient(this.id, participant, message);
+							sseManager.broadcast(message);
 						}
 					  break;
 					case completedVerb:
@@ -230,9 +235,10 @@ class GameplayActivity extends Activity {
 								user: participant,
 								message: `Activity ${this.id} has been completed!`
 							};
-						
+							// Broadcast the message to client list
+							sseManager.sendMessageToClientList(sseSimvaClientManager.getClientList(this.id, participant), message);
 							// Broadcast the message to all clients
-							sseSimvaClientManager.sendMessageToClient(this.id, participant, message);
+							sseManager.broadcast(message);
 						}
 					  break;
 					default: 
