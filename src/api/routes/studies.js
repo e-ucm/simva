@@ -130,9 +130,10 @@ router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
  * To send Server Side Event to Client
  * 
  */
-router.get('/:id/events', Authenticator.auth, async (req, res, next) => {
+router.get('/:id/events', (req, res) => {
   const options = {
     id: req.params['id'],
+    authToken: req.query['token'],
     user: req.user
   };
   logger.info(options);

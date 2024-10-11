@@ -32,10 +32,6 @@
   ],
   "paths": {
     "/events": {
-      "tags": [
-        "teachers",
-        "students"
-      ],
       "get": {
         "summary": "send Server Side Events to Client",
         "operationId": "GetEvent",
@@ -647,10 +643,6 @@
     },
     "/studies/{id}/events": {
       "get": {
-        "tags": [
-          "teachers",
-          "students"
-        ],
         "summary": "send Server Side Events to Client for this study",
         "operationId": "GetEvent",
         "description": "send Server Side Events to Client\n",

@@ -24,9 +24,6 @@ tags:
     description: Operations available to users with no role
 paths:
   /events:
-    tags:
-        - teachers
-        - students
     get:
       summary: send Server Side Events to Client
       operationId: GetEvent
@@ -426,9 +423,6 @@ paths:
         - $ref: '#/components/parameters/studyId'
   /studies/{id}/events:
     get:
-      tags:
-        - teachers
-        - students
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
       description: |
