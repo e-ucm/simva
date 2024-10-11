@@ -18,7 +18,7 @@ class SSEManager {
         this.clients.set(clientId, res);
         this.clientsOptions.set(clientId, options);
         console.log(`Client connected: ${clientId}`);
-        console.log(`options: ${options}`);
+        console.log(options);
 
         // Handle client disconnect
         req.on('close', () => {
