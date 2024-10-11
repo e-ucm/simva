@@ -475,7 +475,7 @@ module.exports.deleteTest = async (options) => {
 
 module.exports.getStudyEvents = async (options) => {
     logger.info(JSON.stringify(options));
-    sseClientsListManager.addActivityAndUserToMap(option.id,options.user, options.userRole, options.clientId);
+    sseClientsListManager.addActivityAndUserToMap(options.id,options.user, options.userRole, options.clientId);
 }
 
 
