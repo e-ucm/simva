@@ -2,10 +2,11 @@
 class SSEManager {
     constructor() {
         this.clients = new Map();  // Track connected clients by a unique client ID
+        this.clientsOptions = new Map();
     }
 
     // Handle a new SSE client connection
-    addClient(req, res) {
+    addClient(req, res, options) {
         const clientId = this.generateClientId();
 
         // Set the required headers for SSE
@@ -15,12 +16,14 @@ class SSEManager {
 
         // Add client to the client list
         this.clients.set(clientId, res);
+        this.clientsOptions.set(clientId, options);
         console.log(`Client connected: ${clientId}`);
 
         // Handle client disconnect
         req.on('close', () => {
             console.log(`Client disconnected: ${clientId}`);
             this.clients.delete(clientId);
+            this.clientsOptions.delete(clientId);
         });
 
         return clientId;  // Return client ID for reference

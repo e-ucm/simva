@@ -1,12 +1,13 @@
 const express = require('express');
 const studies = require('../services/studies');
-
+const sseManager = require('../../lib/utils/sseManager');  // Import SSE Manager
 const router = new express.Router();
 
 // Validators
 const validator = require('../../lib/utils/validator');
 validator.addValidations('/studies', router);
 const Authenticator = require('../../lib/utils/authenticator');
+const logger = require('../../lib/logger');
 
 /**
  * Obtains the list of studies for the current teacher.
@@ -101,6 +102,41 @@ router.delete('/:id', Authenticator.auth, async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+/**
+ * Obtains the list of scheduled activities for the current
+ * 
+ * student and study, and its completion status. Hides the
+ * 
+ * current used test to the user.
+ * 
+ */
+router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getSchedule(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * To send Server Side Event to Client
+ * 
+ */
+router.get('/:id/events', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user
+  };
+  logger.info(options);
+  sseManager.addClient(req, res, options);
 });
 
 /**

@@ -199,7 +199,7 @@ class GameplayActivity extends Activity {
 						};
 					
 						// Broadcast the message to all clients
-						sseManager.broadcast(message, message.type);
+						sseManager.broadcast(message);
 						this.setProgress(participant, 0);
 					  break;
 					case progressedVerb:
@@ -217,7 +217,7 @@ class GameplayActivity extends Activity {
 							};
 						
 							// Broadcast the message to all clients
-							sseManager.broadcast(message, message.type);
+							sseManager.broadcast(message);
 						}
 					  break;
 					case completedVerb:
@@ -232,7 +232,7 @@ class GameplayActivity extends Activity {
 							};
 						
 							// Broadcast the message to all clients
-							sseManager.broadcast(message, message.type);
+							sseManager.broadcast(message);
 						}
 					  break;
 					default: 

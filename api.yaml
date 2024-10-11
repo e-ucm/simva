@@ -24,6 +24,9 @@ tags:
     description: Operations available to users with no role
 paths:
   /events:
+    tags:
+        - teachers
+        - students
     get:
       summary: send Server Side Events to Client
       operationId: GetEvent
@@ -426,6 +429,30 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
+  /studies/{id}/events:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: send Server Side Events to Client for this study
+      operationId: GetEvent
+      description: |
+        send Server Side Events to Client
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/events'
+        required: true
   /studies/{id}/schedule:
     get:
       tags:
