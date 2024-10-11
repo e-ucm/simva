@@ -7,6 +7,7 @@ var GroupsController = require('../../lib/groupscontroller');
 var AllocatorsController = require('../../lib/allocatorscontroller');
 var TestsController = require('../../lib/testscontroller');
 var ActivitiesController = require('../../lib/activitiescontroller');
+var sseClientsListManager = require('../../lib/utils/sseClientsListManager');
 
 /**
  * @param {Object} options
@@ -474,8 +475,7 @@ module.exports.deleteTest = async (options) => {
 
 module.exports.getStudyEvents = async (options) => {
     logger.info(JSON.stringify(options));
-    let study = await StudiesController.getStudy(options.id);
-    logger.info(study);
+    sseClientsListManager.addActivityAndUserToMap(option.id,options.user, options.userRole, options.clientId);
 }
 
 

@@ -146,7 +146,8 @@ router.get('/:id/events', async (req, res, next) => {
       var clientId= sseManager.addClient(req, res);
       const options = {
           id: req.params['id'],
-          user: user, 
+          user: user.data.username,
+          userRole: user.data.role,
           clientId: clientId
       };
       await studies.getStudyEvents(options);

@@ -8,8 +8,8 @@ class SSEClientsListManager {
         this.clientsUsers = new Map();
     }
 
-    addActivityAndUserToMap(user, id, clientId) {
-        this.clients.set(clientId, { user : user, activityId : activityId});
+    addActivityAndUserToMap(id, user, userRole, clientId) {
+        this.clients.set(clientId, { user : user, userrole : userRole, activityId : id});
         this.clientsStudy.set(id, clientId);
         this.clientsUsers.set(user, clientId);
     }
