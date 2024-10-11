@@ -32,19 +32,29 @@ class SSEManager {
     }
 
     // Send a message to a specific client
-    sendMessageToClient(clientId, message) {
+    sendMessageToClient(clientId, message, type) {
         const client = this.clients.get(clientId);
         if (client) {
-            client.write(`data: ${JSON.stringify(message)}\n\n`);
+            var msg="";
+            if(type) {
+                msg=`event:${type}\n`
+            }
+            msg+=`data: ${JSON.stringify(message)}\n\n`
+            client.write(msg);
         } else {
             console.error(`Cannot send message. Client ${clientId} is not connected.`);
         }
     }
 
     // Broadcast a message to all connected clients
-    broadcast(message) {
+    broadcast(message, type) {
         this.clients.forEach((client, clientId) => {
-            client.write(`data: ${JSON.stringify(message)}\n\n`);
+            var msg="";
+            if(type) {
+                msg=`event:${type}\n`
+            }
+            msg+=`data: ${JSON.stringify(message)}\n\n`
+            client.write(msg);
         });
     }
 
