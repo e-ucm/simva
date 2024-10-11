@@ -472,6 +472,12 @@ module.exports.deleteTest = async (options) => {
   return result;
 };
 
+module.exports.getStudyEvents = async (options) => {
+    logger.info(JSON.stringify(options));
+    let study = await StudiesController.getStudy(options.id);
+    logger.info(study);
+}
+
 
 /**
  * @param {Object} options

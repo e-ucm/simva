@@ -141,14 +141,15 @@ router.get('/:id/events', async (req, res, next) => {
 
   // Verify the JWT token
   try{
-     let user = await UsersController.validateJWT(token);
-     logger.info(user);
-     const options = {
-       id: req.params['id'],
-       user: user
-     };
-     logger.info(JSON.stringify(options));
-     sseManager.addClient(req, res, options);
+      let user = await UsersController.validateJWT(token);
+      logger.info(user);
+      var clientId= sseManager.addClient(req, res);
+      const options = {
+          id: req.params['id'],
+          user: user, 
+          clientId: clientId
+      };
+      await studies.getStudyEvents(options);
   } catch(err) {
      next(err);
   }
