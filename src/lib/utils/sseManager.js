@@ -1,3 +1,5 @@
+var sseClientManager = require('./sseClientListManager');
+
 // sseManager.js
 class SSEManager {
     constructor() {
@@ -22,6 +24,7 @@ class SSEManager {
         req.on('close', () => {
             console.log(`Client disconnected: ${clientId}`);
             this.clients.delete(clientId);
+            sseClientManager.removeClient(clientId);
         });
 
         return clientId;  // Return client ID for reference

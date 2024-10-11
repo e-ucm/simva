@@ -25,6 +25,10 @@ class SSEClientsListManager {
 		sseManager.broadcast(message);
     }
 
+    removeClient(clientId) {
+        this.clients.delete(clientId);
+    }
+
     remove(user) {
         this.clientsUsers.delete(user);
     }
