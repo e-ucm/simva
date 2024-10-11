@@ -4,7 +4,7 @@ var sseManager = require('./sseManager');
 class SSEClientsListManager {
     constructor() {
         this.clients= new Map();
-        this.clientsActivities = new Map(); 
+        this.clientsStudy = new Map(); 
         this.clientsUsers = new Map();
     }
 
