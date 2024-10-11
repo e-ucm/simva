@@ -6,7 +6,7 @@ class SSEManager {
     }
 
     // Handle a new SSE client connection
-    addClient(req, res, options) {
+    addClient(req, res) {
         const clientId = this.generateClientId();
 
         // Set the required headers for SSE
@@ -16,15 +16,12 @@ class SSEManager {
 
         // Add client to the client list
         this.clients.set(clientId, res);
-        this.clientsOptions.set(clientId, options);
         console.log(`Client connected: ${clientId}`);
-        console.log(options);
 
         // Handle client disconnect
         req.on('close', () => {
             console.log(`Client disconnected: ${clientId}`);
             this.clients.delete(clientId);
-            this.clientsOptions.delete(clientId);
         });
 
         return clientId;  // Return client ID for reference
@@ -65,6 +62,11 @@ class SSEManager {
     // Get the total number of connected clients (optional utility)
     getClientCount() {
         return this.clients.size;
+    }
+
+    // Get the total number of connected clients (optional utility)
+    getClientConnected(clientId) {
+        return this.clients.has(clientId);
     }
 }
 
