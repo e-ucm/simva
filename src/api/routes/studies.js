@@ -149,7 +149,7 @@ router.get('/:id/events', async (req, res, next) => {
      };
      logger.info(JSON.stringify(options));
      sseManager.addClient(req, res, options);
-  } catch(e) {
+  } catch(err) {
      next(err);
   }
 });
