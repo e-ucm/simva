@@ -1,4 +1,4 @@
-var sseClientManager = require('./sseClientListManager');
+var sseClientManager = require('./sseClientsListManager');
 
 // sseManager.js
 class SSEManager {
