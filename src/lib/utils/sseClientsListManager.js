@@ -1,5 +1,3 @@
-var sseManager = require('./sseManager');
-
 // sseManager.js
 class SSEClientsListManager {
     constructor() {
@@ -13,16 +11,14 @@ class SSEClientsListManager {
         this.clients.set(clientId, JSON.stringify(obj));
         this.clientsStudy.set(id, clientId);
         this.clientsUsers.set(user, clientId);
+        console.log(this.clients);
     }
 
-    sendMessageToClient(activityId, participant, message) {
+
+    getClientList(activityId, participant) {
         let clientsToSend = [];
-		for(var i=0; i < clientsToSend.length; i++) {
-			sseManager.sendMessageToClient(clientsToSend[i], message);
-		}
         console.log(this.clients);
-        // Broadcast the message to all clients
-		sseManager.broadcast(message);
+        return clientsToSend;
     }
 
     removeClient(clientId) {

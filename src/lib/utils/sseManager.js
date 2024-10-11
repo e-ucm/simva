@@ -35,6 +35,13 @@ class SSEManager {
         return Math.random().toString(36).substr(2, 9);
     }
 
+    // Send a message to a specific client list
+    sendMessageToClientList(clientList, message, type) {
+        for(var i=0; i < clientList.length; i++) {
+			this.sendMessageToClient(clientList[i], message, type);
+		}
+    }
+
     // Send a message to a specific client
     sendMessageToClient(clientId, message, type) {
         const client = this.clients.get(clientId);
