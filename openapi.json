@@ -49,15 +49,6 @@
           },
           "401": {
             "description": "One or both of the JWT are not valid"
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/events"
-              }
-            }
           },
           "required": true
         }
@@ -678,17 +669,7 @@
           {
             "$ref": "#/components/parameters/studyId"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/events"
-              }
-            }
-          },
-          "required": true
-        }
+        ]
       }
     },
     "/studies/{id}/schedule": {

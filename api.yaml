@@ -39,11 +39,6 @@ paths:
           description: 'invalid input, object invalid'
         '401':
           description: 'One or both of the JWT are not valid'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/events'
         required: true
   /users:
     get:
@@ -447,12 +442,6 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/events'
-        required: true
   /studies/{id}/schedule:
     get:
       tags:
