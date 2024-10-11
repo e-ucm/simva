@@ -9,7 +9,8 @@ class SSEClientsListManager {
     }
 
     addActivityAndUserToMap(id, user, userRole, clientId) {
-        this.clients.set(clientId, { user : user, userrole : userRole, activityId : id});
+        var obj = { user : user, userrole : userRole, activityId : id};
+        this.clients.set(clientId, JSON.stringify(obj));
         this.clientsStudy.set(id, clientId);
         this.clientsUsers.set(user, clientId);
     }
