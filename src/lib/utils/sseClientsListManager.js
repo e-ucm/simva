@@ -1,3 +1,5 @@
+var StudiesController = require("../studiescontroller");
+
 // sseManager.js
 class SSEClientsListManager {
     constructor() {
@@ -15,7 +17,7 @@ class SSEClientsListManager {
         let clientsToSend = [];
         for (let [clientId, clientData] of this.clients) {
             let client = JSON.parse(clientData); // Parse the stored client data
-            let activities = StudiesController.getActivitiesInStudy(client.id);
+            let activities = []; //StudiesController.getActivitiesInStudy(client.id);
             if (client.userRole === 'teacher') {
                 // Check if the client's study includes the activityId
                 if (activities.includes(activityId)) {
