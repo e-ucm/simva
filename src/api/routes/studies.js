@@ -1,6 +1,7 @@
 const express = require('express');
 const studies = require('../services/studies');
 const sseManager = require('../../lib/utils/sseManager');  // Import SSE Manager
+let UsersController = require('../../lib/userscontroller');
 const router = new express.Router();
 
 // Validators
@@ -130,14 +131,28 @@ router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
  * To send Server Side Event to Client
  * 
  */
-router.get('/:id/events', (req, res) => {
-  const options = {
-    id: req.params['id'],
-    authToken: req.query['token'],
-    user: req.user
-  };
-  logger.info(options);
-  sseManager.addClient(req, res, options);
+router.get('/:id/events', async (req, res) => {
+   // Extract the token from the query parameters
+   const token = req.query.token;
+
+   if (!token) {
+       return res.status(401).json({ message: 'No token provided' });
+   }
+
+   // Verify the JWT token
+   try{
+		  user = await UsersController.validateJWT(token);
+      logger.info(user);
+      const options = {
+        id: req.params['id'],
+        authToken: req.query['token'],
+        user: user
+      };
+      logger.info(options);
+      sseManager.addClient(req, res, options);
+   } catch(e) {
+
+   }
 });
 
 /**
