@@ -40,6 +40,7 @@ class SSEClientsListManager {
 
     removeClient(clientId) {
         this.clients.delete(clientId);
+        console.log(this.clients);
     }
 }
 
