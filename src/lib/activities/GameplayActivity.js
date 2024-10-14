@@ -194,6 +194,7 @@ class GameplayActivity extends Activity {
 						logger.info("INITIALIZED GAME");
 						const message = {
 							type: 'activity_initialized',
+							activityType : "gameplay", 
 							user: participant,
 							activityId: this.id,
 							message: `Activity ${this.id} has been initialized!`
@@ -214,6 +215,7 @@ class GameplayActivity extends Activity {
 							this.setProgress(participant, value);
 							const message = {
 								type: 'activity_progressed',
+								activityType : "gameplay", 
 								activityId: this.id,
 								user: participant,
 								val: value,
@@ -233,6 +235,7 @@ class GameplayActivity extends Activity {
 							this.setCompletion(participant, true);
 							const message = {
 								type: 'activity_completed',
+								activityType : "gameplay", 
 								activityId: this.id,
 								user: participant,
 								message: `Activity ${this.id} has been completed!`

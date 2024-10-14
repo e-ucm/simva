@@ -128,6 +128,11 @@ app.get('/events', (req, res) => {
   sseManager.addClient(req, res);
 });
 
+app.get('/limesurvey/completion/event', (req, res) => {
+  console.log(req);
+  res.status(200).send({ message: 'Treated' });
+});
+
 // catch 404
 app.use((req, res, next) => {
   logger.error(`Error 404 on ${req.url}.`);

@@ -9,6 +9,7 @@ const validator = require('../../lib/utils/validator');
 validator.addValidations('/studies', router);
 const Authenticator = require('../../lib/utils/authenticator');
 const logger = require('../../lib/logger');
+const config = require('../../lib/config');
 
 /**
  * Obtains the list of studies for the current teacher.
@@ -161,6 +162,11 @@ router.get('/:id/schedule/events', async (req, res, next) => {
  * 
  */
 router.get('/:id/events', async (req, res, next) => {
+  
+  const url = config.api.url + req.baseUrl + req.path;
+  const query = req.query;
+  validateUrl(url, query);
+
   // Extract the token from the query parameters
   const token = req.query.token;
 
@@ -183,6 +189,29 @@ router.get('/:id/events', async (req, res, next) => {
      next(err);
   }
 });
+
+function validateUrl(url, query) {
+  const signature = query.signature;
+  var map = new Map();
+  Object.keys(query).forEach(key => {
+    if(key !== "signature") {
+        map.set(key, query[key]);
+    }
+  });
+  var print=url+'\n';
+  map.forEach((value, key) => {
+    print+=key + "=" + value +'\n';
+  });
+  console.log(print);
+  const newSignature = print;
+  if(newSignature == signature) {
+    console.log("Valid signature !");
+    return true;
+  } else {
+    console.log("Invalid signature !");
+    return false;
+  }
+};
 
 /**
  * Obtains the list of scheduled activities for the current
