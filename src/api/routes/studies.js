@@ -131,7 +131,7 @@ router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
  * To send Server Side Event to Client
  * 
  */
-router.get('/:id/events', async (req, res, next) => {
+router.get('/:id/schedule/events', async (req, res, next) => {
   // Extract the token from the query parameters
   const token = req.query.token;
 
@@ -147,7 +147,35 @@ router.get('/:id/events', async (req, res, next) => {
       const options = {
           id: req.params['id'],
           user: user.data.username,
-          userRole: user.data.role,
+          userRole: "student",
+          clientId: clientId
+      };
+      await studies.getStudyEvents(options);
+  } catch(err) {
+     next(err);
+  }
+});
+
+/**
+ * To send Server Side Event to Client
+ * 
+ */
+router.get('/:id/events', async (req, res, next) => {
+  // Extract the token from the query parameters
+  const token = req.query.token;
+
+  if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+  }
+
+  // Verify the JWT token
+  try{
+      let user = await UsersController.validateJWT(token);
+      logger.info(user);
+      var clientId= sseManager.addClient(req, res);
+      const options = {
+          id: req.params['id'],
+          userRole: "teacher",
           clientId: clientId
       };
       await studies.getStudyEvents(options);

@@ -468,6 +468,21 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
+  /studies/{id}/schedule/events:
+    get:
+      summary: send Server Side Events to Client for this study
+      operationId: GetEvent
+      description: |
+        send Server Side Events to Client
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
   /studies/{id}/groups:
     get:
       tags:
