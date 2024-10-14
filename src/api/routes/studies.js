@@ -133,6 +133,10 @@ router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
  * 
  */
 router.get('/:id/schedule/events', async (req, res, next) => {
+  const url = config.api.url + req.baseUrl + req.path;
+  const query = req.query;
+  validateUrl(url, query);
+  
   // Extract the token from the query parameters
   const token = req.query.token;
 
