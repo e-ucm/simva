@@ -50,6 +50,25 @@
         }
       }
     },
+    "/limesurvey/completion/event": {
+      "post": {
+        "summary": "get completion from limesurvey",
+        "operationId": "GetEvent",
+        "description": "get completion from limesurvey\n",
+        "responses": {
+          "200": {
+            "description": "completion from limesurvey"
+          },
+          "400": {
+            "description": "invalid input, object invalid"
+          },
+          "401": {
+            "description": "One or both of the JWT are not valid"
+          },
+          "required": true
+        }
+      }
+    },
     "/users": {
       "get": {
         "tags": [
