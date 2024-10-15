@@ -37,7 +37,7 @@ paths:
         '401':
           description: 'One or both of the JWT are not valid'
         required: true
-  /limesurvey/completion/event:
+  /limesurvey-completion-webhooks:
     post:
       summary: get completion from limesurvey
       operationId: GetEvent

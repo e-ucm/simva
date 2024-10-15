@@ -128,9 +128,52 @@ app.get('/events', (req, res) => {
   sseManager.addClient(req, res);
 });
 
-app.get('/limesurvey/completion/event', (req, res) => {
+verifyHookdeckSignature = async function(
+  req,
+  res,
+  next
+) {
+  if (!SECRET) {
+    console.warn(
+      "No Hookdeck Signing Secret: Skipping webhook verification. Do not do this in production!"
+    );
+    return next();
+  }
+
+  const headers= {};
+  const incomingHeaders = req.headers;
+
+  for (const [key, value] of Object.entries(incomingHeaders)) {
+    headers[key] = value;
+  }
+
+  // console.log({ headers });
+
+  const rawBody = req.rawBody.toString();
+  // console.log({ rawBody });
+
+  const result = await verifyWebhookSignature({
+    headers,
+    rawBody,
+    signingSecret: SECRET,
+    config: {
+      checkSourceVerification: false,
+    },
+  });
+
+  if (!result.isValidSignature) {
+    console.log("Signature is invalid, rejected");
+    res.sendStatus(401);
+  } else {
+    console.log("Signature is valid, accepted");
+    next();
+  }
+};
+
+app.get('/limesurvey-completion-webhooks', verifyHookdeckSignature, (req, res) => {
   console.log(req);
-  res.status(200).send({ message: 'Treated' });
+  console.log(req.headers);
+  res.status(200).send({ message: 'Tested and treated' });
 });
 
 // catch 404

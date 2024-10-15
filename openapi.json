@@ -50,7 +50,7 @@
         }
       }
     },
-    "/limesurvey/completion/event": {
+    "/limesurvey-completion-webhooks": {
       "post": {
         "summary": "get completion from limesurvey",
         "operationId": "GetEvent",
