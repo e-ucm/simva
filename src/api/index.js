@@ -7,6 +7,7 @@ const config = require('../lib/config');
 const logger = require('../lib/logger');
 const AppManager = require('../lib/utils/appmanager');
 const sseManager = require('../lib/utils/sseManager');  // Import SSE Manager
+const sseSimvaClientManager = require('../lib/utils/sseClientsListManager');  // Import SSE Manager
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
 
 var isTest = (process.env.NODE_ENV !== 'production');
@@ -133,7 +134,7 @@ verifyHookdeckSignature = async function(
   res,
   next
 ) {
-  if (!SECRET) {
+  if (!config.limesurvey.SECRET) {
     console.warn(
       "No Hookdeck Signing Secret: Skipping webhook verification. Do not do this in production!"
     );
@@ -170,9 +171,25 @@ verifyHookdeckSignature = async function(
   }
 };
 
-app.get('/limesurvey-completion-webhooks', verifyHookdeckSignature, (req, res) => {
-  console.log(req);
-  console.log(req.headers);
+app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req, res) => {
+  console.log(req.body);
+  // Broadcast the message to client list
+  var clients=await sseSimvaClientManager.getClientList(req.body.surveyId, req.body.token, "limesurvey");
+  var type;
+  if(req.body.event == "survey_initialized") {
+    type='activity_initialized';
+  } else if(req.body.event == "survey_completed") {
+    type='activity_completed';
+  } else {
+    type=req.body.event;
+  };
+  const message = {
+    type: type,
+    activityType : "survey",
+    activityId: sseSimvaClientManager.getSurvey(req.body.surveyId),
+    user: req.body.token
+  };
+  sseManager.sendMessageToClientList(clients, message);
   res.status(200).send({ message: 'Tested and treated' });
 });
 

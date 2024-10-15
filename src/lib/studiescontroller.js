@@ -8,6 +8,7 @@ var AllocatorsController = require('./allocatorscontroller');
 var GroupsController = require('./groupscontroller');
 var TestsController = require('./testscontroller');
 const { groupBy } = require('async');
+const ActivitiesController = require('./activitiescontroller');
 
 if(!Array.prototype.flat){
 	Object.defineProperty(Array.prototype, 'flat', {
@@ -253,7 +254,8 @@ StudiesController.getActivitiesInStudy = async (id) => {
 			activities.push(tests[i].activities[j]);
 		}
 	}
-	return activities;
+	var activitiesObject = await ActivitiesController.getActivities({"_id" : {"$in" : activities}});
+	return activitiesObject;
 }
 
 
