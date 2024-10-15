@@ -6,7 +6,8 @@ var async = require('async');
 var Activity = require('./activity');
 
 var UsersController = require('../userscontroller');
-
+var sseSimvaClientManager = require('../utils/sseClientsListManager');
+var sseManager = require('../utils/sseManager');
 var config = require('../config');
 
 class ManualActivity extends Activity {
@@ -102,7 +103,19 @@ class ManualActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
+		const message = {
+			type: 'activity_completed',
+			activityType : "manual", 
+			activityId: this.id,
+			user: participant,
+			status: status,
+			message: `Activity ${this.id} has been completed!`
+		};
+		// Broadcast the message to client list
+		var clients=await sseSimvaClientManager.getClientList(this.id, participant);
+		sseManager.sendMessageToClientList(clients, message);
 		return await super.setCompletion(participant, status);
+		
 	}
 
 	async getCompletion(participants){
