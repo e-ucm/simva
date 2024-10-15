@@ -185,7 +185,7 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req,
   };
   const message = {
     type: type,
-    activityType : "survey",
+    activityType : "limesurvey",
     activityId: sseSimvaClientManager.getSurvey(req.body.surveyId),
     user: req.body.token
   };
