@@ -976,7 +976,7 @@
       "patch": {
         "summary": "Modifies the test.",
         "tags": [
-          "teacher"
+          "teachers"
         ],
         "operationId": "patchTest",
         "description": "Modifies the test\n",
@@ -1334,7 +1334,7 @@
       "patch": {
         "summary": "Modifies the activity.",
         "tags": [
-          "teacher"
+          "teachers"
         ],
         "operationId": "patchActivity",
         "description": "Modifies the activity\n",

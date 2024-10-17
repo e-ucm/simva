@@ -639,7 +639,7 @@ paths:
     patch:
       summary: Modifies the test.
       tags:
-        - teacher
+        - teachers
       operationId: patchTest
       description: |
         Modifies the test
@@ -864,7 +864,7 @@ paths:
     patch:
       summary: Modifies the activity.
       tags:
-        - teacher
+        - teachers
       operationId: patchActivity
       description: |
         Modifies the activity
