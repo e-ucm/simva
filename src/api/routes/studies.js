@@ -351,6 +351,28 @@ router.put('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Updates an existing test
+ */
+router.patch('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id'],
+    testid: req.params['testid'],
+    user: req.user
+  };
+
+  console.log(options);
+
+  try {
+    const result = await studies.updateTest(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
  * Deletes an existing test and its references
  */
 router.delete('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {

@@ -973,6 +973,48 @@
           "description": "test to be modified"
         }
       },
+      "patch": {
+        "summary": "Modifies the test.",
+        "tags": [
+          "teacher"
+        ],
+        "operationId": "patchTest",
+        "description": "Modifies the test\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/studyStudyId"
+          },
+          {
+            "$ref": "#/components/parameters/testId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/test"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Test updated",
+            "schema": {
+              "$ref": "#/components/schemas/test"
+            }
+          },
+          "400": {
+            "description": "invalid input"
+          },
+          "401": {
+            "description": "Teacher does not own the class"
+          },
+          "404": {
+            "description": "Requested study does not exist"
+          }
+        }
+      },
       "delete": {
         "tags": [
           "teachers"
@@ -1287,6 +1329,39 @@
             }
           },
           "description": "activity to be modified"
+        }
+      },
+      "patch": {
+        "summary": "Modifies the activity.",
+        "tags": [
+          "teacher"
+        ],
+        "operationId": "patchActivity",
+        "description": "Modifies the activity\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/activityBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Activity updated",
+            "schema": {
+              "$ref": "#/components/schemas/activity"
+            }
+          },
+          "400": {
+            "description": "invalid input, object invalid"
+          }
         }
       },
       "delete": {
@@ -3495,6 +3570,23 @@
           },
           "extra_data": {
             "type": "object"
+          }
+        }
+      },
+      "activityBody": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "ObjectId(\"5d07a0767c1405004bc702af\")"
+          },
+          "name": {
+            "type": "string",
+            "example": "Survey for validation"
+          },
+          "type": {
+            "type": "string",
+            "example": "survey, gameplay, etc..."
           }
         }
       },

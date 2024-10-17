@@ -69,13 +69,32 @@ router.get('/:id', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
- * Updates an existing test
+ * Updates an existing activity
  */
 router.put('/:id', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
     id: req.params['id']
   };
+
+  try {
+    const result = await activities.updateActivity(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Updates an existing activity
+ */
+router.patch('/:id', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id']
+  };
+  
+  console.log(options);
 
   try {
     const result = await activities.updateActivity(options);
