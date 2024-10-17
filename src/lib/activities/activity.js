@@ -95,6 +95,12 @@ class Activity {
 		return false;
 	}
 
+	patch(params) {
+		if(typeof params.name !== 'undefined') {
+			this.name = params.name;
+		}
+	}
+
 	async save(){
 		var params = {};
 

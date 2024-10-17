@@ -438,6 +438,33 @@ module.exports.updateTest = async (options) => {
 
 /**
  * @param {Object} options
+ * @param {String} options.id The activity ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateTestName = async (options) => {
+  var result = { status: 200, data: {message: 'Test updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
+    try{
+      var test = await TestsController.getTest(options.testid);
+      if(test !== null){
+        test.name = options.body.name;
+        test.save();
+        result = { status: 200, data: test };
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load test.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
  * @param {String} options.id The study ID
  * @throws {Error}
  * @return {Promise}

@@ -98,7 +98,11 @@ class RageAnalyticsActivity extends Activity {
 			this.extra_data.participants = {};
 		}
 	}
-
+	
+	patch(params) {
+		super.patch(params);
+	}
+	
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};

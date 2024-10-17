@@ -62,6 +62,16 @@ class ManualActivity extends Activity {
 		}
 	}
 
+	patch(params) {
+		super.patch(params);
+		if(typeof params.user_managed !== 'undefined') {
+			this.extra_data.user_managed = params.user_managed;
+		}
+		if(typeof params.uri !== 'undefined') {
+			this.extra_data.uri = params.uri;
+		}
+	}
+
 	async save(){
 		return await super.save();
 	}

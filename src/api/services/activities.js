@@ -110,32 +110,29 @@ module.exports.getPresignedFileUrl = async (options) => {
 
 /**
  * @param {Object} options
- * @param {String} options.id The study ID
+ * @param {String} options.id The activity ID
  * @throws {Error}
  * @return {Promise}
  */
 module.exports.updateActivity = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 200, data: {message: 'Activity updated'} };
 
-  return {
-    status: 200,
-    data: 'updateActivity ok!'
-  };
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var activity = await ActivitiesController.loadActivity(options.id);
+      if(activity !== null){
+        activity.patch(options.body);
+        activity.save();
+        result = { status: 200, data: activity };
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load activity.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
 };
 
 /**

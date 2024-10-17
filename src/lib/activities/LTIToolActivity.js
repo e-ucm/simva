@@ -111,6 +111,10 @@ class LTIToolActivity extends Activity {
 		return super.load();
 	}
 
+	patch(params) {
+		super.patch(params);
+	}
+
 	async save(){
 		let tool = await LtiController.getLtiTool(this.extra_data.tool);
 

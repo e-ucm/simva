@@ -108,6 +108,22 @@ class GameplayActivity extends Activity {
 		}
 	}
 
+	patch(params) {
+		super.patch(params);
+		if(typeof params.trace_storage !==  'undefined') {
+			this.extra_data.config.trace_storage = params.trace_storage;
+		}
+		if(typeof params.realtime !==  'undefined') {
+			this.extra_data.config.realtime = params.realtime;
+		}
+		if(typeof params.backup !== 'undefined') {
+			this.extra_data.config.backup = params.backup;
+		}
+		if(typeof params.game_uri !== 'undefined') {
+			this.extra_data.game_uri = params.game_uri;
+		}
+	}
+
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};

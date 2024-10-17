@@ -61,6 +61,10 @@ class ImsPackageActivity extends GameplayActivity {
 		return super.load();
 	}
 
+	patch(params) {
+		super.patch(params);
+	}
+
 	async save(){
 		return await super.save();
 	}

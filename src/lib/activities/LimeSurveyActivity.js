@@ -95,6 +95,10 @@ class LimeSurveyActivity extends Activity {
 		}
 	}
 
+	patch(params) {
+		super.patch(params);
+	}
+	
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};

@@ -55,6 +55,9 @@ class RageMinioActivity extends MinioActivity {
 			this.extra_data.participants = {};
 		}
 	}
+	patch(params) {
+		super.patch(params);
+	}
 
 	async save(){
 		if(!this.extra_data){

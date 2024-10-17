@@ -364,7 +364,7 @@ router.patch('/:id/tests/:testid', Authenticator.auth, async (req, res, next) =>
   console.log(options);
 
   try {
-    const result = await studies.updateTest(options);
+    const result = await studies.updateTestName(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);
