@@ -10,6 +10,8 @@ validator.addValidations('/studies', router);
 const Authenticator = require('../../lib/utils/authenticator');
 const logger = require('../../lib/logger');
 const config = require('../../lib/config');
+const { verifyTokens, verifyToken, generateData, generateTokens } = require("../../lib/utils/hMacKey/tokens.js");
+
 
 /**
  * Obtains the list of studies for the current teacher.
