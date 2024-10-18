@@ -12,6 +12,17 @@ const logger = require('../../lib/logger');
 const config = require('../../lib/config');
 const { verifyMessage, createHMACKey } = require("../../lib/utils/hMacKey/crypto.js");
 
+initHmacKey();
+
+async function initHmacKey() {
+  console.log("Initialized hmacKey");
+  config.hmac.hmacKey = (await createHMACKey(config.hmac.password
+    //, {
+    //  encodedSalt: config.hmac.salt,
+    //  encodedKey: config.hmac.key
+    //}
+  )).key;
+}
 
 /**
  * Obtains the list of studies for the current teacher.
