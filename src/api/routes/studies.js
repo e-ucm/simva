@@ -197,13 +197,16 @@ async function validateUrl(url, query) {
           .join('\n');
   toSign= url + '\n' + toSign;
   console.log(toSign);
-  const hmacKey = (await createHMACKey(config.hmac.password
-    //, {
-    //  encodedSalt: config.hmac.salt,
-    //  encodedKey: config.hmac.key
-    //}
-  )).key;
-  if(verifyMessage(toSign, signature, hmacKey)) {
+  if(config.hmac.hmacKey == null) {
+      console.log("Initialized hmacKey");
+      config.hmac.hmacKey = (await createHMACKey(config.hmac.password
+        //, {
+        //  encodedSalt: config.hmac.salt,
+        //  encodedKey: config.hmac.key
+        //}
+      )).key;
+  }
+  if(verifyMessage(toSign, signature, config.hmac.hmacKey)) {
     console.log("Valid signature !");
     return true;
   } else {
