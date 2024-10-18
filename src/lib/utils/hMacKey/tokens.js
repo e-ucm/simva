@@ -107,3 +107,5 @@ async function verifyToken(key, token) {
     const verification = await verifyMessage(unsignedData, token.signature, key);
     return verification;
 }
+
+module.exports = {verifyToken, verifyTokens, generateTokens, generateData};

@@ -153,3 +153,5 @@ function decode(input, alphabet) {
 
     return new Uint8Array(bytes.reverse());
 }
+
+module.exports = { encode, decode };

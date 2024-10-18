@@ -10,7 +10,7 @@ validator.addValidations('/studies', router);
 const Authenticator = require('../../lib/utils/authenticator');
 const logger = require('../../lib/logger');
 const config = require('../../lib/config');
-const { verifyTokens, verifyToken, generateData, generateTokens } = require("../../lib/utils/hMacKey/tokens.js");
+const { verifyMessage, createHMACKey } = require("../../lib/utils/hMacKey/crypto.js");
 
 
 /**
@@ -135,31 +135,28 @@ router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
  * 
  */
 router.get('/:id/schedule/events', async (req, res, next) => {
-  const url = config.api.url + req.baseUrl + req.path;
-  const query = req.query;
-  validateUrl(url, query);
-  
   // Extract the token from the query parameters
-  const token = req.query.token;
+  const signature = req.query.signature;
 
-  if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
+  if (!signature) {
+      return res.status(401).json({ message: 'No signature provided' });
   }
 
-  // Verify the JWT token
-  try{
-      let user = await UsersController.validateJWT(token);
-      logger.info(user);
-      var clientId= sseManager.addClient(req, res);
-      const options = {
-          id: req.params['id'],
-          user: user.data.username,
-          userRole: "student",
-          clientId: clientId
-      };
-      await studies.getStudyEvents(options);
-  } catch(err) {
-     next(err);
+  const url = config.api.url + req.baseUrl + req.path;
+  const query = req.query;
+  if(validateUrl(url, query)) {
+    let user = req.query.username;
+    logger.info(user);
+    var clientId = sseManager.addClient(req, res);
+    const options = {
+        id: req.params['id'],
+        user: user,
+        userRole: "student",
+        clientId: clientId
+    };
+    await studies.getStudyEvents(options);
+  } else {
+      return res.status(401).json({ message: 'Signature not valid' });
   }
 });
 
@@ -168,49 +165,45 @@ router.get('/:id/schedule/events', async (req, res, next) => {
  * 
  */
 router.get('/:id/events', async (req, res, next) => {
-  
-  const url = config.api.url + req.baseUrl + req.path;
-  const query = req.query;
-  validateUrl(url, query);
-
   // Extract the token from the query parameters
-  const token = req.query.token;
+  const signature = req.query.signature;
 
-  if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
+  if (!signature) {
+      return res.status(401).json({ message: 'No signature provided' });
   }
 
-  // Verify the JWT token
-  try{
-      let user = await UsersController.validateJWT(token);
-      logger.info(user);
-      var clientId= sseManager.addClient(req, res);
-      const options = {
-          id: req.params['id'],
-          userRole: "teacher",
-          clientId: clientId
-      };
-      await studies.getStudyEvents(options);
-  } catch(err) {
-     next(err);
+  const url = config.api.url + req.baseUrl + req.path;
+  const query = req.query;
+  if(validateUrl(url, query)) {
+    var clientId= sseManager.addClient(req, res);
+    const options = {
+        id: req.params['id'],
+        userRole: "teacher",
+        clientId: clientId
+    };
+    await studies.getStudyEvents(options);
+  } else {
+      return res.status(401).json({ message: 'Signature not valid' });
   }
 });
 
-function validateUrl(url, query) {
+async function validateUrl(url, query) {
   const signature = query.signature;
-  var map = new Map();
-  Object.keys(query).forEach(key => {
-    if(key !== "signature") {
-        map.set(key, query[key]);
-    }
-  });
-  var print=url+'\n';
-  map.forEach((value, key) => {
-    print+=key + "=" + value +'\n';
-  });
-  console.log(print);
-  const newSignature = print;
-  if(newSignature == signature) {
+  console.log(signature);
+  var toSign=Object.entries(query)
+          .filter(([key, value])=> key !== "signature")
+          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Sort by keys
+          .map(([key, value]) => `${key}=${value}`)
+          .join('\n');
+  toSign= url + '\n' + toSign;
+  console.log(toSign);
+  const hmacKey = (await createHMACKey(config.hmac.password
+    //, {
+    //  encodedSalt: config.hmac.salt,
+    //  encodedKey: config.hmac.key
+    //}
+  )).key;
+  if(verifyMessage(toSign, signature, hmacKey)) {
     console.log("Valid signature !");
     return true;
   } else {

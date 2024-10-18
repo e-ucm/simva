@@ -27,3 +27,5 @@ function encode(input, maxline) {
 function decode(input) {
     return _decode(input, alphabet);
 }
+
+module.exports = {decode, encode};

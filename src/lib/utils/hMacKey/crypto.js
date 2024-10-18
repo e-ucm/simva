@@ -249,3 +249,5 @@ async function createHMACKey(encodedPassword = DEFAULT_PASSWORD, hmacKey) {
         encodedPassword
     };
 }
+
+module.exports = {createHMACKey, importKey,signMessage, verifyMessage };

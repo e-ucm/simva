@@ -129,4 +129,9 @@ config.LTI.debug= process.env.LTI_DEBUG || false;
 config.storage = {}
 config.storage.path = process.env.SIMVA_STORAGE_PATH || 'storage/'
 
+config.hmac = {}
+config.hmac.password = process.env.HMAC_PASSWORD || 'password'
+config.hmac.salt = process.env.HMAC_SALT || 'mysalt'
+config.hmac.key = process.env.HMAC_KEY || 'mykey'
+
 module.exports = config;
