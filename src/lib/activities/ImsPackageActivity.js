@@ -27,6 +27,13 @@ class ImsPackageActivity extends GameplayActivity {
 		}
 	}
 
+	async export() {
+		let activity = super.export();
+		activity.tool = true;
+		activity.file_name = this.extra_data.file_name;
+		return activity;
+	}
+
 	toObject(){
 		var params = {};
 		for(var p in activityschema.properties){

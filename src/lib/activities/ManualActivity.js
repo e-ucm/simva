@@ -32,6 +32,15 @@ class ManualActivity extends Activity {
 		}
 	}
 
+	async export() {
+		let activity = super.export();
+		activity.user_managed = this.extra_data.user_managed;
+		if(this.extra_data.uri) {
+			activity.uri = this.extra_data.uri;
+		}
+		return activity;
+	}
+
 	static getType(){
 		return 'manual';
 	}

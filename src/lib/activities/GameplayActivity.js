@@ -72,6 +72,15 @@ class GameplayActivity extends Activity {
 			}
 		}
 	}
+	
+	async export() {
+		let activity = super.export();
+		activity.trace_storage = this.extra_data.config.trace_storage;
+		activity.backup = this.extra_data.config.backup;
+		activity.realtime = this.extra_data.config.realtime;
+		activity.game_uri = this.extra_data.game_uri;
+		return activity;
+	}
 
 	static getType(){
 		return 'gameplay';

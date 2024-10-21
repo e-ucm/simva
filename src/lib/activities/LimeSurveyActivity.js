@@ -50,6 +50,19 @@ class LimeSurveyActivity extends Activity {
 		}
 	}
 
+	async export() {
+		let activity = super.export();
+		//controller.exportSurvey(activity.extra_data.surveyId)(function(error, result) {
+		//	if(error) {
+		//		console.log(JSON.stringify(error));
+		//	} else {
+		//		console.log(JSON.stringify(result));
+		//	}
+		//});
+		activity.copysurvey = this.extra_data.surveyId;
+		return activity;
+	}
+
 	static getType(){
 		return 'limesurvey';
 	}

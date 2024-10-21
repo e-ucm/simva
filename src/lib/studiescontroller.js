@@ -259,4 +259,32 @@ StudiesController.getActivitiesInStudy = async (id) => {
 }
 
 
+StudiesController.getStudyExport = async (id) => {
+	let study = await StudiesController.getStudy(id);
+
+	let exportedStudyTest = await TestsController.getTests({"_id" : {"$in" : study.tests}});
+	let exportedTests = [];
+	for(var i=0; i< exportedStudyTest.length; i++)  {
+		var test = exportedStudyTest[i];
+		let exportedStudyTestActivities = [];
+		for(var j=0; j< exportedStudyTest[i].activities.length; j++) {
+			let activity = await ActivitiesController.loadActivity(exportedStudyTest[i].activities[j]);
+			exportedStudyTestActivities.push(await activity.export());
+		}
+		let testExport = {
+			name : test.name,
+			activities : exportedStudyTestActivities
+		};
+		exportedTests.push(testExport);
+	}
+	let studyExport = {
+		name : study.name,
+		owners : study.owners,
+		tests : exportedTests
+	};
+	return studyExport;
+}
+
+
+
 module.exports = StudiesController;

@@ -40,6 +40,11 @@ class MinioActivity extends Activity {
 		}
 	}
 
+	async export() {
+		let activity = super.export();
+		return activity;
+	}
+
 	static getType(){
 		return 'miniokafka';
 	}

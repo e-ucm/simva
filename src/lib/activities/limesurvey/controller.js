@@ -242,6 +242,38 @@ function insert(survey) {
 	}
 }
 
+
+/**
+ * Insert survey
+ * @param survey
+ */
+function exportSurvey(survey) {
+	return function(callback) {
+		Log('LimesurveyController.export -> Started');
+		options.data = {method:'export_survey',params:[SESSIONKEY, survey, 'lss'],id:1};
+		try{
+			axios(options).then(response => {
+				Log(response);
+				let body;
+				  try{
+					body = response.data;
+				}catch(error){
+					return NotifyRCError('export_survey', error, response, body, callback);
+				}
+				Log('LimesurveyController.export -> Exported survey :');
+				LogMultiple({result: body.result});
+				callback(null, body);
+			  }).catch(error => {
+				  Log('LimesurveyController.export -> ERROR:');
+				  LogMultiple({error: error});
+				  callback({ message: 'Error exporting', error: error });
+			  });
+		}catch(e){
+			LogBigError('export_survey', e, callback);
+		}
+	}
+}
+
 /**
  * Copy survey
  * @param survey
@@ -1148,6 +1180,7 @@ module.exports = {
 	online: online,
 	auth: auth,
 	insert: insert,
+	exportSurvey : exportSurvey,
 	copy: copy,
 	getSurvey: getSurvey,
 	getSurveyList: getSurveyList,

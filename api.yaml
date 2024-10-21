@@ -374,6 +374,32 @@ paths:
             schema:
               $ref: '#/components/schemas/add_study_body'
         description: Study to be created
+  /studies/import:
+    post:
+        tags:
+          - teachers
+        summary: adds an study for the current teacher
+        operationId: addStudyFromImport
+        description: |
+          Creates a new study for the current teacher.
+        responses:
+          '200':
+            description: study created
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/study'
+          '400':
+            description: 'invalid input, object invalid'
+          '409':
+            description: an existing item already exists
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/upload_file'
+          description: Study to be created
   /studies/{id}:
     get:
       tags:
@@ -429,6 +455,28 @@ paths:
       responses:
         '200':
           description: Study deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+  /studies/{id}/export:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets the study export with the given ID
+      operationId: getStudyExport
+      description: |
+        Obtains the requested study Export
+      responses:
+        '200':
+          description: study object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/study'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':

@@ -73,6 +73,11 @@ class LTIToolActivity extends Activity {
 		}
 	}
 
+	async export() {
+		let activity = super.export();
+		return activity;
+	}
+
 	toObject(){
 		var params = {};
 		for(var p in activityschema.properties){

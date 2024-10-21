@@ -47,6 +47,25 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+
+/**
+ * Creates a new study from import for the current teacher.
+ * 
+ */
+router.post('/import', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    file: req.body.file,
+    user: req.user
+  };
+
+  try {
+    const result = await studies.addStudyFromImport(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * Creates a new study for the current teacher.
  * 
@@ -278,6 +297,24 @@ router.get('/:id/tests', Authenticator.auth, async (req, res, next) => {
 
   try {
     const result = await studies.getStudyTests(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Obtains the study export
+ * 
+ */
+router.get('/:id/export', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getStudyExport(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);

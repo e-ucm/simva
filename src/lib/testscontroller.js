@@ -70,8 +70,17 @@ TestsController.getActivities = async (id) => {
 
 }
 
-TestsController.addActivityToTest = async (id, activity) => {
-	
+TestsController.addActivityToTest = async (id, activityBody, participants = []) => {
+	let test = await TestsController.getTest(id);
+    if(!test){
+      	throw { message:'Test not found'};
+    }
+	logger.debug("Adding activity :" + JSON.stringify(test));
+    let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(activityBody));
+	test.activities.push(activity.id);
+	await activity.addParticipants(participants);
+	await TestsController.updateTest(id, test);
+	return activity;
 }
 
 TestsController.removeActivityToTest = async (id, activity) => {

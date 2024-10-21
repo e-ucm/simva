@@ -432,6 +432,17 @@ class Activity {
 
 		return res;
 	}
+
+	export() {
+		var activity = {};
+		activity.name = this.name;
+		activity.type = this.type;
+		activity.extra_data = this.extra_data;
+		delete activity.extra_data;
+		delete activity._id;
+		delete activity.id;
+		return activity;
+	}
 };
 
 // ##########################################
