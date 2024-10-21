@@ -248,31 +248,34 @@ function insert(survey) {
  * @param survey
  */
 function exportSurvey(survey) {
-	return function(callback) {
-		Log('LimesurveyController.export -> Started');
-		options.data = {method:'export_survey',params:[SESSIONKEY, survey, 'lss'],id:1};
-		try{
-			axios(options).then(response => {
-				Log(response);
-				let body;
-				  try{
-					body = response.data;
-				}catch(error){
-					return NotifyRCError('export_survey', error, response, body, callback);
-				}
-				Log('LimesurveyController.export -> Exported survey :');
-				LogMultiple({result: body.result});
-				callback(null, body);
-			  }).catch(error => {
-				  Log('LimesurveyController.export -> ERROR:');
-				  LogMultiple({error: error});
-				  callback({ message: 'Error exporting', error: error });
-			  });
-		}catch(e){
-			LogBigError('export_survey', e, callback);
-		}
-	}
+    return new Promise((resolve, reject) => {
+        Log('LimesurveyController.export -> Started');
+        options.data = { method: 'export_survey_structure', params: [SESSIONKEY, survey], id: 1 };
+
+        axios(options)
+            .then(response => {
+                Log(response);
+                let body;
+                try {
+                    body = response.data;
+                } catch (error) {
+                    NotifyRCError('export_survey_structure', error, response, body, (err) => {
+                        return reject(err);  // reject promise on error
+                    });
+                }
+
+                Log('LimesurveyController.export -> Exported survey:');
+                LogMultiple({ result: body.result });
+                resolve(body.result);  // resolve the promise with the result
+            })
+            .catch(error => {
+                Log('LimesurveyController.export -> ERROR:');
+                LogMultiple({ error: error });
+                reject({ message: 'Error exporting', error: error });  // reject promise on error
+            });
+    });
 }
+
 
 /**
  * Copy survey

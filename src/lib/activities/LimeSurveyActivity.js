@@ -52,16 +52,18 @@ class LimeSurveyActivity extends Activity {
 
 	async export() {
 		let activity = super.export();
-		//controller.exportSurvey(activity.extra_data.surveyId)(function(error, result) {
-		//	if(error) {
-		//		console.log(JSON.stringify(error));
-		//	} else {
-		//		console.log(JSON.stringify(result));
-		//	}
-		//});
-		activity.copysurvey = this.extra_data.surveyId;
+	
+		try {
+			// Await the result of the survey export
+			const surveyResult = await controller.exportSurvey(this.extra_data.surveyId);
+			activity.survey = surveyResult;
+			logger.info("LSS Export successful");
+		} catch (error) {
+			logger.error("LSS Export failed:", error);
+		}
+	
 		return activity;
-	}
+	}	
 
 	static getType(){
 		return 'limesurvey';
