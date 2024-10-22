@@ -105,7 +105,6 @@ module.exports.addStudyFromImport = async (options) => {
     var study = await StudiesController.addStudy(rawstudy);
     for(var i=0; i< newStudy.tests.length; i++) {
       var newtest = newStudy.tests[i];
-      console.log(newtest);
       var rawTest = {
         name : newtest.name,
       };

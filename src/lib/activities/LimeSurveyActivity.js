@@ -43,6 +43,10 @@ class LimeSurveyActivity extends Activity {
 			this.extra_data.participants = [];
 		}
 
+		if(params.survey) {
+			let rawsurvey = params.survey;
+          	params.rawsurvey = btoa(rawsurvey);
+		}
 		if(params.rawsurvey){
 			this.rawsurvey = params.rawsurvey;
 		}else if(params.copysurvey){
@@ -52,11 +56,10 @@ class LimeSurveyActivity extends Activity {
 
 	async export() {
 		let activity = super.export();
-	
 		try {
 			// Await the result of the survey export
 			const surveyResult = await controller.exportSurvey(this.extra_data.surveyId);
-			activity.survey = surveyResult;
+			activity.survey = atob(surveyResult);
 			logger.info("LSS Export successful");
 		} catch (error) {
 			logger.error("LSS Export failed:", error);
