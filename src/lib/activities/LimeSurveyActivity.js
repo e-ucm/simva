@@ -309,6 +309,9 @@ class LimeSurveyActivity extends Activity {
 
 	async getResults(participants, type){
 		return new Promise((resolve, reject) => {
+			if(type == "undefined") {
+				type = "full";
+			}
 			let list = {};
 			let s = this;
 
