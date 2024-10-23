@@ -30,7 +30,7 @@ InstancesController.addInstance = async (instance) => {
 	return instance;
 }
 
-StudiesController.deleteInstance = async (id, instance) => {
+InstancesController.deleteInstance = async (id, instance) => {
 	var instance = await mongoose.model('instance').findOne({_id: id});
 
 	if(!instance){
@@ -39,6 +39,5 @@ StudiesController.deleteInstance = async (id, instance) => {
 		return await mongoose.model('instance').deleteOne({_id: id});
     }
 }
-
 
 module.exports = InstancesController;

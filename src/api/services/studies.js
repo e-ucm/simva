@@ -6,6 +6,7 @@ var UsersController = require('../../lib/userscontroller');
 var GroupsController = require('../../lib/groupscontroller');
 var AllocatorsController = require('../../lib/allocatorscontroller');
 var TestsController = require('../../lib/testscontroller');
+var InstancesController = require('../../lib/instancescontroller');
 var ActivitiesController = require('../../lib/activitiescontroller');
 var sseClientsListManager = require('../../lib/utils/sseClientsListManager');
 
@@ -655,7 +656,7 @@ module.exports.getStudyInstances = async (options) => {
   var result = { status: 404, data: {message: 'Not found'} };
 
   try{
-    if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.instanceid)){
+    if(mongoose.Types.ObjectId.isValid(options.id)){
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
         if(study.owners.indexOf(options.user.data.username) !== -1){
