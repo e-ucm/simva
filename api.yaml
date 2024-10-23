@@ -400,7 +400,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/upload_file'
           description: Study to be created
-  /studies/{id}:
+  /studies/{studyid}:
     get:
       tags:
         - admins
@@ -461,7 +461,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/export:
+  /studies/{studyid}/export:
     get:
       tags:
         - admins
@@ -483,7 +483,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/events:
+  /studies/{studyid}/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -498,7 +498,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/schedule:
+  /studies/{studyid}/schedule:
     get:
       tags:
         - teachers
@@ -530,7 +530,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/schedule/events:
+  /studies/{studyid}/schedule/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -545,7 +545,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/groups:
+  /studies/{studyid}/groups:
     get:
       tags:
         - teachers
@@ -568,7 +568,143 @@ paths:
           description: 'Study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/tests:
+  /studies/{studyid}/instances:
+    get:
+      tags:
+        - teachers
+      summary: gets the instances from a study
+      operationId: getStudyTests
+      description: |
+        Obtains the list of instances of a study
+      responses:
+        '200':
+          description: list of instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/instance'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Study not found'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+    post:
+      tags:
+        - teachers
+      summary: adds a instance to the study
+      operationId: addInstanceToStudy
+      description: |
+        Adds a instance for the current study
+      responses:
+        '200':
+          description: instance created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/instance'
+        '400':
+          description: 'invalid input, object invalid'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/test'
+        required: true
+  /studies/{studyid}/instances/{instanceid}:
+    get:
+      tags:
+        - teachers
+      summary: gets the instance with the given ID
+      operationId: getInstance
+      description: |
+        Obtains the requested Instance
+      responses:
+        '200':
+          description: Instance object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/instance'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/instanceId'
+    put:
+      tags:
+        - teachers
+      summary: updates the Instance
+      operationId: updateInstance
+      description: Updates an existing Instance
+      responses:
+        '200':
+          description: item updated
+        '401':
+          description: 'Teacher does not own the class'
+        '400':
+          description: 'invalid input'
+        '404':
+          description: 'Requested study does not exist'
+      parameters:
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/instanceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/instance'
+        description: instance to be modified
+    patch:
+      summary: Modifies the Instance.
+      tags:
+        - teachers
+      operationId: patchInstance
+      description: |
+        Modifies the Instance
+      parameters:
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/instanceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/instance'
+      responses:
+        '200':
+          description: Instance updated
+          schema:
+              $ref: '#/components/schemas/instance'
+        '401':
+          description: 'Teacher does not own the class'
+        '400':
+          description: 'invalid input'
+        '404':
+          description: 'Requested study does not exist'
+    delete:
+      tags:
+        - teachers
+      summary: deletes the Instance with the given ID
+      operationId: deleteInstance
+      description: |
+        Deleted the selected Instance
+      responses:
+        '200':
+          description: success
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/instanceId'
+  /studies/{studyid}/tests:
     get:
       tags:
         - teachers
@@ -615,7 +751,7 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         required: true
-  /studies/{id}/participants:
+  /studies/{studyid}/participants:
     get:
       tags:
         - teachers
@@ -774,7 +910,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activity'
-  /studies/{id}/allocator:
+  /studies/{studyid}/allocator:
     get:
       tags:
         - teachers
@@ -2066,6 +2202,14 @@ components:
         type: string
         example: "5d07a0767c1405004bc702at"
       description: The test ID
+    instanceId:
+      in: path
+      name: testid
+      required: true
+      schema:
+        type: string
+        example: "5d07a0767c1405004bc702at"
+      description: The test ID
     searchString:
       in: query
       name: searchString
@@ -2376,6 +2520,11 @@ components:
           items:
             type: string
             example: ObjectId("5d07a0767c1405004bc702af")
+        instances:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
         created:
           type: string
           format: date-time
@@ -2392,6 +2541,22 @@ components:
           type: string
           example: "Test A for my study"
         activities:
+          type: array
+          items:
+            type: string
+            example: ObjectId("5d07a0767c1405004bc702af")
+    instance:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
+        name:
+          type: string
+          example: "Instance A for my study"
+        groups:
           type: array
           items:
             type: string
