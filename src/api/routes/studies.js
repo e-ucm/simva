@@ -322,6 +322,25 @@ router.get('/:studyid/instances', Authenticator.auth, async (req, res, next) => 
 });
 
 /**
+ * Adds a instance for the current group
+ * 
+ */
+router.post('/:studyid/instances', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body : req.body,
+    id: req.params['studyid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.addInstanceToStudy(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Obtains the study export
  * 
  */
