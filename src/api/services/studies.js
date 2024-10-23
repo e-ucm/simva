@@ -109,12 +109,7 @@ module.exports.addStudyFromImport = async (options) => {
         name : newtest.name,
       };
       var test = await StudiesController.addTestToStudy(study._id, rawTest);
-      for(var j=0; j< newtest.activities.length; j++) {
-        var rawActivity = newtest.activities[j];
-        rawActivity.owners = [options.user.data.username];
-        rawActivity.test = test._id;
-        var activity = await TestsController.addActivityToTest(test._id, rawActivity);
-      }
+      await TestsController.importTest(test, newtest, options.user.data.username);
     }
   }catch(e){
     logger.error(e);
@@ -412,6 +407,7 @@ module.exports.addTestToStudy = async (options) => {
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
         if(study.owners.indexOf(options.user.data.username) !== -1){
+          options.body.owner=options.user.data.username;
           let test = await StudiesController.addTestToStudy(options.id, options.body);
           result = { status: 200, data: test };
         }else{

@@ -25,7 +25,7 @@ class RageMinioActivity extends MinioActivity {
 		}
 	}
 
-	async export() {
+	async export(complete) {
 		let activity = super.export();
 		return activity;
 	}

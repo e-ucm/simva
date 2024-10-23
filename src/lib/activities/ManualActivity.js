@@ -32,7 +32,7 @@ class ManualActivity extends Activity {
 		}
 	}
 
-	async export() {
+	async export(complete) {
 		let activity = super.export();
 		activity.user_managed = this.extra_data.user_managed;
 		if(this.extra_data.uri) {

@@ -40,7 +40,7 @@ class MinioActivity extends Activity {
 		}
 	}
 
-	async export() {
+	async export(complete) {
 		let activity = super.export();
 		return activity;
 	}

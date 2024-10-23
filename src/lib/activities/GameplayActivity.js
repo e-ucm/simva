@@ -73,7 +73,7 @@ class GameplayActivity extends Activity {
 		}
 	}
 	
-	async export() {
+	async export(complete) {
 		let activity = super.export();
 		activity.trace_storage = this.extra_data.config.trace_storage;
 		activity.backup = this.extra_data.config.backup;

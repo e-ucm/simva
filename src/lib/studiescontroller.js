@@ -237,11 +237,11 @@ StudiesController.addTestToStudy = async (id, params) => {
 		throw {message: 'There was an error in the study.'};
 	}
 
-	//if(test.activities.length > 0){
-	//	let study = await StudiesController.getStudy(id);
-	//	await TestsController.addParticipants(test._id, StudiesController.getParticipants(study));
-	//}
-
+	if(params.from) {
+		let prevtest = await TestsController.getTest(params.from);
+		let testToCopy = await TestsController.getTestExport(prevtest, false);
+		test = await TestsController.importTest(test, testToCopy, params.owner);
+	}
 	return test;
 }
 
@@ -265,17 +265,7 @@ StudiesController.getStudyExport = async (id) => {
 	let exportedStudyTest = await TestsController.getTests({"_id" : {"$in" : study.tests}});
 	let exportedTests = [];
 	for(var i=0; i< exportedStudyTest.length; i++)  {
-		var test = exportedStudyTest[i];
-		let exportedStudyTestActivities = [];
-		for(var j=0; j< exportedStudyTest[i].activities.length; j++) {
-			let activity = await ActivitiesController.loadActivity(exportedStudyTest[i].activities[j]);
-			exportedStudyTestActivities.push(await activity.export());
-		}
-		let testExport = {
-			name : test.name,
-			activities : exportedStudyTestActivities
-		};
-		exportedTests.push(testExport);
+		exportedTests.push(await TestsController.getTestExport(exportedStudyTest[i], true));
 	}
 	let studyExport = {
 		name : study.name,
@@ -284,7 +274,6 @@ StudiesController.getStudyExport = async (id) => {
 	};
 	return studyExport;
 }
-
 
 
 module.exports = StudiesController;

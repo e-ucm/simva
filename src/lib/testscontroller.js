@@ -66,6 +66,27 @@ TestsController.deleteTest = async (id) => {
 	return result.ok > 0;
 }
 
+TestsController.getTestExport = async (test, complete) => {
+	let exportedStudyTestActivities = [];
+	for(var j=0; j< test.activities.length; j++) {
+		let activity = await ActivitiesController.loadActivity(test.activities[j]);
+		exportedStudyTestActivities.push(await activity.export(complete));
+	}
+	return {
+		name : test.name,
+		activities : exportedStudyTestActivities
+	};
+}
+
+TestsController.importTest = async (test, rawTest, owner) => {
+	for(var i=0; i< rawTest.activities.length; i++) {
+        var rawActivity = rawTest.activities[i];
+        rawActivity.owners = [owner];
+        rawActivity.test = test._id;
+        await TestsController.addActivityToTest(test._id, rawActivity);
+    }
+}
+
 TestsController.getActivities = async (id) => {
 
 }
