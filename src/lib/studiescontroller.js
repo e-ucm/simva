@@ -9,6 +9,7 @@ var GroupsController = require('./groupscontroller');
 var TestsController = require('./testscontroller');
 const { groupBy } = require('async');
 const ActivitiesController = require('./activitiescontroller');
+const InstancesController = require('./instancescontroller');
 
 if(!Array.prototype.flat){
 	Object.defineProperty(Array.prototype, 'flat', {
@@ -60,7 +61,7 @@ StudiesController.updateStudy = async (id, study) => {
 		let testsadded = study.tests.filter(x => !old.tests.includes(x));
 
 		if(testsadded.length > 0){
-			throw { message: 'Tests can be added through PUT interface, use POST /study/:id/tests' };
+			throw { message: 'Tests can be added through PUT interface, use POST /study/:studyid/tests' };
 		}
 
 		if(testsdeleted.length > 0){
@@ -204,10 +205,22 @@ StudiesController.addGroupToStudy = async (id, groupid) => {
 	var Study = mongoose.model('study');
 
 	//UpdateParticipants for all tests
-
 	var result = await Study.findOneAndUpdate({ _id: id }, { "$push": { groups: groupid} });
 
 	return result.ok > 0;
+}
+
+StudiesController.addInstanceToStudy = async (id, params) => {
+	var Study = mongoose.model('study');
+
+	let instance = await InstancesController.addInstance(params);
+
+	let result = await Study.updateOne({ _id: id }, { "$push": { instances: instance._id} });
+
+	if(result.ok !== result.n){
+		throw {message: 'There was an error in the study.'};
+	}
+	return instance;
 }
 
 StudiesController.deleteStudy = async (id, study) => {
@@ -236,11 +249,6 @@ StudiesController.addTestToStudy = async (id, params) => {
 	if(result.ok !== result.n){
 		throw {message: 'There was an error in the study.'};
 	}
-
-	//if(test.activities.length > 0){
-	//	let study = await StudiesController.getStudy(id);
-	//	await TestsController.addParticipants(test._id, StudiesController.getParticipants(study));
-	//}
 
 	return test;
 }

@@ -304,6 +304,24 @@ router.get('/:studyid/tests', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Obtains the list of instances assigned to the study
+ * 
+ */
+router.get('/:studyid/instances', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['studyid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getStudyInstances(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Obtains the study export
  * 
  */
@@ -334,6 +352,25 @@ router.post('/:studyid/tests', Authenticator.auth, async (req, res, next) => {
 
   try {
     const result = await studies.addTestToStudy(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Adds a instance for the current group
+ * 
+ */
+router.post('/:studyid/instance', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['studyid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.addInstanceToStudy(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);
@@ -431,6 +468,85 @@ router.delete('/:studyid/tests/:testid', Authenticator.auth, async (req, res, ne
 
   try {
     const result = await studies.deleteTest(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Obtains the requested instance
+ * 
+ */
+router.get('/:studyid/instances/:instanceid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['studyid'],
+    instanceid: req.params['instanceid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getInstance(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Updates an existing instance
+ */
+router.put('/:studyid/instances/:instanceid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['studyid'],
+    instanceid: req.params['instanceid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.updateInstance(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Updates an existing instance
+ */
+router.patch('/:studyid/instances/:instanceid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['studyid'],
+    instanceid: req.params['instanceid'],
+    user: req.user
+  };
+
+  console.log(options);
+
+  try {
+    const result = await studies.updateInstanceName(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Deletes an existing instance and its references
+ */
+router.delete('/:studyid/instances/:instanceid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['studyid'],
+    instanceid: req.params['instanceid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.deleteInstance(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);

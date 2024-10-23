@@ -67,6 +67,7 @@ module.exports.addStudy = async (options) => {
       name: options.body.name,
       owners: [options.user.data.username],
       tests: [],
+      instances: [],
       allocator: allocator.id,
       created: Date.now()
     };
@@ -76,6 +77,13 @@ module.exports.addStudy = async (options) => {
     }
 
     var study = await StudiesController.addStudy(rawstudy);
+    let rawInstance = {
+      name: "base",
+      groups:[],
+      study: study._id,
+    }
+
+    await StudiesController.addInstanceToStudy(study._id, rawInstance);
   }catch(e){
     logger.error(e);
     return {status: 500, data: e };
@@ -551,11 +559,210 @@ module.exports.deleteTest = async (options) => {
           if(ntest !== -1){
             study.tests.splice(ntest,1);
             if(!await StudiesController.updateStudy(options.id, study)){
-              result = { status: 500, data: 'Error deleting the test' };
+              result = { status: 500, data: 'Error deleting the test.' };
             }
           }
         }else{
           result = { status: 401, data: { message: 'You are not owner of the study' } };
+        }
+      }else{
+        result = { status: 404, data: { message: 'Study not found' } };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+  
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The study ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.addInstanceToStudy = async (options) => {
+  var result = { status: 404, data: {message: 'Not found'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var study = await StudiesController.getStudy(options.id);
+      if(study !== null){
+        if(study.owners.indexOf(options.user.data.username) !== -1){
+          let test = await StudiesController.addInstanceToStudy(options.id, options.body);
+          result = { status: 200, data: test };
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the study' } };
+        }
+      }else{
+        result = { status: 404, data: { message: 'Study not found' } };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    logger.error(e);
+    result =  { status: 500, data: e };
+  }
+
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getInstance = async (options) => {
+  var result = { status: 404, data: {message: 'Not found'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.instanceid)){
+      var study = await StudiesController.getStudy(options.id);
+      if(study !== null){
+        if(study.owners.indexOf(options.user.data.username) !== -1){
+          var instance = await InstancesController.getInstance(options.instanceid);
+          if(instance !== null){
+            result = { status: 200, data: instance };
+          }
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the study' } };
+        }
+      }else{
+        result = { status: 404, data: { message: 'Study not found' } };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getStudyInstances = async (options) => {
+  var result = { status: 404, data: {message: 'Not found'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.instanceid)){
+      var study = await StudiesController.getStudy(options.id);
+      if(study !== null){
+        if(study.owners.indexOf(options.user.data.username) !== -1){
+          var instances = await InstancesController.getInstances({"_id" : {"$in" : study.instances}});
+          if(instances !== null){
+            result = { status: 200, data: instances };
+          }
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the study' } };
+        }
+      }else{
+        result = { status: 404, data: { message: 'Study not found' } };
+      }
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The study ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateInstance = async (options) => {
+  var result = { status: 200, data: {message: 'Instance updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.instanceid)){
+    try{
+      var instance = await InstancesController.getInstance(options.instanceid);
+      if(instance !== null){
+        result = { status: 200, data: instance };
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load instance.' } };
+      }
+
+      //TODO
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }else{
+    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+  }
+  
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The activity ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateInstanceName = async (options) => {
+  var result = { status: 200, data: {message: 'Instance updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.instanceid)){
+    try{
+      var instance = await InstancesController.getInstance(options.instanceid);
+      if(instance !== null){
+        instance.name = options.body.name;
+        instance.save();
+        result = { status: 200, data: instance };
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load instance.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The study ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.deleteInstance = async (options) => {
+  var result = { status: 200, data: {message: 'Instance deleted'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.instanceid)){
+      var study = await StudiesController.getStudy(options.id);
+      
+      if(study !== null){
+        if(study.owners.indexOf(options.user.data.username) !== -1){
+          let ninstance = study.instances.indexOf(options.instanceid);
+          if(ninstance !== -1){
+            study.instances.splice(ninstance,1);
+            if(!await InstancesController.deleteInstance(options.instanceid)){
+              result = { status: 500, data: 'Error deleting the instance' };
+            }
+            if(!await StudiesController.updateStudy(options.id, study)){
+              result = { status: 500, data: 'Error deleting the instance from study' };
+            }
+          }
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the instance' } };
         }
       }else{
         result = { status: 404, data: { message: 'Study not found' } };

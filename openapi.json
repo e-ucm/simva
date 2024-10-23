@@ -3857,6 +3857,10 @@
             "type": "string",
             "example": "ObjectId(\"5d07a0767c1405004bc702af\")"
           },
+          "study": {
+            "type": "string",
+            "example": "ObjectId(\"5d07a0767c1405004bc702af\")"
+          },
           "name": {
             "type": "string",
             "example": "Instance A for my study"
