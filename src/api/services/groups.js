@@ -112,6 +112,43 @@ module.exports.getGroup = async (options) => {
  * @throws {Error}
  * @return {Promise}
  */
+module.exports.deleteGroup  = async (options) => {
+  var result = { status: 200, data: {message: 'Group updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var group = await GroupsController.getGroup(options.id);
+      if(group !== null){
+        if(group.owners.indexOf(options.user.data.username) !== -1){
+          let studies = await StudiesController.getStudies({ groups: group._id });
+          for(var i=0; i< studies.length; i++) {
+            await StudiesController.removeGroupToStudy(studies[i]._id, group._id);
+          }
+          if(await GroupsController.removeGroup(options.id)){
+            result.data = { message: 'Group deleted' };
+          }else{
+            result = { status: 500, data: {message: 'Error deleting the group.'} };
+          }
+        }else{
+          result = { status: 401, data: {message: 'User is not authorized to update this group.'} };
+        }
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }else{
+    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The group ID
+ * @throws {Error}
+ * @return {Promise}
+ */
 module.exports.updateGroup = async (options) => {
   var result = { status: 200, data: {message: 'Group updated'} };
 

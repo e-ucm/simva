@@ -210,6 +210,17 @@ StudiesController.addGroupToStudy = async (id, groupid) => {
 	return result.ok > 0;
 }
 
+
+StudiesController.removeGroupToStudy = async (id, groupid) => {
+	var Study = mongoose.model('study');
+
+	//UpdateParticipants for all tests
+
+	var result = await Study.findOneAndUpdate({ _id: id }, { "$pull": { groups: groupid} });
+
+	return result.ok > 0;
+}
+
 StudiesController.deleteStudy = async (id, study) => {
 	var study = await mongoose.model('study').findOne({_id: id});
 

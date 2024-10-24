@@ -86,6 +86,24 @@ router.put('/:id', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Updates an existing group
+ */
+router.delete('/:id', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id'],
+    user: req.user
+  };
+
+  try {
+    const result = await groups.deleteGroup(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Obtains the list of studies assigned to the group
  * 
  */

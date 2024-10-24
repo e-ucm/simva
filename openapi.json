@@ -416,6 +416,30 @@
           },
           "description": "Group to be modified"
         }
+      },
+      "delete": {
+        "tags": [
+          "teachers"
+        ],
+        "summary": "delete the group",
+        "operationId": "deleteGroup",
+        "description": "delete an existing group",
+        "responses": {
+          "200": {
+            "description": "deleted group"
+          },
+          "400": {
+            "description": "invalid input"
+          },
+          "401": {
+            "description": "Teacher does not own the group"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/groupId"
+          }
+        ]
       }
     },
     "/groups/{id}/studies": {
