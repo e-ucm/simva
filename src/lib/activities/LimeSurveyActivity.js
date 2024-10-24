@@ -119,6 +119,12 @@ class LimeSurveyActivity extends Activity {
 
 	patch(params) {
 		super.patch(params);
+		if(typeof params.copysurvey !== 'undefined') {
+			this.copysurvey = params.copysurvey;
+		}
+		if(typeof params.username !== 'undefined') {
+			this.username = params.username;
+		}
 	}
 	
 	async save(){

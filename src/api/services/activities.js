@@ -122,7 +122,7 @@ module.exports.updateActivity = async (options) => {
       var activity = await ActivitiesController.loadActivity(options.id);
       if(activity !== null){
         activity.patch(options.body);
-        activity.save();
+        await activity.save();
         result = { status: 200, data: activity };
       }else{
          return result = { status: 404, data: { message: 'Unable to load activity.' } };

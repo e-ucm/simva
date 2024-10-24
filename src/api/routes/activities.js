@@ -77,7 +77,8 @@ router.put('/:id', Authenticator.auth, async (req, res, next) => {
     body: req.body,
     id: req.params['id']
   };
-
+  options.body.username = req.user.data.username;
+  
   try {
     const result = await activities.updateActivity(options);
     res.status(result.status || 200).send(result.data);
@@ -94,6 +95,7 @@ router.patch('/:id', Authenticator.auth, async (req, res, next) => {
     body: req.body,
     id: req.params['id']
   };
+  options.body.username = req.user.data.username;
   
   console.log(options);
 
