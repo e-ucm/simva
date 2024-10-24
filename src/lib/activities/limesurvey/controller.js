@@ -311,6 +311,73 @@ function setSurveyOwner(survey_id, user_id) {
 }
 
 /**
+ * Get Survey Title
+ * @param survey
+ */
+function getSurveyTitle(survey_id) {
+    return function(callback) {
+		Log('LimesurveyController.getSurveyTitle -> Started');
+		options.data = { method: 'get_survey_properties', params: [SESSIONKEY, survey_id, ["surveyls_title"]], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				Log(response);
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('getSurveyTitle', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+	
+				Log('LimesurveyController.getSurveyTitle -> Exported survey:');
+				LogMultiple({ result: body.result });
+				callback(null, body.result);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.getSurveyTitle -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error getSurveyTitle', error: error });  // reject promise on error
+			});
+	}
+}
+
+
+/**
+ * Get Survey Title
+ * @param survey
+ */
+function setSurveyTitle(survey_id, newTitle) {
+    return function(callback) {
+		Log('LimesurveyController.setSurveyTitle -> Started');
+		options.data = { method: 'set_survey_properties', params: [SESSIONKEY, survey_id, {"surveyls_title": newTitle}], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				Log(response);
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('setSurveyTitle', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+	
+				Log('LimesurveyController.setSurveyTitle -> Exported survey:');
+				LogMultiple({ result: body.result });
+				callback(null, body.result);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.setSurveyTitle -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error setSurveyTitle', error: error });  // reject promise on error
+			});
+	}
+}
+
+/**
  * Get User Id from Users list 
  */
 function getUserIdByUserName(username) {
@@ -1261,6 +1328,8 @@ module.exports = {
 	copy: copy,
 	getSurvey: getSurvey,
 	getSurveyList: getSurveyList,
+	getSurveyTitle :getSurveyTitle,
+	setSurveyTitle :setSurveyTitle,
 	getSurveysFromUser: getSurveysFromUser,
 	start: start,
 	remove: remove,

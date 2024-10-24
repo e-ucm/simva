@@ -218,6 +218,47 @@ class LimeSurveyActivity extends Activity {
 		})
 	}
 
+
+	async getSurveyTitle() {
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.getSurveyTitle(this.extra_data.surveyId)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
+			}
+		})
+	}
+
+	async setSurveyTitle(surveyTitle){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.setSurveyTitle(this.extra_data.surveyId, surveyTitle)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
+			}
+		})
+	}
+
 	async setSurveyOwner(userid){
 		return new Promise((resolve, reject) => {
 			try{

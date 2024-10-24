@@ -85,6 +85,67 @@ module.exports.getActivity = async (options) => {
  * @throws {Error}
  * @return {Promise}
  */
+module.exports.getSurveyProperties = async (options) => {
+  let result = { status: 200, data: null };
+
+  try {
+    activity = await ActivitiesController.loadActivity(options.id);
+
+    if(options.user.data.role === 'teacher'){
+      if(activity.owners.indexOf(options.user.data.username) !== -1){
+        if(activity.type == "limesurvey") {
+          result.data = await activity.getSurveyTitle();
+        } else {
+          result = { status: 401, data: { message: 'The activity provided is not a Limesurvey activity' } };
+        }
+      }else{
+        result = { status: 401, data: { message: 'You are not owner of the activity' } };
+      }
+    }
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateSurveyProperties = async (options) => {
+  let result = { status: 200, data: null };
+
+  try {
+    activity = await ActivitiesController.loadActivity(options.id);
+
+    if(options.user.data.role === 'teacher'){
+      if(activity.owners.indexOf(options.user.data.username) !== -1){
+        if(activity.type == "limesurvey") {
+          result.data = await activity.setSurveyTitle(options.body.title);
+        } else {
+          result = { status: 401, data: { message: 'The activity provided is not a Limesurvey activity' } };
+        }
+      }else{
+        result = { status: 401, data: { message: 'You are not owner of the activity' } };
+      }
+    }
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return result;
+};
+
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
 module.exports.getPresignedFileUrl = async (options) => {
   let result = { status: 200, data: {} };
 

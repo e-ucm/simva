@@ -122,6 +122,43 @@ router.delete('/:id', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+
+/**
+ * Obtains the requested activity
+ * 
+ */
+router.get('/:id/surveyproperties', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user
+  };
+
+  try {
+    const result = await activities.getSurveyProperties(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Updates an existing activity
+ */
+router.patch('/:id/surveyproperties', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['id'],
+    user: req.user
+  };
+  
+  try {
+    const result = await activities.updateSurveyProperties(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * If the activity can be opened, e.g. is hosted in a web,
  * 

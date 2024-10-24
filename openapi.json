@@ -1549,6 +1549,63 @@
         ]
       }
     },
+    "/activities/{id}/surveyproperties": {
+      "get": {
+        "tags": [
+          "teachers"
+        ],
+        "summary": "returns the survey properties of a Limesurvey activity",
+        "operationId": "getSurveyProperties",
+        "description": "Obtains the survey properties of the Limesurvey activity\n",
+        "responses": {
+          "200": {
+            "description": "The Survey Properties"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "teachers"
+        ],
+        "summary": "update the survey properties of a Limesurvey activity",
+        "operationId": "patchSurveyProperties",
+        "description": "Update the survey properties of the Limesurvey activity\n",
+        "responses": {
+          "200": {
+            "description": "if it is openable or not",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          }
+        ]
+      }
+    },
     "/activities/{id}/open": {
       "get": {
         "tags": [
