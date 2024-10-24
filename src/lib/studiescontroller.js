@@ -8,6 +8,7 @@ var AllocatorsController = require('./allocatorscontroller');
 var GroupsController = require('./groupscontroller');
 var TestsController = require('./testscontroller');
 const { groupBy } = require('async');
+const ActivitiesController = require('./activitiescontroller');
 
 if(!Array.prototype.flat){
 	Object.defineProperty(Array.prototype, 'flat', {
@@ -236,12 +237,43 @@ StudiesController.addTestToStudy = async (id, params) => {
 		throw {message: 'There was an error in the study.'};
 	}
 
-	//if(test.activities.length > 0){
-	//	let study = await StudiesController.getStudy(id);
-	//	await TestsController.addParticipants(test._id, StudiesController.getParticipants(study));
-	//}
-
+	if(params.from) {
+		let prevtest = await TestsController.getTest(params.from);
+		let testToCopy = await TestsController.getTestExport(prevtest, false);
+		test = await TestsController.importTest(test, testToCopy, params.owner);
+	}
 	return test;
 }
+
+StudiesController.getActivitiesInStudy = async (id) => {
+	let study = await StudiesController.getStudy(id);
+	var tests = await TestsController.getTests({"_id" : {"$in" : study.tests}});
+	var activities = [];
+	for(var i=0; i< tests.length; i++)  {
+		for(var j=0; j< tests[i].activities.length; j++)  {
+			activities.push(tests[i].activities[j]);
+		}
+	}
+	var activitiesObject = await ActivitiesController.getActivities({"_id" : {"$in" : activities}});
+	return activitiesObject;
+}
+
+
+StudiesController.getStudyExport = async (id) => {
+	let study = await StudiesController.getStudy(id);
+
+	let exportedStudyTest = await TestsController.getTests({"_id" : {"$in" : study.tests}});
+	let exportedTests = [];
+	for(var i=0; i< exportedStudyTest.length; i++)  {
+		exportedTests.push(await TestsController.getTestExport(exportedStudyTest[i], true));
+	}
+	let studyExport = {
+		name : study.name,
+		owners : study.owners,
+		tests : exportedTests
+	};
+	return studyExport;
+}
+
 
 module.exports = StudiesController;

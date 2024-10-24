@@ -6,7 +6,8 @@ var async = require('async');
 var Activity = require('./activity');
 
 var UsersController = require('../userscontroller');
-
+var sseSimvaClientManager = require('../utils/sseClientsListManager');
+var sseManager = require('../utils/sseManager');
 var config = require('../config');
 
 class ManualActivity extends Activity {
@@ -29,6 +30,15 @@ class ManualActivity extends Activity {
 				this.extra_data.user_managed = false;
 			}
 		}
+	}
+
+	async export(complete) {
+		let activity = super.export();
+		activity.user_managed = this.extra_data.user_managed;
+		if(this.extra_data.uri) {
+			activity.uri = this.extra_data.uri;
+		}
+		return activity;
 	}
 
 	static getType(){
@@ -58,6 +68,16 @@ class ManualActivity extends Activity {
 
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
+		}
+	}
+
+	patch(params) {
+		super.patch(params);
+		if(typeof params.user_managed !== 'undefined') {
+			this.extra_data.user_managed = params.user_managed;
+		}
+		if(typeof params.uri !== 'undefined') {
+			this.extra_data.uri = params.uri;
 		}
 	}
 
@@ -102,7 +122,19 @@ class ManualActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
+		const message = {
+			type: 'activity_completed',
+			activityType : "manual", 
+			activityId: this.id,
+			user: participant,
+			status: status,
+			message: `Activity ${this.id} has been completed!`
+		};
+		// Broadcast the message to client list
+		var clients=await sseSimvaClientManager.getClientList(this.id, participant);
+		sseManager.sendMessageToClientList(clients, message);
 		return await super.setCompletion(participant, status);
+		
 	}
 
 	async getCompletion(participants){

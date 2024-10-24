@@ -95,6 +95,12 @@ class Activity {
 		return false;
 	}
 
+	patch(params) {
+		if(typeof params.name !== 'undefined') {
+			this.name = params.name;
+		}
+	}
+
 	async save(){
 		var params = {};
 
@@ -321,6 +327,47 @@ class Activity {
 		return results;
 	}
 
+	async getProgress(participants){
+		if(!participants || participants.length == 0){
+			participants = Object.keys(this.extra_data.participants);
+		}
+
+		let results = {};
+		if(this.extra_data && this.extra_data.participants){
+			for(let i = 0; i < participants.length; i++){
+				if(this.extra_data.participants[participants[i]] && this.extra_data.participants[participants[i]].progress){
+					results[participants[i]] = this.extra_data.participants[participants[i]].progress;
+				}else{
+					results[participants[i]] = 0;
+				}
+			}
+		}else{
+			for(let i = 0; i < participants.length; i++){
+				results[participants[i]] = 0;
+			}
+		}
+
+		return results;
+	}
+
+	async setProgress(participant, progress){
+		if(!this.extra_data){
+			this.extra_data = {}
+		}
+
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
+		}
+
+		if(!this.extra_data.participants[participant]){
+			this.extra_data.participants[participant] = {}
+		}
+		if(progress <= 1) {
+			this.extra_data.participants[participant].progress = progress;
+		}
+		return await this.save();
+	}
+
 	async setCompletion(participant, status){
 		if(!this.extra_data){
 			this.extra_data = {}
@@ -335,6 +382,7 @@ class Activity {
 		}
 
 		this.extra_data.participants[participant].completion = status;
+		this.extra_data.participants[participant].progress = 1;
 
 		return await this.save();
 	}
@@ -383,6 +431,17 @@ class Activity {
 		}
 
 		return res;
+	}
+
+	export() {
+		var activity = {};
+		activity.name = this.name;
+		activity.type = this.type;
+		activity.extra_data = this.extra_data;
+		delete activity.extra_data;
+		delete activity._id;
+		delete activity.id;
+		return activity;
 	}
 };
 

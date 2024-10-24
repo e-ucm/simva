@@ -25,6 +25,11 @@ class RageMinioActivity extends MinioActivity {
 		}
 	}
 
+	async export(complete) {
+		let activity = super.export();
+		return activity;
+	}
+
 	static getType(){
 		return 'rageminio';
 	}
@@ -54,6 +59,9 @@ class RageMinioActivity extends MinioActivity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
 		}
+	}
+	patch(params) {
+		super.patch(params);
 	}
 
 	async save(){

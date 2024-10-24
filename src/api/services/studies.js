@@ -7,6 +7,7 @@ var GroupsController = require('../../lib/groupscontroller');
 var AllocatorsController = require('../../lib/allocatorscontroller');
 var TestsController = require('../../lib/testscontroller');
 var ActivitiesController = require('../../lib/activitiescontroller');
+var sseClientsListManager = require('../../lib/utils/sseClientsListManager');
 
 /**
  * @param {Object} options
@@ -81,6 +82,71 @@ module.exports.addStudy = async (options) => {
   }
 
   return { status: 200, data: study };
+};
+
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.addStudyFromImport = async (options) => {
+  let newStudy = JSON.parse(atob(options.file));
+  try {
+    var allocator = await AllocatorsController.createAllocator(AllocatorsController.getTypes()[0].getType());
+    let rawstudy = {
+      name: newStudy.name,
+      owners: [options.user.data.username],
+      tests: [],
+      allocator: allocator.id,
+      created: Date.now()
+    };
+
+    var study = await StudiesController.addStudy(rawstudy);
+    for(var i=0; i< newStudy.tests.length; i++) {
+      var newtest = newStudy.tests[i];
+      var rawTest = {
+        name : newtest.name,
+      };
+      var test = await StudiesController.addTestToStudy(study._id, rawTest);
+      await TestsController.importTest(test, newtest, options.user.data.username);
+    }
+  }catch(e){
+    logger.error(e);
+    return {status: 500, data: e };
+  }
+
+  return { status: 200, data: study };
+};
+
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The study ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.getStudyExport = async (options) => {
+  var result = { status: 404, data: {message: 'Not found'} };
+
+  try{
+    if(mongoose.Types.ObjectId.isValid(options.id)){
+      var study = await StudiesController.getStudyExport(options.id);
+      if(study !== null){
+        if(options.user.data.role === 'admin' || study.owners.indexOf(options.user.data.username) !== -1){
+          result = { status: 200, data: study };
+        }else{
+          result = { status: 401, data: { message: 'You are not owner of the study' } };
+        }
+      } 
+    }else{
+      result = { status: 400, data: {message: 'ObjectId is not valid'} };
+    }
+  }catch(e){
+    result =  { status: 500, data: e };
+  }
+
+  return result;
 };
 
 /**
@@ -341,6 +407,7 @@ module.exports.addTestToStudy = async (options) => {
       var study = await StudiesController.getStudy(options.id);
       if(study !== null){
         if(study.owners.indexOf(options.user.data.username) !== -1){
+          options.body.owner=options.user.data.username;
           let test = await StudiesController.addTestToStudy(options.id, options.body);
           result = { status: 200, data: test };
         }else{
@@ -437,6 +504,33 @@ module.exports.updateTest = async (options) => {
 
 /**
  * @param {Object} options
+ * @param {String} options.id The activity ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateTestName = async (options) => {
+  var result = { status: 200, data: {message: 'Test updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id) && mongoose.Types.ObjectId.isValid(options.testid)){
+    try{
+      var test = await TestsController.getTest(options.testid);
+      if(test !== null){
+        test.name = options.body.name;
+        test.save();
+        result = { status: 200, data: test };
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load test.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
  * @param {String} options.id The study ID
  * @throws {Error}
  * @return {Promise}
@@ -472,6 +566,11 @@ module.exports.deleteTest = async (options) => {
   return result;
 };
 
+module.exports.getStudyEvents = async (options) => {
+    logger.info(JSON.stringify(options));
+    sseClientsListManager.addActivityAndUserToMap(options.id,options.user, options.userRole, options.clientId);
+}
+
 
 /**
  * @param {Object} options
@@ -500,8 +599,7 @@ module.exports.addActivityToTest = async (options) => {
         return { status: 400, data: { message: 'You have not included yourself as owner of the activity' } };
       }
     }
-    logger.debug("Adding activity :" + JSON.stringify(test));
-    let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(options.body));
+
     let allocator = await AllocatorsController.loadAllocator(study.allocator);
     let participants = await allocator.getAllocatedForTest(options.testid);
     
@@ -519,10 +617,8 @@ module.exports.addActivityToTest = async (options) => {
       } 
       logger.debug("PARTICIPANTS UPDATED: " + participants);
     }
-    await activity.addParticipants(participants);
-    test.activities.push(activity.id);
-    await TestsController.updateTest(options.testid, test);
-    return {status: 200, data: activity.toObject() };
+    let activity = await TestsController.addActivityToTest(options.testid, options.body, participants);
+    return {status: 200, data: activity };
   }catch(e){
     logger.error(e);
     return {status: 500, data: e };

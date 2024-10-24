@@ -23,6 +23,34 @@ tags:
   - name: noroles
     description: Operations available to users with no role
 paths:
+  /events:
+    get:
+      summary: send Server Side Events to Client
+      operationId: GetEvent
+      description: |
+        send Server Side Events to Client
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+        required: true
+  /limesurvey-completion-webhooks:
+    post:
+      summary: get completion from limesurvey
+      operationId: GetEvent
+      description: |
+        get completion from limesurvey
+      responses:
+        '200':
+          description: completion from limesurvey
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+        required: true
   /users:
     get:
       tags:
@@ -346,7 +374,33 @@ paths:
             schema:
               $ref: '#/components/schemas/add_study_body'
         description: Study to be created
-  /studies/{id}:
+  /studies/import:
+    post:
+        tags:
+          - teachers
+        summary: adds an study for the current teacher
+        operationId: addStudyFromImport
+        description: |
+          Creates a new study for the current teacher.
+        responses:
+          '200':
+            description: study created
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/study'
+          '400':
+            description: 'invalid input, object invalid'
+          '409':
+            description: an existing item already exists
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/upload_file'
+          description: Study to be created
+  /studies/{studyid}:
     get:
       tags:
         - admins
@@ -407,7 +461,61 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/schedule:
+  /studies/{studyid}/export:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets the study export with the given ID
+      operationId: getStudyExport
+      description: |
+        Obtains the requested study Export
+      responses:
+        '200':
+          description: study object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/study'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+  /studies/{studyid}/events:
+    get:
+      summary: send Server Side Events to Client for this study
+      operationId: GetEvent
+      description: |
+        send Server Side Events to Client
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+  /studies/{studyid}/events/getPresignedUrl:
+    get:
+      tags:
+        - teachers
+      summary: get getPresignedUrl for Server Side Events to Client for this study
+      operationId: getEventsPresignedUrl
+      description: |
+        get getPresignedUrl Server Side Events to Client
+      responses:
+        '200':
+          description: Event processed
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+  /studies/{studyid}/schedule:
     get:
       tags:
         - teachers
@@ -439,7 +547,40 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/groups:
+  /studies/{studyid}/schedule/events:
+    get:
+      summary: send Server Side Events to Client for this study
+      operationId: GetEvent
+      description: |
+        send Server Side Events to Client
+      responses:
+        '200':
+          description: presigned URL
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+  /studies/{studyid}/schedule/events/getPresignedUrl:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: get getPresignedUrl for Server Side Events to Client for this study
+      operationId: getScheduleEventsPresignedUrl
+      description: |
+        get getPresignedUrl Server Side Events to Client
+      responses:
+        '200':
+          description: presigned URL
+        '400':
+          description: 'invalid input, object invalid'
+        '401':
+          description: 'One or both of the JWT are not valid'
+      parameters:
+        - $ref: '#/components/parameters/studyId'
+  /studies/{studyid}/groups:
     get:
       tags:
         - teachers
@@ -462,7 +603,7 @@ paths:
           description: 'Study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/tests:
+  /studies/{studyid}/tests:
     get:
       tags:
         - teachers
@@ -509,7 +650,7 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         required: true
-  /studies/{id}/participants:
+  /studies/{studyid}/participants:
     get:
       tags:
         - teachers
@@ -578,6 +719,32 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         description: test to be modified
+    patch:
+      summary: Modifies the test.
+      tags:
+        - teachers
+      operationId: patchTest
+      description: |
+        Modifies the test
+      parameters:
+        - $ref: '#/components/parameters/studyStudyId'
+        - $ref: '#/components/parameters/testId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/test'
+      responses:
+        '200':
+          description: Test updated
+          schema:
+              $ref: '#/components/schemas/test'
+        '401':
+          description: 'Teacher does not own the class'
+        '400':
+          description: 'invalid input'
+        '404':
+          description: 'Requested study does not exist'
     delete:
       tags:
         - teachers
@@ -642,7 +809,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activity'
-  /studies/{id}/allocator:
+  /studies/{studyid}/allocator:
     get:
       tags:
         - teachers
@@ -777,6 +944,27 @@ paths:
             schema:
               $ref: '#/components/schemas/activity'
         description: activity to be modified
+    patch:
+      summary: Modifies the activity.
+      tags:
+        - teachers
+      operationId: patchActivity
+      description: |
+        Modifies the activity
+      parameters:
+        - $ref: '#/components/parameters/testId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activityBody'
+      responses:
+        '200':
+          description: Activity updated
+          schema:
+              $ref: '#/components/schemas/activity'
+        '400':
+          description: 'invalid input, object invalid'
     delete:
       tags:
         - teachers
@@ -787,6 +975,24 @@ paths:
       responses:
         '200':
           description: activity deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+  /activities/{id}/surveyowner:
+    patch:
+      tags:
+        - admins
+        - teachers
+      summary: update the survey owner for a Limesurvey activity
+      operationId: updateSurveyOwner
+      description: |
+        updateSurveyOwner
+      responses:
+        '200':
+          description: Survey Updated
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -854,6 +1060,25 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/testId'
+  /activities/{id}/progress:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the progress status of the activity
+      operationId: getCompletion
+      description: |
+        Obtains the progress status of the activity
+      responses:
+        '200':
+          description: if it is openable or not
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
   /activities/{id}/completion:
     get:
       tags:
@@ -987,6 +1212,396 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+  /activities/{id}/statements:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the statement of the activity
+      operationId: getStatement
+      description: |
+        Get the statement object of the activity for a student
+      responses:
+        '200':
+          description: the result of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+    post:
+      tags:
+        - teachers
+        - students
+      summary: Post the statement for the activity
+      operationId: setStatement
+      description: |
+        Post the statement object of the activity for a student
+      responses:
+        '200':
+          description: the traces has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '409':
+          description: 'Conflict in statementId'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+    put:
+      tags:
+        - teachers
+        - students
+      summary: put the statement for the activity
+      operationId: putStatement
+      description: |
+        Put the statement object of the activity for a student
+      responses:
+        '200':
+          description: the traces has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '409':
+          description: 'Conflict in statementId'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+  /activities/{id}/agents:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the agent object of the activity
+      operationId: getAgent
+      description: |
+        Get the  agent object of the activity for a student
+      responses:
+        '200':
+          description: the agents of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+  /activities/{id}/agents/profile:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the agent profile object of the activity
+      operationId: getAgentProfile
+      description: |
+        Get the agent profile object of the activity for a student
+      responses:
+        '200':
+          description: the agent profile of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+    post:
+      tags:
+        - teachers
+        - students
+      summary: Post the agent profile for the activity
+      operationId: setAgentProfile
+      description: |
+        Post the agent profile object of the activity for a student
+      responses:
+        '200':
+          description: the agent profile has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+    put:
+      tags:
+        - teachers
+        - students
+      summary: put the agent profile for the activity
+      operationId: putAgentProfile
+      description: |
+        Put the agent profile object of the activity for a student
+      responses:
+        '200':
+          description: the agent profile has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+    delete:
+      tags:
+        - teachers
+        - students
+      summary: delete the agent profile for the activity
+      operationId: deleteAgentProfile
+      description: |
+        delete the agent profile object of the activity for a student
+      responses:
+        '200':
+          description: the agent profile has been deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+  /activities/{id}/activities:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the activities object of the activity
+      operationId: getActivities
+      description: |
+        Get the  activities object of the activity for a student
+      responses:
+        '200':
+          description: the activities of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+  /activities/{id}/activities/profile:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the activities profile object of the activity
+      operationId: getActivitiesProfile
+      description: |
+        Get the activities profile object of the activity for a student
+      responses:
+        '200':
+          description: the activities profile of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+    post:
+      tags:
+        - teachers
+        - students
+      summary: Post the activities profile for the activity
+      operationId: setActivitiesProfile
+      description: |
+        Post the activities profile object of the activity for a student
+      responses:
+        '200':
+          description: the activities profile has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+    put:
+      tags:
+        - teachers
+        - students
+      summary: put the activities profile for the activity
+      operationId: putActivitiesProfile
+      description: |
+        Put the activities profile object of the activity for a student
+      responses:
+        '200':
+          description: the activities profile has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+    delete:
+      tags:
+        - teachers
+        - students
+      summary: delete the activities profile for the activity
+      operationId: deleteActivitiesProfile
+      description: |
+        delete the activities profile object of the activity for a student
+      responses:
+        '200':
+          description: the activities profile has been deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+  /activities/{id}/activities/status:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the activities status object of the activity
+      operationId: getActivitiesStatus
+      description: |
+        Get the activities status object of the activity for a student
+      responses:
+        '200':
+          description: the activities status of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+    post:
+      tags:
+        - teachers
+        - students
+      summary: Post the activities status for the activity
+      operationId: setActivitiesStatus
+      description: |
+        Post the activities status object of the activity for a student
+      responses:
+        '200':
+          description: the activities status has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+    put:
+      tags:
+        - teachers
+        - students
+      summary: put the activities status for the activity
+      operationId: putActivitiesStatus
+      description: |
+        Put the activities status object of the activity for a student
+      responses:
+        '200':
+          description: the activities status has been stocked
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+    delete:
+      tags:
+        - teachers
+        - students
+      summary: delete the activities status for the activity
+      operationId: deleteActivitiesStatus
+      description: |
+        delete the activities status object of the activity for a student
+      responses:
+        '200':
+          description: the activities status has been deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/user'
+  /activities/{id}/about:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the LRS Information of the activity
+      operationId: getAbout
+      description: |
+        Get the LRS Information of the activity for a student
+      responses:
+        '200':
+          description: the LRS Information of the activity of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/type'
+  /activities/{id}/extensions/{extensionId}:
+    get:
+      tags:
+        - teachers
+        - students
+      summary: gets the extension Information
+      operationId: getExtension 
+      description: |
+        Get the LRS extension Information of the activity for a student
+      responses:
+        '200':
+          description: the LRS extension Information of the activity of the students required
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
+      parameters:
+        - $ref: '#/components/parameters/testId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
   /activitytypes:
@@ -1859,6 +2474,18 @@ components:
             example: ObjectId("5d07a0767c1405004bc702af")
         extra_data:
           type: object
+    activityBody:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ObjectId("5d07a0767c1405004bc702af")
+        name:
+          type: string
+          example: "Survey for validation"
+        type:
+          type: string
+          example: "survey, gameplay, etc..."
     activity_type:
       type: object
       required:

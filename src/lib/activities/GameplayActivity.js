@@ -16,6 +16,9 @@ const pipelineAsync = promisify(pipeline);
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
 var RageAnalyticsActivity = require('./RageAnalyticsActivity');
+var generateStatementId = require('../utils/statementIdGenerator');
+var sseSimvaClientManager = require('../utils/sseClientsListManager');
+var sseManager = require('../utils/sseManager');
 
 var RealtimeActivity = new RageAnalyticsActivity({});
 var TraceStorageActivity = new MinioActivity({});
@@ -61,13 +64,22 @@ class GameplayActivity extends Activity {
 			}
 
 			if(params.game_uri){
-				// Game URI can include parameters such as {activityId}, {authToken} or {username}
+				// Game URI can include parameters such as {activityId}, {simvaResultUri}, {authToken} or {username}
 				// so the game can obtain when opened the authorization to send traces, and result
 				// or completion status to simva.
 				
 				this.extra_data.game_uri = params.game_uri;
 			}
 		}
+	}
+	
+	async export(complete) {
+		let activity = super.export();
+		activity.trace_storage = this.extra_data.config.trace_storage;
+		activity.backup = this.extra_data.config.backup;
+		//activity.realtime = this.extra_data.config.realtime;
+		activity.game_uri = this.extra_data.game_uri;
+		return activity;
 	}
 
 	static getType(){
@@ -102,6 +114,22 @@ class GameplayActivity extends Activity {
 
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
+		}
+	}
+
+	patch(params) {
+		super.patch(params);
+		if(typeof params.trace_storage !==  'undefined') {
+			this.extra_data.config.trace_storage = params.trace_storage;
+		}
+		if(typeof params.realtime !==  'undefined') {
+			this.extra_data.config.realtime = params.realtime;
+		}
+		if(typeof params.backup !== 'undefined') {
+			this.extra_data.config.backup = params.backup;
+		}
+		if(typeof params.game_uri !== 'undefined') {
+			this.extra_data.game_uri = params.game_uri;
 		}
 	}
 
@@ -155,21 +183,158 @@ class GameplayActivity extends Activity {
 		return await super.removeParticipants(participants);
 	}
 
+	updateMissingTraceElements(participant, trace) {
+		const now = new Date();
+		if(!trace.id) {
+			trace.id = generateStatementId(trace);
+		}
+		if(!trace.stored) {
+			trace.stored = now.toISOString();
+		}
+		if(!trace.timestamp) {
+			trace.timestamp = now.toISOString();
+		}
+		if(!trace.version) {
+			trace.version = "1.0.3";
+			//trace.version = "2.0.0";
+		}
+		if(!trace.authority) {
+			trace.authority = {
+				homePage: config.external_url,
+				name: participant
+			};
+		}
+		return trace;
+	}
+
+	async sendProgressOrCompletionOfGame(trace, participant) {
+		if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
+			const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+			const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+			const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+			const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
+			if(trace.verb) {
+				switch(trace.verb.id) {
+					case initializedVerb:
+						logger.info("INITIALIZED GAME");
+						const message = {
+							type: 'activity_initialized',
+							activityType : "gameplay", 
+							user: participant,
+							activityId: this.id,
+							message: `Activity ${this.id} has been initialized!`
+						};
+					
+						// Broadcast the message to client list
+						var clients=await sseSimvaClientManager.getClientList(this.id, participant);
+						sseManager.sendMessageToClientList(clients, message);
+						// Broadcast the message to all clients
+						//sseManager.broadcast(message);
+						this.setProgress(participant, 0);
+					  break;
+					case progressedVerb:
+						logger.info("PROGRESSED THROUGH GAME");
+						if(trace.result && trace.result.extensions[resultExtensionProgress]) {
+							var value = trace.result.extensions[resultExtensionProgress];
+							logger.info(value);
+							this.setProgress(participant, value);
+							const message = {
+								type: 'activity_progressed',
+								activityType : "gameplay", 
+								activityId: this.id,
+								user: participant,
+								val: value,
+								message: `Activity ${this.id} has a progressed!`
+							};
+						
+							// Broadcast the message to client list
+							var clients=await sseSimvaClientManager.getClientList(this.id, participant);
+							sseManager.sendMessageToClientList(clients, message);
+							// Broadcast the message to all clients
+							//sseManager.broadcast(message);
+						}
+					  break;
+					case completedVerb:
+						if(trace.result.completion == true) {
+							logger.info("COMPLETED GAME");
+							this.setCompletion(participant, true);
+							const message = {
+								type: 'activity_completed',
+								activityType : "gameplay", 
+								activityId: this.id,
+								user: participant,
+								message: `Activity ${this.id} has been completed!`
+							};
+							// Broadcast the message to client list
+							var clients=await sseSimvaClientManager.getClientList(this.id, participant);
+							sseManager.sendMessageToClientList(clients, message);
+							// Broadcast the message to all clients
+							//sseManager.broadcast(message);
+						}
+					  break;
+					default: 
+						logger.info("OTHER VERB");
+				}
+			}
+		}
+	}
+
+	async setStatement(participant, result){
+		let toret = 0;
+		let response=[];
+		try {
+			if(Array.isArray(result)){
+				if(this.extra_data.config.trace_storage){
+					var traces= [];
+					for(let traceId = 0; traceId < result.length; traceId++) {
+						var trace = result[traceId];
+						await this.sendProgressOrCompletionOfGame(trace, participant);
+						traces.push(this.updateMissingTraceElements(participant, trace));
+					}
+					response = await TraceStorageActivity.sendTracesToKafka(traces, this.id);
+					toret =  { ids: response };
+				} else {
+					throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
+				}
+			} else if(!result || typeof result === 'object'){
+				if(this.extra_data.config.trace_storage){
+					trace = this.updateMissingTraceElements(participant, result);
+					await this.sendProgressOrCompletionOfGame(trace, participant);
+					await TraceStorageActivity.sendTracesToKafka([trace], this.id);
+					toret =  { ids: response };
+				} else {
+					throw { message: 'Trace Storage is not enabled. No xAPI collector.' };
+				}
+			} else {
+				logger.info('Unknown case');
+				logger.info(result.result);
+				throw { message: 'Unknown case setting the statements' };
+			}
+		}catch(e){
+			logger.error(e);
+			throw { message: 'Error while setting the statements' };
+		}
+		return toret;
+	}
+
 	async setResult(participant, result){
 		let toret = 0;
-
 		try{
 			if(Array.isArray(result)){
-				// If we're receiving an array, we're receiving traces
+ 				// If we're receiving an array, we're receiving traces
 				if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
 					if(this.extra_data.config.trace_storage){
-						await TraceStorageActivity.sendTracesToKafka(result, this.id);
+						var traces= [];
+						for(let traceId = 0; traceId < result.length; traceId++) {
+							var trace = result[traceId];
+							await this.sendProgressOrCompletionOfGame(trace, participant);
+							traces.push(this.updateMissingTraceElements(participant, trace));
+						}
+						await TraceStorageActivity.sendTracesToKafka(traces, this.id);
 					}
-
-					if(this.extra_data.config.realtime){
-						await RealtimeActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
-					}
-					
+					//if(this.extra_data.config.realtime){
+					//	await RealtimeActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
+					//}
 					toret =  { message: 'Traces Received' };
 				}else{
 					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
@@ -183,7 +348,7 @@ class GameplayActivity extends Activity {
 					}else{
 						throw { message: 'Backup is not enabled for this activity' };
 					}
-				}else{
+				} else {
 					if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
 						toret = { 
 							actor: {
@@ -193,7 +358,7 @@ class GameplayActivity extends Activity {
 							playerId: participant,
 							objectId: config.external_url + '/activities/' + this.id,
 						}
-					}else{
+					} else {
 						throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
 					}
 				}
@@ -492,6 +657,8 @@ class GameplayActivity extends Activity {
 					customUri = customUri.replace('{authToken}', authToken);
 				}
 
+				customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.id}`));
+				customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`));
 				customUri = customUri.replace('{activityId}', this.id);
 				customUri = customUri.replace('{username}', participants[i]);
 

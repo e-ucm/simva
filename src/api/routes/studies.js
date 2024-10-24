@@ -1,12 +1,28 @@
 const express = require('express');
 const studies = require('../services/studies');
-
+const sseManager = require('../../lib/utils/sseManager');  // Import SSE Manager
+let UsersController = require('../../lib/userscontroller');
 const router = new express.Router();
 
 // Validators
 const validator = require('../../lib/utils/validator');
 validator.addValidations('/studies', router);
 const Authenticator = require('../../lib/utils/authenticator');
+const logger = require('../../lib/logger');
+const config = require('../../lib/config');
+const { createHMACKey } = require("../../lib/utils/hMacKey/crypto.js");
+const { validateUrl, createUrl } = require("../../lib/utils/hMacKey/tokens.js");
+
+initHmacKey();
+async function initHmacKey() {
+  config.hmac.hmacKey = (await createHMACKey(config.hmac.password
+    //, {
+    //  encodedSalt: config.hmac.salt,
+    //  encodedKey: config.hmac.key
+    //}
+  )).key;
+  logger.info("Initialized hmacKey");
+}
 
 /**
  * Obtains the list of studies for the current teacher.
@@ -28,6 +44,25 @@ router.get('/', Authenticator.auth, async (req, res, next) => {
       status: 500,
       error: 'Server Error'
     });
+  }
+});
+
+
+/**
+ * Creates a new study from import for the current teacher.
+ * 
+ */
+router.post('/import', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    file: req.body.file,
+    user: req.user
+  };
+
+  try {
+    const result = await studies.addStudyFromImport(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -53,9 +88,9 @@ router.post('/', Authenticator.auth, async (req, res, next) => {
  * Obtains the requested study
  * 
  */
-router.get('/:id', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -70,10 +105,10 @@ router.get('/:id', Authenticator.auth, async (req, res, next) => {
 /**
  * Updates an existing stidy
  */
-router.put('/:id', Authenticator.auth, async (req, res, next) => {
+router.put('/:studyid', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -89,9 +124,9 @@ router.put('/:id', Authenticator.auth, async (req, res, next) => {
  * Deleted designed study
  * 
  */
-router.delete('/:id', Authenticator.auth, async (req, res, next) => {
+router.delete('/:studyid', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -111,9 +146,142 @@ router.delete('/:id', Authenticator.auth, async (req, res, next) => {
  * current used test to the user.
  * 
  */
-router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid/schedule', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getSchedule(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * To send Server Side Event to Client
+ * 
+ */
+router.get('/:studyid/schedule/events', async (req, res, next) => {
+  // Extract the token from the query parameters
+  const ts = req.query.ts;
+  const signature = req.query.signature;
+  if (!signature) {
+    return res.status(401).json({ message: 'No signature provided' });
+  }
+  if (!ts) {
+    return res.status(401).json({ message: 'No timestamp provided' });
+  }
+
+  const url = config.api.url + req.baseUrl + req.path;
+  const query = req.query;
+  try {
+    if(await validateUrl(url, query, config.hmac.hmacKey)) {
+      let user = req.query.username;
+      logger.info(user);
+      var clientId = sseManager.addClient(req, res);
+      const options = {
+          id: req.params['studyid'],
+          user: user,
+          userRole: "student",
+          clientId: clientId
+      };
+      await studies.getStudyEvents(options);
+    } else {
+        res.status(401).send({ message: 'Signature not valid' });
+    }
+  } catch (err) {
+      next(err);
+  }
+});
+
+/**
+ * To get presigned url for schedule events
+ * 
+ */
+router.get('/:studyid/schedule/events/getPresignedUrl', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['studyid'],
+    username: req.user.data.username
+  };
+
+  try {
+      const url = `${config.api.url}/studies/${options.id}/schedule/events`;
+      const params={ username: options.username };
+      const result = await createUrl(url, params, config.hmac.hmacKey);
+      res.status(200).send(result.data);
+  } catch (err) {
+      next(err);
+  }
+});
+
+/**
+ * To send Server Side Event to Client
+ * 
+ */
+router.get('/:studyid/events', async (req, res, next) => {
+  // Extract the token from the query parameters
+  const ts = req.query.ts;
+  const signature = req.query.signature; 
+  if (!signature) {
+    return res.status(401).json({ message: 'No signature provided' });
+  }
+  if (!ts) {
+    return res.status(401).json({ message: 'No timestamp provided' });
+  }
+
+  const url = config.api.url + req.baseUrl + req.path;
+  const query = req.query;
+  try {
+    if(await validateUrl(url, query, config.hmac.hmacKey)) {
+      var clientId= sseManager.addClient(req, res);
+      const options = {
+          id: req.params['studyid'],
+          userRole: "teacher",
+          clientId: clientId
+      };
+      await studies.getStudyEvents(options);
+    } else {
+      res.status(401).send({ message: 'Signature not valid' });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * To get presigned url for schedule events
+ * 
+ */
+router.get('/:studyid/events/getPresignedUrl', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['studyid']
+  };
+
+  try {
+      const url = `${config.api.url}/studies/${options.id}/events`;
+      params={};
+      const result = await createUrl(url, params, config.hmac.hmacKey);
+      res.status(200).send(result.data);
+  } catch (err) {
+      next(err);
+  }
+});
+
+
+/**
+ * Obtains the list of scheduled activities for the current
+ * 
+ * student and study, and its completion status. Hides the
+ * 
+ * current used test to the user.
+ * 
+ */
+router.get('/:studyid/schedule', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -129,9 +297,9 @@ router.get('/:id/schedule', Authenticator.auth, async (req, res, next) => {
  * Obtains the list of groups assigned to the study
  * 
  */
-router.get('/:id/groups', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid/groups', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -147,9 +315,9 @@ router.get('/:id/groups', Authenticator.auth, async (req, res, next) => {
  * Obtains the list of tests assigned to the study
  * 
  */
-router.get('/:id/tests', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid/tests', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -162,13 +330,31 @@ router.get('/:id/tests', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Obtains the study export
+ * 
+ */
+router.get('/:studyid/export', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['studyid'],
+    user: req.user
+  };
+
+  try {
+    const result = await studies.getStudyExport(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Adds a test for the current group
  * 
  */
-router.post('/:id/tests', Authenticator.auth, async (req, res, next) => {
+router.post('/:studyid/tests', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -184,9 +370,9 @@ router.post('/:id/tests', Authenticator.auth, async (req, res, next) => {
  * Obtains the list of participants of the group
  * 
  */
-router.get('/:id/participants', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid/participants', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -202,9 +388,9 @@ router.get('/:id/participants', Authenticator.auth, async (req, res, next) => {
  * Obtains the requested test
  * 
  */
-router.get('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid/tests/:testid', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     testid: req.params['testid'],
     user: req.user
   };
@@ -220,10 +406,10 @@ router.get('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
 /**
  * Updates an existing test
  */
-router.put('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
+router.put('/:studyid/tests/:testid', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id'],
+    id: req.params['studyid'],
     testid: req.params['testid'],
     user: req.user
   };
@@ -237,12 +423,34 @@ router.put('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
- * Deletes an existing test and its references
+ * Updates an existing test
  */
-router.delete('/:id/tests/:testid', Authenticator.auth, async (req, res, next) => {
+router.patch('/:studyid/tests/:testid', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id'],
+    id: req.params['studyid'],
+    testid: req.params['testid'],
+    user: req.user
+  };
+
+  logger.info(options);
+
+  try {
+    const result = await studies.updateTestName(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * Deletes an existing test and its references
+ */
+router.delete('/:studyid/tests/:testid', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    body: req.body,
+    id: req.params['studyid'],
     testid: req.params['testid'],
     user: req.user
   };
@@ -259,9 +467,9 @@ router.delete('/:id/tests/:testid', Authenticator.auth, async (req, res, next) =
  * Creates a new test for the current teacher.
  * 
  */
-router.get('/:id/tests/:testid/activities', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid/tests/:testid/activities', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     testid: req.params['testid'],
     user: req.user
   };
@@ -278,13 +486,14 @@ router.get('/:id/tests/:testid/activities', Authenticator.auth, async (req, res,
  * Creates a new test for the current teacher.
  * 
  */
-router.post('/:id/tests/:testid/activities', Authenticator.auth, async (req, res, next) => {
+router.post('/:studyid/tests/:testid/activities', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id'],
+    id: req.params['studyid'],
     testid: req.params['testid'],
     user: req.user
   };
+  options.body.username = req.user.data.username;
 
   try {
     const result = await studies.addActivityToTest(options);
@@ -299,9 +508,9 @@ router.post('/:id/tests/:testid/activities', Authenticator.auth, async (req, res
  * Obtains the allocator used by the study
  * 
  */
-router.get('/:id/allocator', Authenticator.auth, async (req, res, next) => {
+router.get('/:studyid/allocator', Authenticator.auth, async (req, res, next) => {
   const options = {
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 
@@ -317,10 +526,10 @@ router.get('/:id/allocator', Authenticator.auth, async (req, res, next) => {
  * Updates the allocator from the study
  * 
  */
-router.put('/:id/allocator', Authenticator.auth, async (req, res, next) => {
+router.put('/:studyid/allocator', Authenticator.auth, async (req, res, next) => {
   const options = {
     body: req.body,
-    id: req.params['id'],
+    id: req.params['studyid'],
     user: req.user
   };
 

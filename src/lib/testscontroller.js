@@ -66,12 +66,43 @@ TestsController.deleteTest = async (id) => {
 	return result.ok > 0;
 }
 
+TestsController.getTestExport = async (test, complete) => {
+	let exportedStudyTestActivities = [];
+	for(var j=0; j< test.activities.length; j++) {
+		let activity = await ActivitiesController.loadActivity(test.activities[j]);
+		exportedStudyTestActivities.push(await activity.export(complete));
+	}
+	return {
+		name : test.name,
+		activities : exportedStudyTestActivities
+	};
+}
+
+TestsController.importTest = async (test, rawTest, owner) => {
+	for(var i=0; i< rawTest.activities.length; i++) {
+        var rawActivity = rawTest.activities[i];
+        rawActivity.owners = [owner];
+		rawActivity.username = owner;
+        rawActivity.test = test._id;
+        await TestsController.addActivityToTest(test._id, rawActivity);
+    }
+}
+
 TestsController.getActivities = async (id) => {
 
 }
 
-TestsController.addActivityToTest = async (id, activity) => {
-	
+TestsController.addActivityToTest = async (id, activityBody, participants = []) => {
+	let test = await TestsController.getTest(id);
+    if(!test){
+      	throw { message:'Test not found'};
+    }
+	logger.debug("Adding activity :" + JSON.stringify(test));
+    let activity = ActivitiesController.castToClass(await ActivitiesController.addActivity(activityBody));
+	test.activities.push(activity.id);
+	await activity.addParticipants(participants);
+	await TestsController.updateTest(id, test);
+	return activity;
 }
 
 TestsController.removeActivityToTest = async (id, activity) => {

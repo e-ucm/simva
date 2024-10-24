@@ -6,6 +6,8 @@ const formidable = require('formidable');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 const AppManager = require('../lib/utils/appmanager');
+const sseManager = require('../lib/utils/sseManager');  // Import SSE Manager
+const sseSimvaClientManager = require('../lib/utils/sseClientsListManager');  // Import SSE Manager
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
 
 var isTest = (process.env.NODE_ENV !== 'production');
@@ -40,8 +42,7 @@ var db = mongoose.connection;
 db.on('error', logger.error.bind(console, 'connection error:'));
 db.once('open', function() {
   logger.debug('connected');
-
-  	const fs = require('fs');
+  const fs = require('fs');
 	const yaml = require('yaml');
 	const swaggerMongoose = require('swagger-mongoose');
 
@@ -106,7 +107,7 @@ app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: tr
 // ALLOW CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
+    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method, x-experience-api-version');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.header('Allow', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
@@ -123,6 +124,74 @@ app.use('/activitytypes', require('./routes/activitytypes'));
 app.use('/allocatortypes', require('./routes/allocatortypes'));
 app.use('/lti', require('./routes/lti'));
 
+// SSE endpoint to establish a connection with the client
+app.get('/events', (req, res) => {
+  sseManager.addClient(req, res);
+});
+
+verifyHookdeckSignature = async function(
+  req,
+  res,
+  next
+) {
+  if (!config.limesurvey.SECRET) {
+    console.warn(
+      "No Hookdeck Signing Secret: Skipping webhook verification. Do not do this in production!"
+    );
+    return next();
+  }
+
+  const headers= {};
+  const incomingHeaders = req.headers;
+
+  for (const [key, value] of Object.entries(incomingHeaders)) {
+    headers[key] = value;
+  }
+
+  // console.log({ headers });
+
+  const rawBody = req.rawBody.toString();
+  // console.log({ rawBody });
+
+  const result = await verifyWebhookSignature({
+    headers,
+    rawBody,
+    signingSecret: SECRET,
+    config: {
+      checkSourceVerification: false,
+    },
+  });
+
+  if (!result.isValidSignature) {
+    console.log("Signature is invalid, rejected");
+    res.sendStatus(401);
+  } else {
+    console.log("Signature is valid, accepted");
+    next();
+  }
+};
+
+app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req, res) => {
+  console.log(req.body);
+  // Broadcast the message to client list
+  var clients=await sseSimvaClientManager.getClientList(req.body.surveyId, req.body.token, "limesurvey");
+  var type;
+  if(req.body.event == "survey_initialized") {
+    type='activity_initialized';
+  } else if(req.body.event == "survey_completed") {
+    type='activity_completed';
+  } else {
+    type=req.body.event;
+  };
+  const message = {
+    type: type,
+    activityType : "limesurvey",
+    activityId: sseSimvaClientManager.getSurvey(req.body.surveyId),
+    user: req.body.token
+  };
+  sseManager.sendMessageToClientList(clients, message);
+  res.status(200).send({ message: 'Tested and treated' });
+});
 
 // catch 404
 app.use((req, res, next) => {

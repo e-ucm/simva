@@ -110,32 +110,59 @@ module.exports.getPresignedFileUrl = async (options) => {
 
 /**
  * @param {Object} options
- * @param {String} options.id The study ID
+ * @param {String} options.id The activity ID
  * @throws {Error}
  * @return {Promise}
  */
 module.exports.updateActivity = async (options) => {
-  // Implement your business logic here...
-  //
-  // This function should return as follows:
-  //
-  // return {
-  //   status: 200, // Or another success code.
-  //   data: [] // Optional. You can put whatever you want here.
-  // };
-  //
-  // If an error happens during your business logic implementation,
-  // you should throw an error as follows:
-  //
-  // throw new ServerError({
-  //   status: 500, // Or another error code.
-  //   error: 'Server Error' // Or another error message.
-  // });
+  var result = { status: 200, data: {message: 'Activity updated'} };
 
-  return {
-    status: 200,
-    data: 'updateActivity ok!'
-  };
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var activity = await ActivitiesController.loadActivity(options.id);
+      if(activity !== null){
+        activity.patch(options.body);
+        await activity.save();
+        result = { status: 200, data: activity };
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load activity.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The activity ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateSurveyOwner = async (options) => {
+  var result = { status: 200, data: {message: 'Activity updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var activity = await ActivitiesController.loadActivity(options.id);
+      if(activity !== null){
+        if(activity.type == "limesurvey"){
+          await activity.setSurveyOwnerFromUsername(options.user.data.username);
+          result.data = activity;
+        } else {
+          return result = { status: 404, data: { message: 'Activity is not a Limesurvey one.' } };
+       }
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load activity.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
 };
 
 /**
@@ -271,6 +298,49 @@ module.exports.getTarget = async (options) => {
  * @throws {Error}
  * @return {Promise}
  */
+module.exports.getProgress = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data = await activity.getProgress([options.user.data.username]);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        let users = [];
+        if(options.users && options.users !== ''){
+          users = options.users.split(',');
+        }
+
+        body.data = await activity.getProgress(users);
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    logger.info('GetProgress exploded:');
+    logger.error(e);
+    return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @throws {Error}
+ * @return {Promise}
+ */
 module.exports.getCompletion = async (options) => {
   let body = {
     status: 200,
@@ -390,6 +460,62 @@ module.exports.getResult = async (options) => {
     logger.info('GetResult exploded:');
     logger.error(e);
     return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The test ID
+ * @param {String} options.user the user to check its completion status
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.setStatement = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+
+    if(participants.indexOf(options.user.data.username) !== -1){
+      body.data = await activity.setStatement(options.user.data.username, options.body);
+    }else{
+      if(study.owners.indexOf(options.user.data.username) !== -1){
+        if(participants.indexOf(options.postuser) !== -1){
+          body.data = await activity.setStatement(options.postuser, options.body);
+        }else{
+          body.status = 400;
+          body.data.message = 'The user you are trying to set statement to is not a participant';
+        }
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.NotImplemented = async (options) => {
+  let body = {
+    status: 501,
+    data: { message : "Not implemented" }
   }
 
   return body;

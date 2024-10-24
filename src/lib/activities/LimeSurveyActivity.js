@@ -43,12 +43,34 @@ class LimeSurveyActivity extends Activity {
 			this.extra_data.participants = [];
 		}
 
+		if(params.survey) {
+			let rawsurvey = params.survey;
+          	params.rawsurvey = btoa(rawsurvey);
+		}
 		if(params.rawsurvey){
 			this.rawsurvey = params.rawsurvey;
 		}else if(params.copysurvey){
 			this.copysurvey = params.copysurvey;
 		}
+		this.username = params.username;
 	}
+
+	async export(complete) {
+		let activity = super.export();
+		if(complete) {
+			try {
+				// Await the result of the survey export
+				const surveyResult = await controller.exportSurvey(this.extra_data.surveyId);
+				activity.survey = atob(surveyResult);
+				logger.info("LSS Export successful");
+			} catch (error) {
+				logger.error("LSS Export failed:", error);
+			}
+		} else {
+			activity.copysurvey = this.extra_data.surveyId;
+		}
+		return activity;
+	}	
 
 	static getType(){
 		return 'limesurvey';
@@ -95,17 +117,30 @@ class LimeSurveyActivity extends Activity {
 		}
 	}
 
+	patch(params) {
+		super.patch(params);
+		if(typeof params.copysurvey !== 'undefined') {
+			this.copysurvey = params.copysurvey;
+		}
+		if(typeof params.username !== 'undefined') {
+			this.username = params.username;
+		}
+	}
+	
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};
 		}
-
 		if(this.copysurvey){
 			this.extra_data.surveyId = await this.createSurveyById();
 			delete this.copysurvey;
 		}else if(this.rawsurvey){
-			this.extra_data.surveyId = await this.createSurveyByFile();
+			this.extra_data.surveyId = await this.createSurveyByFile();	
 			delete this.rawsurvey;
+		}
+		if(this.username) {
+			await this.setSurveyOwnerFromUsername(this.username);
+			delete this.username;
 		}
 
 		return await super.save();
@@ -153,20 +188,62 @@ class LimeSurveyActivity extends Activity {
 					async.waterfall([
 						controller.online,
 						controller.auth,
-						controller.create(this.rawsurvey),
+						controller.create(this.rawsurvey)
 					], function (err, result) {
-						
 						if(err){
 							reject(err);
 						}else{
 							resolve(result);
 						}
-
-						resolve(result);
 					});
 				}catch(exception){
 					logger.error(exception);
 				}
+			}
+		})
+	}
+
+	async setSurveyOwnerFromUsername(username) {
+		var userid = await this.getUserIdByUserName(username);
+		await this.setSurveyOwner(userid);
+	}
+
+	async getUserIdByUserName(username){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.getUserIdByUserName(username)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
+			}
+		})
+	}
+
+	async setSurveyOwner(userid){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.setSurveyOwner(this.extra_data.surveyId, userid)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
 			}
 		})
 	}
@@ -287,6 +364,9 @@ class LimeSurveyActivity extends Activity {
 
 	async getResults(participants, type){
 		return new Promise((resolve, reject) => {
+			if(type == "undefined") {
+				type = "full";
+			}
 			let list = {};
 			let s = this;
 

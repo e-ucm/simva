@@ -27,6 +27,13 @@ class ImsPackageActivity extends GameplayActivity {
 		}
 	}
 
+	async export(complete) {
+		let activity = super.export();
+		activity.tool = true;
+		activity.file_name = this.extra_data.file_name;
+		return activity;
+	}
+
 	toObject(){
 		var params = {};
 		for(var p in activityschema.properties){
@@ -59,6 +66,10 @@ class ImsPackageActivity extends GameplayActivity {
 
 	async load(){
 		return super.load();
+	}
+
+	patch(params) {
+		super.patch(params);
 	}
 
 	async save(){

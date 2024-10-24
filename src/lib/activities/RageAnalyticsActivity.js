@@ -66,6 +66,11 @@ class RageAnalyticsActivity extends Activity {
 			this.extra_data.participants = [];
 		}
 	}
+	
+	async export(complete) {
+		let activity = super.export();
+		return activity;
+	}
 
 	static getType(){
 		return 'rageanalytics';
@@ -98,7 +103,11 @@ class RageAnalyticsActivity extends Activity {
 			this.extra_data.participants = {};
 		}
 	}
-
+	
+	patch(params) {
+		super.patch(params);
+	}
+	
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};

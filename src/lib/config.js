@@ -66,6 +66,7 @@ config.limesurvey.url =  config.limesurvey.protocol + '://' + config.limesurvey.
 config.limesurvey.external_url = process.env.LIMESURVEY_EXTERNAL || config.limesurvey.url
 config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
+config.limesurvey.SECRET =  process.env.LIMESURVEY_SECRET || null
 
 config.sso = {}
 config.sso.enabled = process.env.SSO_ENABLED == 'true' || false
@@ -127,5 +128,11 @@ config.LTI.debug= process.env.LTI_DEBUG || false;
 
 config.storage = {}
 config.storage.path = process.env.SIMVA_STORAGE_PATH || 'storage/'
+
+config.hmac = {}
+config.hmac.password = process.env.HMAC_PASSWORD || 'mypassword'
+config.hmac.salt = process.env.HMAC_SALT || 'mysalt'
+config.hmac.key = process.env.HMAC_KEY || 'mykey'
+config.hmac.hmacKey = null
 
 module.exports = config;
