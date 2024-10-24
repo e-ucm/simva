@@ -604,7 +604,7 @@
         }
       }
     },
-    "/studies/{id}": {
+    "/studies/{studyid}": {
       "get": {
         "tags": [
           "admins",
@@ -699,7 +699,7 @@
         ]
       }
     },
-    "/studies/{id}/export": {
+    "/studies/{studyid}/export": {
       "get": {
         "tags": [
           "admins",
@@ -733,7 +733,7 @@
         ]
       }
     },
-    "/studies/{id}/events": {
+    "/studies/{studyid}/events": {
       "get": {
         "summary": "send Server Side Events to Client for this study",
         "operationId": "GetEvent",
@@ -756,7 +756,7 @@
         ]
       }
     },
-    "/studies/{id}/events/getPresignedUrl": {
+    "/studies/{studyid}/events/getPresignedUrl": {
       "get": {
         "tags": [
           "teachers"
@@ -782,7 +782,7 @@
         ]
       }
     },
-    "/studies/{id}/schedule": {
+    "/studies/{studyid}/schedule": {
       "get": {
         "tags": [
           "teachers",
@@ -828,7 +828,7 @@
         ]
       }
     },
-    "/studies/{id}/schedule/events": {
+    "/studies/{studyid}/schedule/events": {
       "get": {
         "summary": "send Server Side Events to Client for this study",
         "operationId": "GetEvent",
@@ -851,7 +851,7 @@
         ]
       }
     },
-    "/studies/{id}/schedule/events/getPresignedUrl": {
+    "/studies/{studyid}/schedule/events/getPresignedUrl": {
       "get": {
         "tags": [
           "teachers",
@@ -878,7 +878,7 @@
         ]
       }
     },
-    "/studies/{id}/groups": {
+    "/studies/{studyid}/groups": {
       "get": {
         "tags": [
           "teachers"
@@ -914,7 +914,7 @@
         ]
       }
     },
-    "/studies/{id}/tests": {
+    "/studies/{studyid}/tests": {
       "get": {
         "tags": [
           "teachers"
@@ -988,7 +988,7 @@
         }
       }
     },
-    "/studies/{id}/participants": {
+    "/studies/{studyid}/participants": {
       "get": {
         "tags": [
           "teachers"
@@ -1246,7 +1246,7 @@
         }
       }
     },
-    "/studies/{id}/allocator": {
+    "/studies/{studyid}/allocator": {
       "get": {
         "tags": [
           "teachers"

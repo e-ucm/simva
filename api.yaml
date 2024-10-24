@@ -400,7 +400,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/upload_file'
           description: Study to be created
-  /studies/{id}:
+  /studies/{studyid}:
     get:
       tags:
         - admins
@@ -461,7 +461,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/export:
+  /studies/{studyid}/export:
     get:
       tags:
         - admins
@@ -483,7 +483,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/events:
+  /studies/{studyid}/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -498,7 +498,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/events/getPresignedUrl:
+  /studies/{studyid}/events/getPresignedUrl:
     get:
       tags:
         - teachers
@@ -515,7 +515,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/schedule:
+  /studies/{studyid}/schedule:
     get:
       tags:
         - teachers
@@ -547,7 +547,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/schedule/events:
+  /studies/{studyid}/schedule/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -562,7 +562,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/schedule/events/getPresignedUrl:
+  /studies/{studyid}/schedule/events/getPresignedUrl:
     get:
       tags:
         - teachers
@@ -580,7 +580,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/groups:
+  /studies/{studyid}/groups:
     get:
       tags:
         - teachers
@@ -603,7 +603,7 @@ paths:
           description: 'Study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{id}/tests:
+  /studies/{studyid}/tests:
     get:
       tags:
         - teachers
@@ -650,7 +650,7 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         required: true
-  /studies/{id}/participants:
+  /studies/{studyid}/participants:
     get:
       tags:
         - teachers
@@ -809,7 +809,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activity'
-  /studies/{id}/allocator:
+  /studies/{studyid}/allocator:
     get:
       tags:
         - teachers
