@@ -1515,6 +1515,33 @@
         ]
       }
     },
+    "/activities/{id}/surveyowner": {
+      "patch": {
+        "tags": [
+          "admins",
+          "teachers"
+        ],
+        "summary": "update the survey owner for a Limesurvey activity",
+        "operationId": "updateSurveyOwner",
+        "description": "updateSurveyOwner\n",
+        "responses": {
+          "200": {
+            "description": "Survey Updated"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          }
+        ]
+      }
+    },
     "/activities/{id}/openable": {
       "get": {
         "tags": [
