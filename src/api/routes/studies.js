@@ -10,7 +10,7 @@ validator.addValidations('/studies', router);
 const Authenticator = require('../../lib/utils/authenticator');
 const logger = require('../../lib/logger');
 const config = require('../../lib/config');
-const { verifyMessage, createHMACKey } = require("../../lib/utils/hMacKey/crypto.js");
+const { verifyMessage, signMessage, createHMACKey } = require("../../lib/utils/hMacKey/crypto.js");
 
 initHmacKey();
 
@@ -174,7 +174,7 @@ router.get('/:id/schedule/events', async (req, res, next) => {
 
   const url = config.api.url + req.baseUrl + req.path;
   const query = req.query;
-  if(validateUrl(url, query)) {
+  if(validateUrl(url, query, config.hmac.hmacKey)) {
     let user = req.query.username;
     logger.info(user);
     var clientId = sseManager.addClient(req, res);
@@ -187,6 +187,26 @@ router.get('/:id/schedule/events', async (req, res, next) => {
     await studies.getStudyEvents(options);
   } else {
       return res.status(401).json({ message: 'Signature not valid' });
+  }
+});
+
+/**
+ * To get presigned url for schedule events
+ * 
+ */
+router.get('/:id/schedule/events/getPresignedUrl', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    username: req.user.data.username
+  };
+
+  try {
+      const url = `${config.api.url}/studies/${options.id}/schedule/events`;
+      const params={ username: options.username };
+      const result = await createUrl(url, params, config.hmac.hmacKey);
+      res.status(200).send(result.data);
+  } catch (err) {
+      next(err);
   }
 });
 
@@ -204,7 +224,7 @@ router.get('/:id/events', async (req, res, next) => {
 
   const url = config.api.url + req.baseUrl + req.path;
   const query = req.query;
-  if(validateUrl(url, query)) {
+  if(validateUrl(url, query, config.hmac.hmacKey)) {
     var clientId= sseManager.addClient(req, res);
     const options = {
         id: req.params['id'],
@@ -217,7 +237,26 @@ router.get('/:id/events', async (req, res, next) => {
   }
 });
 
-async function validateUrl(url, query) {
+/**
+ * To get presigned url for schedule events
+ * 
+ */
+router.get('/:id/events/getPresignedUrl', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id']
+  };
+
+  try {
+      const url = `${config.api.url}/studies/${options.id}/events`;
+      params={};
+      const result = await createUrl(url, params, config.hmac.hmacKey);
+      res.status(200).send(result.data);
+  } catch (err) {
+      next(err);
+  }
+});
+
+async function validateUrl(url, query, hmacKey) {
   const signature = query.signature;
   console.log(signature);
   var toSign=Object.entries(query)
@@ -227,16 +266,7 @@ async function validateUrl(url, query) {
           .join('\n');
   toSign= url + '\n' + toSign;
   console.log(toSign);
-  if(config.hmac.hmacKey == null) {
-      console.log("Initialized hmacKey");
-      config.hmac.hmacKey = (await createHMACKey(config.hmac.password
-        //, {
-        //  encodedSalt: config.hmac.salt,
-        //  encodedKey: config.hmac.key
-        //}
-      )).key;
-  }
-  if(verifyMessage(toSign, signature, config.hmac.hmacKey)) {
+  if(verifyMessage(toSign, signature, hmacKey)) {
     console.log("Valid signature !");
     return true;
   } else {
@@ -244,6 +274,34 @@ async function validateUrl(url, query) {
     return false;
   }
 };
+
+
+async function createUrl(url, mapParameters, hmacKey) {
+  const buffer = new Uint8Array(8);
+  crypto.getRandomValues(buffer);
+
+  mapParameters.ts = (new Date()).toISOString();
+  var toSign=Object.entries(mapParameters)
+          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Sort by keys
+          .map(([key, value]) => `${key}=${value}`)
+          .join('\n');
+  toSign=url + '\n' + toSign;
+  var signature;
+  try {
+     signature = await signMessage(toSign, hmacKey);
+  } catch(e) {
+      console.log(e);
+      signature = "TODO";
+  }
+  const queryString = Object.entries(mapParameters)
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Sort by keys
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+      url = url + `?${queryString}&signature=${signature}`;
+
+  return { data : {url : url} };
+}
+
 
 /**
  * Obtains the list of scheduled activities for the current
