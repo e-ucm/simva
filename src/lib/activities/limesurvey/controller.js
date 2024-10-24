@@ -244,7 +244,7 @@ function insert(survey) {
 
 
 /**
- * Insert survey
+ * export survey structure
  * @param survey
  */
 function exportSurvey(survey) {
@@ -276,6 +276,78 @@ function exportSurvey(survey) {
     });
 }
 
+/**
+ * Setting Survey Owner
+ * @param survey
+ * @param userid
+ */
+function setSurveyOwner(survey_id, user_id) {
+    return function(callback) {
+		Log('LimesurveyController.setSurveyOwner -> Started');
+		options.data = { method: 'set_survey_properties', params: [SESSIONKEY, survey_id, {"owner_id": user_id}], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				Log(response);
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('set_survey_properties', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+	
+				Log('LimesurveyController.setSurveyOwner -> Exported survey:');
+				LogMultiple({ result: body.result });
+				callback(null, body.result);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.setSurveyOwner -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error setSurveyOwner', error: error });  // reject promise on error
+			});
+	}
+}
+
+/**
+ * Get User Id from Users list 
+ */
+function getUserIdByUserName(username) {
+    return function(callback) {
+        Log('LimesurveyController.list_users -> Started');
+        options.data = { method: 'list_users', params: [SESSIONKEY], id: 1 };
+
+        axios(options)
+            .then(response => {
+				let body;
+                try {
+					body = response.data.result;
+					for(var i=0; i < body.length; i++) {
+						delete body[i].permissions;
+					}
+					Log(JSON.stringify(body));
+                    let user = body.find(obj => obj.users_name === username);
+					if(user == null) {
+						callback({message : "User not found in Limesurvey"}); 
+					} else {
+						Log("User :");
+						Log(JSON.stringify(user));
+						callback(null, user.uid);
+					}
+                } catch (error) {
+                    NotifyRCError('list_users', error, response, body, (err) => {
+                        return callback(err);  
+                    });
+                }
+            })
+            .catch(error => {
+                Log('LimesurveyController.list_users -> ERROR:');
+                LogMultiple({ error: error });
+                return callback({ message: 'Error list_users', error: error }); 
+            });
+    }
+}
 
 /**
  * Copy survey
@@ -1184,6 +1256,8 @@ module.exports = {
 	auth: auth,
 	insert: insert,
 	exportSurvey : exportSurvey,
+	getUserIdByUserName : getUserIdByUserName,
+	setSurveyOwner:setSurveyOwner,
 	copy: copy,
 	getSurvey: getSurvey,
 	getSurveyList: getSurveyList,

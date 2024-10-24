@@ -82,6 +82,7 @@ TestsController.importTest = async (test, rawTest, owner) => {
 	for(var i=0; i< rawTest.activities.length; i++) {
         var rawActivity = rawTest.activities[i];
         rawActivity.owners = [owner];
+		rawActivity.username = owner;
         rawActivity.test = test._id;
         await TestsController.addActivityToTest(test._id, rawActivity);
     }

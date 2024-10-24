@@ -52,6 +52,7 @@ class LimeSurveyActivity extends Activity {
 		}else if(params.copysurvey){
 			this.copysurvey = params.copysurvey;
 		}
+		this.username = params.username;
 	}
 
 	async export(complete) {
@@ -124,13 +125,17 @@ class LimeSurveyActivity extends Activity {
 		if(!this.extra_data){
 			this.extra_data = {};
 		}
-
 		if(this.copysurvey){
 			this.extra_data.surveyId = await this.createSurveyById();
 			delete this.copysurvey;
 		}else if(this.rawsurvey){
-			this.extra_data.surveyId = await this.createSurveyByFile();
+			this.extra_data.surveyId = await this.createSurveyByFile();	
 			delete this.rawsurvey;
+		}
+		if(this.username) {
+			var userid = await this.getUserIdByUserName();
+			await this.setSurveyOwner(userid);
+			delete this.username;
 		}
 
 		return await super.save();
@@ -178,20 +183,57 @@ class LimeSurveyActivity extends Activity {
 					async.waterfall([
 						controller.online,
 						controller.auth,
-						controller.create(this.rawsurvey),
+						controller.create(this.rawsurvey)
 					], function (err, result) {
-						
 						if(err){
 							reject(err);
 						}else{
 							resolve(result);
 						}
-
-						resolve(result);
 					});
 				}catch(exception){
 					logger.error(exception);
 				}
+			}
+		})
+	}
+
+	async getUserIdByUserName(){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.getUserIdByUserName(this.username)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
+			}
+		})
+	}
+
+	async setSurveyOwner(userid){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.setSurveyOwner(this.extra_data.surveyId, userid)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
 			}
 		})
 	}

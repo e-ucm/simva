@@ -493,6 +493,7 @@ router.post('/:studyid/tests/:testid/activities', Authenticator.auth, async (req
     testid: req.params['testid'],
     user: req.user
   };
+  options.body.username = req.user.data.username;
 
   try {
     const result = await studies.addActivityToTest(options);

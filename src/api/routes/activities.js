@@ -41,6 +41,7 @@ router.post('/', Authenticator.auth, async (req, res, next) => {
     body: req.body,
     files: req.files
   };
+  options.body.username = req.user.data.username;
 
   try {
     const result = await activities.addActivity(options);
