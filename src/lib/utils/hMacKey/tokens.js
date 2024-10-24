@@ -1,21 +1,27 @@
 const { signMessage, verifyMessage } = require("./crypto.js");
+const logger = require('../../logger.js');
 
 async function validateUrl(url, query, hmacKey) {
   const signature = query.signature;
-  console.log(signature);
+  logger.info(signature);
   var toSign=Object.entries(query)
           .filter(([key, value])=> key !== "signature")
           .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Sort by keys
           .map(([key, value]) => `${key}=${value}`)
           .join('\n');
   toSign= url + '\n' + toSign;
-  console.log(toSign);
-  if(verifyMessage(toSign, signature, hmacKey)) {
-    console.log("Valid signature !");
-    return true;
-  } else {
-    console.log("Invalid signature !");
-    return false;
+  logger.info(toSign);
+  try {
+    if(await verifyMessage(toSign, signature, hmacKey)) {
+      logger.info("Valid signature !");
+      return true;
+    } else {
+      logger.info("Invalid signature !");
+      return false;
+    }
+  } catch(e) {
+      logger.info(e);
+      return false;
   }
 };
 
@@ -34,7 +40,7 @@ async function createUrl(url, mapParameters, hmacKey) {
   try {
      signature = await signMessage(toSign, hmacKey);
   } catch(e) {
-      console.log(e);
+      logger.info(e);
       signature = "TODO";
   }
   const queryString = Object.entries(mapParameters)

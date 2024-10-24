@@ -14,15 +14,14 @@ const { createHMACKey } = require("../../lib/utils/hMacKey/crypto.js");
 const { validateUrl, createUrl } = require("../../lib/utils/hMacKey/tokens.js");
 
 initHmacKey();
-
 async function initHmacKey() {
-  console.log("Initialized hmacKey");
   config.hmac.hmacKey = (await createHMACKey(config.hmac.password
     //, {
     //  encodedSalt: config.hmac.salt,
     //  encodedKey: config.hmac.key
     //}
   )).key;
+  logger.info("Initialized hmacKey");
 }
 
 /**
@@ -167,27 +166,34 @@ router.get('/:studyid/schedule', Authenticator.auth, async (req, res, next) => {
  */
 router.get('/:studyid/schedule/events', async (req, res, next) => {
   // Extract the token from the query parameters
+  const ts = req.query.ts;
   const signature = req.query.signature;
-
   if (!signature) {
-      return res.status(401).json({ message: 'No signature provided' });
+    return res.status(401).json({ message: 'No signature provided' });
+  }
+  if (!ts) {
+    return res.status(401).json({ message: 'No timestamp provided' });
   }
 
   const url = config.api.url + req.baseUrl + req.path;
   const query = req.query;
-  if(validateUrl(url, query, config.hmac.hmacKey)) {
-    let user = req.query.username;
-    logger.info(user);
-    var clientId = sseManager.addClient(req, res);
-    const options = {
-        id: req.params['studyid'],
-        user: user,
-        userRole: "student",
-        clientId: clientId
-    };
-    await studies.getStudyEvents(options);
-  } else {
-      return res.status(401).json({ message: 'Signature not valid' });
+  try {
+    if(await validateUrl(url, query, config.hmac.hmacKey)) {
+      let user = req.query.username;
+      logger.info(user);
+      var clientId = sseManager.addClient(req, res);
+      const options = {
+          id: req.params['studyid'],
+          user: user,
+          userRole: "student",
+          clientId: clientId
+      };
+      await studies.getStudyEvents(options);
+    } else {
+        res.status(401).send({ message: 'Signature not valid' });
+    }
+  } catch (err) {
+      next(err);
   }
 });
 
@@ -217,24 +223,31 @@ router.get('/:studyid/schedule/events/getPresignedUrl', Authenticator.auth, asyn
  */
 router.get('/:studyid/events', async (req, res, next) => {
   // Extract the token from the query parameters
-  const signature = req.query.signature;
-
+  const ts = req.query.ts;
+  const signature = req.query.signature; 
   if (!signature) {
-      return res.status(401).json({ message: 'No signature provided' });
+    return res.status(401).json({ message: 'No signature provided' });
+  }
+  if (!ts) {
+    return res.status(401).json({ message: 'No timestamp provided' });
   }
 
   const url = config.api.url + req.baseUrl + req.path;
   const query = req.query;
-  if(validateUrl(url, query, config.hmac.hmacKey)) {
-    var clientId= sseManager.addClient(req, res);
-    const options = {
-        id: req.params['studyid'],
-        userRole: "teacher",
-        clientId: clientId
-    };
-    await studies.getStudyEvents(options);
-  } else {
-      return res.status(401).json({ message: 'Signature not valid' });
+  try {
+    if(await validateUrl(url, query, config.hmac.hmacKey)) {
+      var clientId= sseManager.addClient(req, res);
+      const options = {
+          id: req.params['studyid'],
+          userRole: "teacher",
+          clientId: clientId
+      };
+      await studies.getStudyEvents(options);
+    } else {
+      res.status(401).send({ message: 'Signature not valid' });
+    }
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -420,7 +433,7 @@ router.patch('/:studyid/tests/:testid', Authenticator.auth, async (req, res, nex
     user: req.user
   };
 
-  console.log(options);
+  logger.info(options);
 
   try {
     const result = await studies.updateTestName(options);
