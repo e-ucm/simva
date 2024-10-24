@@ -133,8 +133,7 @@ class LimeSurveyActivity extends Activity {
 			delete this.rawsurvey;
 		}
 		if(this.username) {
-			var userid = await this.getUserIdByUserName();
-			await this.setSurveyOwner(userid);
+			await this.setSurveyOwnerFromUsername(this.username);
 			delete this.username;
 		}
 
@@ -198,11 +197,16 @@ class LimeSurveyActivity extends Activity {
 		})
 	}
 
-	async getUserIdByUserName(){
+	async setSurveyOwnerFromUsername(username) {
+		var userid = await this.getUserIdByUserName(username);
+		await this.setSurveyOwner(userid);
+	}
+
+	async getUserIdByUserName(username){
 		return new Promise((resolve, reject) => {
 			try{
 				async.waterfall([
-					controller.getUserIdByUserName(this.username)
+					controller.getUserIdByUserName(username)
 				], function (err, result) {
 					if(err){
 						reject(err);

@@ -137,6 +137,36 @@ module.exports.updateActivity = async (options) => {
 
 /**
  * @param {Object} options
+ * @param {String} options.id The activity ID
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.updateSurveyOwner = async (options) => {
+  var result = { status: 200, data: {message: 'Activity updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var activity = await ActivitiesController.loadActivity(options.id);
+      if(activity !== null){
+        if(activity.type == "limesurvey"){
+          await activity.setSurveyOwnerFromUsername(options.user.data.username);
+          result.data = activity;
+        } else {
+          return result = { status: 404, data: { message: 'Activity is not a Limesurvey one.' } };
+       }
+      }else{
+         return result = { status: 404, data: { message: 'Unable to load activity.' } };
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
  * @param {String} options.id The test ID
  * @throws {Error}
  * @return {Promise}

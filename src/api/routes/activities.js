@@ -106,6 +106,25 @@ router.patch('/:id', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Updates survey owner of an existing Limesurvey activity
+ */
+router.patch('/:id/surveyowner', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user
+  };
+  
+  console.log(options);
+
+  try {
+    const result = await activities.updateSurveyOwner(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Deletes the specified activity
  * 
  */
