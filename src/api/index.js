@@ -47,11 +47,15 @@ db.once('open', function() {
   logger.debug('connected');
   const fs = require('fs');
 	const yaml = require('yaml');
-	const swaggerMongoose = require('swagger-mongoose');
+	const swaggeringMongoose = require('swaggering-mongoose');
 
 	const descriptor = yaml.parse(fs.readFileSync('./api.yaml', 'utf8'));
-	swaggerMongoose.compile(JSON.stringify(descriptor));
+	const { models, schemas } = swaggeringMongoose.compile(JSON.stringify(descriptor));
 
+  // Register the models
+  Object.entries(models).forEach(([modelName, model]) => {
+    mongoose.model(modelName, model.schema);
+  });
   createAdminUser();
   let StudiesController = require('../lib/studiescontroller');
   StudiesController.updateStudyIdInTestsAndActivitiesMigration().then(() => {

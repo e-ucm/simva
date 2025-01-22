@@ -2572,6 +2572,43 @@ components:
             example: ObjectId("5d07a0767c1405004bc702af")
         extra_data:
           type: object
+          properties:
+            surveyId:
+              type: string
+            surveyOwner:
+              type: string
+            language:
+              type: string
+            participants:
+              type: object
+            config:
+              type: object
+              properties:
+                trace_storage:
+                  type: string
+                  format: boolean
+                realtime:
+                  type: string
+                  format: boolean
+                backup:
+                  type: string
+                  format: boolean
+            miniotrace:
+              type: object
+              properties:
+                presignedUrl:
+                  type: string
+                generated_at:
+                  type: string
+                expire_on_seconds:
+                  type: string
+            user_managed: 
+              type: string
+              format: boolean
+            game_uri:
+              type: string
+            uri:
+              type: string
         active:
           type: string
           format: boolean
@@ -2640,6 +2677,10 @@ components:
           example: "manual, random, ponderated..."
         extra_data:
           type: object
+          allocations:
+            type: object
+            additionalProperties: 
+              type: string
         version:
           type: integer
           minimum: 0
@@ -2756,7 +2797,7 @@ components:
         file:
           type: string
           format: binary
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     events:
       required:
@@ -2768,7 +2809,7 @@ components:
           example: eventname
           description: |
             The event name.
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     add_group_body:
       required:
@@ -2784,7 +2825,7 @@ components:
             The amount of codes to be created
             randomly when the group is created
           example: 30
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     add_study_body:
       required:
@@ -2794,7 +2835,7 @@ components:
         name:
           type: string
           example: Name of the Study
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     add_study_to_group_body:
       required:
@@ -2804,7 +2845,7 @@ components:
         study:
           type: string
           example: 5d07a0767c1405004bc702af
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     add_group_to_study_body:
       required:
@@ -2814,7 +2855,7 @@ components:
         group:
           type: string
           example: 5d07a0767c1405004bc702af
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     login_body:
       required:
@@ -2828,7 +2869,7 @@ components:
         password:
           type: string
           example: Pass12345
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     lti_status:
       required:
@@ -2842,7 +2883,7 @@ components:
         password:
           type: boolean
           example: false
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
     link_accounts:
       required:
@@ -2859,7 +2900,7 @@ components:
         domain:
           type: string
           example: moodle_12321
-      x-swagger-mongoose:
+      x-swaggering-mongoose:
         exclude-schema: true
 #    lti_claims:
 #      type: object
@@ -2890,5 +2931,5 @@ components:
 #              "name": "SIMVA e-UCM"
 #            }
 #        }'
-#      x-swagger-mongoose:
+#      x-swaggering-mongoose:
 #        exclude-schema: true
