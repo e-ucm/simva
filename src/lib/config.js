@@ -20,7 +20,7 @@ config.api.adminUsername = process.env.ADMIN_USERNAME || 'admin'
 config.api.adminEmail = process.env.ADMIN_EMAIL || 'admin@simva.admin'
 config.api.adminPassword = process.env.ADMIN_PASSWORD || 'password'
 config.api.maxUploadFileSize = process.env.MAX_UPLOAD_FILE_SIZE || '33554432'
-config.api.profiling = process.env.ENABLE_DEBUG_PROFILING == "true" ? true : false
+config.api.profiling = process.env.ENABLE_DEBUG_PROFILING == "true" || false
 
 config.JWT = {}
 config.JWT.issuer = 'simva'
