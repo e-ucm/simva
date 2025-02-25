@@ -1,4 +1,4 @@
-FROM node:20.18.3-bullseye
+FROM node:22.14.0-bullseye
 
 # Install ca-certificates and update them
 RUN apt-get update && apt-get install -y --no-install-recommends \
