@@ -25,4 +25,4 @@ RUN mkdir -p /home/node/logs && chown -R node:node /home/node/logs
 # Make port 443 available to the world outside this container
 EXPOSE 443
 
-CMD [ "/app/docker-startup.sh" ]
+CMD [ "npm", "start" ]
