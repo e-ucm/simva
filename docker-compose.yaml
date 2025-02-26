@@ -12,48 +12,103 @@ networks:
 
 services:
   mongodb:
-    image: mongo:4.0
+    image: mongo:4.2.8
     volumes:
       - mongo_data:/data/db
     networks:
       - default
-    hostname: mongodb
+    hostname: mongodb.dev.test
     ports:
       - 27017:27017
 
   simva-api:
-    image: node:20
-    command: bash -c "cd /app && chmod +x docker-startup.sh && ./docker-startup.sh"
+    build: ./
+    command: [ "npm", "run", "dev" ]
     stdin_open: true
     tty: true
     environment:
-      EXTERNAL_URL: https://simva.e-ucm.es
-      MONGO_HOST: mongodb
-      MONGO_DB: /simva
-      KAFKA_HOST: kafka1
-      KAFKA_PORT: 9092
-      KAFKA_TOPIC: traces
-      MINIO_URL: https://minio.simva.e-ucm.es/
-      MINIO_BUCKET: datalake
-      LIMESURVEY_PROTOCOL: http
-      LIMESURVEY_HOST: limesurvey-dev
-      LIMESURVEY_PORT: 80
-      LIMESURVEY_EXTERNAL: https://limesurvey.simva.e-ucm.es/
-      LIMESURVEY_ADMIN_USER: admin
-      LIMESURVEY_ADMIN_PASSWORD: password
-      A2_HOST: a2
-      A2_PORT: 3000
-      A2_PROTOCOL: http
-      A2_ADMIN_USER: root
-      A2_ADMIN_PASSWORD: r0qha5N6e2u8bhbHkgiaWlbQ80usTBvp
-      A2_EXTERNAL: https://analytics.simva.e-ucm.es
+      #DEBUG
+      DEBUG: false
+      #NODE
+      NODE_ENV: development
       NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
-      SSO_ENABLED: "true"
-      SSO_PUBLIC_KEY: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl8J97hjtDV3TZuR+FEvK4StI2obCdBs36G6J8xvAPKkPlZSuUYNTGbjAWXb+zN5G5jGOAFk5pY03/BVIqdirtXc079sFCoHNprGKzNq79f7EGWOimor4N/b/DKqcZBCGpOMCowOkp+SoQi+3zU0BzaKygXQSqORDXj0w0CmWM4Q+1nCVrIj8JGMzH0/UeEWYWUum535M/urEqMfWfobXaWqK+kyVovRZNkTiljrs4ct0IyksBtAN205aeILcOGzjLSBjymcL3DZatJi/GB1pOAtT6xjxzCpBd8jAnXV4mnEdY25IB+QiujMeUIVs7IadXK9PCi5ju0ZbsnwmSgnv/QIDAQAB
-      SSO_ADMIN_USER: admin-simva
-      SSO_ADMIN_PASSWORD: simva-password
+      #EXTERNAL URL
+      EXTERNAL_URL: https://simva.dev.test
+      #SIMVA API (SELF)
+      SIMVA_API_HOST: simva-api.dev.test
+      SIMVA_API_PORT: 443
+      SIMVA_API_PROTOCOL: https
+      ADMIN_USERNAME: admin
+      ADMIN_EMAIL: admin@dev.test
+      ADMIN_PASSWORD: password
+      #MONGO DB
+      MONGO_HOST: mongodb.dev.test
+      MONGO_DB: /simva
+      LTI_MONGO_DB: /lti_simva
+      #KAFKA
+      KAFKA_HOST: kafka1.dev.test
+      KAFKA_PORT: 9092
+      #MINIO
+      MINIO_URL: https://minio.dev.test/
+      MINIO_API_URL: minio-api.dev.test
+      MINIO_SSL: true
+      MINIO_PORT: 443
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: secret
+      MINIO_BUCKET: traces
+      MINIO_TOPICS_DIR: kafka-topics
+      MINIO_TRACES_TOPIC: traces
+      MINIO_OUTPUTS_DIR: outputs
+      MINIO_TRACES_FILE: traces.json
+      MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME : 1h 
+      #LIMESURVEY
+      LIMESURVEY_HOST: limesurvey.external.test
+      LIMESURVEY_PROTOCOL: https
+      LIMESURVEY_PORT: 443
+      LIMESURVEY_EXTERNAL: https://limesurvey.dev.test/
+      LIMESURVEY_ADMIN_USER: admin
+      LIMESURVEY_ADMIN_PASSWORD: secret
+      #SSO KEYCLOAK
+      SSO_ENABLED: true
+      SSO_REALM: simva
+      SSO_CLIENT_ID: simva
+      SSO_CLIENT_SECRET: secret
+      SSO_STUDENT_ALLOWED_ROLE: true
+      SSO_TEACHING_ASSISTANT_ALLOWED_ROLE: true
+      SSO_TEACHER_ALLOWED_ROLE: true
+      SSO_RESEARCHER_ALLOWED_ROLE: true
+      SSO_SSL_REQUIRED: external
+      SSO_PUBLIC_CLIENT: false
+      SSO_HOST: sso.dev.test
+      SSO_PROTOCOL: https
+      SSO_PORT: 443
+      SSO_ADMIN_USER: administrator
+      SSO_ADMIN_PASSWORD: administrator
+      #A2
+      A2_HOST: a2
+      A2_PROTOCOL: http
+      A2_PORT: 3000
+      A2_ADMIN_USER: root
+      A2_ADMIN_PASSWORD: password
+      A2_EXTERNAL: https://analytics.dev.test
+      #ANALYTICS BACKEND
+      ANALYTICSBACKEND_API: /api/proxy/gleaner
+      #LTI
+      LTI_PLATFORM_CLIENT_ID: lti_platform
+      LTI_PLATFORM_SIGNING_KEY: secret
+      LTI_PLATFORM_DB_NAME: /lti_simva
+      LTI_PLATFORM_DB_USER:  root
+      LTI_PLATFORM_DB_PASSWORD: password
+      #STORAGE
+      SIMVA_STORAGE_PATH: /storage/
+      #SHLINK
+      SHLINK_SERVER_HOST: shlink.dev.test
+      SHLINK_PORT: 443
+      SHLINK_PROTOCOL: https
+      SHLINK_SERVER_API_KEY: password
     volumes:
-      - ./:/app
+      - ./:/home/node/app
+      - /home/node/app/node_modules #exclude node_modules 
     depends_on:
       - mongodb
     hostname: simva-api.dev.test
@@ -64,4 +119,4 @@ services:
     labels:
       traefik.enable: true
       traefik.port: 3000
-      traefik.frontend.rule: "Host:api.simva.e-ucm.es"
+      traefik.frontend.rule: Host:simva-api.dev.test
