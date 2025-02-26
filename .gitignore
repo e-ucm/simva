@@ -6,3 +6,4 @@ config-test.js
 *.log
 *.heapsnapshot
 *.crt
+!DemoCA.crt
