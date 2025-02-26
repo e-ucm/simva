@@ -27,11 +27,14 @@ services:
     stdin_open: true
     tty: true
     environment:
+      #LOG
+      LOG_LEVEL: "debug"
+      LOG_FOLDER: "/home/node/logs"
       #DEBUG
       DEBUG: false
       #NODE
       NODE_ENV: development
-      NODE_EXTRA_CA_CERTS: /app/DemoCA.crt
+      NODE_EXTRA_CA_CERTS: /home/node/app/DemoCA.crt
       #EXTERNAL URL
       EXTERNAL_URL: https://simva.dev.test
       #SIMVA API (SELF)
