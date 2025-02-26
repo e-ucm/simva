@@ -16,10 +16,8 @@ const pipelineAsync = promisify(pipeline);
 var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
-var RageAnalyticsActivity = require('./RageAnalyticsActivity');
 var generateStatementId = require('../utils/statementIdGenerator');
 
-//var RealtimeActivity = new RageAnalyticsActivity({});
 var TraceStorageActivity = new MinioActivity({});
 
 var UsersController = require('../userscontroller');
@@ -39,7 +37,6 @@ class GameplayActivity extends Activity {
 			if(!this.extra_data.config){
 				this.extra_data.config = {
 					trace_storage: false,
-					realtime: false,
 					backup: false
 				};
 			}
@@ -48,18 +45,12 @@ class GameplayActivity extends Activity {
 				this.extra_data.config.trace_storage = true;
 			}
 
-			if(params.realtime && params.realtime === true){
-				this.extra_data.config.realtime = true;
-				this.extra_data.analytics = {};
-			}
-
 			if(params.backup && params.backup === true){
 				this.extra_data.config.backup = true;
 			}
 
 			if(!this.extra_data.participants){
 				this.extra_data.participants = [];
-				this.extra_data.analytics = {};
 			}
 
 			if(params.game_uri){
@@ -76,7 +67,6 @@ class GameplayActivity extends Activity {
 		let activity = super.export();
 		activity.trace_storage = this.extra_data.config.trace_storage;
 		activity.backup = this.extra_data.config.backup;
-		//activity.realtime = this.extra_data.config.realtime;
 		activity.game_uri = this.extra_data.game_uri;
 		return activity;
 	}
@@ -94,7 +84,6 @@ class GameplayActivity extends Activity {
 	}
 
 	static async getUtils(username){
-		let autils = await RageAnalyticsActivity.getUtils(username);
 		let mutils = await MinioActivity.getUtils(username);
 
 		return {...autils, ...mutils};
@@ -103,8 +92,7 @@ class GameplayActivity extends Activity {
 	async getDetails(){
 		return {
 			backup: this.extra_data.config.backup,
-			trace_storage: this.extra_data.config.trace_storage,
-			realtime: this.extra_data.config.realtime
+			trace_storage: this.extra_data.config.trace_storage
 		};
 	}
 
@@ -124,12 +112,6 @@ class GameplayActivity extends Activity {
 			}
 			this.extra_data.config.trace_storage = params.trace_storage;
 		}
-		if(typeof params.realtime !==  'undefined') {
-			if(typeof params.realtime == "string") {
-				params.realtime = params.realtime === "true";
-			}
-			this.extra_data.config.realtime = params.realtime;
-		}
 		if(typeof params.backup !== 'undefined') {
 			if(typeof params.backup == "string") {
 				params.backup = params.backup === "true";
@@ -145,20 +127,9 @@ class GameplayActivity extends Activity {
 		if(!this.extra_data){
 			this.extra_data = {};
 		}
-
-		if(!this.id){
-			//if(this.extra_data.config.realtime){
-			//	this.extra_data.analytics = await RealtimeActivity.initAnalytics(this.owners[0], this.name);
-			//}
-		}
 		if(typeof this.extra_data.config.trace_storage !==  'undefined') {
 			if(typeof this.extra_data.config.trace_storage == "string") {
 				this.extra_data.config.trace_storage = this.extra_data.config.trace_storage === "true";
-			}
-		}
-		if(typeof this.extra_data.config.realtime !==  'undefined') {
-			if(typeof this.extra_data.config.realtime == "string") {
-				this.extra_data.config.realtime = this.extra_data.config.realtime === "true";
 			}
 		}
 		if(typeof this.extra_data.config.backup !== 'undefined') {
@@ -171,10 +142,6 @@ class GameplayActivity extends Activity {
 	}
 
 	async remove(){
-		//if(this.extra_data.config.realtime){
-		//	await RealtimeActivity.cleanAnalytics(this.extra_data.analytics);
-		//}
-
 		return await super.remove();
 	}
 
@@ -191,17 +158,11 @@ class GameplayActivity extends Activity {
 	}
 
 	async addParticipants(participants){
-		//if(this.extra_data.config.realtime){
-		//	this.extra_data.analytics = await RealtimeActivity.addParticipantsToAnalytics(participants, this.extra_data.analytics);
-		//}
 
 		return await super.addParticipants(participants);
 	}
 
 	async removeParticipants(participants){
-		//if(this.extra_data.config.realtime){
-		//	this.extra_data.analytics = await RealtimeActivity.removeParticipantsFromAnalytics(participants, this.extra_data.analytics);
-		//}
 
 		return await super.removeParticipants(participants);
 	}
@@ -323,19 +284,14 @@ class GameplayActivity extends Activity {
 		try{
 			if(Array.isArray(result)){
  				// If we're receiving an array, we're receiving traces
-				if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
-					if(this.extra_data.config.trace_storage){
-						var traces= [];
-						for(let traceId = 0; traceId < result.length; traceId++) {
-							var trace = result[traceId];
-							await this.sendProgressOrCompletionOfGame(trace, participant);
-							traces.push(this.updateMissingTraceElements(participant, trace));
-						}
-						await TraceStorageActivity.sendTracesToKafka(traces, this.id);
+				if(this.extra_data.config.trace_storage){
+					var traces= [];
+					for(let traceId = 0; traceId < result.length; traceId++) {
+						var trace = result[traceId];
+						await this.sendProgressOrCompletionOfGame(trace, participant);
+						traces.push(this.updateMissingTraceElements(participant, trace));
 					}
-					//if(this.extra_data.config.realtime){
-					//	await RealtimeActivity.sendTracesToAnalytics(participant, this.extra_data.analytics, result)
-					//}
+					await TraceStorageActivity.sendTracesToKafka(traces, this.id);
 					toret =  { message: 'Traces Received' };
 				}else{
 					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
@@ -350,7 +306,7 @@ class GameplayActivity extends Activity {
 						throw { message: 'Backup is not enabled for this activity' };
 					}
 				} else {
-					if(this.extra_data.config.trace_storage || this.extra_data.config.realtime){
+					if(this.extra_data.config.trace_storage){
 						toret = { 
 							actor: {
 								account: { homePage: config.external_url, name: participant },
@@ -379,31 +335,13 @@ class GameplayActivity extends Activity {
 	async getResults(participants, type){
 		let results = {};
 
-		/* ########## DISABLED TRACE STORAGE DOWNLOAD ##########
-		if(this.extra_data.config.trace_storage && !participants && (!Array.isArray(participants) || participants.length == 0))
-		{
-			return await GameplayActivity.getTracesFromZip(this.id, this.token, this.res);
-		}*/
-
-		/* ########## DISABLED REALTIME ##########
-		let analyticsresults = {};
-		if(this.extra_data.config.realtime){
-			analyticsresults = await RealtimeActivity.getAnalyticsResults(participants, this.extra_data.analytics);
-		}*/
-
 		let backupresults = await this.loadBackups(participants);
 		participants = Object.keys(backupresults);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
 			results[participants[i]] = null;
-			if( //(this.extra_data.config.realtime && analyticsresults[participants[i]] !== null) ||
-				(this.extra_data.config.backup && backupresults[participants[i]] !== null) ){
+			if( (this.extra_data.config.backup && backupresults[participants[i]] !== null) ){
 				results[participants[i]] = null;
-
-				/* ########## DISABLED REALTIME ##########
-				if(this.extra_data.config.realtime){
-					results[participants[i]].realtime = analyticsresults[participants[i]];
-				}*/
 
 				if(this.extra_data.config.backup){
 					results[participants[i]] = backupresults[participants[i]];
@@ -547,10 +485,10 @@ class GameplayActivity extends Activity {
 				res
 			);
 	
-			logger.info('Pipeline completada con éxito.');
+			logger.info('Pipeline completed successfully.');
 	
 		} catch (error) {
-			logger.error("Error al procesar el archivo ZIP:", error);
+			logger.error("Error processesing ZIP:" + error);
 			res.status(500).send({ error: error.message });
 		}
 	}
@@ -614,18 +552,10 @@ class GameplayActivity extends Activity {
 		let completion = {};
 
 		let basecompletion = await super.getCompletion(participants);
-		let analyticscompletion = {};
-
-		//if(this.extra_data.config.realtime){
-		//	analyticscompletion = await RealtimeActivity.getAnalyticsCompletion(participants, this.extra_data.analytics);
-		//}
 
 		participants = Object.keys(basecompletion);
 
 		for (var i = participants.length - 1; i >= 0; i--) {
-			//if(this.extra_data.config.realtime){
-			//	completion[participants[i]] = analyticscompletion[participants[i]];
-			//}
 
 			completion[participants[i]] = completion[participants[i]] || basecompletion[participants[i]];
 		}
@@ -717,23 +647,6 @@ class GameplayActivity extends Activity {
 	getCodeFromError(error) {
 		return error.substr(3, error.indexOf('<<')-3);
 	}
-
-
-	// ##########################################
-	// Minio
-	// ##########################################
-	//static async initializeMinioClient(access_token, ca_file = "") {
-	//	var utils = await GameplayActivity.getUtils("");
-	//	var temporaryCredentials = await GameplayActivity.getTemporaryCredentials(utils.minio_url, access_token, ca_file);
-	//	var minioClient = new Minio.Client({
-	//		endPoint: new URL(utils.minio_url).hostname,
-	//		useSSL: true,
-	//		accessKey: temporaryCredentials.access_key_id,
-	//		secretKey: temporaryCredentials.secret_access_key,
-	//		sessionToken: temporaryCredentials.session_token
-	//	});
-	//	return minioClient;
-	//}
 
 	initializeMinioClient() {
 		logger.info("MinioClient");
