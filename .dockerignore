@@ -2,3 +2,5 @@ node_modules
 .github
 Dockerfile
 .dockerignore
+*.heapsnapshot
+*.log
