@@ -214,7 +214,10 @@ class Activity {
 			try{
 				let savefile = function(){
 					let fullname = config.storage.path + activity._id + '/' + filename;
-					fs.writeFile(fullname, content, function(error) {
+
+                	// Ensure content ends with a newline character
+                	let contentWithNewline = content.endsWith('\n') ? content : content + '\n';
+					fs.appendFile(fullname, contentWithNewline, function(error) {
 						if(error) {
 							reject({ message: 'Unable to save file: "' + fullname + '".', error: error})
 						}else{
