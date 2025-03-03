@@ -38,17 +38,46 @@ class LimeSurveyActivity extends Activity {
 
 	constructor(params){
 		super(params);
-
+		
+		if(!this.extra_data){
+			this.extra_data = {};
+		}
 		if(!this.extra_data.participants){
 			this.extra_data.participants = [];
 		}
 
+		if(params.survey) {
+			let rawsurvey = params.survey;
+          	params.rawsurvey = btoa(rawsurvey);
+		}
 		if(params.rawsurvey){
 			this.rawsurvey = params.rawsurvey;
 		}else if(params.copysurvey){
 			this.copysurvey = params.copysurvey;
 		}
+		this.username = params.username;
+		if(params.language){
+			this.extra_data.language = params.language;
+		}
 	}
+
+	async export(complete) {
+		let activity = super.export();
+		if(complete) {
+			try {
+				// Await the result of the survey export
+				const surveyResult = await controller.exportSurvey(this.extra_data.surveyId);
+				activity.survey = atob(surveyResult);
+				logger.info("LSS Export successful");
+			} catch (error) {
+				logger.error("LSS Export failed:", error);
+			}
+		} else {
+			activity.copysurvey = this.extra_data.surveyId;
+		}
+		activity.language = this.extra_data.language;
+		return activity;
+	}	
 
 	static getType(){
 		return 'limesurvey';
@@ -95,17 +124,43 @@ class LimeSurveyActivity extends Activity {
 		}
 	}
 
+	patch(params) {
+		super.patch(params);
+		if(!this.extra_data) {
+			this.extra_data = {};
+		}
+		if(typeof params.copysurvey !== 'undefined') {
+			this.copysurvey = params.copysurvey;
+		}
+		if(typeof params.username !== 'undefined') {
+			this.username = params.username;
+		}
+		if(typeof params.language !== 'undefined') {
+			this.extra_data.language = params.language;
+		}
+	}
+	
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};
 		}
-
 		if(this.copysurvey){
 			this.extra_data.surveyId = await this.createSurveyById();
 			delete this.copysurvey;
 		}else if(this.rawsurvey){
-			this.extra_data.surveyId = await this.createSurveyByFile();
+			this.extra_data.surveyId = await this.createSurveyByFile();	
 			delete this.rawsurvey;
+		}
+		if(!this.extra_data.language) {
+			this.extra_data.language = (await this.getSurveyLanguages()).default;
+		}
+		if(this.username) {
+			try {
+				await this.setSurveyOwnerFromUsername(this.username);
+			} catch(e) {
+				logger.info(e);
+			}
+			delete this.username;
 		}
 
 		return await super.save();
@@ -153,20 +208,110 @@ class LimeSurveyActivity extends Activity {
 					async.waterfall([
 						controller.online,
 						controller.auth,
-						controller.create(this.rawsurvey),
+						controller.create(this.rawsurvey)
 					], function (err, result) {
-						
 						if(err){
 							reject(err);
 						}else{
 							resolve(result);
 						}
-
-						resolve(result);
 					});
 				}catch(exception){
 					logger.error(exception);
 				}
+			}
+		})
+	}
+
+	async setSurveyOwnerFromUsername(username) {
+		let isOwner=await this.isUserOwnerOfSurvey(username);
+		if(!isOwner) {
+			var userid = await this.getUserIdByUserName(username);
+			await this.setSurveyOwner(userid);
+			this.extra_data.surveyOwner = username;
+			this.save();
+		}
+	}
+
+	async getUserIdByUserName(username){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.getUserIdByUserName(username)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
+			}
+		})
+	}
+
+	
+	async isUserOwnerOfSurvey(username){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.isUserOwnerOfSurvey(this.extra_data.surveyId, username)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result.isOwner);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
+			}
+		})
+	}
+
+	async setSurveyOwner(userid){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.setSurveyOwner(this.extra_data.surveyId, userid)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
+			}
+		})
+	}
+
+	async getSurveyLanguages(){
+		return new Promise((resolve, reject) => {
+			try{
+				async.waterfall([
+					controller.online,
+					controller.auth,
+					controller.getSurveyLanguages(this.extra_data.surveyId)
+				], function (err, result) {
+					if(err){
+						reject(err);
+					}else{
+						resolve(result);
+					}
+
+					resolve(result);
+				});
+			}catch(exception){
+				logger.error(exception);
 			}
 		})
 	}
@@ -287,6 +432,9 @@ class LimeSurveyActivity extends Activity {
 
 	async getResults(participants, type){
 		return new Promise((resolve, reject) => {
+			if(type == "undefined") {
+				type = "full";
+			}
 			let list = {};
 			let s = this;
 
@@ -305,7 +453,7 @@ class LimeSurveyActivity extends Activity {
 				async.waterfall([
 					controller.online,
 					controller.auth,
-					controller.getResponses(s.extra_data.surveyId, participants, type),
+					controller.getResponses(s.extra_data.surveyId, s.extra_data.language, participants, type),
 				], function (err, responses) {
 					if(err){
 						reject(err);
@@ -325,7 +473,7 @@ class LimeSurveyActivity extends Activity {
 				async.waterfall([
 					controller.online,
 					controller.auth,
-					controller.getResponseByToken(s.extra_data.surveyId,participants[0], type)
+					controller.getResponseByToken(s.extra_data.surveyId,s.extra_data.language,participants[0], type)
 				], function (err, response) {
 					if(err){
 						reject(err);
@@ -392,8 +540,11 @@ class LimeSurveyActivity extends Activity {
 		if(this.extra_data && this.extra_data.surveyId){
 			for (let i = 0; i < participants.length; i++) {
 				targets[participants[i]] = config.limesurvey.external_url + this.extra_data.surveyId + '?token=' + participants[i];
+				if(this.extra_data.language) {
+					targets[participants[i]]+='&lang=' + this.extra_data.language;
+				}
 			}
-		}else{
+		} else {
 			return false;
 		}
 

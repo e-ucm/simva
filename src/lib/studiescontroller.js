@@ -8,6 +8,8 @@ var AllocatorsController = require('./allocatorscontroller');
 var GroupsController = require('./groupscontroller');
 var TestsController = require('./testscontroller');
 const { groupBy } = require('async');
+const ActivitiesController = require('./activitiescontroller');
+const config=require("./config");
 
 if(!Array.prototype.flat){
 	Object.defineProperty(Array.prototype, 'flat', {
@@ -23,6 +25,81 @@ StudiesController.getStudies = async (params) => {
 	var res = await mongoose.model('study').find(params);
 
 	return res;
+};
+
+StudiesController.updateStudyIdInTestsAndActivitiesMigration = async () => {
+	let studies = await StudiesController.getStudies();
+	for(let i=0; i < studies.length; i++) {
+		let study = studies[i];
+		let studyid = study._id.toString();
+		logger.info("Study : " + studyid);
+		try {
+			let updateStudy=false;
+			if(study.version && study.version === 1) {
+				logger.info("Study already updated.");
+			} else {
+				study.version = 1;
+				study.active = false;
+				updateStudy=true;
+			}
+			if(study.shlink && study.shlink.domain === config.shlink.apihost) {
+				logger.info("Study shlink domain ok.");
+			} else {
+				study.shlink=null;
+				updateStudy=true;
+			}
+			if(updateStudy) {
+				await StudiesController.updateStudy(studyid, study);
+			}
+		} catch(e) {
+			logger.error("Error updating study");
+		}
+		for(let j=0; j < study.tests.length; j++) {
+			let testid = study.tests[j];
+			logger.info("Test : " + testid);
+			let test = await TestsController.getTest(testid);
+			delete test.id;
+			if(test.study !== "") {
+				logger.info("StudyId already present in test.");
+			} else {
+				test.study = studyid;
+				await test.save();
+				logger.info("Test saved");
+			}
+			for(let k=0; k < test.activities.length; k++) {
+				let activityid = test.activities[k];
+				logger.info("Activity : " + activityid);
+				let activity = await ActivitiesController.loadActivity(activityid);
+				if(activity.type == "limesurvey" && activity.extra_data && !activity.extra_data.language) {
+					if(activity.study !== "") {
+						logger.info("StudyId already present in activity.");
+					} else {
+						activity.study = studyid;
+					}
+					await activity.save();
+					logger.info("Language in limesurvey activity saved");
+				} else if(activity.type == "gameplay"
+					&& activity.extra_data && activity.extra_data.config
+					&& (typeof activity.extra_data.config.trace_storage == "string" || typeof activity.extra_data.config.realtime == "string"  || typeof activity.extra_data.config.backup == "string")) {
+					if(activity.study !== "") {
+						logger.info("StudyId already present in activity.");
+					} else {
+						activity.study = studyid;
+					}
+					await activity.save();
+					logger.info("Fix config extra_data in gameplay activity saved");
+				} else {
+					if(activity.study !== "") {
+						logger.info("StudyId already present in activity.");
+					} else {
+						activity.study = studyid;
+						await activity.save();
+						logger.info("Activity saved");
+					}
+				}
+			}
+		}
+	}
 };
 
 StudiesController.getStudy = async (id) => {
@@ -51,18 +128,18 @@ StudiesController.updateStudy = async (id, study) => {
 
 		var old = await mongoose.model('study').findOne({_id: id});
 
-		if(!old){
+		if(!old) {
 			throw {message: 'Unable to load the study to update.'};
 		}
 
 		let testsdeleted = old.tests.filter(x => !study.tests.includes(x));
 		let testsadded = study.tests.filter(x => !old.tests.includes(x));
 
-		if(testsadded.length > 0){
+		if(testsadded.length > 0) {
 			throw { message: 'Tests can be added through PUT interface, use POST /study/:id/tests' };
 		}
 
-		if(testsdeleted.length > 0){
+		if(testsdeleted.length > 0) {
 			for (var i = 0; i < testsdeleted.length; i++) {
 				await TestsController.deleteTest(testsdeleted[i]);
 			}
@@ -127,7 +204,9 @@ StudiesController.updateStudy = async (id, study) => {
 					alloc=[]
 					for (var j = 0; j < allocation.length; j++) {
 						var gr=await GroupsController.getGroup(allocation[j]);
-						alloc=alloc.concat(gr.participants);
+						if(gr != null)  {
+							alloc=alloc.concat(gr.participants);
+						}
 					}
 					allocation=alloc;
 				} else {
@@ -183,17 +262,43 @@ StudiesController.getParticipants = async (study) => {
 	return participants;
 }
 
+StudiesController.removeOwners = async (study, owners) => {
+	for (var i = 0; i < study.tests.length; i++) {
+		await TestsController.removeOwners(study.tests[i], owners);
+	}
+	return true;
+}
+
+StudiesController.addOwners = async (study, owners) => {
+	for (var i = 0; i < study.tests.length; i++) {
+		await TestsController.addOwners(study.tests[i], owners);
+	}
+	return true;
+}
+
 StudiesController.addParticipants = async (study, participants) => {
+	let allocator=await AllocatorsController.loadAllocator(study.allocator);
 	for (var i = study.tests.length - 1; i >= 0; i--) {
-		await TestsController.addParticipants(study.tests[i], participants);
+		let testid = study.tests[i];
+		let allocation=await allocator.getAllocatedForTest(testid);
+		let participantsToAdd = allocation.filter(x => participants.includes(x));
+		logger.info(`Test : ${testid}`);
+		logger.info(participantsToAdd);
+		await TestsController.addParticipants(testid, participantsToAdd);
 	}
 
 	return true;
 }
 
 StudiesController.removeParticipants = async (study, participants) => {
+	let allocator=await AllocatorsController.loadAllocator(study.allocator);
 	for (var i = study.tests.length - 1; i >= 0; i--) {
-		await TestsController.removeParticipants(study.tests[i], participants);
+		let testid = study.tests[i];
+		let allocation=await allocator.getAllocatedForTest(testid);
+		let participantsToRemove = participants.filter(x => ! allocation.includes(x));
+		logger.info(`Test : ${testid}`);
+		logger.info(participantsToRemove);
+		await TestsController.removeParticipants(testid, participantsToRemove);
 	}
 
 	return true;
@@ -205,6 +310,17 @@ StudiesController.addGroupToStudy = async (id, groupid) => {
 	//UpdateParticipants for all tests
 
 	var result = await Study.findOneAndUpdate({ _id: id }, { "$push": { groups: groupid} });
+
+	return result.ok > 0;
+}
+
+
+StudiesController.removeGroupToStudy = async (id, groupid) => {
+	var Study = mongoose.model('study');
+
+	//UpdateParticipants for all tests
+
+	var result = await Study.findOneAndUpdate({ _id: id }, { "$pull": { groups: groupid} });
 
 	return result.ok > 0;
 }
@@ -227,7 +343,6 @@ StudiesController.deleteStudy = async (id, study) => {
 
 StudiesController.addTestToStudy = async (id, params) => {
 	let Study = mongoose.model('study');
-
 	let test = await TestsController.addTest(params);
 
 	let result = await Study.updateOne({ _id: id }, { "$push": { tests: test._id} });
@@ -236,12 +351,43 @@ StudiesController.addTestToStudy = async (id, params) => {
 		throw {message: 'There was an error in the study.'};
 	}
 
-	//if(test.activities.length > 0){
-	//	let study = await StudiesController.getStudy(id);
-	//	await TestsController.addParticipants(test._id, StudiesController.getParticipants(study));
-	//}
-
+	if(params.from) {
+		let prevtest = await TestsController.getTest(params.from);
+		let testToCopy = await TestsController.getTestExport(prevtest, false);
+		test.study = id;
+		test = await TestsController.importTest(test, testToCopy, params.owner);
+	}
 	return test;
 }
+
+StudiesController.getActivitiesInStudy = async (id) => {
+	let study = await StudiesController.getStudy(id);
+	var tests = await TestsController.getTests({"_id" : {"$in" : study.tests}});
+	var activities = [];
+	for(var i=0; i< tests.length; i++)  {
+		for(var j=0; j< tests[i].activities.length; j++)  {
+			activities.push(tests[i].activities[j]);
+		}
+	}
+	var activitiesObject = await ActivitiesController.getActivities({"_id" : {"$in" : activities}});
+	return activitiesObject;
+}
+
+
+StudiesController.getStudyExport = async (id) => {
+	let study = await StudiesController.getStudy(id);
+	let exportedStudyTest = await TestsController.getTests({"_id" : {"$in" : study.tests}});
+	let exportedTests = [];
+	for(var i=0; i< exportedStudyTest.length; i++)  {
+		exportedTests.push(await TestsController.getTestExport(exportedStudyTest[i], true));
+	}
+	let studyExport = {
+		name : study.name,
+		owners : study.owners,
+		tests : exportedTests
+	};
+	return studyExport;
+}
+
 
 module.exports = StudiesController;

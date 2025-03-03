@@ -242,6 +242,154 @@ function insert(survey) {
 	}
 }
 
+
+/**
+ * export survey structure
+ * @param survey
+ */
+function exportSurvey(survey) {
+    return new Promise((resolve, reject) => {
+        Log('LimesurveyController.export -> Started');
+        options.data = { method: 'export_survey_structure', params: [SESSIONKEY, survey], id: 1 };
+
+        axios(options)
+            .then(response => {
+                Log(response);
+                let body;
+                try {
+                    body = response.data;
+                } catch (error) {
+                    NotifyRCError('export_survey_structure', error, response, body, (err) => {
+                        return reject(err);  // reject promise on error
+                    });
+                }
+
+                Log('LimesurveyController.export -> Exported survey:');
+                LogMultiple({ result: body.result });
+                resolve(body.result);  // resolve the promise with the result
+            })
+            .catch(error => {
+                Log('LimesurveyController.export -> ERROR:');
+                LogMultiple({ error: error });
+                reject({ message: 'Error exporting', error: error });  // reject promise on error
+            });
+    });
+}
+
+/**
+ * Setting Survey Owner
+ * @param survey
+ * @param userid
+ */
+function setSurveyOwner(survey_id, user_id) {
+    return function(callback) {
+		Log('LimesurveyController.setSurveyOwner -> Started');
+		options.data = { method: 'set_survey_properties', params: [SESSIONKEY, survey_id, {"owner_id": user_id}], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				Log(response);
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('set_survey_properties', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+	
+				Log('LimesurveyController.setSurveyOwner -> Exported survey:');
+				LogMultiple({ result: body.result });
+				callback(null, body.result);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.setSurveyOwner -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error setSurveyOwner', error: error });  // reject promise on error
+			});
+	}
+}
+
+/**
+ * Get User Id from Users list 
+ */
+function getSurveyLanguages(surveyid) {
+    return function(callback) {
+        Log('LimesurveyController.get_language_properties -> Started');
+        options.data = { method: 'get_survey_properties', params: [SESSIONKEY, surveyid], id: 1 };
+
+        axios(options)
+            .then(response => {
+				let body;
+                try {
+					body = response.data.result;
+					if(body == null) {
+						callback({message : "Languages not found in Limesurvey"}); 
+					} else {
+						Log("LimesurveyController.get_language_properties -> Languages :");
+						Log(body.language);
+						Log(body.additional_languages);
+						let lang = { default : body.language, list : [] }
+						lang.list.push(body.language);
+						if(body.additional_languages) {
+							let additional_languages = body.additional_languages.split(" ");
+							lang.list.push(...additional_languages);
+						}
+						callback(null, lang);
+					}
+                } catch (error) {
+                    NotifyRCError('get_language_properties', error, response, body, (err) => {
+                        return callback(err);  
+                    });
+                }
+            })
+            .catch(error => {
+                Log('LimesurveyController.get_language_properties -> ERROR:');
+                LogMultiple({ error: error });
+                return callback({ message: 'Error get_language_properties', error: error }); 
+            });
+    }
+}
+
+/**
+ * Get User Id from Users list 
+ */
+function getUserIdByUserName(username) {
+    return function(callback) {
+        Log('LimesurveyController.list_users -> Started');
+        options.data = { method: 'list_users', params: [SESSIONKEY], id: 1 };
+
+        axios(options)
+            .then(response => {
+				let body;
+                try {
+					body = response.data.result;
+					for(var i=0; i < body.length; i++) {
+						delete body[i].permissions;
+					}
+					Log(JSON.stringify(body));
+                    let user = body.find(obj => obj.users_name === username);
+					if(user == null) {
+						callback({message : "User not found in Limesurvey"}); 
+					} else {
+						Log("User :");
+						Log(JSON.stringify(user));
+						callback(null, user.uid);
+					}
+                } catch (error) {
+                    NotifyRCError('list_users', error, response, body, (err) => {
+                        return callback(err);  
+                    });
+                }
+            })
+            .catch(error => {
+                Log('LimesurveyController.list_users -> ERROR:');
+                LogMultiple({ error: error });
+                return callback({ message: 'Error list_users', error: error }); 
+            });
+    }
+}
+
 /**
  * Copy survey
  * @param survey
@@ -400,6 +548,45 @@ function getSurveysFromUser(username) {
 				});
 		}catch(e){
 			LogBigError('getSurveysFromUser', e, callback);
+		}
+	}
+}
+
+/**
+ * isUserOwnerOfSurveyt
+ * @param sid
+ * @param username
+ */
+function isUserOwnerOfSurvey(surveyid, username) {
+	return function(callback) {
+		try{
+			Log('LimesurveyController.isUserOwnerOfSurvey -> Started');
+			options.data = {method:'list_surveys',params:[SESSIONKEY, username],id:1};
+
+			axios(options).then(response => {
+				let body;
+				let result={ isOwner : false };
+					try{
+						body=response.data;
+						let surveylist = body.result;
+						for(let i=0; i< surveylist.length;i++) {
+							let survey=surveylist[i];
+							if(survey.sid == surveyid) {
+								result.isOwner = true;
+							}
+						}
+					}catch(error){
+						return NotifyRCError('isUserOwnerOfSurvey', error, response, body, callback);
+					}
+
+					callback(null, result);
+				}).catch(error => {
+					Log('LimesurveyController.isUserOwnerOfSurvey -> error obtaining the list of surveys');
+					LogMultiple({error: error});
+					callback({ message: 'Error obtaining survey list from Limesurvey', error: error });
+				});
+		}catch(e){
+			LogBigError('isUserOwnerOfSurvey', e, callback);
 		}
 	}
 }
@@ -632,7 +819,7 @@ function getResponseId(sid, token, rid){
  * @param sid
  * @param r 
  */
-function getResponses(sid, participants, type){
+function getResponses(sid, language, participants, type){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponses -> Started');
@@ -651,7 +838,7 @@ function getResponses(sid, participants, type){
 								sid,
 								'json',
 								participant,
-								null,
+								language,
 								'all',
 								headingType,
 								responseType
@@ -952,7 +1139,7 @@ function tokenHasCompleted(survey, token, rid){
  * @param token
  * @param rid 
  */
-function getResponseByToken(survey, token, type){
+function getResponseByToken(survey, language, token, type){
 	return function(callback){
 		try{
 			Log('LimesurveyController.getResponseByToken -> Started');
@@ -969,7 +1156,7 @@ function getResponseByToken(survey, token, type){
 					survey,             // Survey ID
 					'json',          // Document Type (e.g., json, pdf, csv)
 					token, 			 // token for which responses needed
-					null,            // Language code (skip by setting null or omit)
+					language,        // Language code (skip by setting null or omit)
 					'all', 		     // Completion Status (optional)
 					headingType,     // Heading Type (optional)
 					responseType    // Response Type (optional)
@@ -1148,6 +1335,10 @@ module.exports = {
 	online: online,
 	auth: auth,
 	insert: insert,
+	exportSurvey : exportSurvey,
+	getUserIdByUserName : getUserIdByUserName,
+	setSurveyOwner:setSurveyOwner,
+	isUserOwnerOfSurvey:isUserOwnerOfSurvey,
 	copy: copy,
 	getSurvey: getSurvey,
 	getSurveyList: getSurveyList,
@@ -1164,5 +1355,6 @@ module.exports = {
 	getResponseByToken: getResponseByToken,
 	startTokensSurvey: startTokensSurvey,
 	addParticipants: addParticipants,
-	delParticipants: delParticipants
+	delParticipants: delParticipants,
+	getSurveyLanguages: getSurveyLanguages
 }

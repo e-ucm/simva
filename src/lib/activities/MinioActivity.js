@@ -1,33 +1,18 @@
 const logger = require('../logger');
-const { v4: uuidv4 } = require('uuid');
-const {ScalableBloomFilter} = require('bloom-filters')
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
 
-// by default it creates an ideally scalable bloom filter for 8 elements with an error rate of 0.01 and a load factor of 0.5
-const filter = new ScalableBloomFilter()
+var generateStatementId = require('../utils/statementIdGenerator');
 
 var Activity = require('./activity');
 
 var config = require('../config');
 
-var kafka = require('kafka-node'),
-    HighLevelProducer = kafka.HighLevelProducer,
-    KeyedMessage = kafka.KeyedMessage,
-    client = new kafka.KafkaClient({kafkaHost: config.kafka.url}),
-    producer = new HighLevelProducer(client);
-
-logger.info('## MinioActivity: Connecting to Kafka: ' + config.kafka.url);
-
-producer.on('ready', function () {
-	logger.info('Kafka producer ready!')
-});
- 
-producer.on('error', function (err) {
-	logger.info(err);
-	logger.info('Unable to connect to kafka');
-})
+var Kafka = require('../kafka')
+logger.info('## MinioActivity: Connecting to Kafka: ' + config.kafka.url + " to topic : " + config.minio.traces_topic + " : " + config.kafka.traceClientId + " : " + config.kafka.traceGroupId);
+const kafkaClient = new Kafka(config.kafka.traceClientId, [ config.kafka.url ], config.kafka.traceGroupId, config.minio.traces_topic);
+kafkaClient.connectToProducer();
 
 class MinioActivity extends Activity {
 
@@ -41,6 +26,11 @@ class MinioActivity extends Activity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = [];
 		}
+	}
+
+	async export(complete) {
+		let activity = super.export();
+		return activity;
 	}
 
 	static getType(){
@@ -77,6 +67,10 @@ class MinioActivity extends Activity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = {};
 		}
+	}
+
+	patch(params) {
+		super.patch(params);
 	}
 
 	async save(){
@@ -139,40 +133,17 @@ class MinioActivity extends Activity {
 		return toret;
 	}
 
-	generateStatementId(trace) {
-		var traceid
-		if(trace.id == null) {
-			traceid = uuidv4();
-		} else {
-			traceid = trace.id;
-		}
-		while(filter.has(traceid)) {
-			traceid = uuidv4();
-		}
-		return traceid;
-	}
-
 	async sendTracesToKafka(traces, activityId){
-		return new Promise((resolve, reject) => {
-				let payloads = [];
-
-				for (var i = traces.length - 1; i >= 0; i--) {
-					let trace = traces[i];
-					trace.id = this.generateStatementId(trace);
-					filter.add(trace.id);
-					payloads.push({ topic: config.minio.traces_topic, key: JSON.stringify({ _id: activityId }), messages: JSON.stringify(trace), partition: 0 });
-				}
-
-				producer.send(payloads, function (err, data) {
-					if(err){
-						logger.info("Error in Kafka enqueue: " + err);
-						reject(err);
-					}else{
-						logger.info("Trace enqueued ok! Data: " + JSON.stringify(data));
-						resolve(data);
-					}
-				});
-		});
+		let payloads = [];
+		let responses = [];
+		for (var i = traces.length - 1; i >= 0; i--) {
+			let trace = traces[i];
+			trace.id = generateStatementId(trace);
+			responses.push(trace.id);
+			payloads.push(JSON.stringify(trace));
+		}
+		await kafkaClient.sendMessages(payloads, 0, JSON.stringify({ _id: activityId }));
+		return responses;
 	}
 
 	async getResults(participants, type){

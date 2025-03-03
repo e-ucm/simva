@@ -145,10 +145,13 @@ class GroupAllocator extends Allocator {
 			for([group, value] of Object.entries(this.extra_data.allocations)) {
 				if(value == test) {
 					var gr=await GroupsController.getGroup(group);
-					allocation=allocation.concat(gr.participants);
+					if(gr && gr.participants) {
+						allocation=allocation.concat(gr.participants);
+					}
 				}
 			}
 		}
+		logger.debug(allocation);
 		return allocation;
 	}
 };

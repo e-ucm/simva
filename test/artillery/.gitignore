@@ -1,0 +1,8 @@
+.env
+test-log.txt
+users.csv
+*.json
+statements.csv
+*.har
+har-artillery-config.yml
+*-har-artillery-config.yml

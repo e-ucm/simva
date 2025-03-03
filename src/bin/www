@@ -8,6 +8,10 @@ const http = require('http');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 
+if(process.env.NODE_ENV == "development") {
+  //const profiler = require('../lib/profiler');
+}
+
 process.env.DEBUG = '*';
 
 //XXX

@@ -5,12 +5,15 @@ const multiparty = require('multiparty');
 const formidable = require('formidable');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
+const profiling = require('../lib/profiling');
+
 const AppManager = require('../lib/utils/appmanager');
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
 
 var isTest = (process.env.NODE_ENV !== 'production');
 
 logger.debug(isTest);
+logger.debug(JSON.stringify(config));
 
 let createAdminUser = async function(){
   let UsersController = require('../lib/userscontroller');
@@ -35,13 +38,14 @@ let createAdminUser = async function(){
 }
 
 var mongoose = require('mongoose');
+const sendSimvaEventsToKafka = require('../lib/utils/SimvaEventsToKafka');
+const getActivityFromSurveyId = require('../lib/activities/limesurvey/getActivityFromSurveyId');
 mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true});
 var db = mongoose.connection;
 db.on('error', logger.error.bind(console, 'connection error:'));
 db.once('open', function() {
   logger.debug('connected');
-
-  	const fs = require('fs');
+  const fs = require('fs');
 	const yaml = require('yaml');
 	const swaggerMongoose = require('swagger-mongoose');
 
@@ -49,7 +53,15 @@ db.once('open', function() {
 	swaggerMongoose.compile(JSON.stringify(descriptor));
 
   createAdminUser();
+  let StudiesController = require('../lib/studiescontroller');
+  StudiesController.updateStudyIdInTestsAndActivitiesMigration().then(() => {
+      logger.info('Migration completed.');
+    }).catch(err => {
+      logger.error('Migration failed: ' + err);
+    });
 });
+
+
 
 let multipartwith
 
@@ -106,7 +118,7 @@ app.use(bodyParser.urlencoded({limit: config.api.maxUploadFileSize, extended: tr
 // ALLOW CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
+    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method, x-experience-api-version');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.header('Allow', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
@@ -123,6 +135,77 @@ app.use('/activitytypes', require('./routes/activitytypes'));
 app.use('/allocatortypes', require('./routes/allocatortypes'));
 app.use('/lti', require('./routes/lti'));
 
+verifyHookdeckSignature = async function(
+  req,
+  res,
+  next
+) {
+  if (!config.limesurvey.SECRET) {
+    console.warn(
+      "No Hookdeck Signing Secret: Skipping webhook verification. Do not do this in production!"
+    );
+    return next();
+  }
+
+  const headers= {};
+  const incomingHeaders = req.headers;
+
+  for (const [key, value] of Object.entries(incomingHeaders)) {
+    headers[key] = value;
+  }
+
+  // logger.info({ headers });
+
+  const rawBody = req.rawBody.toString();
+  // logger.info({ rawBody });
+
+  const result = await verifyWebhookSignature({
+    headers,
+    rawBody,
+    signingSecret: SECRET,
+    config: {
+      checkSourceVerification: false,
+    },
+  });
+
+  if (!result.isValidSignature) {
+    logger.info("Signature is invalid, rejected");
+    res.sendStatus(401);
+  } else {
+    logger.info("Signature is valid, accepted");
+    next();
+  }
+};
+
+app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req, res) => {
+  logger.info(req.body);
+  var type;
+  if(req.body.event == "survey_initialized") {
+    type='activity_initialized';
+  } else if(req.body.event == "survey_completed") {
+    type='activity_completed';
+  } else {
+    type=req.body.event;
+  };
+  let surveyId = req.body.surveyId;
+  let activities = await getActivityFromSurveyId(surveyId);
+  let messages = [];
+  for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
+      const message = {
+          type: type,
+          activityType: "limesurvey",
+          surveyId: surveyId,
+          activityId: activity._id,
+          studyId: activity.study,
+          user: req.body.token
+      };
+      logger.info(message);
+      messages.push(message);
+  }
+  sendSimvaEventsToKafka(messages);
+  res.status(200).send({ message: 'Tested and treated' });
+});
 
 // catch 404
 app.use((req, res, next) => {

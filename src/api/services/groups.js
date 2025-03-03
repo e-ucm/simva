@@ -62,6 +62,7 @@ module.exports.addGroup = async (options) => {
   try {
     group = await GroupsController.addGroup({
       name: options.body.name,
+      version : options.body.version,
       owners: [options.user.data.username],
       participants: [],
       created: Date.now()
@@ -112,6 +113,43 @@ module.exports.getGroup = async (options) => {
  * @throws {Error}
  * @return {Promise}
  */
+module.exports.deleteGroup  = async (options) => {
+  var result = { status: 200, data: {message: 'Group updated'} };
+
+  if(mongoose.Types.ObjectId.isValid(options.id)){
+    try{
+      var group = await GroupsController.getGroup(options.id);
+      if(group !== null){
+        if(group.owners.indexOf(options.user.data.username) !== -1){
+          let studies = await StudiesController.getStudies({ groups: group._id });
+          for(var i=0; i< studies.length; i++) {
+            await StudiesController.removeGroupToStudy(studies[i]._id, group._id);
+          }
+          if(await GroupsController.removeGroup(options.id)){
+            result.data = { message: 'Group deleted' };
+          }else{
+            result = { status: 500, data: {message: 'Error deleting the group.'} };
+          }
+        }else{
+          result = { status: 401, data: {message: 'User is not authorized to update this group.'} };
+        }
+      }
+    }catch(e){
+      logger.error(e);
+      result = { status: 500, data: e };
+    }
+  }else{
+    result = { status: 400, data: { message: 'ObjectId is not valid' } };
+  }
+  return result;
+};
+
+/**
+ * @param {Object} options
+ * @param {String} options.id The group ID
+ * @throws {Error}
+ * @return {Promise}
+ */
 module.exports.updateGroup = async (options) => {
   var result = { status: 200, data: {message: 'Group updated'} };
 
@@ -141,29 +179,31 @@ module.exports.updateGroup = async (options) => {
             }else if(loadedparticipantsadded.length !== participantsadded.length){
               result = { status: 404, data: {message: 'A participant added does not exist'} };
             }else{
-              if(participantsadded.length > 0 || participantsremoved.length > 0){
-                try {
-                  let studies = await StudiesController.getStudies({ groups: group._id });
-
-                  if(participantsadded.length > 0){
-                    for (var i = studies.length - 1; i >= 0; i--) {
-                      await StudiesController.addParticipants(studies[i], participantsadded);
-                    }
-                  }
-
-                  if(participantsremoved.length > 0){
-                    for (var i = studies.length - 1; i >= 0; i--) {
-                      await StudiesController.removeParticipants(studies[i], participantsremoved);
-                    }
-                  }
-                }catch(e){
-                  logger.error(e);
-                  result = { status: 500, data: {message: 'Error notifying the studies about changes in participans.', error: e} };
-                }
-              }
-
               if(await GroupsController.updateGroup(options.id, options.body)){
-                result.data = { message: 'Group updated' };
+                if(participantsadded.length > 0 || participantsremoved.length > 0){
+                  try {
+                    let studies = await StudiesController.getStudies({ groups: group._id });
+  
+                    if(participantsadded.length > 0){
+                      for (var i = studies.length - 1; i >= 0; i--) {
+                        await StudiesController.addParticipants(studies[i], participantsadded);
+                      }
+                    }
+  
+                    if(participantsremoved.length > 0){
+                      for (var i = studies.length - 1; i >= 0; i--) {
+                        await StudiesController.removeParticipants(studies[i], participantsremoved);
+                      }
+                      //REMOVE PARTICIPANTS FROM KEYCLOAK
+                      await UsersController.removeUsersToKeycloak(options.id, participantsremoved);
+                    }
+                    
+                    result.data = { message: 'Group updated' };
+                  } catch(e) {
+                    logger.error(e);
+                    result = { status: 500, data: {message: 'Error notifying the studies about changes in participants.', error: e} };
+                  }
+                }
               }else{
                 result = { status: 500, data: {message: 'Error updating the group.'} };
               }

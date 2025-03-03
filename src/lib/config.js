@@ -1,4 +1,4 @@
-
+const ms = require("ms");
 let config = {}
 
 let ignored_ports = [80, 8080, 443];
@@ -20,6 +20,7 @@ config.api.adminUsername = process.env.ADMIN_USERNAME || 'admin'
 config.api.adminEmail = process.env.ADMIN_EMAIL || 'admin@simva.admin'
 config.api.adminPassword = process.env.ADMIN_PASSWORD || 'password'
 config.api.maxUploadFileSize = process.env.MAX_UPLOAD_FILE_SIZE || '33554432'
+config.api.profiling = process.env.ENABLE_DEBUG_PROFILING == undefined ? "false" : (process.env.ENABLE_DEBUG_PROFILING == "true")
 
 config.JWT = {}
 config.JWT.issuer = 'simva'
@@ -42,6 +43,11 @@ config.kafka = {}
 config.kafka.host = process.env.KAFKA_HOST || 'kafka'
 config.kafka.port = process.env.KAFKA_PORT || 9092
 config.kafka.url = config.kafka.host + ':' + config.kafka.port
+config.kafka.events_topic = process.env.KAFKA_EVENTS_TOPIC || 'simva_events_topic'
+config.kafka.eventClientId =  process.env.KAFKA_EVENTS_CLIENT_ID !== undefined ? process.env.KAFKA_EVENTS_CLIENT_ID : 'simva_events'
+config.kafka.eventGroupId  = process.env.KAFKA_EVENTS_GROUP_ID !== undefined ?  process.env.KAFKA_EVENTS_GROUP_ID : 'simva_events'
+config.kafka.traceClientId =  process.env.KAFKA_TOPIC_CLIENT_ID !== undefined ? process.env.KAFKA_TOPIC_CLIENT_ID : 'simva_trace'
+config.kafka.traceGroupId = process.env.KAFKA_TOPIC_GROUP_ID !== undefined ? process.env.KAFKA_TOPIC_GROUP_ID : 'simva_trace'
 
 config.minio = {}
 config.minio.url = process.env.MINIO_URL || 'minio.external.test'
@@ -55,7 +61,7 @@ config.minio.bucket = process.env.MINIO_BUCKET || 'traces'
 config.minio.topics_dir = process.env.MINIO_TOPICS_DIR || 'kafka-topics'
 config.minio.traces_topic = process.env.MINIO_TRACES_TOPIC || 'traces'
 config.minio.outputs_dir = process.env.MINIO_OUTPUTS_DIR || 'outputs'
-config.minio.presigned_url_expiration_time = process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME !== undefined ? parseInt(process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME) : Number(60*60)
+config.minio.presigned_url_expiration_time_in_second = process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME !== undefined ? ms(process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME)/1000 : ms("1h")/1000
 config.minio.traces_file = process.env.MINIO_TRACES_FILE || 'traces.json'
 
 config.limesurvey = {}
@@ -66,6 +72,7 @@ config.limesurvey.url =  config.limesurvey.protocol + '://' + config.limesurvey.
 config.limesurvey.external_url = process.env.LIMESURVEY_EXTERNAL || config.limesurvey.url
 config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
+config.limesurvey.SECRET =  process.env.LIMESURVEY_SECRET || null
 
 config.sso = {}
 config.sso.enabled = process.env.SSO_ENABLED == 'true' || false
@@ -81,6 +88,7 @@ config.sso.url = config.sso.protocol + '://' + config.sso.host
 			+ ( (ignored_ports.indexOf(config.sso.port) !== -1) ? '' : (':' + config.sso.port) );
 config.sso.webhookPath = process.env.SSO_WEBHOOK_PATH || '/webhook'
 config.sso.realmUrl = config.sso.url + '/realms/' + config.sso.realm
+config.sso.tokenUrl=config.sso.realmUrl + '/protocol/openid-connect/token'
 config.sso.webhookUrl = config.sso.realmUrl + config.sso.webhookPath
 config.sso.publicKey = "-----BEGIN PUBLIC KEY----- \n" + process.env.SSO_PUBLIC_KEY + "\n-----END PUBLIC KEY-----\n";
 config.sso.studentAllowedRole = (process.env.SSO_STUDENT_ALLOWED_ROLE === "true") ? "student" : null
@@ -94,23 +102,6 @@ config.sso.loggerActive = process.env.SSO_LOGGER_ACTIVE || false;
 
 config.sso.adminUser = process.env.SSO_ADMIN_USER || 'admin';
 config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'password';
-
-config.a2 = {}
-config.a2.host = process.env.A2_HOST || 'a2.external.test'
-config.a2.protocol = process.env.A2_PROTOCOL || 'https'
-config.a2.port = process.env.A2_PORT || '443'
-config.a2.url =  config.a2.protocol + '://' + config.a2.host + ':' + config.a2.port
-config.a2.adminUser =  process.env.A2_ADMIN_USER || 'root'
-config.a2.adminPassword =  process.env.A2_ADMIN_PASSWORD || 'password'
-config.a2.external_url =  process.env.A2_EXTERNAL || 'a2.external.test'
-
-config.analyticsbackend = {}
-config.analyticsbackend.host = process.env.ANALYTICSBACKEND_HOST || config.a2.host
-config.analyticsbackend.protocol = process.env.ANALYTICSBACKEND_PROTOCOL || config.a2.protocol
-config.analyticsbackend.port = process.env.ANALYTICSBACKEND_PORT || config.a2.port
-config.analyticsbackend.apiPath = process.env.ANALYTICSBACKEND_API || '/api/proxy/gleaner'
-config.analyticsbackend.url =  config.analyticsbackend.protocol + '://' + config.analyticsbackend.host
-							+ ':' + config.analyticsbackend.port + config.analyticsbackend.apiPath
 
 config.LTI = {}
 config.LTI.platform = {}
@@ -127,5 +118,12 @@ config.LTI.debug= process.env.LTI_DEBUG || false;
 
 config.storage = {}
 config.storage.path = process.env.SIMVA_STORAGE_PATH || 'storage/'
+
+config.shlink = {}
+config.shlink.apihost = process.env.SHLINK_SERVER_HOST || 'shlink.external.test'
+config.shlink.protocol = process.env.SHLINK_PROTOCOL || 'https'
+config.shlink.port = process.env.SHLINK_PORT || '443'
+config.shlink.apiurl =  `${config.shlink.protocol}://${config.shlink.apihost}:${config.shlink.port}`
+config.shlink.apikey = process.env.SHLINK_SERVER_API_KEY || 'myapikey'
 
 module.exports = config;
