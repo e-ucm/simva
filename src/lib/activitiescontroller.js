@@ -5,9 +5,7 @@ var mongoose = require('mongoose');
 var ActivitiesController = {};
 var Activity = require('./activities/activity');
 var LimeSurveyActivity = require('./activities/LimeSurveyActivity');
-var RageAnalyticsActivity = require('./activities/RageAnalyticsActivity');
 var MinioActivity = require('./activities/MinioActivity');
-var RageMinioActivity = require('./activities/RageMinioActivity');
 var GameplayActivity = require('./activities/GameplayActivity');
 var ManualActivity = require('./activities/ManualActivity');
 var LTIToolActivity = require('./activities/LTIToolActivity');
@@ -16,7 +14,7 @@ var ImsPackageActivity = require('./activities/ImsPackageActivity');
 var types = [
 	Activity,
 	LimeSurveyActivity,
-	/*RageAnalyticsActivity, MinioActivity, RageMinioActivity, */
+	/*MinioActivity, */
 	GameplayActivity,
 	ManualActivity,
 	LTIToolActivity,

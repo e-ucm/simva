@@ -103,23 +103,6 @@ config.sso.loggerActive = process.env.SSO_LOGGER_ACTIVE || false;
 config.sso.adminUser = process.env.SSO_ADMIN_USER || 'admin';
 config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'password';
 
-config.a2 = {}
-config.a2.host = process.env.A2_HOST || 'a2.external.test'
-config.a2.protocol = process.env.A2_PROTOCOL || 'https'
-config.a2.port = process.env.A2_PORT || '443'
-config.a2.url =  config.a2.protocol + '://' + config.a2.host + ':' + config.a2.port
-config.a2.adminUser =  process.env.A2_ADMIN_USER || 'root'
-config.a2.adminPassword =  process.env.A2_ADMIN_PASSWORD || 'password'
-config.a2.external_url =  process.env.A2_EXTERNAL || 'a2.external.test'
-
-config.analyticsbackend = {}
-config.analyticsbackend.host = process.env.ANALYTICSBACKEND_HOST || config.a2.host
-config.analyticsbackend.protocol = process.env.ANALYTICSBACKEND_PROTOCOL || config.a2.protocol
-config.analyticsbackend.port = process.env.ANALYTICSBACKEND_PORT || config.a2.port
-config.analyticsbackend.apiPath = process.env.ANALYTICSBACKEND_API || '/api/proxy/gleaner'
-config.analyticsbackend.url =  config.analyticsbackend.protocol + '://' + config.analyticsbackend.host
-							+ ':' + config.analyticsbackend.port + config.analyticsbackend.apiPath
-
 config.LTI = {}
 config.LTI.platform = {}
 config.LTI.platform.client_id = process.env.LTI_PLATFORM_CLIENT_ID || 'lti-platform'
