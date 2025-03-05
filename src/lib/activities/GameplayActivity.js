@@ -86,7 +86,7 @@ class GameplayActivity extends Activity {
 	static async getUtils(username){
 		let mutils = await MinioActivity.getUtils(username);
 
-		return {...autils, ...mutils};
+		return {...mutils};
 	}
 
 	async getDetails(){
