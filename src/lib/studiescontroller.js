@@ -31,6 +31,7 @@ StudiesController.updateStudyIdInTestsAndActivitiesMigration = async () => {
 	let studies = await StudiesController.getStudies();
 	for(let i=0; i < studies.length; i++) {
 		let study = studies[i];
+		const owners = study.owners;
 		let studyid = study._id.toString();
 		logger.info("Study : " + studyid);
 		try {
@@ -70,6 +71,15 @@ StudiesController.updateStudyIdInTestsAndActivitiesMigration = async () => {
 				let activityid = test.activities[k];
 				logger.info("Activity : " + activityid);
 				let activity = await ActivitiesController.loadActivity(activityid);
+				if(activity.owners.length != owners.length) {
+					let toAdd=[];
+					owners.forEach(owner => {
+						if(!activity.owners.includes(owner)) {
+							toAdd.push(owner);
+						}
+					});
+					activity.addOwners(toAdd);
+				}
 				if(activity.type == "limesurvey" && activity.extra_data && !activity.extra_data.language) {
 					if(activity.study !== "") {
 						logger.info("StudyId already present in activity.");
