@@ -128,19 +128,27 @@ function clone(surveyId) {
 
 function online(callback){
 	Log('LimesurveyController.online -> Started');
-	options.data = {};
-	try{
-		axios(options).then(response => {
-			logger.info('Limesurvey ONLINE')
-			callback(null);
-		}).catch(error => {
-			Log('LimesurveyController.online -> Unable to reach service')
-			LogMultiple({error: error});
-			callback({ message: 'LimeSurvey service unreachable.', error: error});
-		})
-	}catch(e){
-		LogBigError('online', e, callback);
-	}
+	options.body = JSON.stringify({});
+
+	request(options, function(error, response, body){
+		try{
+			if (!error && (response.statusCode == 200 || response.statusCode == 500)) { 
+				// LIMESURVEY 6-apache - application/libraries/LSjsonRPCServer.php
+				// $request = json_decode(file_get_contents('php://input'), true);
+				// $result = @call_user_func_array(array($object, $request['method']), $request['params']); 
+				// test if status code == 500 : with an empty objet return an error from the server that it can't handle it => THAT MEAN LIMESURVEY IS ONLINE
+				Log('Limesurvey ONLINE');
+				callback(null);
+			}
+			else {
+				Log('LimesurveyController.online -> Unable to reach service');
+				LogMultiple({error: error, response: response, body: body});
+				callback({ message: 'LimeSurvey service unreachable.', error: error});
+			}
+		}catch(e){
+			LogBigError('online', e, callback);
+		}
+	});
 }
 
 function auth(callback) {
@@ -906,17 +914,19 @@ function getResponses(sid, language, participants, type){
 										return callback({ message: 'Error transforming LimeSurvey result' });
 									}
 									if(participants){
-										for (var rid in raw){
-											for (var res in raw[rid]){
-												if(participants.indexOf(raw[rid][res].token) > -1){
-													if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-														responses[raw[rid][res].token] = raw[rid][res];
-													}
+										for (let res of raw){
+											if(participants.indexOf(res.token) > -1){
+												if(!responses[res.token] || (responses[res.token] && !responses[res.token].submitdate)){
+													responses[res.token] = res;
 												}
 											}
 										}
-									}else{
-										responses=raw;
+									} else {
+										for (let res of raw){
+											if(!responses[res.token] || (responses[res.token] && !responses[res.token].submitdate)){
+												responses[res.token] = res;
+											}
+										}
 									}
 								}
 								Log('LimesurveyController.getResponses -> Completed');
@@ -1189,22 +1199,19 @@ function getResponseByToken(survey, language, token, type){
 								}
 							}
 						}
-
+						Log('LimesurveyController.getResponseByToken -> Response :');
+						Log(JSON.stringify(response));
 						if(!response.status){
 							if(response.responses){
 								if(response.responses.length > 0){
-									for (var i = 0; i < response.responses.length; i++) {
-										let keys = Object.keys(response.responses[i]);
-										if(response.responses[i][keys[0]].submitdate !== null){
-											return callback(null, response.responses[i][keys[0]]);
+									for (let res of response.responses) {
+										if(res.submitdate !== null){
+											return callback(null, res);
 										}
 									}
-
-									let keys = Object.keys(response.responses[response.responses.length -1]);
-									callback(null, response.responses[response.responses.length -1][keys[0]]);
+									callback(null, response.responses[0]);
 								}else{
-									let keys = Object.keys(response.responses[0]);
-									callback(null, response.responses[0][keys[0]]);
+									callback(null, response);
 								}
 							}else{
 								callback(null, false);
