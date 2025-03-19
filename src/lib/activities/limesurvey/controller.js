@@ -130,24 +130,17 @@ function online(callback){
 	Log('LimesurveyController.online -> Started');
 	options.body = JSON.stringify({});
 
-	request(options, function(error, response, body){
-		try{
-			if (!error && (response.statusCode == 200 || response.statusCode == 500)) { 
-				// LIMESURVEY 6-apache - application/libraries/LSjsonRPCServer.php
-				// $request = json_decode(file_get_contents('php://input'), true);
-				// $result = @call_user_func_array(array($object, $request['method']), $request['params']); 
-				// test if status code == 500 : with an empty objet return an error from the server that it can't handle it => THAT MEAN LIMESURVEY IS ONLINE
-				Log('Limesurvey ONLINE');
-				callback(null);
-			}
-			else {
-				Log('LimesurveyController.online -> Unable to reach service');
-				LogMultiple({error: error, response: response, body: body});
-				callback({ message: 'LimeSurvey service unreachable.', error: error});
-			}
-		}catch(e){
-			LogBigError('online', e, callback);
-		}
+	axios(options).then(response => {
+		// LIMESURVEY 6-apache - application/libraries/LSjsonRPCServer.php
+		// $request = json_decode(file_get_contents('php://input'), true);
+		// $result = @call_user_func_array(array($object, $request['method']), $request['params']); 
+		// test if status code == 500 : with an empty objet return an error from the server that it can't handle it => THAT MEAN LIMESURVEY IS ONLINE
+		Log('Limesurvey ONLINE');
+		callback(null);
+	})
+	.catch(error => {
+		Log('LimesurveyController.online -> Unable to reach service');
+		callback({ message: 'LimeSurvey service unreachable.', error: error});
 	});
 }
 
