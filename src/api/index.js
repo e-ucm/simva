@@ -178,16 +178,16 @@ verifyHookdeckSignature = async function(
 };
 
 app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req, res) => {
-  logger.info(req.body);
+  logger.info(JSON.stringify(req.body));
   var type;
-  if(req.body.event == "survey_initialized") {
+  if(req.body.event == "beforeSurveyPage") {
     type='activity_initialized';
-  } else if(req.body.event == "survey_completed") {
+  } else if(req.body.event == "afterSurveyComplete") {
     type='activity_completed';
   } else {
     type=req.body.event;
   };
-  let surveyId = req.body.surveyId;
+  let surveyId = req.body.survey;
   let activities = await getActivityFromSurveyId(surveyId);
   let messages = [];
   for (let i = 0; i < activities.length; i++) {
@@ -200,11 +200,13 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req,
           studyId: activity.study,
           user: req.body.token
       };
-      logger.info(message);
       messages.push(message);
   }
-  sendSimvaEventsToKafka(messages);
-  res.status(200).send({ message: 'Tested and treated' });
+  if(messages.length > 0) {
+    logger.info(JSON.stringify(messages));
+    sendSimvaEventsToKafka(messages);
+  }
+  res.status(200).send({ message: 'Message treated' });
 });
 
 // catch 404
