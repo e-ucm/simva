@@ -6,6 +6,7 @@ const formidable = require('formidable');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 const profiling = require('../lib/profiling');
+const crypto = require("crypto");
 
 const AppManager = require('../lib/utils/appmanager');
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
@@ -153,16 +154,14 @@ verifyHookdeckSignature = async function(
   for (const [key, value] of Object.entries(incomingHeaders)) {
     headers[key] = value;
   }
+  logger.info(headers);
 
-  // logger.info({ headers });
+  const rawBody = req.body;
+  logger.info(rawBody);
 
-  const rawBody = req.rawBody.toString();
-  // logger.info({ rawBody });
-
-  const result = await verifyWebhookSignature({
+  const result = await validatePayload({
     headers,
     rawBody,
-    signingSecret: SECRET,
     config: {
       checkSourceVerification: false,
     },
@@ -176,6 +175,32 @@ verifyHookdeckSignature = async function(
     next();
   }
 };
+
+//Validate payload
+function validatePayload(payload) {
+  const headers=payload.headers;
+  if (headers[config.limesurvey.headerName]) {
+    //Extract Signature header
+    const sig = headers[config.limesurvey.headerName] || "";
+    logger.info(sig);
+
+    //Calculate HMAC
+    const hmac = crypto.createHmac("sha256", config.limesurvey.SECRET);
+    const digest = Buffer.from(
+      config.limesurvey.headerPrefix + hmac.update(JSON.stringify(payload.rawBody)).digest("hex"),
+      "utf8",
+    );
+    logger.info(digest);
+
+    //Compare HMACs
+    if (sig.length !== digest.length || !crypto.timingSafeEqual(digest, sig)) {
+      return { isValidSignature: false };
+    } else {
+      return { isValidSignature: true };
+    }
+  }
+  return { isValidSignature: false };
+}
 
 app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req, res) => {
   logger.info(JSON.stringify(req.body));

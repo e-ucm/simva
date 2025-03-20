@@ -72,7 +72,9 @@ config.limesurvey.url =  config.limesurvey.protocol + '://' + config.limesurvey.
 config.limesurvey.external_url = process.env.LIMESURVEY_EXTERNAL || config.limesurvey.url
 config.limesurvey.adminUser =  process.env.LIMESURVEY_ADMIN_USER || 'admin'
 config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'password'
-config.limesurvey.SECRET =  process.env.LIMESURVEY_SECRET || null
+config.limesurvey.SECRET =  process.env.LIMESURVEY_SECRET || 'secret'
+config.limesurvey.headerName = process.env.LIMESURVEY_HEADER_NAME !== undefined ? process.env.LIMESURVEY_HEADER_NAME.toLocaleLowerCase() : "x-signature-sha256"
+config.limesurvey.headerPrefix = process.env.LIMESURVEY_HEADER_PREFIX || ""
 
 config.sso = {}
 config.sso.enabled = process.env.SSO_ENABLED == 'true' || false
