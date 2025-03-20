@@ -853,10 +853,9 @@ function getResponses(sid, language, participants, type){
 
 								if (body && body.result && body.result.length > 0) {
 									const decodedResult = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
-									for (var rid in decodedResult){
-										for (var res in decodedResult[rid]){
-											responses[participant] = decodedResult[rid][res];
-										}
+									for (var res in decodedResult){
+										logger.info(res);
+										responses[participant] = decodedResult[res];
 									}
 								} else {
 									responses[participant] = null;
@@ -908,16 +907,16 @@ function getResponses(sid, language, participants, type){
 									}
 									if(participants){
 										for (let res of raw){
-											if(participants.indexOf(res.token) > -1){
-												if(!responses[res.token] || (responses[res.token] && !responses[res.token].submitdate)){
-													responses[res.token] = res;
+											if(participants.indexOf(raw[res].token) > -1){
+												if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+													responses[raw[res].token] = res;
 												}
 											}
 										}
 									} else {
 										for (let res of raw){
-											if(!responses[res.token] || (responses[res.token] && !responses[res.token].submitdate)){
-												responses[res.token] = res;
+											if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+												responses[raw[res].token] = raw[res];
 											}
 										}
 									}
@@ -969,21 +968,17 @@ function getResponses(sid, language, participants, type){
 									return callback({ message: 'Error transforming LimeSurvey result' });
 								}
 								if(participants){
-									for (var rid in raw){
-										for (var res in raw[rid]){
-											if(participants.indexOf(raw[rid][res].token) > -1){
-												if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-													responses[raw[rid][res].token] = raw[rid][res];
-												}
+									for (var res in raw){
+										if(participants.indexOf(raw[res].token) > -1){
+											if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+												responses[raw[res].token] = raw[res];
 											}
 										}
 									}
 								}else{
-									for (var rid in raw){
-										for (var res in raw[rid]){
-											if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-												responses[raw[rid][res].token] = raw[rid][res];
-											}
+									for (var res in raw){
+										if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+											responses[raw[res].token] = raw[res];
 										}
 									}
 								}
