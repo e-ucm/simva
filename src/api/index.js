@@ -159,7 +159,7 @@ verifyHookdeckSignature = async function(
   const rawBody = req.body;
   logger.info(rawBody);
 
-  const result = await validatePayload({
+  const result = validatePayload({
     headers,
     rawBody,
     config: {
