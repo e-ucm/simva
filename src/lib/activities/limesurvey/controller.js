@@ -80,6 +80,7 @@ function create(survey) {
 				async.waterfall([
 					auth,
 					insert(survey),
+					update_activated_survey,
 					start,
 					startTokensSurvey
 				], function (err, result) {
@@ -109,6 +110,7 @@ function clone(surveyId) {
 			async.waterfall([
 				auth,
 				copy(surveyId),
+				update_activated_survey,
 				start,
 				startTokensSurvey
 			], function (err, result) {
@@ -275,6 +277,36 @@ function exportSurvey(survey) {
                 reject({ message: 'Error exporting', error: error });  // reject promise on error
             });
     });
+}
+
+/**
+ * update_activated_survey
+ * @param survey_id
+ */
+function update_activated_survey(survey_id, callback) {
+		Log('LimesurveyController.update_activated_survey -> Started');
+		options.data = { method: 'set_survey_properties', params: [SESSIONKEY, survey_id, {"anonymized": "N", "datestamp": "Y", "savetimings": "Y", "ipaddr": "N", "refurl": "N"}], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('update_activated_survey', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+	
+				Log('LimesurveyController.update_activated_survey -> survey updated:');
+				Log(JSON.stringify(body));
+				callback(null, survey_id);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.update_activated_survey -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error update_activated_survey', error: error });  // reject promise on error
+			});
 }
 
 /**
