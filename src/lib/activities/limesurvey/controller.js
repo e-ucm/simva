@@ -647,7 +647,7 @@ function getSurveysFromUser(username) {
 }
 
 /**
- * isUserOwnerOfSurveyt
+ * isUserOwnerOfSurvey
  * @param sid
  * @param username
  */
