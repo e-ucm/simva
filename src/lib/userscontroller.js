@@ -8,9 +8,46 @@ const jwt = require('jsonwebtoken');
 
 var config = require('./config');
 
+var limeconfig = {
+	options: {
+		url: config.limesurvey.url + '/index.php/admin/remotecontrol',
+		method: "POST",
+		headers: {
+			'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
+			'host': config.limesurvey.host,
+			'path': '/index.php/admin/remotecontrol',
+			'connection': 'keep-alive',
+			'content-type': 'application/json'
+		}
+	},
+	user: config.limesurvey.adminUser,
+	password: config.limesurvey.adminPassword
+}
+
+let controller = require('./activities/limesurvey/controller');
+
+controller.setOptions(limeconfig.options);
+controller.setUser(limeconfig.user,limeconfig.password);
+
 let UsersController = {};
 
 let allowedRoles = config.sso.allowedRoles.split(',');
+
+UsersController.isUserLimesurveyAdmin = async (username) => {
+	return new Promise((resolve, reject) => 
+	controller.authAndGetAdminUser(username, (error, result) => {
+		if(!error) {
+			logger.info(result);
+			if(result.status) {
+				resolve({ isLimesurveyUserAdmin : false });
+			} else {
+				resolve({ isLimesurveyUserAdmin : true });
+			}
+		} else {
+			reject(error);
+		}
+	}));
+};
 
 UsersController.getUser = async (id) => {
 	var res = await mongoose.model('user').find({_id: id});

@@ -149,6 +149,24 @@ paths:
                 $ref: '#/components/schemas/user'
         '400':
           description: 'invalid input'
+  /users/islimesurveyadmin:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: Is Limesurvey Admin.
+      operationId: isUserLimesurveyAdmin
+      description: |
+        Based on the current auth header obtains the user 
+      responses:
+        '200':
+          description: is user Present in Limesurvey 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '400':
+          description: 'invalid input'
   /users/link:
     post:
       summary: Links the secondary account to the main one

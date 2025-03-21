@@ -312,6 +312,67 @@ function setSurveyOwner(survey_id, user_id) {
 }
 
 /**
+ * Get admin username
+ * @param survey
+ */
+function authAndGetAdminUser(username,callback) {
+	Log('LimesurveyController.authAndGetAdminUser -> Started');
+	try{
+		if(username){
+			async.waterfall([
+				auth,
+				getUser(username)
+			], function (err, result) {
+				if(err){
+					Log('LimesurveyController.authAndGetAdminUser -> ERROR');
+					Log(err);
+					return callback({ message: 'Error getting user ', error: err})
+				}else{
+					Log('LimesurveyController.authAndGetAdminUser -> Completed');
+					Log(result);
+					callback(null, result);
+				}
+			});
+		}
+	}catch(e){
+		LogBigError('authAndGetAdminUser', e, callback);
+	}
+}
+
+/**
+ * Get admin username
+ * @param username
+ */
+function getUser(username) {
+    return function(callback) {
+		Log('LimesurveyController.getUser -> Started');
+		options.data = { method: 'list_users', params: [SESSIONKEY, null, username], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				Log(response);
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('getUser', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+				Log('LimesurveyController.getUser -> User got:');
+				//Log(JSON.stringify(body));
+				callback(null, body.result);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.getUser -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error getUser', error: error });  // reject promise on error
+			});
+	}
+}
+
+
+/**
  * Get User Id from Users list 
  */
 function getSurveyLanguages(surveyid) {
@@ -1331,6 +1392,7 @@ module.exports = {
 	auth: auth,
 	insert: insert,
 	exportSurvey : exportSurvey,
+	authAndGetAdminUser : authAndGetAdminUser,
 	getUserIdByUserName : getUserIdByUserName,
 	setSurveyOwner:setSurveyOwner,
 	isUserOwnerOfSurvey:isUserOwnerOfSurvey,
