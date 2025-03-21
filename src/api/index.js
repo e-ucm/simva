@@ -158,14 +158,15 @@ verifyHookdeckSignature = async function(
 
   const rawBody = req.body;
   logger.info(rawBody);
+  logger.info(JSON.stringify(rawBody));
 
-  const result = validatePayload({
-    headers,
+  const conf={
+    checkSourceVerification: false,
+  };
+  const result = validatePayload(headers,
     rawBody,
-    config: {
-      checkSourceVerification: false,
-    },
-  });
+    conf
+  );
 
   if (!result.isValidSignature) {
     logger.info("Signature is invalid, rejected");
@@ -177,20 +178,20 @@ verifyHookdeckSignature = async function(
 };
 
 //Validate payload
-function validatePayload(payload) {
-  const headers=payload.headers;
+function validatePayload(headers, rawBody, conf) {
   if (headers[config.limesurvey.headerName]) {
     //Extract Signature header
-    const sig = headers[config.limesurvey.headerName] || "";
-    logger.info(sig);
+    const signature = headers[config.limesurvey.headerName] || "";
+    logger.info(signature);
+    const sig = Buffer.from(signature);
 
     //Calculate HMAC
     const hmac = crypto.createHmac("sha256", config.limesurvey.SECRET);
     const digest = Buffer.from(
-      config.limesurvey.headerPrefix + hmac.update(JSON.stringify(payload.rawBody)).digest("hex"),
+      config.limesurvey.headerPrefix + hmac.update(JSON.stringify(rawBody)).digest("hex"),
       "utf8",
     );
-    logger.info(digest);
+    logger.info(digest.toString());
 
     //Compare HMACs
     if (sig.length !== digest.length || !crypto.timingSafeEqual(digest, sig)) {
