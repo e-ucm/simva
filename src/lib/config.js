@@ -8,10 +8,13 @@ config.favicon_file = process.env.SIMVA_FRONT_FAVICON || '/favicon.ico'
 config.favicon_url = config.external_url + config.favicon_file
 
 config.api = {}
-config.api.host = process.env.SIMVA_API_HOST || 'simva-api.simva.external.test'
+config.api.host = process.env.SIMVA_API_HOST || 'simva-api-service.simva.external.test'
 config.api.port  = process.env.SIMVA_API_PORT || 443
 config.api.protocol = process.env.SIMVA_API_PROTOCOL
 config.api.url = config.api.protocol + '://' + config.api.host
+			+ ( (ignored_ports.indexOf(config.api.port) !== -1) ? '' : (':' + config.api.port) );
+config.api.data_host = process.env.SIMVA_DATA_API_HOST || 'simva-api.simva.external.test'
+config.api.data_url = config.api.protocol + '://' + config.api.data_host
 			+ ( (ignored_ports.indexOf(config.api.port) !== -1) ? '' : (':' + config.api.port) );
 config.api.webhookPath = process.env.SIMVA_API_WEBHOOK_PATH || '/users/events'
 config.api.webhookSecret = process.env.SIMVA_API_WEBHOOK_SECRET || 'w3bh00k_s3cr3t'
