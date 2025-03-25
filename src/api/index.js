@@ -211,9 +211,9 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req,
   } else if(req.body.event == "afterSurveyComplete") {
     type='activity_completed';
   } else {
-    type=req.body.event;
+    res.status(200).send({ message: 'Event not treated.' });
   };
-  let surveyId = req.body.survey;
+  let surveyId = req.body.event_details.surveyid;
   let activities = await getActivityFromSurveyId(surveyId);
   let messages = [];
   for (let i = 0; i < activities.length; i++) {
@@ -224,7 +224,7 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req,
           surveyId: surveyId,
           activityId: activity._id,
           studyId: activity.study,
-          user: req.body.token
+          user: req.body.event_details.token
       };
       messages.push(message);
   }
