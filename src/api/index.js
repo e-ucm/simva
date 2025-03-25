@@ -213,7 +213,7 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req,
   } else {
     res.status(200).send({ message: 'Event not treated.' });
   };
-  let surveyId = req.body.event_details.surveyid;
+  let surveyId = req.body.event_details.surveyId;
   let activities = await getActivityFromSurveyId(surveyId);
   let messages = [];
   for (let i = 0; i < activities.length; i++) {
