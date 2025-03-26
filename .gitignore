@@ -1,5 +1,6 @@
 /node_modules/
 /tmp/*
+.clinic/
 
 # Config files
 config-test.js

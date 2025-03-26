@@ -3,9 +3,13 @@
   "description": "Simva, AKA Simple Validator, AKA SurveyManager is the evolution of a tool created to integrate and ease the task of validating serious games using pre-post surveys as a control point. This version allows to create more complex studies with more variety of activities and different allocations.",
   "version": "1.0.1",
   "scripts": {
-    "start": "node src/bin/www",
-    "dev": "nodemon --inspect=0.0.0.0:9229 src/bin/www",
-    "dev:profiling": "nodemon --inspect=0.0.0.0:9229 --prof --perf-basic-prof --interpreted-frames-native-stack src/bin/www",
+    "start": "node src/bin/www $NODE_ARGS",
+    "dev": "nodemon --inspect=0.0.0.0:9229 src/bin/www $NODE_ARGS",
+    "dev:profiling": "nodemon --inspect=0.0.0.0:9229 --prof --perf-basic-prof --interpreted-frames-native-stack src/bin/www $NODE_ARGS",
+    "dev:clinic:doctor": "clinic doctor $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
+    "dev:clinic:bubbleprof": "clinic bubbleprof $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
+    "dev:clinic:flame": "clinic flame $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
+    "dev:clinic:heapprofiler": "clinic heapprofiler $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
     "test": "set NODE_ENV=test&& mocha -R spec"
   },
   "dependencies": {
@@ -27,6 +31,7 @@
     "mongoose": "^5.7.8",
     "ms": "^2.1.3",
     "multiparty-express": "^0.1.9",
+    "node-cron": "^3.0.3",
     "node-yaml-config": "1.0.0",
     "pino": "^9.6.0",
     "require-text": "0.0.1",
@@ -35,7 +40,6 @@
     "unzipper": "0.12.3",
     "uuid": "^10.0.0",
     "xml2js": "0.6.2",
-    "node-cron": "^3.0.3",
     "yaml": "^1.7.2"
   },
   "devDependencies": {
