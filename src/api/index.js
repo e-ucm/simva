@@ -6,6 +6,7 @@ const formidable = require('formidable');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 const profiling = require('../lib/profiling');
+const crypto = require("crypto");
 
 const AppManager = require('../lib/utils/appmanager');
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
@@ -153,20 +154,19 @@ verifyHookdeckSignature = async function(
   for (const [key, value] of Object.entries(incomingHeaders)) {
     headers[key] = value;
   }
+  logger.info(headers);
 
-  // logger.info({ headers });
+  const rawBody = req.body;
+  logger.info(rawBody);
+  logger.info(JSON.stringify(rawBody));
 
-  const rawBody = req.rawBody.toString();
-  // logger.info({ rawBody });
-
-  const result = await verifyWebhookSignature({
-    headers,
+  const conf={
+    checkSourceVerification: false,
+  };
+  const result = validatePayload(headers,
     rawBody,
-    signingSecret: SECRET,
-    config: {
-      checkSourceVerification: false,
-    },
-  });
+    conf
+  );
 
   if (!result.isValidSignature) {
     logger.info("Signature is invalid, rejected");
@@ -177,17 +177,43 @@ verifyHookdeckSignature = async function(
   }
 };
 
+//Validate payload
+function validatePayload(headers, rawBody, conf) {
+  if (headers[config.limesurvey.headerName]) {
+    //Extract Signature header
+    const signature = headers[config.limesurvey.headerName] || "";
+    logger.info(signature);
+    const sig = Buffer.from(signature);
+
+    //Calculate HMAC
+    const hmac = crypto.createHmac("sha256", config.limesurvey.SECRET);
+    const digest = Buffer.from(
+      config.limesurvey.headerPrefix + hmac.update(JSON.stringify(rawBody)).digest("hex"),
+      "utf8",
+    );
+    logger.info(digest.toString());
+
+    //Compare HMACs
+    if (sig.length !== digest.length || !crypto.timingSafeEqual(digest, sig)) {
+      return { isValidSignature: false };
+    } else {
+      return { isValidSignature: true };
+    }
+  }
+  return { isValidSignature: false };
+}
+
 app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req, res) => {
-  logger.info(req.body);
+  logger.info(JSON.stringify(req.body));
   var type;
-  if(req.body.event == "survey_initialized") {
+  if(req.body.event == "beforeSurveyPage") {
     type='activity_initialized';
-  } else if(req.body.event == "survey_completed") {
+  } else if(req.body.event == "afterSurveyComplete") {
     type='activity_completed';
   } else {
-    type=req.body.event;
+    res.status(200).send({ message: 'Event not treated.' });
   };
-  let surveyId = req.body.surveyId;
+  let surveyId = req.body.event_details.surveyId;
   let activities = await getActivityFromSurveyId(surveyId);
   let messages = [];
   for (let i = 0; i < activities.length; i++) {
@@ -198,13 +224,15 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, async (req,
           surveyId: surveyId,
           activityId: activity._id,
           studyId: activity.study,
-          user: req.body.token
+          user: req.body.event_details.token
       };
-      logger.info(message);
       messages.push(message);
   }
-  sendSimvaEventsToKafka(messages);
-  res.status(200).send({ message: 'Tested and treated' });
+  if(messages.length > 0) {
+    logger.info(JSON.stringify(messages));
+    sendSimvaEventsToKafka(messages);
+  }
+  res.status(200).send({ message: 'Message treated' });
 });
 
 // catch 404

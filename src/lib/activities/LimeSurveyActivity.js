@@ -258,6 +258,7 @@ class LimeSurveyActivity extends Activity {
 		return new Promise((resolve, reject) => {
 			try{
 				async.waterfall([
+					controller.auth,
 					controller.isUserOwnerOfSurvey(this.extra_data.surveyId, username)
 				], function (err, result) {
 					if(err){
@@ -278,6 +279,7 @@ class LimeSurveyActivity extends Activity {
 		return new Promise((resolve, reject) => {
 			try{
 				async.waterfall([
+					controller.auth,
 					controller.setSurveyOwner(this.extra_data.surveyId, userid)
 				], function (err, result) {
 					if(err){

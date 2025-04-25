@@ -80,6 +80,7 @@ function create(survey) {
 				async.waterfall([
 					auth,
 					insert(survey),
+					update_activated_survey,
 					start,
 					startTokensSurvey
 				], function (err, result) {
@@ -109,6 +110,7 @@ function clone(surveyId) {
 			async.waterfall([
 				auth,
 				copy(surveyId),
+				update_activated_survey,
 				start,
 				startTokensSurvey
 			], function (err, result) {
@@ -128,19 +130,20 @@ function clone(surveyId) {
 
 function online(callback){
 	Log('LimesurveyController.online -> Started');
-	options.data = {};
-	try{
-		axios(options).then(response => {
-			logger.info('Limesurvey ONLINE')
-			callback(null);
-		}).catch(error => {
-			Log('LimesurveyController.online -> Unable to reach service')
-			LogMultiple({error: error});
-			callback({ message: 'LimeSurvey service unreachable.', error: error});
-		})
-	}catch(e){
-		LogBigError('online', e, callback);
-	}
+	options.body = JSON.stringify({});
+
+	axios(options).then(response => {
+		// LIMESURVEY 6-apache - application/libraries/LSjsonRPCServer.php
+		// $request = json_decode(file_get_contents('php://input'), true);
+		// $result = @call_user_func_array(array($object, $request['method']), $request['params']); 
+		// test if status code == 500 : with an empty objet return an error from the server that it can't handle it => THAT MEAN LIMESURVEY IS ONLINE
+		Log('Limesurvey ONLINE');
+		callback(null);
+	})
+	.catch(error => {
+		Log('LimesurveyController.online -> Unable to reach service');
+		callback({ message: 'LimeSurvey service unreachable.', error: error});
+	});
 }
 
 function auth(callback) {
@@ -277,6 +280,36 @@ function exportSurvey(survey) {
 }
 
 /**
+ * update_activated_survey
+ * @param survey_id
+ */
+function update_activated_survey(survey_id, callback) {
+		Log('LimesurveyController.update_activated_survey -> Started');
+		options.data = { method: 'set_survey_properties', params: [SESSIONKEY, survey_id, {"anonymized": "N", "datestamp": "Y", "savetimings": "Y", "ipaddr": "N", "refurl": "N"}], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('update_activated_survey', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+	
+				Log('LimesurveyController.update_activated_survey -> survey updated:');
+				Log(JSON.stringify(body));
+				callback(null, survey_id);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.update_activated_survey -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error update_activated_survey', error: error });  // reject promise on error
+			});
+}
+
+/**
  * Setting Survey Owner
  * @param survey
  * @param userid
@@ -309,6 +342,67 @@ function setSurveyOwner(survey_id, user_id) {
 			});
 	}
 }
+
+/**
+ * Get admin username
+ * @param survey
+ */
+function authAndGetAdminUser(username,callback) {
+	Log('LimesurveyController.authAndGetAdminUser -> Started');
+	try{
+		if(username){
+			async.waterfall([
+				auth,
+				getUser(username)
+			], function (err, result) {
+				if(err){
+					Log('LimesurveyController.authAndGetAdminUser -> ERROR');
+					Log(err);
+					return callback({ message: 'Error getting user ', error: err})
+				}else{
+					Log('LimesurveyController.authAndGetAdminUser -> Completed');
+					Log(result);
+					callback(null, result);
+				}
+			});
+		}
+	}catch(e){
+		LogBigError('authAndGetAdminUser', e, callback);
+	}
+}
+
+/**
+ * Get admin username
+ * @param username
+ */
+function getUser(username) {
+    return function(callback) {
+		Log('LimesurveyController.getUser -> Started');
+		options.data = { method: 'list_users', params: [SESSIONKEY, null, username], id: 1 };
+	
+		axios(options)
+			.then(response => {
+				Log(response);
+				let body;
+				try {
+					body = response.data;
+				} catch (error) {
+					NotifyRCError('getUser', error, response, body, (err) => {
+						return callback(err);  // reject promise on error
+					});
+				}
+				Log('LimesurveyController.getUser -> User got:');
+				//Log(JSON.stringify(body));
+				callback(null, body.result);  // resolve the promise with the result
+			})
+			.catch(error => {
+				Log('LimesurveyController.getUser -> ERROR:');
+				LogMultiple({ error: error });
+				callback({ message: 'Error getUser', error: error });  // reject promise on error
+			});
+	}
+}
+
 
 /**
  * Get User Id from Users list 
@@ -553,7 +647,7 @@ function getSurveysFromUser(username) {
 }
 
 /**
- * isUserOwnerOfSurveyt
+ * isUserOwnerOfSurvey
  * @param sid
  * @param username
  */
@@ -852,10 +946,9 @@ function getResponses(sid, language, participants, type){
 
 								if (body && body.result && body.result.length > 0) {
 									const decodedResult = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
-									for (var rid in decodedResult){
-										for (var res in decodedResult[rid]){
-											responses[participant] = decodedResult[rid][res];
-										}
+									for (var res in decodedResult){
+										logger.info(res);
+										responses[participant] = decodedResult[res];
 									}
 								} else {
 									responses[participant] = null;
@@ -906,17 +999,19 @@ function getResponses(sid, language, participants, type){
 										return callback({ message: 'Error transforming LimeSurvey result' });
 									}
 									if(participants){
-										for (var rid in raw){
-											for (var res in raw[rid]){
-												if(participants.indexOf(raw[rid][res].token) > -1){
-													if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-														responses[raw[rid][res].token] = raw[rid][res];
-													}
+										for (let res of raw){
+											if(participants.indexOf(raw[res].token) > -1){
+												if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+													responses[raw[res].token] = res;
 												}
 											}
 										}
-									}else{
-										responses=raw;
+									} else {
+										for (let res of raw){
+											if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+												responses[raw[res].token] = raw[res];
+											}
+										}
 									}
 								}
 								Log('LimesurveyController.getResponses -> Completed');
@@ -966,21 +1061,17 @@ function getResponses(sid, language, participants, type){
 									return callback({ message: 'Error transforming LimeSurvey result' });
 								}
 								if(participants){
-									for (var rid in raw){
-										for (var res in raw[rid]){
-											if(participants.indexOf(raw[rid][res].token) > -1){
-												if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-													responses[raw[rid][res].token] = raw[rid][res];
-												}
+									for (var res in raw){
+										if(participants.indexOf(raw[res].token) > -1){
+											if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+												responses[raw[res].token] = raw[res];
 											}
 										}
 									}
 								}else{
-									for (var rid in raw){
-										for (var res in raw[rid]){
-											if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
-												responses[raw[rid][res].token] = raw[rid][res];
-											}
+									for (var res in raw){
+										if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+											responses[raw[res].token] = raw[res];
 										}
 									}
 								}
@@ -1189,22 +1280,19 @@ function getResponseByToken(survey, language, token, type){
 								}
 							}
 						}
-
+						Log('LimesurveyController.getResponseByToken -> Response :');
+						Log(JSON.stringify(response));
 						if(!response.status){
 							if(response.responses){
 								if(response.responses.length > 0){
-									for (var i = 0; i < response.responses.length; i++) {
-										let keys = Object.keys(response.responses[i]);
-										if(response.responses[i][keys[0]].submitdate !== null){
-											return callback(null, response.responses[i][keys[0]]);
+									for (let res of response.responses) {
+										if(res.submitdate !== null){
+											return callback(null, res);
 										}
 									}
-
-									let keys = Object.keys(response.responses[response.responses.length -1]);
-									callback(null, response.responses[response.responses.length -1][keys[0]]);
+									callback(null, response.responses[0]);
 								}else{
-									let keys = Object.keys(response.responses[0]);
-									callback(null, response.responses[0][keys[0]]);
+									callback(null, response);
 								}
 							}else{
 								callback(null, false);
@@ -1336,6 +1424,7 @@ module.exports = {
 	auth: auth,
 	insert: insert,
 	exportSurvey : exportSurvey,
+	authAndGetAdminUser : authAndGetAdminUser,
 	getUserIdByUserName : getUserIdByUserName,
 	setSurveyOwner:setSurveyOwner,
 	isUserOwnerOfSurvey:isUserOwnerOfSurvey,

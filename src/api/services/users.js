@@ -171,3 +171,20 @@ module.exports.eventUser = async (options) => {
   
   return result;
 };
+
+
+/**
+ * @param {Object} options
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.isUserLimesurveyAdmin = async (options) => {
+  var result = { status: 200, data: {} };
+  try{
+    result.data = await UsersController.isUserLimesurveyAdmin(options.username);
+  }catch(e){
+    result = { status: 400, data: e };
+  }
+  
+  return result;
+};

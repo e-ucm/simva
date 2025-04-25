@@ -52,6 +52,23 @@ router.get('/me', Authenticator.auth, async (req, res, next) => {
 });
 
 /**
+ * Obtains the list of groups owned by current user.
+ * 
+ */
+router.get('/islimesurveyadmin', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    username: req.user.data.username
+  };
+
+  try {
+    const result = await users.isUserLimesurveyAdmin(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Creates a new group for the current user as owner.
  * 
  */
