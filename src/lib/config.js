@@ -75,6 +75,7 @@ config.limesurvey.adminPassword =  process.env.LIMESURVEY_ADMIN_PASSWORD || 'pas
 config.limesurvey.SECRET =  process.env.LIMESURVEY_SECRET || 'secret'
 config.limesurvey.headerName = process.env.LIMESURVEY_HEADER_NAME !== undefined ? process.env.LIMESURVEY_HEADER_NAME.toLocaleLowerCase() : "x-signature-sha256"
 config.limesurvey.headerPrefix = process.env.LIMESURVEY_HEADER_PREFIX || ""
+config.limesurvey.useNewVersion = process.env.LIMESURVEY_VERSION_NUMBER !== undefined ? parseInt(process.env.LIMESURVEY_VERSION_NUMBER) > 5 : false
 
 config.sso = {}
 config.sso.enabled = process.env.SSO_ENABLED == 'true' || false

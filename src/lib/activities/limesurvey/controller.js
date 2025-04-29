@@ -24,6 +24,7 @@ var SESSIONKEY = '';
 var options = {};
 var user, pass;
 var debug = true;
+var config= require('../../config');
 
 function setOptions(_options){
 	options = _options;
@@ -131,19 +132,24 @@ function clone(surveyId) {
 function online(callback){
 	Log('LimesurveyController.online -> Started');
 	options.body = JSON.stringify({});
-
 	axios(options).then(response => {
-		// LIMESURVEY 6-apache - application/libraries/LSjsonRPCServer.php
-		// $request = json_decode(file_get_contents('php://input'), true);
-		// $result = @call_user_func_array(array($object, $request['method']), $request['params']); 
-		// test if status code == 500 : with an empty objet return an error from the server that it can't handle it => THAT MEAN LIMESURVEY IS ONLINE
-		Log('Limesurvey ONLINE');
-		callback(null);
-	})
-	.catch(error => {
-		Log('LimesurveyController.online -> Unable to reach service');
-		callback({ message: 'LimeSurvey service unreachable.', error: error});
-	});
+			// LIMESURVEY 6-apache - application/libraries/LSjsonRPCServer.php
+			// $request = json_decode(file_get_contents('php://input'), true);
+			// $result = @call_user_func_array(array($object, $request['method']), $request['params']); 
+			// test if status code == 500 : with an empty objet return an error from the server that it can't handle it => THAT MEAN LIMESURVEY IS ONLINE
+			Log('Limesurvey ONLINE');
+			callback(null);
+		})
+		.catch(error => {
+			if(error.status == 500) {
+				Log('Limesurvey ONLINE');
+				callback(null);
+			} else {
+				Log('LimesurveyController.online -> Unable to reach service')
+				LogMultiple({error: error});
+				callback({ message: 'LimeSurvey service unreachable.', error: error});
+			}
+		});
 }
 
 function auth(callback) {
@@ -946,9 +952,17 @@ function getResponses(sid, language, participants, type){
 
 								if (body && body.result && body.result.length > 0) {
 									const decodedResult = JSON.parse(Buffer.from(body.result, 'base64').toString()).responses;
-									for (var res in decodedResult){
-										logger.info(res);
-										responses[participant] = decodedResult[res];
+									if(config.limesurvey.useNewVersion) {
+										for (var res in decodedResult){
+											logger.info(res);
+											responses[participant] = decodedResult[res];
+										}
+									} else {
+										for (var rid in decodedResult){
+											for (var res in decodedResult[rid]){
+												responses[participant] = decodedResult[rid][res];
+											}
+										}
 									}
 								} else {
 									responses[participant] = null;
@@ -999,18 +1013,32 @@ function getResponses(sid, language, participants, type){
 										return callback({ message: 'Error transforming LimeSurvey result' });
 									}
 									if(participants){
-										for (let res of raw){
-											if(participants.indexOf(raw[res].token) > -1){
-												if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
-													responses[raw[res].token] = res;
+										if(config.limesurvey.useNewVersion) {
+											for (let res of raw){
+												if(participants.indexOf(raw[res].token) > -1){
+													if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+														responses[raw[res].token] = res;
+													}
+												}
+											}
+										} else {
+											for (let res of raw){
+												if(participants.indexOf(raw[res].token) > -1){
+													if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+														responses[raw[res].token] = res;
+													}
 												}
 											}
 										}
 									} else {
-										for (let res of raw){
-											if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
-												responses[raw[res].token] = raw[res];
+										if(config.limesurvey.useNewVersion) {
+											for (let res of raw){
+												if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+													responses[raw[res].token] = raw[res];
+												}
 											}
+										} else {
+											responses=raw;
 										}
 									}
 								}
@@ -1061,17 +1089,39 @@ function getResponses(sid, language, participants, type){
 									return callback({ message: 'Error transforming LimeSurvey result' });
 								}
 								if(participants){
-									for (var res in raw){
-										if(participants.indexOf(raw[res].token) > -1){
-											if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
-												responses[raw[res].token] = raw[res];
+									if(config.limesurvey.useNewVersion) {
+										for (var res in raw){
+											if(participants.indexOf(raw[res].token) > -1){
+												if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+													responses[raw[res].token] = raw[res];
+												}
+											}
+										}
+									} else {
+										for (var rid in raw){
+											for (var res in raw[rid]){
+												if(participants.indexOf(raw[rid][res].token) > -1){
+													if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+														responses[raw[rid][res].token] = raw[rid][res];
+													}
+												}
 											}
 										}
 									}
 								}else{
-									for (var res in raw){
-										if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
-											responses[raw[res].token] = raw[res];
+									if(config.limesurvey.useNewVersion) {
+										for (var res in raw){
+											if(!responses[raw[res].token] || (responses[raw[res].token] && !responses[raw[res].token].submitdate)){
+												responses[raw[res].token] = raw[res];
+											}
+										}
+									} else {
+										for (var rid in raw){
+											for (var res in raw[rid]){
+												if(!responses[raw[rid][res].token] || (responses[raw[rid][res].token] && !responses[raw[rid][res].token].submitdate)){
+													responses[raw[rid][res].token] = raw[rid][res];
+												}
+											}
 										}
 									}
 								}
@@ -1285,14 +1335,30 @@ function getResponseByToken(survey, language, token, type){
 						if(!response.status){
 							if(response.responses){
 								if(response.responses.length > 0){
-									for (let res of response.responses) {
-										if(res.submitdate !== null){
-											return callback(null, res);
+									if(config.limesurvey.useNewVersion) { 
+										for (let res of response.responses) {
+											if(res.submitdate !== null){
+												return callback(null, res);
+											}
 										}
+										callback(null, response.responses[0]);
+									} else {
+										for (var i = 0; i < response.responses.length; i++) {
+											let keys = Object.keys(response.responses[i]);
+											if(response.responses[i][keys[0]].submitdate !== null){
+												return callback(null, response.responses[i][keys[0]]);
+											}
+										}
+										let keys = Object.keys(response.responses[response.responses.length -1]);
+										callback(null, response.responses[response.responses.length -1][keys[0]]);
 									}
-									callback(null, response.responses[0]);
 								}else{
-									callback(null, response);
+									if(config.limesurvey.useNewVersion) {
+										callback(null, response);
+									} else {
+										let keys = Object.keys(response.responses[0]);
+										callback(null, response.responses[0][keys[0]]);
+									}
 								}
 							}else{
 								callback(null, false);

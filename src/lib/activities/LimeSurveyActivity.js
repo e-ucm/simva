@@ -105,6 +105,13 @@ class LimeSurveyActivity extends Activity {
 						url: config.limesurvey.external_url,
 						surveys: surveys
 					};
+					if(config.limesurvey.useNewVersion) {
+						utils.editurl= config.limesurvey.external_url + "/surveyAdministration/view?surveyid=" ;
+						utils.newurl= config.limesurvey.external_url + "/surveyAdministration/newSurvey" ;
+					} else {
+						utils.editurl= config.limesurvey.external_url + "/admin/survey/sa/view/surveyid/" ;
+						utils.newurl= config.limesurvey.external_url + "/admin/survey/sa/newsurvey" ;
+					}
 
 					resolve(utils);
 				}
@@ -234,12 +241,15 @@ class LimeSurveyActivity extends Activity {
 	}
 
 	async setSurveyOwnerFromUsername(username) {
-		let isOwner=await this.isUserOwnerOfSurvey(username);
-		if(!isOwner) {
-			var userid = await this.getUserIdByUserName(username);
-			await this.setSurveyOwner(userid);
-			this.extra_data.surveyOwner = username;
-			this.save();
+		if(config.limesurvey.useNewVersion) {
+		} else {
+			let isOwner=await this.isUserOwnerOfSurvey(username);
+			if(!isOwner) {
+				var userid = await this.getUserIdByUserName(username);
+				await this.setSurveyOwner(userid);
+				this.extra_data.surveyOwner = username;
+				this.save();
+			}
 		}
 	}
 
