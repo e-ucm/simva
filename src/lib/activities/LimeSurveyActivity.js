@@ -131,6 +131,7 @@ class LimeSurveyActivity extends Activity {
 		}
 		if(typeof params.copysurvey !== 'undefined') {
 			this.copysurvey = params.copysurvey;
+			this.participants=Object.keys(this.extra_data.participants);
 		}
 		if(typeof params.username !== 'undefined') {
 			this.username = params.username;
@@ -143,10 +144,20 @@ class LimeSurveyActivity extends Activity {
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};
+			this.extra_data.participants={};
 		}
 		if(this.copysurvey){
-			this.extra_data.surveyId = await this.createSurveyById();
+			let copysurvey=this.copysurvey;
 			delete this.copysurvey;
+			let participants=Object.keys(this.extra_data.participants);
+			if(participants.length > 0) {
+				await this.removeParticipants(participants);
+			}
+			this.extra_data.surveyId = await this.createSurveyById(copysurvey);
+			if(this.participants.length > 0) {
+				await this.addParticipants(this.participants);
+			}
+			delete this.participants;
 		}else if(this.rawsurvey){
 			this.extra_data.surveyId = await this.createSurveyByFile();	
 			delete this.rawsurvey;
@@ -176,23 +187,20 @@ class LimeSurveyActivity extends Activity {
 		}
 	}
 
-	async createSurveyById(){
+	async createSurveyById(surveyId){
 		return new Promise((resolve, reject) => {
-			if(this.copysurvey){
+			if(surveyId){
 				try{
 					async.waterfall([
 						controller.online,
 						controller.auth,
-						controller.clone(this.copysurvey, this.name),
+						controller.clone(surveyId, this.name),
 					], function (err, result) {
-						
 						if(err){
 							reject(err);
 						}else{
 							resolve(result);
 						}
-
-						resolve(result);
 					});
 				}catch(exception){
 					logger.error(exception);
