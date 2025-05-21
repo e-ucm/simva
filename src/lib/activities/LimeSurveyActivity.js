@@ -131,7 +131,9 @@ class LimeSurveyActivity extends Activity {
 		}
 		if(typeof params.copysurvey !== 'undefined') {
 			this.copysurvey = params.copysurvey;
-			this.participants=Object.keys(this.extra_data.participants);
+			if(this.extra_data && this.extra_data.participants) {
+				this.participants=Object.keys(this.extra_data.participants);
+			}
 		}
 		if(typeof params.username !== 'undefined') {
 			this.username = params.username;
@@ -154,7 +156,7 @@ class LimeSurveyActivity extends Activity {
 				await this.removeParticipants(participants);
 			}
 			this.extra_data.surveyId = await this.createSurveyById(copysurvey);
-			if(this.participants.length > 0) {
+			if(this.participants && this.participants.length > 0) {
 				await this.addParticipants(this.participants);
 			}
 			delete this.participants;
