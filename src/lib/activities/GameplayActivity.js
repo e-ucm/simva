@@ -16,9 +16,9 @@ const pipelineAsync = promisify(pipeline);
 var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
-var generateStatementId = require('../utils/statementIdGenerator');
+var LRS= require("./LRS.js");
 
-var TraceStorageActivity = new MinioActivity({});
+var LRSManager = new LRS();
 
 var UsersController = require('../userscontroller');
 
@@ -80,7 +80,7 @@ class GameplayActivity extends Activity {
 	}
 
 	static getDescription(){
-		return 'A xAPI processor activity that uses RAGE Analytics and also Minio.';
+		return 'A xAPI processor activity that uses Minio.';
 	}
 
 	static async getUtils(username){
@@ -167,110 +167,13 @@ class GameplayActivity extends Activity {
 		return await super.removeParticipants(participants);
 	}
 
-	updateMissingTraceElements(participant, trace) {
-		const now = new Date();
-		if(!trace.id) {
-			trace.id = generateStatementId(trace);
-		}
-		if(!trace.stored) {
-			trace.stored = now.toISOString();
-		}
-		if(!trace.timestamp) {
-			trace.timestamp = now.toISOString();
-		}
-		if(!trace.version) {
-			trace.version = "1.0.3";
-			//trace.version = "2.0.0";
-		}
-		if(!trace.authority) {
-			trace.authority = {
-				homePage: config.external_url,
-				name: participant
-			};
-		}
-		return trace;
-	}
-
-	async sendProgressOrCompletionOfGame(trace, participant) {
-		if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
-			const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
-			const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
-			const completedVerb='http://adlnet.gov/expapi/verbs/completed';
-			const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
-			if(trace.verb) {
-				switch(trace.verb.id) {
-					case initializedVerb:
-						logger.info("INITIALIZED GAME");
-						await this.setProgress(participant, 0);
-						const message = {
-							type: 'activity_initialized',
-							activityType : "gameplay", 
-							user: participant,
-							activityId: this.id,
-							studyId: this.study
-						};
-						sendSimvaEventsToKafka([message]);
-					  break;
-					case progressedVerb:
-						logger.info("PROGRESSED THROUGH GAME");
-						if(trace.result && trace.result.extensions[resultExtensionProgress]) {
-							var value = trace.result.extensions[resultExtensionProgress];
-							logger.info(value);
-							await this.setProgress(participant, value);
-							const message = {
-								type: 'activity_progressed',
-								activityType : "gameplay", 
-								activityId: this.id,
-								studyId: this.study,
-								user: participant,
-								val: value
-							};
-							sendSimvaEventsToKafka([message]);
-						}
-					  break;
-					case completedVerb:
-						if(trace.result.completion == true) {
-							logger.info("COMPLETED GAME");
-							await this.setCompletion(participant, true);
-						}
-					  break;
-					default: 
-						logger.info("OTHER VERB");
-				}
-			}
-		}
-	}
-
 	async setStatement(participant, result){
 		let toret = 0;
-		let response=[];
 		try {
-			if(Array.isArray(result)){
-				if(this.extra_data.config.trace_storage){
-					var traces= [];
-					for(let traceId = 0; traceId < result.length; traceId++) {
-						var trace = result[traceId];
-						await this.sendProgressOrCompletionOfGame(trace, participant);
-						traces.push(this.updateMissingTraceElements(participant, trace));
-					}
-					response = await TraceStorageActivity.sendTracesToKafka(traces, this.id);
-					toret =  { ids: response };
-				} else {
-					throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
-				}
-			} else if(!result || typeof result === 'object'){
-				if(this.extra_data.config.trace_storage){
-					trace = this.updateMissingTraceElements(participant, result);
-					await this.sendProgressOrCompletionOfGame(trace, participant);
-					await TraceStorageActivity.sendTracesToKafka([trace], this.id);
-					toret =  { ids: response };
-				} else {
-					throw { message: 'Trace Storage is not enabled. No xAPI collector.' };
-				}
+			if(this.extra_data.config.trace_storage){
+				toret = await LRSManager.setStatement("gameplay", this.id, participant, result);
 			} else {
-				logger.info('Unknown case');
-				logger.info(result.result);
-				throw { message: 'Unknown case setting the statements' };
+				throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
 			}
 		}catch(e){
 			logger.error(e);
@@ -285,14 +188,7 @@ class GameplayActivity extends Activity {
 			if(Array.isArray(result)){
  				// If we're receiving an array, we're receiving traces
 				if(this.extra_data.config.trace_storage){
-					var traces= [];
-					for(let traceId = 0; traceId < result.length; traceId++) {
-						var trace = result[traceId];
-						await this.sendProgressOrCompletionOfGame(trace, participant);
-						traces.push(this.updateMissingTraceElements(participant, trace));
-					}
-					await TraceStorageActivity.sendTracesToKafka(traces, this.id);
-					toret =  { message: 'Traces Received' };
+					toret = await LRSManager.setStatement("gameplay", this.id, participant, result);
 				}else{
 					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
 				}

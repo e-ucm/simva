@@ -6,7 +6,6 @@ var async = require('async');
 var Activity = require('./activity');
 
 var config = require('../config');
-
 var limeconfig = {
 	options: {
 		url: config.limesurvey.url + '/index.php/admin/remotecontrol',
@@ -23,6 +22,9 @@ var limeconfig = {
   	password: config.limesurvey.adminPassword
 }
 
+var LRS= require("./LRS.js");
+
+var LRSManager = new LRS();
 
 let controller = require('./limesurvey/controller');
 
@@ -173,6 +175,11 @@ class LimeSurveyActivity extends Activity {
 		}
 		if(!this.extra_data.language) {
 			this.extra_data.language = (await this.getSurveyLanguages()).default;
+		}
+		if(!this.extra_data.lrsset) {
+			var surveyid = this.extra_data.surveyId;
+			var lrsendpoint=config.api.url + "/activities/" + this.id;
+			await controller.setActivityLRSEndpointPromise(surveyid, lrsendpoint);
 		}
 		if(this.username) {
 			try {
@@ -446,6 +453,23 @@ class LimeSurveyActivity extends Activity {
 				resolve();
 			}
 		})
+	}
+
+
+	async setStatement(participant, result){
+		let toret = 0;
+		try {
+			toret = await LRSManager.setStatement("limesurvey", this.id, participant, result);
+			//if(this.extra_data.config.trace_storage){
+			//	
+			//} else {
+			//	throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
+			//}
+		}catch(e){
+			logger.error(e);
+			throw { message: 'Error while setting the statements' };
+		}
+		return toret;
 	}
 
 	async setResult(participant, result){
