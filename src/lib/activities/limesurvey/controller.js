@@ -182,6 +182,47 @@ function reauth(callback) {
 	}
 }
 
+function setActivityLRSEndpoint(surveyId, lrsendpoint) {
+	return function (callback) {
+		Log('LimesurveyController.setActivityLRSEndpoint -> Started');
+		options.data = {method:'update_plugin_settings',params:[
+			SESSIONKEY,
+			"LimeSurveyXAPITracker",
+			surveyId,
+			{ "lrs-endpoint" : lrsendpoint }
+		],id:1};
+		axios(options).then(res => {
+				logger.info("Status : %s", JSON.stringify(res.data));
+				callback(null, res);
+		}).catch(err => {
+			if (err.response) {
+				logger.error('Status: %s | Data : %s', err.response.status, JSON.stringify(err.response.data));
+				callback(err.response.data);
+			} else {
+				logger.error(err.message);
+				callback(err.message);
+			}
+		});
+	}
+}
+
+function setActivityLRSEndpointPromise(surveyId, lrsendpoint) {
+	return new Promise((resolve, reject) => {
+		Log('LimesurveyController.setActivityLRSEndpointPromise -> Started');
+		try{
+			async.waterfall([
+				auth, 
+				setActivityLRSEndpoint(surveyId, lrsendpoint)
+			], function (err, result) {
+				Log('LimesurveyController.setActivityLRSEndpointPromise -> Completed');
+				resolve(result);
+			});
+		}catch(e){
+			reject(e);
+		}
+	});
+}
+
 function release_session_token(callback){
 	Log('LimesurveyController.release_session_token -> Started');
 	options.data = {method:'release_session_key',params:[SESSIONKEY],id:1};
@@ -1511,5 +1552,7 @@ module.exports = {
 	startTokensSurvey: startTokensSurvey,
 	addParticipants: addParticipants,
 	delParticipants: delParticipants,
-	getSurveyLanguages: getSurveyLanguages
+	getSurveyLanguages: getSurveyLanguages,
+	setActivityLRSEndpoint: setActivityLRSEndpoint,
+	setActivityLRSEndpointPromise: setActivityLRSEndpointPromise
 }
