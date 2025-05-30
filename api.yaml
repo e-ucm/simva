@@ -22,6 +22,8 @@ tags:
     description: Operations available to students
   - name: noroles
     description: Operations available to users with no role
+  - name: lrsmanagers
+    description: Operations available to users that manage lrs
 paths:
   /events:
     get:
@@ -1311,6 +1313,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the statement of the activity
       operationId: getStatement
       description: |
@@ -1332,6 +1335,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: Post the statement for the activity
       operationId: setStatement
       description: |
@@ -1352,6 +1356,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: put the statement for the activity
       operationId: putStatement
       description: |
@@ -1373,6 +1378,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the agent object of the activity
       operationId: getAgent
       description: |
@@ -1395,6 +1401,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the agent profile object of the activity
       operationId: getAgentProfile
       description: |
@@ -1416,6 +1423,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: Post the agent profile for the activity
       operationId: setAgentProfile
       description: |
@@ -1434,6 +1442,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: put the agent profile for the activity
       operationId: putAgentProfile
       description: |
@@ -1454,6 +1463,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: delete the agent profile for the activity
       operationId: deleteAgentProfile
       description: |
@@ -1475,6 +1485,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the activities object of the activity
       operationId: getActivities
       description: |
@@ -1497,6 +1508,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the activities profile object of the activity
       operationId: getActivitiesProfile
       description: |
@@ -1518,6 +1530,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: Post the activities profile for the activity
       operationId: setActivitiesProfile
       description: |
@@ -1536,6 +1549,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: put the activities profile for the activity
       operationId: putActivitiesProfile
       description: |
@@ -1556,6 +1570,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: delete the activities profile for the activity
       operationId: deleteActivitiesProfile
       description: |
@@ -1577,6 +1592,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the activities status object of the activity
       operationId: getActivitiesStatus
       description: |
@@ -1598,6 +1614,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: Post the activities status for the activity
       operationId: setActivitiesStatus
       description: |
@@ -1616,6 +1633,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: put the activities status for the activity
       operationId: putActivitiesStatus
       description: |
@@ -1636,6 +1654,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: delete the activities status for the activity
       operationId: deleteActivitiesStatus
       description: |
@@ -1657,6 +1676,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the LRS Information of the activity
       operationId: getAbout
       description: |
@@ -1679,6 +1699,7 @@ paths:
       tags:
         - teachers
         - students
+        - lrsmanagers
       summary: gets the extension Information
       operationId: getExtension 
       description: |
@@ -2417,6 +2438,7 @@ components:
            - "teaching-assistant"
            - "researcher"
            - "admin"
+           - "lrsmanager"
         external_entity:
           type: array
           items:

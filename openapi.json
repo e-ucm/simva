@@ -28,6 +28,10 @@
     {
       "name": "noroles",
       "description": "Operations available to users with no role"
+    },
+    {
+      "name": "lrsmanagers",
+      "description": "Operations available to users that manage lrs"
     }
   ],
   "paths": {
@@ -2020,7 +2024,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the statement of the activity",
         "operationId": "getStatement",
@@ -2054,7 +2059,8 @@
       "post": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "Post the statement for the activity",
         "operationId": "setStatement",
@@ -2085,7 +2091,8 @@
       "put": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "put the statement for the activity",
         "operationId": "putStatement",
@@ -2118,7 +2125,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the agent object of the activity",
         "operationId": "getAgent",
@@ -2154,7 +2162,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the agent profile object of the activity",
         "operationId": "getAgentProfile",
@@ -2188,7 +2197,8 @@
       "post": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "Post the agent profile for the activity",
         "operationId": "setAgentProfile",
@@ -2216,7 +2226,8 @@
       "put": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "put the agent profile for the activity",
         "operationId": "putAgentProfile",
@@ -2247,7 +2258,8 @@
       "delete": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "delete the agent profile for the activity",
         "operationId": "deleteAgentProfile",
@@ -2280,7 +2292,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the activities object of the activity",
         "operationId": "getActivities",
@@ -2316,7 +2329,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the activities profile object of the activity",
         "operationId": "getActivitiesProfile",
@@ -2350,7 +2364,8 @@
       "post": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "Post the activities profile for the activity",
         "operationId": "setActivitiesProfile",
@@ -2378,7 +2393,8 @@
       "put": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "put the activities profile for the activity",
         "operationId": "putActivitiesProfile",
@@ -2409,7 +2425,8 @@
       "delete": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "delete the activities profile for the activity",
         "operationId": "deleteActivitiesProfile",
@@ -2442,7 +2459,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the activities status object of the activity",
         "operationId": "getActivitiesStatus",
@@ -2476,7 +2494,8 @@
       "post": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "Post the activities status for the activity",
         "operationId": "setActivitiesStatus",
@@ -2504,7 +2523,8 @@
       "put": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "put the activities status for the activity",
         "operationId": "putActivitiesStatus",
@@ -2535,7 +2555,8 @@
       "delete": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "delete the activities status for the activity",
         "operationId": "deleteActivitiesStatus",
@@ -2568,7 +2589,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the LRS Information of the activity",
         "operationId": "getAbout",
@@ -2604,7 +2626,8 @@
       "get": {
         "tags": [
           "teachers",
-          "students"
+          "students",
+          "lrsmanagers"
         ],
         "summary": "gets the extension Information",
         "operationId": "getExtension",
@@ -3658,7 +3681,8 @@
               "teacher",
               "teaching-assistant",
               "researcher",
-              "admin"
+              "admin",
+              "lrsmanager"
             ]
           },
           "external_entity": {

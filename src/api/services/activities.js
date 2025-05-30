@@ -558,8 +558,7 @@ module.exports.setStatement = async (options) => {
     let study = await ActivitiesController.getStudy(options.id);
 
     let participants = await StudiesController.getParticipants(study);
-
-    if(participants.indexOf(options.user.data.username) !== -1){
+    if(options.user.data.role == 'lrsmanager' || participants.indexOf(options.user.data.username) !== -1 ){
       body.data = await activity.setStatement(options.user.data.username, options.body);
     }else{
       if(study.owners.indexOf(options.user.data.username) !== -1){
@@ -571,7 +570,7 @@ module.exports.setStatement = async (options) => {
         }
       }else{
         body.status = 401;
-        body.data.message = 'You do not participate in the activity either as owner or user';
+        body.data.message = 'You do not participate in the activity either as owner or user or as admin';
       }
     }
 
