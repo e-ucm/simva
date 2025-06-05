@@ -185,6 +185,14 @@ class Activity {
 	
 
 	async setResult(participant, result){
+		const message = {
+			type: 'activity_result',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		if(!this.extra_data){
 			this.extra_data = {}
 		}
@@ -370,6 +378,15 @@ class Activity {
 	}
 
 	async setProgress(participant, progress){
+		const message = {
+			type: 'activity_progressed',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant,
+			val: progress
+		};
+		sendSimvaEventsToKafka([message]);
 		if(!this.extra_data){
 			this.extra_data = {}
 		}
@@ -388,17 +405,15 @@ class Activity {
 	}
 
 	async setCompletion(participant, status){
-		if(this.type === "activity") {
-			const message = {
-				type: 'activity_completed',
-				activityType : "activity", 
-				activityId: this.id,
-				studyId: this.study,
-				status: status,
-				user: participant
-			};
-			sendSimvaEventsToKafka([message]);
-		}
+		const message = {
+			type: 'activity_completed',
+			activityType : this.type, 
+			activityId: this.id,
+			studyId: this.study,
+			status: status,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		if(!this.extra_data){
 			this.extra_data = {}
 		}

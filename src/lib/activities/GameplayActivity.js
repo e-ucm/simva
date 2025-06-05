@@ -182,6 +182,14 @@ class GameplayActivity extends Activity {
 	}
 
 	async setResult(participant, result){
+		const message = {
+			type: 'activity_result',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		let toret = 0;
 		try{
 			if(Array.isArray(result)){
@@ -431,15 +439,6 @@ class GameplayActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
-		const message = {
-			type: 'activity_completed',
-			activityType : "gameplay", 
-			activityId: this.id,
-			studyId: this.study,
-			status: status,
-			user: participant
-		};
-		sendSimvaEventsToKafka([message]);
 		return await super.setCompletion(participant, status);
 	}
 

@@ -1,5 +1,5 @@
 const logger = require('../logger');
-var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka.js');
 var MinioActivity = require('./MinioActivity');
 var generateStatementId = require('../utils/statementIdGenerator');
 
@@ -40,44 +40,45 @@ class LRS {
                 switch(trace.verb.id) {
                     case initializedVerb:
                         logger.info("INITIALIZED ACTIVITY");
-                        const message = {
-                            type: 'activity_initialized',
-                            activityType : activityType, 
-                            user: participant,
-                            activityId: this.id,
-                            studyId: this.study
-                        };
-                        sendSimvaEventsToKafka([message]);
+                        const taskMessage = {
+							task: 'setProgress',
+							params: 'user,progress',
+							object: 'Activity',
+							objectId: this.id,
+							user: participant,
+							progress: 0
+						};
+						sendSimvaTaskToKafka([taskMessage]);
                       break;
                     case progressedVerb:
                         logger.info("PROGRESSED THROW ACTIVITY");
                         if(trace.result && trace.result.extensions[resultExtensionProgress]) {
                             var value = trace.result.extensions[resultExtensionProgress];
                             logger.info(value);
-                            const message = {
-                                type: 'activity_progressed',
-                                activityType : activityType, 
-                                activityId: this.id,
-                                studyId: this.study,
+                            const taskMessage = {
+                                task: 'setProgress',
+                                params: 'user,progress',
+                                object: 'Activity',
+                                objectId: this.id,
                                 user: participant,
-                                val: value
+                                progress: value
                             };
-                            sendSimvaEventsToKafka([message]);
-                        }
+                            sendSimvaTaskToKafka([taskMessage]);
+						}
                       break;
                     case completedVerb:
                         if(trace.result.completion == true) {
-                            logger.info("COMPLETED ACTIVITY");
-                            const message = {
-                                type: 'activity_completed',
-                                activityType : activityType, 
-                                activityId: this.id,
-                                studyId: this.study,
-                                status: true,
-                                user: participant
-                            };
-                            sendSimvaEventsToKafka([message]);
-                        }
+							logger.info("COMPLETED GAME");
+							const taskMessage = {
+								task: 'setCompletion',
+								params: 'user,completion',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								completion: true
+							};
+							sendSimvaTaskToKafka([taskMessage]);
+						}
                       break;
                     default: 
                         logger.info("OTHER VERB");
@@ -88,7 +89,6 @@ class LRS {
 
     async setStatement(activityType, activityId, participant, result) {
         let toret = 0;
-        let response=[];
         if(Array.isArray(result)){
             var traces= [];
             for(let traceId = 0; traceId < result.length; traceId++) {

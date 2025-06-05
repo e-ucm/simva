@@ -44,8 +44,12 @@ config.kafka.host = process.env.KAFKA_HOST || 'kafka'
 config.kafka.port = process.env.KAFKA_PORT || 9092
 config.kafka.url = config.kafka.host + ':' + config.kafka.port
 config.kafka.events_topic = process.env.KAFKA_EVENTS_TOPIC || 'simva_events_topic'
+config.kafka.task_topic = process.env.KAFKA_TASK_TOPIC || 'simva_task_topic'
 config.kafka.eventClientId =  process.env.KAFKA_EVENTS_CLIENT_ID !== undefined ? process.env.KAFKA_EVENTS_CLIENT_ID : 'simva_events'
 config.kafka.eventGroupId  = process.env.KAFKA_EVENTS_GROUP_ID !== undefined ?  process.env.KAFKA_EVENTS_GROUP_ID : 'simva_events'
+config.kafka.consumeTaskMessage =  process.env.KAFKA_TASK_COMSUME_MESSAGE !== undefined ? process.env.KAFKA_TASK_COMSUME_MESSAGE == 'true' : true
+config.kafka.taskClientId =  process.env.KAFKA_TASK_CLIENT_ID !== undefined ? process.env.KAFKA_TASK_CLIENT_ID : 'simva_task'
+config.kafka.taskGroupId  = process.env.KAFKA_TASK_GROUP_ID !== undefined ?  process.env.KAFKA_TASK_GROUP_ID : 'simva_task'
 config.kafka.traceClientId =  process.env.KAFKA_TOPIC_CLIENT_ID !== undefined ? process.env.KAFKA_TOPIC_CLIENT_ID : 'simva_trace'
 config.kafka.traceGroupId = process.env.KAFKA_TOPIC_GROUP_ID !== undefined ? process.env.KAFKA_TOPIC_GROUP_ID : 'simva_trace'
 
