@@ -7,6 +7,7 @@ var GroupsController = require('../../lib/groupscontroller');
 var AllocatorsController = require('../../lib/allocatorscontroller');
 var TestsController = require('../../lib/testscontroller');
 var ActivitiesController = require('../../lib/activitiescontroller');
+var sendSimvaEventsToKafka = require('../../lib/utils/SimvaEventsToKafka.js');
 
 /**
  * @param {Object} options
@@ -302,6 +303,21 @@ module.exports.getSchedule = async (options) => {
 
             if(schedule.next == null && !iscompleted){
               schedule.next = activity._id;
+            }
+            if(i == 0 && !iscompleted) {
+              const message = {
+                  type: 'study_initialized',
+                  studyId : options.id, 
+                  user: currentuser
+              };
+              sendSimvaEventsToKafka([message]);
+            } else if(i == test.activities.length-1 && schedule.next == null) {
+              const message = {
+                  type: 'study_completed',
+                  studyId : options.id, 
+                  user: currentuser
+              };
+              sendSimvaEventsToKafka([message]);
             }
           }
 
