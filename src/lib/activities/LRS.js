@@ -30,7 +30,7 @@ class LRS {
         return trace;
     }
 
-    async sendProgressOrCompletionOfActivity(activityType, trace, participant) {
+    async sendProgressOrCompletionOfActivity(trace, participant, activityType) {
         if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
             const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
             const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
@@ -39,8 +39,8 @@ class LRS {
             if(trace.verb) {
                 switch(trace.verb.id) {
                     case initializedVerb:
-                        logger.info("INITIALIZED ACTIVITY");
-                        const taskMessage = {
+                        logger.info("INITIALIZED ACTIVITY " . activityType);
+                        var taskMessage = {
 							task: 'setProgress',
 							params: 'user,progress',
 							object: 'Activity',
@@ -51,25 +51,28 @@ class LRS {
 						sendSimvaTaskToKafka([taskMessage]);
                       break;
                     case progressedVerb:
-                        logger.info("PROGRESSED THROW ACTIVITY");
+                        logger.info("PROGRESSED THROW ACTIVITY " . activityType);
+                        var value = null;
                         if(trace.result && trace.result.extensions[resultExtensionProgress]) {
-                            var value = trace.result.extensions[resultExtensionProgress];
-                            logger.info(value);
-                            const taskMessage = {
-                                task: 'setProgress',
-                                params: 'user,progress',
-                                object: 'Activity',
-                                objectId: this.id,
-                                user: participant,
-                                progress: value
-                            };
-                            sendSimvaTaskToKafka([taskMessage]);
-						}
+							value = trace.result.extensions[resultExtensionProgress];
+						} else if(trace.result && trace.result.score && trace.result.score.scaled) {
+                            value = trace.result.score.scaled;
+                        }
+                        logger.info(value);
+                        var taskMessage = {
+								task: 'setProgress',
+								params: 'user,progress',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								progress: value
+						};
+						sendSimvaTaskToKafka([taskMessage]);
                       break;
                     case completedVerb:
                         if(trace.result.completion == true) {
-							logger.info("COMPLETED GAME");
-							const taskMessage = {
+							logger.info("COMPLETED ACTIVITY " . activityType);
+							var taskMessage = {
 								task: 'setCompletion',
 								params: 'user,completion',
 								object: 'Activity',

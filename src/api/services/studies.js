@@ -7,6 +7,7 @@ var GroupsController = require('../../lib/groupscontroller');
 var AllocatorsController = require('../../lib/allocatorscontroller');
 var TestsController = require('../../lib/testscontroller');
 var ActivitiesController = require('../../lib/activitiescontroller');
+var sendSimvaTaskToKafka = require('../../lib/utils/SimvaTaskToKafka.js');
 var sendSimvaEventsToKafka = require('../../lib/utils/SimvaEventsToKafka.js');
 
 /**
@@ -306,18 +307,37 @@ module.exports.getSchedule = async (options) => {
             }
             if(i == 0 && !iscompleted) {
               const message = {
-                  type: 'study_initialized',
-                  studyId : options.id, 
-                  user: currentuser
+                type: 'study_initialized',
+                studyId: options.id,
+                user: currentuser,
               };
               sendSimvaEventsToKafka([message]);
+              const taskMessage = {
+                task: 'sendXAPITrace',
+                params: 'user,verb',
+                object: 'Study',
+                objectId: options.id,
+                user: currentuser,
+                verb: 'initialized'
+              };
+              sendSimvaTaskToKafka([taskMessage]);              
             } else if(i == test.activities.length-1 && schedule.next == null) {
               const message = {
-                  type: 'study_completed',
-                  studyId : options.id, 
-                  user: currentuser
+                type: 'study_completed',
+                studyId: options.id,
+                user: currentuser
               };
               sendSimvaEventsToKafka([message]);
+              const taskMessage = {
+                task: 'sendXAPITrace',
+                params: 'user,verb',
+                object: 'Study',
+                objectId: options.id,
+                user: currentuser,
+                verb: 'terminated'
+              };
+              sendSimvaTaskToKafka([taskMessage]);
+              
             }
           }
 
