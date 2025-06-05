@@ -26,6 +26,7 @@
     "jsonwebtoken": "9.0.2",
     "kafkajs": "^2.2.4",
     "keycloak-public-key": "github:e-ucm/keycloak-public-key#1.0.2-eucm",
+    "js-tracker": "github:e-ucm/js-tracker#scorm",
     "ltijs": "^5.9.6",
     "minio": "^8.0.1",
     "mongoose": "^5.7.8",
