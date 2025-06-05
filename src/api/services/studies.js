@@ -314,11 +314,12 @@ module.exports.getSchedule = async (options) => {
               sendSimvaEventsToKafka([message]);
               const taskMessage = {
                 task: 'sendXAPITrace',
-                params: 'user,verb',
+                params: 'user,verb,studyId',
                 object: 'Study',
                 objectId: options.id,
                 user: currentuser,
-                verb: 'initialized'
+                verb: 'initialized',
+                studyId: options.id
               };
               sendSimvaTaskToKafka([taskMessage]);              
             } else if(i == test.activities.length-1 && schedule.next == null) {
@@ -334,7 +335,8 @@ module.exports.getSchedule = async (options) => {
                 object: 'Study',
                 objectId: options.id,
                 user: currentuser,
-                verb: 'terminated'
+                verb: 'terminated',
+                studyId: options.id
               };
               sendSimvaTaskToKafka([taskMessage]);
               
