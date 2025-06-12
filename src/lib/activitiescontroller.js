@@ -166,32 +166,28 @@ ActivitiesController.getPresignedFileUrl = async (id) => {
 	let activity = await ActivitiesController.loadActivity(id);
 	if(activity) {
 		logger.info('GamePlayActivity : getPresignedFileUrl');
-		if (activity.extra_data.config.trace_storage) {
-			logger.info('Trace storage existing... getting URL..');
-			if(activity.extra_data.miniotrace && Object.keys(activity.extra_data.miniotrace).length != 0) {
-				logger.info('URL found in object...');
-				logger.info(activity.extra_data.miniotrace);
-				const now = new Date();
-				logger.info(`Now : ${now.toISOString()}`);
-				const generated = new Date(activity.extra_data.miniotrace.generated_at);
-				logger.info(`Generated : ${generated.toISOString()}`);
-				const milliseconds = 0.9 * Number(activity.extra_data.miniotrace.expire_on_seconds) * 1000; // 1 seconds = 1000 milliseconds
-				logger.info(`Expire in (milliseconds) : ${milliseconds}`);
-				const expire_at = new Date(generated.getTime() + milliseconds);
-				logger.info(`Expire at : ${expire_at.toISOString()}`);
-				if(now>=expire_at) {
-					logger.info('URL expired.. Generating a new one...');
-					await activity.generatePresignedFileUrl();
-					await ActivitiesController.updateActivity(activity._id, activity);
-				}
-			} else {
+		logger.info('Trace storage existing... getting URL..');
+		if(activity.extra_data.miniotrace && Object.keys(activity.extra_data.miniotrace).length != 0) {
+			logger.info('URL found in object...');
+			logger.info(activity.extra_data.miniotrace);
+			const now = new Date();
+			logger.info(`Now : ${now.toISOString()}`);
+			const generated = new Date(activity.extra_data.miniotrace.generated_at);
+			logger.info(`Generated : ${generated.toISOString()}`);
+			const milliseconds = 0.9 * Number(activity.extra_data.miniotrace.expire_on_seconds) * 1000; // 1 seconds = 1000 milliseconds
+			logger.info(`Expire in (milliseconds) : ${milliseconds}`);
+			const expire_at = new Date(generated.getTime() + milliseconds);
+			logger.info(`Expire at : ${expire_at.toISOString()}`);
+			if(now>=expire_at) {
+				logger.info('URL expired.. Generating a new one...');
 				await activity.generatePresignedFileUrl();
 				await ActivitiesController.updateActivity(activity._id, activity);
 			}
-			return activity.extra_data.miniotrace.presignedUrl;
 		} else {
-			throw 'Error not a trace storage for this activity';
+			await activity.generatePresignedFileUrl();
+			await ActivitiesController.updateActivity(activity._id, activity);
 		}
+		return activity.extra_data.miniotrace.presignedUrl;
 	}else{
 		return null;
 	}

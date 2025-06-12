@@ -123,7 +123,15 @@ module.exports.getPresignedFileUrl = async (options) => {
     if(options.user.data.role === 'teacher'){
       let activity = await ActivitiesController.loadActivity(options.id);
       if(activity.owners.indexOf(options.user.data.username) !== -1){
-        result.data.url = presignedurl;
+        let activityType=activity.type;
+        logger.info(activityType);
+        if (activityType == 'gameplay' && activity.extra_data.config.trace_storage || activityType == 'limesurvey') {
+          presignedurl = await ActivitiesController.getPresignedFileUrl(options.id);
+          logger.info(presignedurl);
+          result.data.url = presignedurl;
+        } else {
+          result = { status: 401, data: { message: 'Error not a trace storage for this activity' }};
+        }
       }else{
         result = { status: 401, data: { message: 'You are not owner of the activity' } };
       }
