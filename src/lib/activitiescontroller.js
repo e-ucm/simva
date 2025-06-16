@@ -3,23 +3,8 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 
 var ActivitiesController = {};
-var Activity = require('./activities/activity');
-var LimeSurveyActivity = require('./activities/LimeSurveyActivity');
-var MinioActivity = require('./activities/MinioActivity');
-var GameplayActivity = require('./activities/GameplayActivity');
-var ManualActivity = require('./activities/ManualActivity');
-var LTIToolActivity = require('./activities/LTIToolActivity');
-var ImsPackageActivity = require('./activities/ImsPackageActivity');
-
-var types = [
-	Activity,
-	LimeSurveyActivity,
-	/*MinioActivity, */
-	GameplayActivity,
-	ManualActivity,
-	LTIToolActivity,
-	ImsPackageActivity
-];
+var {activityTypes, castActivityToClass} = require('./activities/activityTypes');
+var types = activityTypes;
 
 const Activity = require('./activities/activity');
 
@@ -161,7 +146,7 @@ ActivitiesController.loadActivity = async (id) => {
 	if(!activity){
 		throw {message: 'Unable to load activity.'}; 
 	}
-	return ActivitiesController.castToClass(activity);
+	return castActivityToClass(activity);
 }
 
 ActivitiesController.exportActivity = async (id, complete) => {
@@ -310,16 +295,6 @@ ActivitiesController.removeParticipantsFromActivity = async (id, participants) =
 		throw { message: 'Error removing participants from activity: ' + id };
 	}
 	logger.debug("ActivitiesController.removeParticipants finished");
-}
-
-ActivitiesController.castToClass = function(activity){
-	for (let i = 0; i < types.length; i++) {
-		if(types[i].getType() == activity.type){
-			let castedActivity = new types[i](activity);
-			return castedActivity;
-		}
-	}
-	return null;
 }
 
 ActivitiesController.getActivityTypes = async (user) => {

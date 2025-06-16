@@ -339,7 +339,6 @@ module.exports.getSchedule = async (options) => {
                 studyId: options.id
               };
               sendSimvaTaskToKafka([taskMessage]);
-              
             }
           }
 

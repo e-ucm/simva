@@ -4,7 +4,7 @@
   "version": "1.0.1",
   "scripts": {
     "start": "node src/bin/www $NODE_ARGS",
-    "dev": "nodemon --inspect=0.0.0.0:9229 src/bin/www $NODE_ARGS",
+    "dev": "nodemon --trace-warnings --inspect=0.0.0.0:9229 src/bin/www $NODE_ARGS",
     "dev:profiling": "nodemon --inspect=0.0.0.0:9229 --prof --perf-basic-prof --interpreted-frames-native-stack src/bin/www $NODE_ARGS",
     "dev:clinic:doctor": "clinic doctor $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
     "dev:clinic:bubbleprof": "clinic bubbleprof $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
