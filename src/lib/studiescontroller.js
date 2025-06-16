@@ -8,7 +8,6 @@ var AllocatorsController = require('./allocatorscontroller');
 var GroupsController = require('./groupscontroller');
 var TestsController = require('./testscontroller');
 const { groupBy } = require('async');
-const ActivitiesController = require('./activitiescontroller');
 const config=require("./config");
 
 if(!Array.prototype.flat){
@@ -58,62 +57,7 @@ StudiesController.updateStudyIdInTestsAndActivitiesMigration = async () => {
 		for(let j=0; j < study.tests.length; j++) {
 			let testid = study.tests[j];
 			logger.info("Test : " + testid);
-			let test = await TestsController.getTest(testid);
-			delete test.id;
-			if(test.study !== "") {
-				logger.info("StudyId already present in test.");
-			} else {
-				test.study = studyid;
-				await test.save();
-				logger.info("Test saved");
-			}
-			for(let k=0; k < test.activities.length; k++) {
-				let activityid = test.activities[k];
-				logger.info("Activity : " + activityid);
-				let activity = await ActivitiesController.loadActivity(activityid);
-				if(activity.owners.length != owners.length) {
-					let toAdd=[];
-					owners.forEach(owner => {
-						if(!activity.owners.includes(owner)) {
-							toAdd.push(owner);
-						}
-					});
-					activity.addOwners(toAdd);
-				}
-				if(activity.type == "limesurvey" && activity.extra_data) {
-					if(!activity.extra_data.language) {
-						if(activity.study !== "") {
-							logger.info("StudyId already present in activity.");
-						} else {
-							activity.study = studyid;
-							await activity.save();
-							logger.info("Language in limesurvey activity saved");
-						}
-					}
-					if(!activity.extra_data.lrsset) {
-						await activity.save();
-						logger.info("LRS set");
-					}
-				} else if(activity.type == "gameplay"
-					&& activity.extra_data && activity.extra_data.config
-					&& (typeof activity.extra_data.config.trace_storage == "string" || typeof activity.extra_data.config.realtime == "string"  || typeof activity.extra_data.config.backup == "string")) {
-					if(activity.study !== "") {
-						logger.info("StudyId already present in activity.");
-					} else {
-						activity.study = studyid;
-						await activity.save();
-						logger.info("Fix config extra_data in gameplay activity saved");
-					}
-				} else {
-					if(activity.study !== "") {
-						logger.info("StudyId already present in activity.");
-					} else {
-						activity.study = studyid;
-						await activity.save();
-						logger.info("Activity saved");
-					}
-				}
-			}
+			await TestsController.updateStudyIdInTestsAndActivitiesMigration(testid, studyid, owners);
 		}
 	}
 };
@@ -378,14 +322,7 @@ StudiesController.addTestToStudy = async (id, params) => {
 
 StudiesController.getActivitiesInStudy = async (id) => {
 	let study = await StudiesController.getStudy(id);
-	var tests = await TestsController.getTests({"_id" : {"$in" : study.tests}});
-	var activities = [];
-	for(var i=0; i< tests.length; i++)  {
-		for(var j=0; j< tests[i].activities.length; j++)  {
-			activities.push(tests[i].activities[j]);
-		}
-	}
-	var activitiesObject = await ActivitiesController.getActivities({"_id" : {"$in" : activities}});
+	var activitiesObject = await TestsController.getActivitiesInTest(study.tests);
 	return activitiesObject;
 }
 

@@ -21,6 +21,52 @@ var types = [
 	ImsPackageActivity
 ];
 
+ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activityid, studyid, owners) => {
+	let activity = await ActivitiesController.loadActivity(activityid);
+	if(activity.owners.length != owners.length) {
+		let toAdd=[];
+		owners.forEach(owner => {
+			if(!activity.owners.includes(owner)) {
+				toAdd.push(owner);
+			}
+		});
+		activity.addOwners(toAdd);
+	}
+	if(activity.type == "limesurvey" && activity.extra_data) {
+		if(!activity.extra_data.language) {
+			if(activity.study !== "") {
+				logger.info("StudyId already present in activity.");
+			} else {
+				activity.study = studyid;
+				await activity.save();
+				logger.info("Language in limesurvey activity saved");
+			}
+		}
+		if(!activity.extra_data.lrsset) {
+			await activity.save();
+			logger.info("LRS set");
+		}
+	} else if(activity.type == "gameplay"
+		&& activity.extra_data && activity.extra_data.config
+		&& (typeof activity.extra_data.config.trace_storage == "string" || typeof activity.extra_data.config.realtime == "string"  || typeof activity.extra_data.config.backup == "string")) {
+		if(activity.study !== "") {
+			logger.info("StudyId already present in activity.");
+		} else {
+			activity.study = studyid;
+			await activity.save();
+			logger.info("Fix config extra_data in gameplay activity saved");
+		}
+	} else {
+		if(activity.study !== "") {
+			logger.info("StudyId already present in activity.");
+		} else {
+			activity.study = studyid;
+			await activity.save();
+			logger.info("Activity saved");
+		}
+	}
+}
+
 ActivitiesController.getStudy = async (id) => {
 	let res = null;
 
