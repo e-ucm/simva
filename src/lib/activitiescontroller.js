@@ -6,8 +6,6 @@ var ActivitiesController = {};
 var {activityTypes, castActivityToClass} = require('./activities/activityTypes');
 var types = activityTypes;
 
-const Activity = require('./activities/activity');
-
 /**
  * Update an activity in the database for migration purpurses
  * 
