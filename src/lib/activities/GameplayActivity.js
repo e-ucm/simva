@@ -195,7 +195,7 @@ class GameplayActivity extends Activity {
             if(trace.verb) {
                 switch(trace.verb.id) {
                     case initializedVerb:
-                        logger.info("INITIALIZED ACTIVITY " . activityType);
+                        logger.info(`INITIALIZED ACTIVITY ${activityType}`);
                         var taskMessage = {
 							task: 'setProgress',
 							params: 'user,progress',
@@ -207,7 +207,7 @@ class GameplayActivity extends Activity {
 						sendSimvaTaskToKafka([taskMessage]);
                       break;
                     case progressedVerb:
-                        logger.info("PROGRESSED THROW ACTIVITY " . activityType);
+                        logger.info(`PROGRESSED THROW ACTIVITY  ${activityType}`);
                         var value = null;
                         if(trace.result && trace.result.extensions[resultExtensionProgress]) {
 							value = trace.result.extensions[resultExtensionProgress];
@@ -227,7 +227,7 @@ class GameplayActivity extends Activity {
                       break;
                     case completedVerb:
                         if(trace.result.completion == true) {
-							logger.info("COMPLETED ACTIVITY " . activityType);
+							logger.info(`COMPLETED ACTIVITY ${activityType}`);
 							var taskMessage = {
 								task: 'setCompletion',
 								params: 'user,completion',

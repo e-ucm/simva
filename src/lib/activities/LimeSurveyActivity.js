@@ -458,6 +458,17 @@ class LimeSurveyActivity extends Activity {
 
 	async sendProgressOrCompletionOfActivity(trace, participant, activityType) {
         if(trace.object && trace.object.definition && trace.object.definition.type == "http://adlnet.gov/expapi/activities/assessment") {
+			var username;
+			if(trace.actor) {
+				if(trace.actor.account && trace.actor.account.name) {
+					username=trace.actor.account.name;
+				} else {
+					username=trace.actor.name;
+				}
+			}
+			if(username == null) {
+				username=participant;
+			}
             const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
             const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
             const completedVerb='http://adlnet.gov/expapi/verbs/completed';
@@ -471,7 +482,7 @@ class LimeSurveyActivity extends Activity {
 							params: 'user,progress',
 							object: 'Activity',
 							objectId: this.id,
-							user: participant,
+							user: username,
 							progress: 0
 						};
 						sendSimvaTaskToKafka([taskMessage]);
@@ -488,7 +499,7 @@ class LimeSurveyActivity extends Activity {
 								params: 'user,progress',
 								object: 'Activity',
 								objectId: this.id,
-								user: participant,
+								user: username,
 								progress: value
 						};
 						sendSimvaTaskToKafka([taskMessage]);
@@ -501,7 +512,7 @@ class LimeSurveyActivity extends Activity {
 								params: 'user,completion',
 								object: 'Activity',
 								objectId: this.id,
-								user: participant,
+								user: username,
 								completion: true
 							};
 							sendSimvaTaskToKafka([taskMessage]);
