@@ -456,11 +456,72 @@ class LimeSurveyActivity extends Activity {
 		})
 	}
 
+	async sendProgressOrCompletionOfActivity(trace, participant, activityType) {
+        if(trace.object && trace.object.definition && trace.object.definition.type == "http://adlnet.gov/expapi/activities/assessment") {
+            const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+            const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+            const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+			var sendSimvaTaskToKafka = require("../utils/SimvaTaskToKafka.js");
+            if(trace.verb) {
+                switch(trace.verb.id) {
+                    case initializedVerb:
+                        logger.info(`INITIALIZED ACTIVITY ${activityType}`);
+                        var taskMessage = {
+							task: 'setProgress',
+							params: 'user,progress',
+							object: 'Activity',
+							objectId: this.id,
+							user: participant,
+							progress: 0
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case progressedVerb:
+                        logger.info(`PROGRESSED THROW ACTIVITY  ${activityType}`);
+                        var value = null;
+                        if(trace.result && trace.result.score && trace.result.score.scaled) {
+                            value = trace.result.score.scaled;
+                        }
+                        logger.info(value);
+                        var taskMessage = {
+								task: 'setProgress',
+								params: 'user,progress',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								progress: value
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case completedVerb:
+                        if(trace.result.completion == true) {
+							logger.info(`COMPLETED ACTIVITY ${activityType}`);
+							var taskMessage = {
+								task: 'setCompletion',
+								params: 'user,completion',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								completion: true
+							};
+							sendSimvaTaskToKafka([taskMessage]);
+						}
+                      break;
+                    default: 
+                        logger.info("OTHER VERB");
+                }
+            }
+        }
+    }
 
 	async setStatement(participant, result){
 		let toret = 0;
 		try {
-			toret = await LRSManager.setStatement("limesurvey", this.id, participant, result);
+			for(let traceId = 0; traceId < result.length; traceId++) {
+				var trace = result[traceId];
+				await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
+			}
+			toret = await LRSManager.setStatement(this.id, participant, result);
 			//if(this.extra_data.config.trace_storage){
 			//	
 			//} else {

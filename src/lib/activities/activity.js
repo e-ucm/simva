@@ -10,7 +10,10 @@ const validator = require('../utils/validator');
 var activityschema = validator.getSchema('#/components/schemas/activity');
 
 var config = require('../config');
-const sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka');
+let { v4: uuidv4} = require('uuid');
+var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka');
+var { isoToDuration } = require('../utils/date');
+
 class Activity {
 
 	// ##########################################
@@ -183,6 +186,185 @@ class Activity {
 		return await this.save();
 	}
 	
+	async sendXAPITraceForActivity(user,verb, timestamp, resultScore=null) {
+		try {
+			logger.info(`sendXAPITraceForActivity ${this.name}`);
+			if(!this.extra_data){
+				this.extra_data = { participants: {} };
+			}
+			if(!this.extra_data.participants){
+				this.extra_data.participants = {};
+			}
+			let registrationid = this.extra_data.participants[user].registrationid;
+			let startedTimestamp = this.extra_data.participants[user].timestamp;
+			var attemptId= this.extra_data.participants[user].attemptId;
+			let verbXAPI;
+			let result;
+			switch(verb) {
+				case "Initialized":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/initialized",
+						"display": {
+							"en-US": "initialized"
+						}
+					};
+					if(registrationid) {
+						logger.info("Already Initialized");
+						verbXAPI = {
+							"id":"http://adlnet.gov/expapi/verbs/resumed",
+							"display": {
+								"en-US": "resumed"
+							}
+						};
+					} else {
+						registrationid=uuidv4();
+						this.extra_data.participants[user].registrationid = registrationid;
+					}
+					if(attemptId) {
+						logger.info("Already Present");
+					} else {
+						attemptId=uuidv4();
+						this.extra_data.participants[user].attemptId = attemptId;
+					}
+					this.extra_data.participants[user].timestamp=timestamp;
+					await this.save();
+					break;
+				case "Terminated":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/terminated",
+						"display": {
+							"en-US": "terminated"
+						}
+					};
+					result= {
+						duration: isoToDuration(startedTimestamp, timestamp),
+					};
+					break;
+				case "Progressed":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/progressed",
+						"display": {
+							"en-US": "progressed"
+						}
+					};
+					result= {
+						score: {
+							scaled: resultScore
+						}
+					};
+					break;
+				case "Resumed":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/resumed",
+						"display": {
+							"en-US": "resumed"
+						}
+					};
+					this.extra_data.participants[user].timestamp=timestamp;
+					await this.save();
+					break;
+				case "Suspended":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/suspended",
+						"display": {
+							"en-US": "suspended"
+						}
+					};
+					result= {
+						duration: isoToDuration(startedTimestamp, timestamp),
+					};
+					break;
+				case "Completed":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/completed",
+						"display": {
+							"en-US": "completed"
+						}
+					};
+					break;
+				default:
+					logger.info(`${verb} not defined`);
+					return;
+			}
+			var statement = {
+				actor: {
+					account: {
+						homePage: config.external_url,
+						name: user
+					}
+				},
+				verb: verbXAPI,
+				object: {
+					id: `${config.external_url}/studies/${this.study}/activity/${this._id}`,
+					definition: {
+						name: {
+							"en-US": this.name
+						},
+						description:  {
+							"en-US":`An activity ${this.name} of study ${this.study}`
+						},
+						"type": "http://adlnet.gov/expapi/activities/lesson"
+					}
+				},
+				"context": {
+					grouping: [{
+						id: `${config.external_url}/studies/${this.study}`,
+						definition: {
+							name:  {
+								"en-US": `${this.study}`,
+							},
+							description:  {
+								"en-US":`The activity representing the study ${this.study}`
+							},
+							"type": "http://adlnet.gov/expapi/activities/course"
+						}
+					},
+					{
+						id: `${config.external_url}/studies/${this.study}/activity/${this._id}?id=${attemptId}`,
+						definition: {
+							name:  {
+								"en-US": `Attempt of activity ${this._id}`
+							},
+							description:  {
+								"en-US": `The activity representing an attempt of activity ${this._id} in study ${this.study}`
+							},
+							"type": "http://adlnet.gov/expapi/activities/attempt"
+						}
+					},
+					],
+					"contextActivities": {
+						"category": [{
+							"id":"https://w3id.org/xapi/scorm",
+							"definition": {
+								"type":"http://adlnet.gov/expapi/activities/profile"
+							}
+						}]
+					},
+					"registration": registrationid
+				},
+				"timestamp": timestamp
+			};
+			switch(verb) {
+				case "Terminated":
+					this.extra_data.participants[user].attemptId=null;
+					this.extra_data.participants[user].timestamp=null;
+					this.extra_data.participants[user].registrationid=null;
+					await this.save();
+					break;
+				default:
+					logger.info("Nothing to do.");
+			}
+			if(result !== null) {
+				statement.result=result;
+			}
+			logger.info(JSON.stringify(statement));
+			const LRS = require('./LRS');
+			var LRSManager = new LRS();
+			await LRSManager.setStatement(this._id, user, [statement]);
+		} catch(e) {
+			logger.error(e);
+		}
+	}
 
 	async setResult(participant, result){
 		const message = {

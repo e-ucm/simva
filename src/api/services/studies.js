@@ -301,28 +301,41 @@ module.exports.getSchedule = async (options) => {
               completed: iscompleted,
               result: (await activity.getResults([currentuser]))[currentuser]
             }
-
+          
+            var date = new Date();
             if(schedule.next == null && !iscompleted){
               schedule.next = activity._id;
-            }
-            if(i == 0 && !iscompleted) {
+              if(i!==0) {
+                const taskMessage = {
+                  task: 'sendXAPITraceForActivity',
+                  params: 'user,verb,timestamp',
+                  object: 'Activity',
+                  objectId: test.activities[i-1],
+                  user: currentuser,
+                  verb: 'Terminated',
+                  timestamp: date.toISOString()
+                };
+                sendSimvaTaskToKafka([taskMessage]);
+              }
+              const taskMessage2 = {
+                task: 'sendXAPITraceForActivity',
+                params: 'user,verb,timestamp',
+                object: 'Activity',
+                objectId: schedule.next,
+                user: currentuser,
+                verb: 'Initialized',
+                timestamp: date.toISOString()
+              };
+              sendSimvaTaskToKafka([taskMessage2]);
               const message = {
                 type: 'study_initialized',
                 studyId: options.id,
                 user: currentuser,
               };
               sendSimvaEventsToKafka([message]);
-              const taskMessage = {
-                task: 'sendXAPITrace',
-                params: 'user,verb,studyId',
-                object: 'Study',
-                objectId: options.id,
-                user: currentuser,
-                verb: 'initialized',
-                studyId: options.id
-              };
-              sendSimvaTaskToKafka([taskMessage]);              
-            } else if(i == test.activities.length-1 && schedule.next == null) {
+            }
+          }
+          if(schedule.next == null) {
               const message = {
                 type: 'study_completed',
                 studyId: options.id,
@@ -330,18 +343,16 @@ module.exports.getSchedule = async (options) => {
               };
               sendSimvaEventsToKafka([message]);
               const taskMessage = {
-                task: 'sendXAPITrace',
-                params: 'user,verb',
-                object: 'Study',
-                objectId: options.id,
+                task: 'sendXAPITraceForActivity',
+                params: 'user,verb,timestamp',
+                object: 'Activity',
+                objectId: test.activities[test.activities.length-1],
                 user: currentuser,
-                verb: 'terminated',
-                studyId: options.id
+                verb: 'Terminated',
+                timestamp: date.toISOString()
               };
               sendSimvaTaskToKafka([taskMessage]);
             }
-          }
-
           result =  { 
             status: 200,
             data: schedule

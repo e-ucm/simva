@@ -3,8 +3,11 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 
 var ActivitiesController = {};
-var {activityTypes, castActivityToClass} = require('./activities/activityTypes');
+var activityTypes = require('./activities/activityTypes');
 var types = activityTypes;
+
+const LRS = require('./activities/LRS');
+var LRSManager = new LRS();
 
 /**
  * Update an activity in the database for migration purpurses
@@ -144,7 +147,7 @@ ActivitiesController.loadActivity = async (id) => {
 	if(!activity){
 		throw {message: 'Unable to load activity.'}; 
 	}
-	return castActivityToClass(activity);
+	return ActivitiesController.castToClass(activity);
 }
 
 ActivitiesController.exportActivity = async (id, complete) => {

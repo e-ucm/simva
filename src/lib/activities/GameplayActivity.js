@@ -13,6 +13,7 @@ const unzipper = require('unzipper');
 const pipelineAsync = promisify(pipeline);
 
 var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka.js');
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
 var LRS= require("./LRS.js");
@@ -170,7 +171,11 @@ class GameplayActivity extends Activity {
 		let toret = 0;
 		try {
 			if(this.extra_data.config.trace_storage){
-				toret = await LRSManager.setStatement("gameplay", this.id, participant, result);
+				for(let traceId = 0; traceId < result.length; traceId++) {
+					var trace = result[traceId];
+					await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
+				}
+				toret = await LRSManager.setStatement(this.id, participant, result);
 			} else {
 				throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
 			}
@@ -180,6 +185,66 @@ class GameplayActivity extends Activity {
 		}
 		return toret;
 	}
+
+	async sendProgressOrCompletionOfActivity(trace, participant, activityType) {
+        if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
+            const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+            const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+            const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+            const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
+            if(trace.verb) {
+                switch(trace.verb.id) {
+                    case initializedVerb:
+                        logger.info("INITIALIZED ACTIVITY " . activityType);
+                        var taskMessage = {
+							task: 'setProgress',
+							params: 'user,progress',
+							object: 'Activity',
+							objectId: this.id,
+							user: participant,
+							progress: 0
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case progressedVerb:
+                        logger.info("PROGRESSED THROW ACTIVITY " . activityType);
+                        var value = null;
+                        if(trace.result && trace.result.extensions[resultExtensionProgress]) {
+							value = trace.result.extensions[resultExtensionProgress];
+						} else if(trace.result && trace.result.score && trace.result.score.scaled) {
+                            value = trace.result.score.scaled;
+                        }
+                        logger.info(value);
+                        var taskMessage = {
+								task: 'setProgress',
+								params: 'user,progress',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								progress: value
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case completedVerb:
+                        if(trace.result.completion == true) {
+							logger.info("COMPLETED ACTIVITY " . activityType);
+							var taskMessage = {
+								task: 'setCompletion',
+								params: 'user,completion',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								completion: true
+							};
+							sendSimvaTaskToKafka([taskMessage]);
+						}
+                      break;
+                    default: 
+                        logger.info("OTHER VERB");
+                }
+            }
+        }
+    }
 
 	async setResult(participant, result){
 		const message = {
@@ -195,9 +260,13 @@ class GameplayActivity extends Activity {
 			if(Array.isArray(result)){
  				// If we're receiving an array, we're receiving traces
 				if(this.extra_data.config.trace_storage){
-					toret = await LRSManager.setStatement("gameplay", this.id, participant, result);
+					for(let traceId = 0; traceId < result.length; traceId++) {
+						var trace = result[traceId];
+						await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
+					}
+					toret = await LRSManager.setStatement(this.id, participant, result);
 				}else{
-					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
+					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.'};
 				}
 			}else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start or backup
