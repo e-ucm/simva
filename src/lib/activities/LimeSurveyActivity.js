@@ -176,10 +176,11 @@ class LimeSurveyActivity extends Activity {
 		if(!this.extra_data.language) {
 			this.extra_data.language = (await this.getSurveyLanguages()).default;
 		}
-		if(!this.extra_data.lrsset) {
-			var surveyid = this.extra_data.surveyId;
+		var surveyid = this.extra_data.surveyId;
+		if(this.extra_data.lrsset !== surveyid) {
 			var lrsendpoint=config.api.url + "/activities/" + this.id;
 			await controller.setActivityLRSEndpointPromise(surveyid, lrsendpoint);
+			this.extra_data.lrsset = surveyid;
 		}
 		if(this.username) {
 			try {
