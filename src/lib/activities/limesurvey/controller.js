@@ -192,10 +192,12 @@ function setActivityLRSEndpoint(surveyId, lrsendpoint) {
 			{ "lrs-endpoint" : lrsendpoint }
 		],id:1};
 		axios(options).then(res => {
+				Log('LimesurveyController.setActivityLRSEndpoint -> Completed');
 				logger.info("Status : %s", JSON.stringify(res.data));
 				callback(null, res);
 		}).catch(err => {
 			if (err.response) {
+				Log('LimesurveyController.setActivityLRSEndpoint -> Error');
 				logger.error('Status: %s | Data : %s', err.response.status, JSON.stringify(err.response.data));
 				callback(err.response.data);
 			} else {
@@ -214,8 +216,12 @@ function setActivityLRSEndpointPromise(surveyId, lrsendpoint) {
 				auth, 
 				setActivityLRSEndpoint(surveyId, lrsendpoint)
 			], function (err, result) {
-				Log('LimesurveyController.setActivityLRSEndpointPromise -> Completed');
-				resolve(result);
+				if(err) {
+					reject(err);
+				} else {
+					Log('LimesurveyController.setActivityLRSEndpointPromise -> Completed');
+					resolve(result);
+				}
 			});
 		}catch(e){
 			reject(e);
