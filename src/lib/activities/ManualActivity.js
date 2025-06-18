@@ -22,7 +22,9 @@ class ManualActivity extends Activity {
 			if(params.uri){
 				this.extra_data.uri = params.uri;
 			}
-
+			if(!this.extra_data.participants){
+				this.extra_data.participants = [];
+			}
 			if(params.user_managed){
 				this.extra_data.user_managed = true;
 			}else{

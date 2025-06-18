@@ -195,6 +195,9 @@ class Activity {
 			if(!this.extra_data.participants){
 				this.extra_data.participants = {};
 			}
+			if(!this.extra_data.participants[user]){
+				this.extra_data.participants[user] = {};
+			}
 			let registrationid = this.extra_data.participants[user].registrationid;
 			let startedTimestamp = this.extra_data.participants[user].timestamp;
 			var attemptId= this.extra_data.participants[user].attemptId;
@@ -560,13 +563,15 @@ class Activity {
 	}
 
 	async setProgress(participant, progress){
+		let num = parseFloat(progress); // Convert string to number
+		let roundedProgress = parseFloat(num.toFixed(3)); // Round to 3 decimal places
 		const message = {
 			type: 'activity_progressed',
 			activityType : this.type,
 			activityId: this.id,
 			studyId: this.study,
 			user: participant,
-			val: progress
+			val: roundedProgress
 		};
 		sendSimvaEventsToKafka([message]);
 		if(!this.extra_data){
@@ -580,8 +585,8 @@ class Activity {
 		if(!this.extra_data.participants[participant]){
 			this.extra_data.participants[participant] = {}
 		}
-		if(progress <= 1) {
-			this.extra_data.participants[participant].progress = progress;
+		if(roundedProgress <= 1) {
+			this.extra_data.participants[participant].progress = roundedProgress;
 		}
 		return await this.save();
 	}

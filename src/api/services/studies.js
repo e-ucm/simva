@@ -315,7 +315,9 @@ module.exports.getSchedule = async (options) => {
                   verb: 'Terminated',
                   timestamp: date.toISOString()
                 };
-                sendSimvaTaskToKafka([taskMessage]);
+                if(activity.extra_data.participants[currentuser].registrationid != null) {
+                  sendSimvaTaskToKafka([taskMessage]);
+                }
               }
               const taskMessage2 = {
                 task: 'sendXAPITraceForActivity',
@@ -334,8 +336,7 @@ module.exports.getSchedule = async (options) => {
               };
               sendSimvaEventsToKafka([message]);
             }
-          }
-          if(schedule.next == null) {
+            if(i == test.activities.length-1 && schedule.next == null) {
               const message = {
                 type: 'study_completed',
                 studyId: options.id,
@@ -351,8 +352,12 @@ module.exports.getSchedule = async (options) => {
                 verb: 'Terminated',
                 timestamp: date.toISOString()
               };
-              sendSimvaTaskToKafka([taskMessage]);
+              if(activity.extra_data.participants[currentuser].registrationid != null) {
+                sendSimvaTaskToKafka([taskMessage]);
+              }
             }
+          }
+          
           result =  { 
             status: 200,
             data: schedule
