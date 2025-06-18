@@ -223,12 +223,8 @@ class Activity {
 						registrationid=uuidv4();
 						this.extra_data.participants[user].registrationid = registrationid;
 					}
-					if(attemptId) {
-						logger.info("Already Present");
-					} else {
-						attemptId=uuidv4();
-						this.extra_data.participants[user].attemptId = attemptId;
-					}
+					attemptId=uuidv4();
+					this.extra_data.participants[user].attemptId=attemptId;
 					this.extra_data.participants[user].timestamp=timestamp;
 					await this.save();
 					break;
@@ -264,6 +260,8 @@ class Activity {
 						}
 					};
 					this.extra_data.participants[user].timestamp=timestamp;
+					attemptId=uuidv4();
+					this.extra_data.participants[user].attemptId=attemptId;
 					await this.save();
 					break;
 				case "Suspended":
@@ -276,6 +274,7 @@ class Activity {
 					result= {
 						duration: isoToDuration(startedTimestamp, timestamp),
 					};
+					await this.save();
 					break;
 				case "Completed":
 					verbXAPI = {
@@ -349,9 +348,14 @@ class Activity {
 			};
 			switch(verb) {
 				case "Terminated":
-					this.extra_data.participants[user].attemptId=null;
-					this.extra_data.participants[user].timestamp=null;
-					this.extra_data.participants[user].registrationid=null;
+					delete this.extra_data.participants[user].attemptId;
+					delete this.extra_data.participants[user].timestamp;
+					delete this.extra_data.participants[user].registrationid;
+					await this.save();
+					break;
+				case "Suspended":
+					delete this.extra_data.participants[user].attemptId;
+					delete this.extra_data.participants[user].timestamp;
 					await this.save();
 					break;
 				default:
