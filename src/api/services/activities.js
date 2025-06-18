@@ -156,7 +156,7 @@ module.exports.getPresignedFileUrl = async (options) => {
       if(activity.owners.indexOf(options.user.data.username) !== -1){
         let activityType=activity.type;
         logger.info(activityType);
-        if (activityType == 'gameplay' && activity.extra_data.config.trace_storage || activityType == 'limesurvey') {
+        if (activityType == 'gameplay' && activity.extra_data.config.trace_storage || activityType == 'limesurvey' || activityType == 'manual') {
           presignedurl = await ActivitiesController.getPresignedFileUrl(options.id);
           logger.info(presignedurl);
           result.data.url = presignedurl;
