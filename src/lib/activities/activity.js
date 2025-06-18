@@ -384,10 +384,13 @@ class Activity {
 			logger.info(JSON.stringify(statement));
 			const LRS = require('./LRS');
 			var LRSManager = new LRS();
-			await LRSManager.setStatement(this._id, user, [statement]);
+			let res = await LRSManager.setStatement(this._id, user, [statement]);
+			logger.info(res);
+			return res;
 		} catch(e) {
 			logger.error(e);
 		}
+		return null;
 	}
 
 	async setResult(participant, result){

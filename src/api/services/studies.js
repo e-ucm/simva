@@ -315,9 +315,7 @@ module.exports.getSchedule = async (options) => {
                   verb: 'Terminated',
                   timestamp: date.toISOString()
                 };
-                if(activity.extra_data.participants[currentuser].registrationid != null) {
-                  sendSimvaTaskToKafka([taskMessage]);
-                }
+                sendSimvaTaskToKafka([taskMessage]);
               }
               const taskMessage2 = {
                 task: 'sendXAPITraceForActivity',
@@ -352,9 +350,7 @@ module.exports.getSchedule = async (options) => {
                 verb: 'Terminated',
                 timestamp: date.toISOString()
               };
-              if(activity.extra_data.participants[currentuser].registrationid != null) {
-                sendSimvaTaskToKafka([taskMessage]);
-              }
+              sendSimvaTaskToKafka([taskMessage]);
             }
           }
           
