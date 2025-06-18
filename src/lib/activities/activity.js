@@ -189,6 +189,7 @@ class Activity {
 	async sendXAPITraceForActivity(user,verb, timestamp, resultScore=null) {
 		try {
 			logger.info(`sendXAPITraceForActivity ${this.name}`);
+			logger.info(`User : ${user} | verb : ${verb} | timestamp : ${timestamp} | resultScore : ${resultScore}`);
 			if(!this.extra_data){
 				this.extra_data = { participants: {} };
 			}
@@ -201,6 +202,7 @@ class Activity {
 			let registrationid = this.extra_data.participants[user].registrationid;
 			let startedTimestamp = this.extra_data.participants[user].timestamp;
 			var attemptId= this.extra_data.participants[user].attemptId;
+			var suspended = this.extra_data.participants[user].suspended;
 			let verbXAPI;
 			let result;
 			switch(verb) {
@@ -211,7 +213,7 @@ class Activity {
 							"en-US": "initialized"
 						}
 					};
-					if(registrationid) {
+					if(suspended) {
 						logger.info("Already Initialized");
 						verbXAPI = {
 							"id":"http://adlnet.gov/expapi/verbs/resumed",
@@ -226,6 +228,7 @@ class Activity {
 					attemptId=uuidv4();
 					this.extra_data.participants[user].attemptId=attemptId;
 					this.extra_data.participants[user].timestamp=timestamp;
+					delete this.extra_data.participants[user].suspended;
 					await this.save();
 					break;
 				case "Terminated":
@@ -238,6 +241,9 @@ class Activity {
 					result= {
 						duration: isoToDuration(startedTimestamp, timestamp),
 					};
+					if(!registrationid) {
+						return;
+					}
 					break;
 				case "Progressed":
 					verbXAPI = {
@@ -251,6 +257,9 @@ class Activity {
 							scaled: resultScore
 						}
 					};
+					if(!registrationid) {
+						return;
+					}
 					break;
 				case "Resumed":
 					verbXAPI = {
@@ -263,6 +272,9 @@ class Activity {
 					attemptId=uuidv4();
 					this.extra_data.participants[user].attemptId=attemptId;
 					await this.save();
+					if(!registrationid) {
+						return;
+					}
 					break;
 				case "Suspended":
 					verbXAPI = {
@@ -274,7 +286,9 @@ class Activity {
 					result= {
 						duration: isoToDuration(startedTimestamp, timestamp),
 					};
-					await this.save();
+					if(!registrationid) {
+						return;
+					}
 					break;
 				case "Completed":
 					verbXAPI = {
@@ -283,6 +297,9 @@ class Activity {
 							"en-US": "completed"
 						}
 					};
+					if(!registrationid) {
+						return;
+					}
 					break;
 				default:
 					logger.info(`${verb} not defined`);
@@ -592,6 +609,24 @@ class Activity {
 		if(roundedProgress <= 1) {
 			this.extra_data.participants[participant].progress = roundedProgress;
 		}
+		return await this.save();
+	}
+
+	async setSuspension(participant) {
+		if(!this.extra_data){
+			this.extra_data = {}
+		}
+
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
+		}
+
+		if(!this.extra_data.participants[participant]){
+			this.extra_data.participants[participant] = {}
+		}
+
+		this.extra_data.participants[participant].suspended = true;
+		
 		return await this.save();
 	}
 

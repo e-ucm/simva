@@ -616,50 +616,16 @@ module.exports.setSuspension = async (options) => {
     let participants = await StudiesController.getParticipants(study);
     let date = new Date();
     if(participants.indexOf(options.user.data.username) !== -1){
-      await activity.setSuspension(options.user.data.username, options.status);
+      await activity.setSuspension(options.user.data.username);
       if(! (await activity.getCompletion([options.user.data.username]))[options.user.data.username]) {
-        let verb;
-        if(options.status) {
-          verb="Suspended";
-        } else {
-          verb="Resumed";
-        }
-        sendSimvaTaskToKafka([{
-          task: 'sendXAPITraceForActivity',
-          params: 'user,verb,timestamp,result,reason',
-          object: 'Activity',
-          objectId: options.id,
-          user: options.user.data.username,
-          verb: verb,
-          timestamp: date.toISOString(),
-          result:null,
-          reason:options.reason
-        }]);
-        body.data.result = { msg : "OK" };
+        body.data.result = await activity.sendXAPITraceForActivity(options.user.data.username,"Suspended", date.toISOString());
       }
     }else{
       if(study.owners.indexOf(options.data.user.data.username) !== -1){
         if(participants.indexOf(options.postuser) !== -1){
-          await activity.setSuspension(options.postuser, options.status);
+          await activity.setSuspension(options.postuser);
           if(! (await activity.getCompletion([options.postuser]))[options.postuser]) {
-            let verb;
-            if(options.status) {
-              verb="Suspended";
-            } else {
-              verb="Resumed";
-            }
-            await sendSimvaTaskToKafka([{
-              task: 'sendXAPITraceForActivity',
-              params: 'user,verb,timestamp,result,reason',
-              object: 'Activity',
-              objectId: options.id,
-              user: options.postuser,
-              verb: verb,
-              timestamp: date.toISOString(),
-              result:null,
-              reason:options.reason
-            }]);
-            body.data.result = { msg : "OK" };
+            body.data.result = await activity.sendXAPITraceForActivity(options.postuser,"Suspended", date.toISOString());
           }
         }else{
           body.status = 400;
