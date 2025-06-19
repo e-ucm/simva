@@ -620,9 +620,9 @@ module.exports.setSuspension = async (options) => {
       if(! (await activity.getCompletion([options.user.data.username]))[options.user.data.username]) {
         let verb;
         if(options.status) {
-          verb="Resumed";
-        } else {
           verb="Suspended";
+        } else {
+          verb="Resumed";
         }
         sendSimvaTaskToKafka([{
           task: 'sendXAPITraceForActivity',
@@ -644,9 +644,9 @@ module.exports.setSuspension = async (options) => {
           if(! (await activity.getCompletion([options.postuser]))[options.postuser]) {
             let verb;
             if(options.status) {
-              verb="Resumed";
-            } else {
               verb="Suspended";
+            } else {
+              verb="Resumed";
             }
             await sendSimvaTaskToKafka([{
               task: 'sendXAPITraceForActivity',
