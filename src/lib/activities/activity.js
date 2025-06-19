@@ -186,7 +186,7 @@ class Activity {
 		return await this.save();
 	}
 	
-	async sendXAPITraceForActivity(user,verb, timestamp, resultScore=null) {
+	async sendXAPITraceForActivity(user,verb, timestamp, resultScore=null, reasonExtension=null) {
 		try {
 			logger.info(`sendXAPITraceForActivity ${this.name}`);
 			logger.info(`User : ${user} | verb : ${verb} | timestamp : ${timestamp} | resultScore : ${resultScore}`);
@@ -204,7 +204,7 @@ class Activity {
 			var attemptId= this.extra_data.participants[user].attemptId;
 			var suspended = this.extra_data.participants[user].suspended;
 			let verbXAPI;
-			let result;
+			let result, contextExtensions;
 			switch(verb) {
 				case "Initialized":
 					verbXAPI = {
@@ -275,6 +275,9 @@ class Activity {
 					if(!registrationid) {
 						return;
 					}
+					contextExtensions  = {
+						"http://reason": reasonExtension
+					};
 					break;
 				case "Suspended":
 					verbXAPI = {
@@ -289,6 +292,9 @@ class Activity {
 					if(!registrationid) {
 						return;
 					}
+					contextExtensions  = {
+						"http://reason": reasonExtension
+					};
 					break;
 				case "Completed":
 					verbXAPI = {
@@ -380,6 +386,9 @@ class Activity {
 			}
 			if(result !== null) {
 				statement.result=result;
+			}
+			if(contextExtensions !== null) {
+				statement.context.extensions=contextExtensions;
 			}
 			logger.info(JSON.stringify(statement));
 			const LRS = require('./LRS');
@@ -615,7 +624,7 @@ class Activity {
 		return await this.save();
 	}
 
-	async setSuspension(participant) {
+	async setSuspension(participant, status) {
 		if(!this.extra_data){
 			this.extra_data = {}
 		}
@@ -628,7 +637,11 @@ class Activity {
 			this.extra_data.participants[participant] = {}
 		}
 
-		this.extra_data.participants[participant].suspended = true;
+		if(status) {
+			this.extra_data.participants[participant].suspended = true;
+		} else {
+			delete this.extra_data.participants[participant].suspended;
+		}
 		
 		return await this.save();
 	}

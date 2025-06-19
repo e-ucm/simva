@@ -616,16 +616,50 @@ module.exports.setSuspension = async (options) => {
     let participants = await StudiesController.getParticipants(study);
     let date = new Date();
     if(participants.indexOf(options.user.data.username) !== -1){
-      await activity.setSuspension(options.user.data.username);
+      await activity.setSuspension(options.user.data.username, options.status);
       if(! (await activity.getCompletion([options.user.data.username]))[options.user.data.username]) {
-        body.data.result = await activity.sendXAPITraceForActivity(options.user.data.username,"Suspended", date.toISOString());
+        let verb;
+        if(options.status) {
+          verb="Suspended";
+        } else {
+          verb="Resumed";
+        }
+        sendSimvaTaskToKafka([{
+          task: 'sendXAPITraceForActivity',
+          params: 'user,verb,timestamp,result,reason',
+          object: 'Activity',
+          objectId: options.id,
+          user: options.user.data.username,
+          verb: verb,
+          timestamp: date.toISOString(),
+          result:null,
+          reason:options.reason
+        }]);
+        body.data.result = { msg : "OK" };
       }
     }else{
       if(study.owners.indexOf(options.data.user.data.username) !== -1){
         if(participants.indexOf(options.postuser) !== -1){
-          await activity.setSuspension(options.postuser);
+          await activity.setSuspension(options.postuser, options.status);
           if(! (await activity.getCompletion([options.postuser]))[options.postuser]) {
-            body.data.result = await activity.sendXAPITraceForActivity(options.postuser,"Suspended", date.toISOString());
+            let verb;
+            if(options.status) {
+              verb="Suspended";
+            } else {
+              verb="Resumed";
+            }
+            await sendSimvaTaskToKafka([{
+              task: 'sendXAPITraceForActivity',
+              params: 'user,verb,timestamp,result,reason',
+              object: 'Activity',
+              objectId: options.id,
+              user: options.postuser,
+              verb: verb,
+              timestamp: date.toISOString(),
+              result:null,
+              reason:options.reason
+            }]);
+            body.data.result = { msg : "OK" };
           }
         }else{
           body.status = 400;

@@ -333,7 +333,9 @@ router.post('/:id/suspend', Authenticator.auth, async (req, res, next) => {
   const options = {
     id: req.params['id'],
     user: req.user,
-    postuser: req.body.user
+    postuser: req.body.user,
+    status: Boolean(req.body.status),
+    reason: req.body.reason
   };
 
   try {
