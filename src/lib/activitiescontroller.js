@@ -21,6 +21,17 @@ var types = [
 	ImsPackageActivity
 ];
 
+const Activity = require('./activities/activity');
+
+/**
+ * Update an activity in the database for migration purpurses
+ * 
+ * @param {String} activityid The Activity Id
+ * @param {String} studyid The Study Id
+ * @param {Array<String>} owners the owners of the activity
+ * 
+ * 
+ */
 ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activityid, studyid, owners) => {
 	let activity = await ActivitiesController.loadActivity(activityid);
 	if(activity.owners.length != owners.length) {
@@ -67,6 +78,12 @@ ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activit
 	}
 }
 
+/**
+ * Get Study object From Id
+ * 
+ * @param {String} id the Activity Id Id
+ * @returns {Promise<Object>}
+ */
 ActivitiesController.getStudy = async (id) => {
 	let res = null;
 
@@ -82,12 +99,40 @@ ActivitiesController.getStudy = async (id) => {
 	return res;
 }
 
+/**
+ * Casts an activity to its class type.
+ * 
+ * @param {Object} activity 
+ * @returns {Activity}
+ */
+ActivitiesController.castToClass = (activity) => {
+	for (let i = 0; i < types.length; i++) {
+		if(types[i].getType() == activity.type){
+			let castedActivity = new types[i](activity);
+			return castedActivity;
+		}
+	}
+	return null;
+}
+
+/**
+ * Get activities object from parameters.
+ * 
+ * @param {Object} activity parameters
+ * @returns {Promise<Object>}
+ */
 ActivitiesController.getActivities = async (params) => {
 	let res = await mongoose.model('activity').find(params);
 
 	return res;
 };
 
+/**
+ * Get activity object from its id.
+ * 
+ * @param {string} id The activity Id
+ * @returns {Promise<Object>}
+ */
 ActivitiesController.getActivity = async (id) => {
 	let res = await mongoose.model('activity').find({_id: id});
 

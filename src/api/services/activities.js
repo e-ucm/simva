@@ -5,12 +5,19 @@ var ActivitiesController = require('../../lib/activitiescontroller');
 var StudiesController = require('../../lib/studiescontroller');
 var TestsController = require('../../lib/testscontroller');
 const LimeSurveyActivity = require('../../lib/activities/LimeSurveyActivity');
+const sendSimvaTaskToKafka = require('../../lib/utils/SimvaTaskToKafka');
 
 /**
+ * Get Activity List for a certain user
+ * 
  * @param {Object} options
  * @param {String} options.searchString pass an optional search string for result filtering
  * @param {Integer} options.skip number of records to skip for pagination
  * @param {Integer} options.limit maximum number of records to return
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -33,6 +40,7 @@ module.exports.getActivities = async (options) => {
 
     result.data = await ActivitiesController.getActivities(query);
   }catch(e){
+    logger.error(e);
     result = { status: 500, data: e };
   }
   
@@ -40,7 +48,11 @@ module.exports.getActivities = async (options) => {
 };
 
 /**
+ * Add activity to current user
+ * 
  * @param {Object} options
+ * @param {Object} options.body the activity object
+ * @params {String} options.body.username the username of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -48,6 +60,7 @@ module.exports.addActivity = async (options) => {
   try {
     group = await ActivitiesController.addActivity(options.body);
   }catch(e){
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -55,8 +68,14 @@ module.exports.addActivity = async (options) => {
 };
 
 /**
+ * Get Activity From Id
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -74,6 +93,7 @@ module.exports.getActivity = async (options) => {
       }
     }
   }catch(e){
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -81,8 +101,14 @@ module.exports.getActivity = async (options) => {
 };
 
 /**
+ * Export Activity for a later import in the plateform
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -100,6 +126,7 @@ module.exports.exportActivity = async (options) => {
       }
     }
   }catch(e){
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -107,8 +134,14 @@ module.exports.exportActivity = async (options) => {
 };
 
 /**
+ * Get Presigned Url For Data File from Minio for this activitiy
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -118,8 +151,6 @@ module.exports.getPresignedFileUrl = async (options) => {
   try {
     logger.info("getPresignedFileUrl");
     logger.info(options);
-    presignedurl = await ActivitiesController.getPresignedFileUrl(options.id);
-    logger.info(presignedurl);
     if(options.user.data.role === 'teacher'){
       let activity = await ActivitiesController.loadActivity(options.id);
       if(activity.owners.indexOf(options.user.data.username) !== -1){
@@ -137,6 +168,7 @@ module.exports.getPresignedFileUrl = async (options) => {
       }
     }
   }catch(e){
+    logger.error(e);
     return {status: 500, data: e };
   }
 
@@ -144,8 +176,11 @@ module.exports.getPresignedFileUrl = async (options) => {
 };
 
 /**
+ * Update Activity from its ID
+ * 
  * @param {Object} options
  * @param {String} options.id The activity ID
+ * @param {Object} options.body the part of the activity object to patch
  * @throws {Error}
  * @return {Promise}
  */
@@ -171,8 +206,14 @@ module.exports.updateActivity = async (options) => {
 };
 
 /**
+ * Update Survey Owner for LimeSurvey to be editable by the others owners of the activity
+ * 
  * @param {Object} options
  * @param {String} options.id The activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -201,6 +242,8 @@ module.exports.updateSurveyOwner = async (options) => {
 };
 
 /**
+ * Get Survey Language List to be able to change the language by default
+ * 
  * @param {Object} options
  * @param {String} options.id The activity ID
  * @throws {Error}
@@ -231,8 +274,13 @@ module.exports.getSurveyLanguages = async (options) => {
 
 
 /**
+ * Get Current User Survey List that he have access
+ * 
  * @param {Object} options
- * @param {String} options.id The activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -249,8 +297,10 @@ module.exports.getUserSurveys = async (options) => {
 };
 
 /**
+ * Delete activity from its ID
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
  * @throws {Error}
  * @return {Promise}
  */
@@ -297,8 +347,14 @@ module.exports.deleteActivity = async (options) => {
 };
 
 /**
+ * Get to know if the activity is openable in the webbrowser or if it is an external activity
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
@@ -333,8 +389,15 @@ module.exports.getOpenable = async (options) => {
 };
 
 /**
+ * Get URL Target for an openable activity in the webbrowser
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.users the users list to get the target URL
  * @throws {Error}
  * @return {Promise}
  */
@@ -376,8 +439,15 @@ module.exports.getTarget = async (options) => {
 };
 
 /**
+ * Get Progress for current Activity
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.users the users list to get the progress
  * @throws {Error}
  * @return {Promise}
  */
@@ -419,8 +489,15 @@ module.exports.getProgress = async (options) => {
 };
 
 /**
+ * Get the completion of an activity
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.users the users list to get the completion
  * @throws {Error}
  * @return {Promise}
  */
@@ -462,9 +539,17 @@ module.exports.getCompletion = async (options) => {
 };
 
 /**
+ * Set Activity Completion Status for a user
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
- * @param {String} options.user the user to check its completion status
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.postuser the user to check its completion status
+ * @param {Object} options.body The Activity body
+ * @param {String} options.body.status The Activity body completion
  * @throws {Error}
  * @return {Promise}
  */
@@ -504,8 +589,106 @@ module.exports.setCompletion = async (options) => {
 };
 
 /**
+ * Set Suspension Status for an Activity
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {String} options.user the user to check its completion status
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.postuser the user to set the suspension status 
+ * @param {boolean} options.status the status to set the suspension status
+ * @param {String} options.reason the reason to set the suspension status
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.setSuspension = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    let study = await ActivitiesController.getStudy(options.id);
+
+    let participants = await StudiesController.getParticipants(study);
+    let date = new Date();
+    if(participants.indexOf(options.user.data.username) !== -1){
+      await activity.setSuspension(options.user.data.username, options.status);
+      if(! (await activity.getCompletion([options.user.data.username]))[options.user.data.username]) {
+        let verb;
+        if(options.status) {
+          verb="Suspended";
+        } else {
+          verb="Resumed";
+        }
+        sendSimvaTaskToKafka([{
+          task: 'sendXAPITraceForActivity',
+          params: 'user,verb,timestamp,result,reason',
+          object: 'Activity',
+          objectId: options.id,
+          user: options.user.data.username,
+          verb: verb,
+          timestamp: date.toISOString(),
+          result:null,
+          reason:options.reason
+        }]);
+        body.data.result = { msg : "OK" };
+      }
+    }else{
+      if(study.owners.indexOf(options.data.user.data.username) !== -1){
+        if(participants.indexOf(options.postuser) !== -1){
+          await activity.setSuspension(options.postuser, options.status);
+          if(! (await activity.getCompletion([options.postuser]))[options.postuser]) {
+            let verb;
+            if(options.status) {
+              verb="Suspended";
+            } else {
+              verb="Resumed";
+            }
+            await sendSimvaTaskToKafka([{
+              task: 'sendXAPITraceForActivity',
+              params: 'user,verb,timestamp,result,reason',
+              object: 'Activity',
+              objectId: options.id,
+              user: options.postuser,
+              verb: verb,
+              timestamp: date.toISOString(),
+              result:null,
+              reason:options.reason
+            }]);
+            body.data.result = { msg : "OK" };
+          }
+        }else{
+          body.status = 400;
+          body.data.message = 'The user you are trying to set suspension to is not a participant';
+        }
+      }else{
+        body.status = 401;
+        body.data.message = 'You do not participate in the activity either as owner or user';
+      }
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
+ * Get the result of an Activity for a given user
+ * 
+ * @param {Object} options
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the user to check its completion status
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {Object} options.res The response object
+ * @param {String} options.users the users list to get the result
  * @throws {Error}
  * @return {Promise}
  */
@@ -549,9 +732,15 @@ module.exports.getResult = async (options) => {
 };
 
 /**
+ * Set statement(s) for an activity
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
- * @param {String} options.user the user to check its completion status
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.postuser The user to set statement
  * @throws {Error}
  * @return {Promise}
  */
@@ -590,6 +779,8 @@ module.exports.setStatement = async (options) => {
 };
 
 /**
+ * Not implemented yet.
+ * 
  * @param {Object} options
  * @throws {Error}
  * @return {Promise}
@@ -604,9 +795,15 @@ module.exports.NotImplemented = async (options) => {
 };
 
 /**
+ * Set result for an activity.
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
- * @param {String} options.user the user to check its completion status
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.postuser the user to set result
  * @throws {Error}
  * @return {Promise}
  */
@@ -646,8 +843,15 @@ module.exports.setResult = async (options) => {
 };
 
 /**
+ * Check if an Activity has a result for a given user
+ * 
  * @param {Object} options
- * @param {String} options.id The test ID
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {String} options.users the users list to get the result
  * @throws {Error}
  * @return {Promise}
  */
@@ -689,7 +893,13 @@ module.exports.hasResult = async (options) => {
 };
 
 /**
+ * Get the activity types for a user
+ * 
  * @param {Object} options
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
  * @throws {Error}
  * @return {Promise}
  */
