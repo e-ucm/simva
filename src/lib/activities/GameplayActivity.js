@@ -1,4 +1,4 @@
-const logger = require('../logger');
+	const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -37,12 +37,17 @@ class GameplayActivity extends Activity {
 			if(!this.extra_data.config){
 				this.extra_data.config = {
 					trace_storage: false,
-					backup: false
+					backup: false,
+					scorm_xapi_by_game:false,
 				};
 			}
 
 			if(params.trace_storage && params.trace_storage === true){
 				this.extra_data.config.trace_storage = true;
+			}
+
+			if(params.scorm_xapi_by_game && params.scorm_xapi_by_game === true){
+				this.extra_data.config.scorm_xapi_by_game = true;
 			}
 
 			if(params.backup && params.backup === true){
@@ -68,6 +73,7 @@ class GameplayActivity extends Activity {
 		activity.trace_storage = this.extra_data.config.trace_storage;
 		activity.backup = this.extra_data.config.backup;
 		activity.game_uri = this.extra_data.game_uri;
+		activity.scorm_xapi_by_game = this.extra_data.scorm_xapi_by_game;
 		return activity;
 	}
 
@@ -92,7 +98,8 @@ class GameplayActivity extends Activity {
 	async getDetails(){
 		return {
 			backup: this.extra_data.config.backup,
-			trace_storage: this.extra_data.config.trace_storage
+			trace_storage: this.extra_data.config.trace_storage,
+			scorm_xapi_by_game: this.extra_data.config.scorm_xapi_by_game,
 		};
 	}
 
@@ -118,6 +125,12 @@ class GameplayActivity extends Activity {
 			}
 			this.extra_data.config.backup = params.backup;
 		}
+		if(typeof params.scorm_xapi_by_game !== 'undefined') {
+			if(typeof params.scorm_xapi_by_game == "string") {
+				params.scorm_xapi_by_game = params.scorm_xapi_by_game === "true";
+			}
+			this.extra_data.config.scorm_xapi_by_game = params.scorm_xapi_by_game;
+		}
 		if(typeof params.game_uri !== 'undefined') {
 			this.extra_data.game_uri = params.game_uri;
 		}
@@ -132,6 +145,11 @@ class GameplayActivity extends Activity {
 				this.extra_data.config.trace_storage = this.extra_data.config.trace_storage === "true";
 			}
 		}
+		if(typeof this.extra_data.config.scorm_xapi_by_game !==  'undefined') {
+			if(typeof this.extra_data.config.scorm_xapi_by_game == "string") {
+				this.extra_data.config.scorm_xapi_by_game = this.extra_data.config.scorm_xapi_by_game === "true";
+			}
+		}
 		if(typeof this.extra_data.config.backup !== 'undefined') {
 			if(typeof this.extra_data.config.backup == "string") {
 				this.extra_data.config.backup = this.extra_data.config.backup === "true";
@@ -143,6 +161,13 @@ class GameplayActivity extends Activity {
 
 	async remove(){
 		return await super.remove();
+	}
+
+
+	async sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension) {
+		if(!this.extra_data.scorm_xapi_by_game) {
+			return super.sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension);
+		}
 	}
 
 	// ##########################################
