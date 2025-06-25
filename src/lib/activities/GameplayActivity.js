@@ -165,7 +165,7 @@ class GameplayActivity extends Activity {
 
 
 	async sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension) {
-		if(!this.extra_data.scorm_xapi_by_game) {
+		if(!this.extra_data.config.scorm_xapi_by_game) {
 			return super.sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension);
 		}
 	}

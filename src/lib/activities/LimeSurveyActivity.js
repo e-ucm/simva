@@ -122,7 +122,10 @@ class LimeSurveyActivity extends Activity {
 	}
 
 	async getDetails(){
-		return {};
+		return {
+			url:`${config.limesurvey.external_url}/${this.extra_data.surveyId}`,
+			lang: `${this.extra_data.language}`,
+		};
 	}
 
 	set params(params){

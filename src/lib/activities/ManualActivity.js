@@ -60,7 +60,8 @@ class ManualActivity extends Activity {
 
 	async getDetails(){
 		return {
-			user_managed: this.extra_data.user_managed
+			user_managed: this.extra_data.user_managed,
+			uri: this.extra_data.uri
 		};
 	}
 
