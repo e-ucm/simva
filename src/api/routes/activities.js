@@ -324,7 +324,6 @@ router.post('/:id/completion', Authenticator.auth, async (req, res, next) => {
   }
 });
 
-
 /**
  * Set the suspension status of the activity for a student
  * 
@@ -340,6 +339,25 @@ router.post('/:id/suspend', Authenticator.auth, async (req, res, next) => {
 
   try {
     const result = await activities.setSuspension(options);
+        res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Set the multi completion status of the activity
+ * 
+ */
+router.post('/:id/multicompletion', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    body: req.body
+  };
+
+  try {
+    const result = await activities.setMultiCompletion(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     next(err);
