@@ -123,15 +123,6 @@ class ManualActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
-		const message = {
-			type: 'activity_completed',
-			activityType : "manual", 
-			activityId: this.id,
-			studyId: this.study,
-			user: participant,
-			status: status
-		};
-		sendSimvaEventsToKafka([message]);
 		return await super.setCompletion(participant, status);
 		
 	}
