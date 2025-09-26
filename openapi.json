@@ -76,7 +76,8 @@
     "/users": {
       "get": {
         "tags": [
-          "admins"
+          "admins",
+          "teachers"
         ],
         "summary": "gets the list of users.",
         "operationId": "getUsers",
@@ -3795,6 +3796,10 @@
             "type": "string",
             "example": "Test group for School"
           },
+          "sandbox": {
+            "type": "boolean",
+            "example": true
+          },
           "owners": {
             "type": "array",
             "items": {
@@ -3849,6 +3854,10 @@
             }
           },
           "allocator": {
+            "type": "string",
+            "example": "ObjectId(\"5d07a0767c1405004bc702af\")"
+          },
+          "sandbox": {
             "type": "string",
             "example": "ObjectId(\"5d07a0767c1405004bc702af\")"
           },
