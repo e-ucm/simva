@@ -8,7 +8,6 @@ var Allocator = require('./allocator');
 const validator = require('../utils/validator');
 
 var allocatorschema = validator.getSchema('#/components/schemas/allocator');
-var StudiesController = require('../studiescontroller');
 var GroupsController = require('../groupscontroller');
 
 class GroupAllocator extends Allocator {

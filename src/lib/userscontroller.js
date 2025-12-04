@@ -527,18 +527,24 @@ UsersController.createUserFromJWT = async function(decoded){
 UsersController.getRoleFromJWT = function(decoded){
 	logger.debug("getRoleFromJWT : " + JSON.stringify(decoded));
 	let role = 'norole';
+	if(decoded.realm_access.roles.includes("admin")){
+		role = 'admin';
+	} else if(decoded.realm_access.roles.includes("lrsmanager")){
+		role = 'lrsmanager';
+	} else {
+		for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
+			let teacherroles = ['teacher', 'teaching-assistant', 'researcher'];
+			let jwtrole = decoded.realm_access.roles[i];
 
-	for (var i = decoded.realm_access.roles.length - 1; i >= 0; i--) {
-		let teacherroles = ['teacher', 'teaching-assistant', 'researcher'];
-		let jwtrole = decoded.realm_access.roles[i];
-
-		if(teacherroles.includes(jwtrole)){
-			role = 'teacher';
-			break;
-		}else if(jwtrole === 'student'){
-			role = 'student';
-		};
+			if(teacherroles.includes(jwtrole)){
+				role = 'teacher';
+				break;
+			}else if(jwtrole === 'student'){
+				role = 'student';
+			};
+		}
 	}
+	
 
 	return role;
 }

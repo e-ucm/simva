@@ -6,7 +6,6 @@ var async = require('async');
 var Activity = require('./activity');
 
 var config = require('../config');
-
 var limeconfig = {
 	options: {
 		url: config.limesurvey.url + '/index.php/admin/remotecontrol',
@@ -23,6 +22,9 @@ var limeconfig = {
   	password: config.limesurvey.adminPassword
 }
 
+var LRS= require("./LRS.js");
+
+var LRSManager = new LRS();
 
 let controller = require('./limesurvey/controller');
 
@@ -105,6 +107,13 @@ class LimeSurveyActivity extends Activity {
 						url: config.limesurvey.external_url,
 						surveys: surveys
 					};
+					if(config.limesurvey.useNewVersion) {
+						utils.editurl= config.limesurvey.external_url + "/surveyAdministration/view?surveyid=" ;
+						utils.newurl= config.limesurvey.external_url + "/surveyAdministration/newSurvey" ;
+					} else {
+						utils.editurl= config.limesurvey.external_url + "/admin/survey/sa/view/surveyid/" ;
+						utils.newurl= config.limesurvey.external_url + "/admin/survey/sa/newsurvey" ;
+					}
 
 					resolve(utils);
 				}
@@ -113,7 +122,10 @@ class LimeSurveyActivity extends Activity {
 	}
 
 	async getDetails(){
-		return {};
+		return {
+			url:`${config.limesurvey.external_url}/${this.extra_data.surveyId}`,
+			lang: `${this.extra_data.language}`,
+		};
 	}
 
 	set params(params){
@@ -131,6 +143,9 @@ class LimeSurveyActivity extends Activity {
 		}
 		if(typeof params.copysurvey !== 'undefined') {
 			this.copysurvey = params.copysurvey;
+			if(this.extra_data && this.extra_data.participants) {
+				this.participants=Object.keys(this.extra_data.participants);
+			}
 		}
 		if(typeof params.username !== 'undefined') {
 			this.username = params.username;
@@ -143,16 +158,32 @@ class LimeSurveyActivity extends Activity {
 	async save(){
 		if(!this.extra_data){
 			this.extra_data = {};
+			this.extra_data.participants={};
 		}
 		if(this.copysurvey){
-			this.extra_data.surveyId = await this.createSurveyById();
+			let copysurvey=this.copysurvey;
 			delete this.copysurvey;
+			let participants=Object.keys(this.extra_data.participants);
+			if(participants.length > 0) {
+				await this.removeParticipants(participants);
+			}
+			this.extra_data.surveyId = await this.createSurveyById(copysurvey);
+			if(this.participants && this.participants.length > 0) {
+				await this.addParticipants(this.participants);
+			}
+			delete this.participants;
 		}else if(this.rawsurvey){
 			this.extra_data.surveyId = await this.createSurveyByFile();	
 			delete this.rawsurvey;
 		}
 		if(!this.extra_data.language) {
 			this.extra_data.language = (await this.getSurveyLanguages()).default;
+		}
+		var surveyid = this.extra_data.surveyId;
+		if(this.extra_data.lrsset !== surveyid) {
+			var lrsendpoint=config.api.url + "/activities/" + this.id;
+			await controller.setActivityLRSEndpointPromise(surveyid, lrsendpoint);
+			this.extra_data.lrsset = surveyid;
 		}
 		if(this.username) {
 			try {
@@ -176,23 +207,20 @@ class LimeSurveyActivity extends Activity {
 		}
 	}
 
-	async createSurveyById(){
+	async createSurveyById(surveyId){
 		return new Promise((resolve, reject) => {
-			if(this.copysurvey){
+			if(surveyId){
 				try{
 					async.waterfall([
 						controller.online,
 						controller.auth,
-						controller.clone(this.copysurvey, this.name),
+						controller.clone(surveyId, this.name),
 					], function (err, result) {
-						
 						if(err){
 							reject(err);
 						}else{
 							resolve(result);
 						}
-
-						resolve(result);
 					});
 				}catch(exception){
 					logger.error(exception);
@@ -224,12 +252,15 @@ class LimeSurveyActivity extends Activity {
 	}
 
 	async setSurveyOwnerFromUsername(username) {
-		let isOwner=await this.isUserOwnerOfSurvey(username);
-		if(!isOwner) {
-			var userid = await this.getUserIdByUserName(username);
-			await this.setSurveyOwner(userid);
-			this.extra_data.surveyOwner = username;
-			this.save();
+		if(config.limesurvey.useNewVersion) {
+		} else {
+			let isOwner=await this.isUserOwnerOfSurvey(username);
+			if(!isOwner) {
+				var userid = await this.getUserIdByUserName(username);
+				await this.setSurveyOwner(userid);
+				this.extra_data.surveyOwner = username;
+				this.save();
+			}
 		}
 	}
 
@@ -426,6 +457,95 @@ class LimeSurveyActivity extends Activity {
 				resolve();
 			}
 		})
+	}
+
+	async sendProgressOrCompletionOfActivity(trace, participant, activityType) {
+        if(trace.object && trace.object.definition && trace.object.definition.type == "http://adlnet.gov/expapi/activities/assessment") {
+			var username;
+			if(trace.actor) {
+				if(trace.actor.account && trace.actor.account.name) {
+					username=trace.actor.account.name;
+				} else {
+					username=trace.actor.name;
+				}
+			}
+			if(username == null) {
+				username=participant;
+			}
+            const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+            const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+            const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+			var sendSimvaTaskToKafka = require("../utils/SimvaTaskToKafka.js");
+            if(trace.verb) {
+                switch(trace.verb.id) {
+                    case initializedVerb:
+                        logger.info(`INITIALIZED ACTIVITY ${activityType}`);
+                        var taskMessage = {
+							task: 'setProgress',
+							params: 'user,progress',
+							object: 'Activity',
+							objectId: this.id,
+							user: username,
+							progress: 0
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case progressedVerb:
+                        logger.info(`PROGRESSED THROW ACTIVITY  ${activityType}`);
+                        var value = null;
+                        if(trace.result && trace.result.score && trace.result.score.scaled) {
+                            value = trace.result.score.scaled;
+                        }
+                        logger.info(value);
+                        var taskMessage = {
+								task: 'setProgress',
+								params: 'user,progress',
+								object: 'Activity',
+								objectId: this.id,
+								user: username,
+								progress: value
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case completedVerb:
+                        if(trace.result.completion == true) {
+							logger.info(`COMPLETED ACTIVITY ${activityType}`);
+							var taskMessage = {
+								task: 'setCompletion',
+								params: 'user,completion',
+								object: 'Activity',
+								objectId: this.id,
+								user: username,
+								completion: true
+							};
+							sendSimvaTaskToKafka([taskMessage]);
+						}
+                      break;
+                    default: 
+                        logger.info("OTHER VERB");
+                }
+            }
+        }
+    }
+
+	async setStatement(participant, result){
+		let toret = 0;
+		try {
+			for(let traceId = 0; traceId < result.length; traceId++) {
+				var trace = result[traceId];
+				await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
+			}
+			toret = await LRSManager.setStatement(this.id, participant, result);
+			//if(this.extra_data.config.trace_storage){
+			//	
+			//} else {
+			//	throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
+			//}
+		}catch(e){
+			logger.error(e);
+			throw { message: 'Error while setting the statements' };
+		}
+		return toret;
 	}
 
 	async setResult(participant, result){

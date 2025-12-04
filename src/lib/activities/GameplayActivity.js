@@ -1,8 +1,7 @@
-const logger = require('../logger');
+	const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
-const { Client } = require('minio');
 
 const axios = require('axios');
 const xml2js = require('xml2js');
@@ -14,11 +13,12 @@ const unzipper = require('unzipper');
 const pipelineAsync = promisify(pipeline);
 
 var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka.js');
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
-var generateStatementId = require('../utils/statementIdGenerator');
+var LRS= require("./LRS.js");
 
-var TraceStorageActivity = new MinioActivity({});
+var LRSManager = new LRS();
 
 var UsersController = require('../userscontroller');
 
@@ -37,12 +37,17 @@ class GameplayActivity extends Activity {
 			if(!this.extra_data.config){
 				this.extra_data.config = {
 					trace_storage: false,
-					backup: false
+					backup: false,
+					scorm_xapi_by_game:false,
 				};
 			}
 
 			if(params.trace_storage && params.trace_storage === true){
 				this.extra_data.config.trace_storage = true;
+			}
+
+			if(params.scorm_xapi_by_game && params.scorm_xapi_by_game === true){
+				this.extra_data.config.scorm_xapi_by_game = true;
 			}
 
 			if(params.backup && params.backup === true){
@@ -68,6 +73,7 @@ class GameplayActivity extends Activity {
 		activity.trace_storage = this.extra_data.config.trace_storage;
 		activity.backup = this.extra_data.config.backup;
 		activity.game_uri = this.extra_data.game_uri;
+		activity.scorm_xapi_by_game = this.extra_data.scorm_xapi_by_game;
 		return activity;
 	}
 
@@ -80,7 +86,7 @@ class GameplayActivity extends Activity {
 	}
 
 	static getDescription(){
-		return 'A xAPI processor activity that uses RAGE Analytics and also Minio.';
+		return 'A xAPI processor activity that uses Minio.';
 	}
 
 	static async getUtils(username){
@@ -92,7 +98,8 @@ class GameplayActivity extends Activity {
 	async getDetails(){
 		return {
 			backup: this.extra_data.config.backup,
-			trace_storage: this.extra_data.config.trace_storage
+			trace_storage: this.extra_data.config.trace_storage,
+			scorm_xapi_by_game: this.extra_data.config.scorm_xapi_by_game,
 		};
 	}
 
@@ -118,6 +125,12 @@ class GameplayActivity extends Activity {
 			}
 			this.extra_data.config.backup = params.backup;
 		}
+		if(typeof params.scorm_xapi_by_game !== 'undefined') {
+			if(typeof params.scorm_xapi_by_game == "string") {
+				params.scorm_xapi_by_game = params.scorm_xapi_by_game === "true";
+			}
+			this.extra_data.config.scorm_xapi_by_game = params.scorm_xapi_by_game;
+		}
 		if(typeof params.game_uri !== 'undefined') {
 			this.extra_data.game_uri = params.game_uri;
 		}
@@ -132,6 +145,11 @@ class GameplayActivity extends Activity {
 				this.extra_data.config.trace_storage = this.extra_data.config.trace_storage === "true";
 			}
 		}
+		if(typeof this.extra_data.config.scorm_xapi_by_game !==  'undefined') {
+			if(typeof this.extra_data.config.scorm_xapi_by_game == "string") {
+				this.extra_data.config.scorm_xapi_by_game = this.extra_data.config.scorm_xapi_by_game === "true";
+			}
+		}
 		if(typeof this.extra_data.config.backup !== 'undefined') {
 			if(typeof this.extra_data.config.backup == "string") {
 				this.extra_data.config.backup = this.extra_data.config.backup === "true";
@@ -143,6 +161,13 @@ class GameplayActivity extends Activity {
 
 	async remove(){
 		return await super.remove();
+	}
+
+
+	async sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension) {
+		if(!this.extra_data.config.scorm_xapi_by_game) {
+			return super.sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension);
+		}
 	}
 
 	// ##########################################
@@ -167,110 +192,17 @@ class GameplayActivity extends Activity {
 		return await super.removeParticipants(participants);
 	}
 
-	updateMissingTraceElements(participant, trace) {
-		const now = new Date();
-		if(!trace.id) {
-			trace.id = generateStatementId(trace);
-		}
-		if(!trace.stored) {
-			trace.stored = now.toISOString();
-		}
-		if(!trace.timestamp) {
-			trace.timestamp = now.toISOString();
-		}
-		if(!trace.version) {
-			trace.version = "1.0.3";
-			//trace.version = "2.0.0";
-		}
-		if(!trace.authority) {
-			trace.authority = {
-				homePage: config.external_url,
-				name: participant
-			};
-		}
-		return trace;
-	}
-
-	async sendProgressOrCompletionOfGame(trace, participant) {
-		if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
-			const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
-			const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
-			const completedVerb='http://adlnet.gov/expapi/verbs/completed';
-			const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
-			if(trace.verb) {
-				switch(trace.verb.id) {
-					case initializedVerb:
-						logger.info("INITIALIZED GAME");
-						await this.setProgress(participant, 0);
-						const message = {
-							type: 'activity_initialized',
-							activityType : "gameplay", 
-							user: participant,
-							activityId: this.id,
-							studyId: this.study
-						};
-						sendSimvaEventsToKafka([message]);
-					  break;
-					case progressedVerb:
-						logger.info("PROGRESSED THROUGH GAME");
-						if(trace.result && trace.result.extensions[resultExtensionProgress]) {
-							var value = trace.result.extensions[resultExtensionProgress];
-							logger.info(value);
-							await this.setProgress(participant, value);
-							const message = {
-								type: 'activity_progressed',
-								activityType : "gameplay", 
-								activityId: this.id,
-								studyId: this.study,
-								user: participant,
-								val: value
-							};
-							sendSimvaEventsToKafka([message]);
-						}
-					  break;
-					case completedVerb:
-						if(trace.result.completion == true) {
-							logger.info("COMPLETED GAME");
-							await this.setCompletion(participant, true);
-						}
-					  break;
-					default: 
-						logger.info("OTHER VERB");
-				}
-			}
-		}
-	}
-
 	async setStatement(participant, result){
 		let toret = 0;
-		let response=[];
 		try {
-			if(Array.isArray(result)){
-				if(this.extra_data.config.trace_storage){
-					var traces= [];
-					for(let traceId = 0; traceId < result.length; traceId++) {
-						var trace = result[traceId];
-						await this.sendProgressOrCompletionOfGame(trace, participant);
-						traces.push(this.updateMissingTraceElements(participant, trace));
-					}
-					response = await TraceStorageActivity.sendTracesToKafka(traces, this.id);
-					toret =  { ids: response };
-				} else {
-					throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
+			if(this.extra_data.config.trace_storage){
+				for(let traceId = 0; traceId < result.length; traceId++) {
+					var trace = result[traceId];
+					await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
 				}
-			} else if(!result || typeof result === 'object'){
-				if(this.extra_data.config.trace_storage){
-					trace = this.updateMissingTraceElements(participant, result);
-					await this.sendProgressOrCompletionOfGame(trace, participant);
-					await TraceStorageActivity.sendTracesToKafka([trace], this.id);
-					toret =  { ids: response };
-				} else {
-					throw { message: 'Trace Storage is not enabled. No xAPI collector.' };
-				}
+				toret = await LRSManager.setStatement(this.id, participant, result);
 			} else {
-				logger.info('Unknown case');
-				logger.info(result.result);
-				throw { message: 'Unknown case setting the statements' };
+				throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
 			}
 		}catch(e){
 			logger.error(e);
@@ -279,22 +211,87 @@ class GameplayActivity extends Activity {
 		return toret;
 	}
 
+	async sendProgressOrCompletionOfActivity(trace, participant, activityType) {
+        if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
+            const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+            const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+            const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+            const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
+            if(trace.verb) {
+                switch(trace.verb.id) {
+                    case initializedVerb:
+                        logger.info(`INITIALIZED ACTIVITY ${activityType}`);
+                        var taskMessage = {
+							task: 'setProgress',
+							params: 'user,progress',
+							object: 'Activity',
+							objectId: this.id,
+							user: participant,
+							progress: 0
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case progressedVerb:
+                        logger.info(`PROGRESSED THROW ACTIVITY  ${activityType}`);
+                        var value = null;
+                        if(trace.result && trace.result.extensions[resultExtensionProgress]) {
+							value = trace.result.extensions[resultExtensionProgress];
+						} else if(trace.result && trace.result.score && trace.result.score.scaled) {
+                            value = trace.result.score.scaled;
+                        }
+                        logger.info(value);
+                        var taskMessage = {
+								task: 'setProgress',
+								params: 'user,progress',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								progress: value
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case completedVerb:
+                        if(trace.result.completion == true) {
+							logger.info(`COMPLETED ACTIVITY ${activityType}`);
+							var taskMessage = {
+								task: 'setCompletion',
+								params: 'user,completion',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								completion: true
+							};
+							sendSimvaTaskToKafka([taskMessage]);
+						}
+                      break;
+                    default: 
+                        logger.info("OTHER VERB");
+                }
+            }
+        }
+    }
+
 	async setResult(participant, result){
+		const message = {
+			type: 'activity_result',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		let toret = 0;
 		try{
 			if(Array.isArray(result)){
  				// If we're receiving an array, we're receiving traces
 				if(this.extra_data.config.trace_storage){
-					var traces= [];
 					for(let traceId = 0; traceId < result.length; traceId++) {
 						var trace = result[traceId];
-						await this.sendProgressOrCompletionOfGame(trace, participant);
-						traces.push(this.updateMissingTraceElements(participant, trace));
+						await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
 					}
-					await TraceStorageActivity.sendTracesToKafka(traces, this.id);
-					toret =  { message: 'Traces Received' };
+					toret = await LRSManager.setStatement(this.id, participant, result);
 				}else{
-					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
+					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.'};
 				}
 			}else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start or backup
@@ -536,15 +533,6 @@ class GameplayActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
-		const message = {
-			type: 'activity_completed',
-			activityType : "gameplay", 
-			activityId: this.id,
-			studyId: this.study,
-			status: status,
-			user: participant
-		};
-		sendSimvaEventsToKafka([message]);
 		return await super.setCompletion(participant, status);
 	}
 
@@ -646,105 +634,6 @@ class GameplayActivity extends Activity {
 
 	getCodeFromError(error) {
 		return error.substr(3, error.indexOf('<<')-3);
-	}
-
-	initializeMinioClient() {
-		logger.info("MinioClient");
-		logger.info(`Minio Config - Host: ${config.minio.api_host}, Port: ${config.minio.port}, SSL: ${config.minio.useSSL}`);
-		try {
-			const minioClient = new Client({
-				endPoint: config.minio.api_host,
-				port: Number(config.minio.port),
-				accessKey: config.minio.access_key,
-				secretKey: config.minio.secret_key,
-				useSSL: config.minio.useSSL
-			});
-			logger.info("MinioClient connected");
-			return minioClient;
-		} catch (error) {
-			logger.error("Error initializing MinioClient: ");
-			logger.error(error);
-			throw error;
-		}
-	}
-
-	async generatePresignedFileUrl() {
-		let path = `${config.minio.outputs_dir}/${this._id}/${config.minio.traces_file}`;
-		logger.info(path);
-		let minioClient = this.initializeMinioClient();
-		if (await this.fileExists(minioClient, path)) {
-			let presignedUrl = null;	
-			let time_before_expiration=config.minio.presigned_url_expiration_time_in_second;
-			presignedUrl = await this.getPresignedUrl(minioClient, path, time_before_expiration);
-			const now=new Date().toJSON();
-			this.extra_data.miniotrace={
-				presignedUrl:presignedUrl,
-				generated_at:now,
-				expire_on_seconds:time_before_expiration
-			};
-		} else {
-			throw `Error the file ${path} don't exist in minio`;
-		}
-	}
-
-	/**
-	 * Retrieve file content from Minio
-	 * @param {Object} minioClient - Minio Client object
-	 * @param {string} file - File path
-	 * @returns {Promise<string>}
-	 */
-	async getFile(minioClient, file) {
-		try {
-			const objectStream = await minioClient.getObject(config.minio.bucket, file);
-			objectStream.setEncoding('utf-8');
-	
-			let content = '';
-			for await (const chunk of objectStream) {
-				content += chunk;
-			}
-	
-			return content;
-		} catch (err) {
-			logger.error(`Error fetching file: ${err.message}`);
-			throw err;
-		}
-	}
-	
-	/**
-	 * Check if the file exists in Minio bucket
-	 * @param {Object} minioClient - Minio Client object
-	 * @param {string} path - File path
-	 * @returns {Promise<boolean>}
-	 */
-	async fileExists(minioClient, path) {
-		logger.debug("Minio : fileExists");
-		try {
-			const objectsStream = await minioClient.listObjectsV2(config.minio.bucket, path);
-			const iterator = objectsStream[Symbol.asyncIterator]();
-			const nextValue = await iterator.next();
-			return !nextValue.done;
-		} catch (err) {
-			logger.error(`Error checking file existence: ${err.message}`);
-			return false;
-		}
-	}
-	
-	/**
-	 * Generate a presigned URL for a file in Minio
-	 * @param {Object} minioClient - Minio Client object
-	 * @param {string} path - File path
-	 * @returns {Promise<string>}
-	 */
-	async getPresignedUrl(minioClient, path, time) {
-		logger.info("Minio : getPresignedUrl");
-		try {
-			const presignedUrl = await minioClient.presignedGetObject(config.minio.bucket, path, time);
-			logger.info(presignedUrl);
-			return presignedUrl;
-		} catch (err) {
-			logger.error(`Error generating presigned URL: ${err.message}`);
-			throw err;
-		}
 	}
 };
 

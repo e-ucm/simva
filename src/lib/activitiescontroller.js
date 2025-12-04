@@ -3,24 +3,83 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 
 var ActivitiesController = {};
-var Activity = require('./activities/activity');
-var LimeSurveyActivity = require('./activities/LimeSurveyActivity');
-var MinioActivity = require('./activities/MinioActivity');
-var GameplayActivity = require('./activities/GameplayActivity');
-var ManualActivity = require('./activities/ManualActivity');
-var LTIToolActivity = require('./activities/LTIToolActivity');
-var ImsPackageActivity = require('./activities/ImsPackageActivity');
+var activityTypes = require('./activities/activityTypes');
+var types = activityTypes;
 
-var types = [
-	Activity,
-	LimeSurveyActivity,
-	/*MinioActivity, */
-	GameplayActivity,
-	ManualActivity,
-	LTIToolActivity,
-	ImsPackageActivity
-];
+const LRS = require('./activities/LRS');
+var LRSManager = new LRS();
 
+/**
+ * Update an activity in the database for migration purpurses
+ * 
+ * @param {String} activityid The Activity Id
+ * @param {String} studyid The Study Id
+ * @param {Array<String>} owners the owners of the activity
+ * 
+ * 
+ */
+ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activityid, studyid, owners) => {
+	let activityToSave=false;
+	let activity = await ActivitiesController.loadActivity(activityid);
+	if(activity.owners.length != owners.length) {
+		let toAdd=[];
+		owners.forEach(owner => {
+			if(!activity.owners.includes(owner)) {
+				toAdd.push(owner);
+			}
+		});
+		activity.addOwners(toAdd);
+		activityToSave=true;
+	}
+	if(activity.type == "limesurvey" && activity.extra_data) {
+		if(!activity.extra_data.language) {
+			if(activity.study !== "") {
+				logger.info("StudyId already present in activity.");
+			} else {
+				activity.study = studyid;
+				activityToSave=true;
+				logger.info("Language in limesurvey activity saved");
+			}
+		}
+		if(!activity.extra_data.lrsset) {
+			activityToSave=true;
+			logger.info("LRS set");
+		}
+	} else if(activity.type == "gameplay" && activity.extra_data && activity.extra_data.config) {
+		if((typeof activity.extra_data.config.trace_storage == "string" || typeof activity.extra_data.config.realtime == "string"  || typeof activity.extra_data.config.backup == "string")) {
+			activityToSave=true;
+		}
+		if(!activity.extra_data.config.scorm_xapi_by_game) {
+			activity.extra_data.config.scorm_xapi_by_game=false;
+			activityToSave=true;
+		}
+		if(activity.study !== "") {
+			logger.info("StudyId already present in activity.");
+		} else {
+			activity.study = studyid;
+			activityToSave=true;
+			logger.info("Fix config extra_data in gameplay activity saved");
+		}
+	} else {
+		if(activity.study !== "") {
+			logger.info("StudyId already present in activity.");
+		} else {
+			activity.study = studyid;
+			activityToSave=true;
+			logger.info("Activity saved");
+		}
+	}
+	if(activityToSave) {
+		await activity.save();
+	}
+}
+
+/**
+ * Get Study object From Id
+ * 
+ * @param {String} id the Activity Id Id
+ * @returns {Promise<Object>}
+ */
 ActivitiesController.getStudy = async (id) => {
 	let res = null;
 
@@ -36,12 +95,40 @@ ActivitiesController.getStudy = async (id) => {
 	return res;
 }
 
+/**
+ * Casts an activity to its class type.
+ * 
+ * @param {Object} activity 
+ * @returns {Activity}
+ */
+ActivitiesController.castToClass = (activity) => {
+	for (let i = 0; i < types.length; i++) {
+		if(types[i].getType() == activity.type){
+			let castedActivity = new types[i](activity);
+			return castedActivity;
+		}
+	}
+	return null;
+}
+
+/**
+ * Get activities object from parameters.
+ * 
+ * @param {Object} activity parameters
+ * @returns {Promise<Object>}
+ */
 ActivitiesController.getActivities = async (params) => {
 	let res = await mongoose.model('activity').find(params);
 
 	return res;
 };
 
+/**
+ * Get activity object from its id.
+ * 
+ * @param {string} id The activity Id
+ * @returns {Promise<Object>}
+ */
 ActivitiesController.getActivity = async (id) => {
 	let res = await mongoose.model('activity').find({_id: id});
 
@@ -166,32 +253,28 @@ ActivitiesController.getPresignedFileUrl = async (id) => {
 	let activity = await ActivitiesController.loadActivity(id);
 	if(activity) {
 		logger.info('GamePlayActivity : getPresignedFileUrl');
-		if (activity.extra_data.config.trace_storage) {
-			logger.info('Trace storage existing... getting URL..');
-			if(activity.extra_data.miniotrace && Object.keys(activity.extra_data.miniotrace).length != 0) {
-				logger.info('URL found in object...');
-				logger.info(activity.extra_data.miniotrace);
-				const now = new Date();
-				logger.info(`Now : ${now.toISOString()}`);
-				const generated = new Date(activity.extra_data.miniotrace.generated_at);
-				logger.info(`Generated : ${generated.toISOString()}`);
-				const milliseconds = 0.9 * Number(activity.extra_data.miniotrace.expire_on_seconds) * 1000; // 1 seconds = 1000 milliseconds
-				logger.info(`Expire in (milliseconds) : ${milliseconds}`);
-				const expire_at = new Date(generated.getTime() + milliseconds);
-				logger.info(`Expire at : ${expire_at.toISOString()}`);
-				if(now>=expire_at) {
-					logger.info('URL expired.. Generating a new one...');
-					await activity.generatePresignedFileUrl();
-					await ActivitiesController.updateActivity(activity._id, activity);
-				}
-			} else {
+		logger.info('Trace storage existing... getting URL..');
+		if(activity.extra_data.miniotrace && Object.keys(activity.extra_data.miniotrace).length != 0) {
+			logger.info('URL found in object...');
+			logger.info(activity.extra_data.miniotrace);
+			const now = new Date();
+			logger.info(`Now : ${now.toISOString()}`);
+			const generated = new Date(activity.extra_data.miniotrace.generated_at);
+			logger.info(`Generated : ${generated.toISOString()}`);
+			const milliseconds = 0.9 * Number(activity.extra_data.miniotrace.expire_on_seconds) * 1000; // 1 seconds = 1000 milliseconds
+			logger.info(`Expire in (milliseconds) : ${milliseconds}`);
+			const expire_at = new Date(generated.getTime() + milliseconds);
+			logger.info(`Expire at : ${expire_at.toISOString()}`);
+			if(now>=expire_at) {
+				logger.info('URL expired.. Generating a new one...');
 				await activity.generatePresignedFileUrl();
 				await ActivitiesController.updateActivity(activity._id, activity);
 			}
-			return activity.extra_data.miniotrace.presignedUrl;
 		} else {
-			throw 'Error not a trace storage for this activity';
+			await activity.generatePresignedFileUrl();
+			await ActivitiesController.updateActivity(activity._id, activity);
 		}
+		return activity.extra_data.miniotrace.presignedUrl;
 	}else{
 		return null;
 	}
@@ -223,16 +306,6 @@ ActivitiesController.removeParticipantsFromActivity = async (id, participants) =
 		throw { message: 'Error removing participants from activity: ' + id };
 	}
 	logger.debug("ActivitiesController.removeParticipants finished");
-}
-
-ActivitiesController.castToClass = function(activity){
-	for (let i = 0; i < types.length; i++) {
-		if(types[i].getType() == activity.type){
-			let castedActivity = new types[i](activity);
-			return castedActivity;
-		}
-	}
-	return null;
 }
 
 ActivitiesController.getActivityTypes = async (user) => {

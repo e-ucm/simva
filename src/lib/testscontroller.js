@@ -51,6 +51,40 @@ TestsController.updateTest = async (id, test) => {
 	return result.ok > 0;
 }
 
+TestsController.updateStudyIdInTestsAndActivitiesMigration = async (testid, studyid, owners) => {
+	let test = await TestsController.getTest(testid);
+	delete test.id;
+	if(test.study !== "") {
+		logger.info("StudyId already present in test.");
+	} else {
+		test.study = studyid;
+		await test.save();
+		logger.info("Test saved");
+	}
+	for(let k=0; k < test.activities.length; k++) {
+		let activityid = test.activities[k];
+		logger.info("Activity : " + activityid);
+		try {
+			await ActivitiesController.updateStudyIdInTestsAndActivitiesMigration(activityid, studyid, owners);
+		} catch(e) {
+			logger.info(e);
+		}
+	}
+}
+
+
+TestsController.getActivitiesInTest = async () => {
+	var tests = await TestsController.getTests({"_id" : {"$in" : testsId}});
+	var activities = [];
+	for(var i=0; i< tests.length; i++)  {
+		for(var j=0; j< tests[i].activities.length; j++)  {
+			activities.push(tests[i].activities[j]);
+		}
+	}
+	var activitiesObject = await ActivitiesController.getActivities({"_id" : {"$in" : activities}});
+	return activitiesObject;
+}
+
 TestsController.deleteTest = async (id) => {
 	var test = await TestsController.getTest(id);
 
