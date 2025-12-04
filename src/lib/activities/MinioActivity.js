@@ -3,11 +3,10 @@ const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
 
-var generateStatementId = require('../utils/statementIdGenerator');
-
 var Activity = require('./activity');
 
 var config = require('../config');
+var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
 
 var Kafka = require('../kafka')
 logger.info('## MinioActivity: Connecting to Kafka: ' + config.kafka.url + " to topic : " + config.minio.traces_topic + " : " + config.kafka.traceClientId + " : " + config.kafka.traceGroupId);
@@ -102,6 +101,14 @@ class MinioActivity extends Activity {
 	}
 
 	async setResult(participant, result){
+		const message = {
+			type: 'activity_result',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		let toret = 0;
 		try{
 			if(Array.isArray(result)){
@@ -138,7 +145,6 @@ class MinioActivity extends Activity {
 		let responses = [];
 		for (var i = traces.length - 1; i >= 0; i--) {
 			let trace = traces[i];
-			trace.id = generateStatementId(trace);
 			responses.push(trace.id);
 			payloads.push(JSON.stringify(trace));
 		}

@@ -1,4 +1,4 @@
-const logger = require('../logger');
+	const logger = require('../logger');
 const ServerError = require('../error');
 var mongoose = require('mongoose');
 var async = require('async');
@@ -13,6 +13,7 @@ const unzipper = require('unzipper');
 const pipelineAsync = promisify(pipeline);
 
 var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka.js');
 var Activity = require('./activity');
 var MinioActivity = require('./MinioActivity');
 var LRS= require("./LRS.js");
@@ -36,12 +37,17 @@ class GameplayActivity extends Activity {
 			if(!this.extra_data.config){
 				this.extra_data.config = {
 					trace_storage: false,
-					backup: false
+					backup: false,
+					scorm_xapi_by_game:false,
 				};
 			}
 
 			if(params.trace_storage && params.trace_storage === true){
 				this.extra_data.config.trace_storage = true;
+			}
+
+			if(params.scorm_xapi_by_game && params.scorm_xapi_by_game === true){
+				this.extra_data.config.scorm_xapi_by_game = true;
 			}
 
 			if(params.backup && params.backup === true){
@@ -67,6 +73,7 @@ class GameplayActivity extends Activity {
 		activity.trace_storage = this.extra_data.config.trace_storage;
 		activity.backup = this.extra_data.config.backup;
 		activity.game_uri = this.extra_data.game_uri;
+		activity.scorm_xapi_by_game = this.extra_data.scorm_xapi_by_game;
 		return activity;
 	}
 
@@ -91,7 +98,8 @@ class GameplayActivity extends Activity {
 	async getDetails(){
 		return {
 			backup: this.extra_data.config.backup,
-			trace_storage: this.extra_data.config.trace_storage
+			trace_storage: this.extra_data.config.trace_storage,
+			scorm_xapi_by_game: this.extra_data.config.scorm_xapi_by_game,
 		};
 	}
 
@@ -117,6 +125,12 @@ class GameplayActivity extends Activity {
 			}
 			this.extra_data.config.backup = params.backup;
 		}
+		if(typeof params.scorm_xapi_by_game !== 'undefined') {
+			if(typeof params.scorm_xapi_by_game == "string") {
+				params.scorm_xapi_by_game = params.scorm_xapi_by_game === "true";
+			}
+			this.extra_data.config.scorm_xapi_by_game = params.scorm_xapi_by_game;
+		}
 		if(typeof params.game_uri !== 'undefined') {
 			this.extra_data.game_uri = params.game_uri;
 		}
@@ -131,6 +145,11 @@ class GameplayActivity extends Activity {
 				this.extra_data.config.trace_storage = this.extra_data.config.trace_storage === "true";
 			}
 		}
+		if(typeof this.extra_data.config.scorm_xapi_by_game !==  'undefined') {
+			if(typeof this.extra_data.config.scorm_xapi_by_game == "string") {
+				this.extra_data.config.scorm_xapi_by_game = this.extra_data.config.scorm_xapi_by_game === "true";
+			}
+		}
 		if(typeof this.extra_data.config.backup !== 'undefined') {
 			if(typeof this.extra_data.config.backup == "string") {
 				this.extra_data.config.backup = this.extra_data.config.backup === "true";
@@ -142,6 +161,13 @@ class GameplayActivity extends Activity {
 
 	async remove(){
 		return await super.remove();
+	}
+
+
+	async sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension) {
+		if(!this.extra_data.config.scorm_xapi_by_game) {
+			return super.sendXAPITraceForActivity(user, verb, timeStamp, resultScore,reasonExtension);
+		}
 	}
 
 	// ##########################################
@@ -170,7 +196,11 @@ class GameplayActivity extends Activity {
 		let toret = 0;
 		try {
 			if(this.extra_data.config.trace_storage){
-				toret = await LRSManager.setStatement("gameplay", this.id, participant, result);
+				for(let traceId = 0; traceId < result.length; traceId++) {
+					var trace = result[traceId];
+					await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
+				}
+				toret = await LRSManager.setStatement(this.id, participant, result);
 			} else {
 				throw { message: 'Trace Storage is not enabled. No xAPI collector.' }
 			}
@@ -181,15 +211,87 @@ class GameplayActivity extends Activity {
 		return toret;
 	}
 
+	async sendProgressOrCompletionOfActivity(trace, participant, activityType) {
+        if(trace.object && trace.object.definition && trace.object.definition.type == "https://w3id.org/xapi/seriousgames/activity-types/serious-game") {
+            const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+            const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+            const completedVerb='http://adlnet.gov/expapi/verbs/completed';
+            const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
+            if(trace.verb) {
+                switch(trace.verb.id) {
+                    case initializedVerb:
+                        logger.info(`INITIALIZED ACTIVITY ${activityType}`);
+                        var taskMessage = {
+							task: 'setProgress',
+							params: 'user,progress',
+							object: 'Activity',
+							objectId: this.id,
+							user: participant,
+							progress: 0
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case progressedVerb:
+                        logger.info(`PROGRESSED THROW ACTIVITY  ${activityType}`);
+                        var value = null;
+                        if(trace.result && trace.result.extensions[resultExtensionProgress]) {
+							value = trace.result.extensions[resultExtensionProgress];
+						} else if(trace.result && trace.result.score && trace.result.score.scaled) {
+                            value = trace.result.score.scaled;
+                        }
+                        logger.info(value);
+                        var taskMessage = {
+								task: 'setProgress',
+								params: 'user,progress',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								progress: value
+						};
+						sendSimvaTaskToKafka([taskMessage]);
+                      break;
+                    case completedVerb:
+                        if(trace.result.completion == true) {
+							logger.info(`COMPLETED ACTIVITY ${activityType}`);
+							var taskMessage = {
+								task: 'setCompletion',
+								params: 'user,completion',
+								object: 'Activity',
+								objectId: this.id,
+								user: participant,
+								completion: true
+							};
+							sendSimvaTaskToKafka([taskMessage]);
+						}
+                      break;
+                    default: 
+                        logger.info("OTHER VERB");
+                }
+            }
+        }
+    }
+
 	async setResult(participant, result){
+		const message = {
+			type: 'activity_result',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		let toret = 0;
 		try{
 			if(Array.isArray(result)){
  				// If we're receiving an array, we're receiving traces
 				if(this.extra_data.config.trace_storage){
-					toret = await LRSManager.setStatement("gameplay", this.id, participant, result);
+					for(let traceId = 0; traceId < result.length; traceId++) {
+						var trace = result[traceId];
+						await this.sendProgressOrCompletionOfActivity(trace, participant, "limesurvey");
+					}
+					toret = await LRSManager.setStatement(this.id, participant, result);
 				}else{
-					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.' };
+					throw { message: 'Trace Storage or Realtime are not enabled. No xAPI collector.'};
 				}
 			}else if(!result || typeof result === 'object'){
 				// If these conditions are satisfied, we're receiving an start or backup
@@ -431,15 +533,6 @@ class GameplayActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
-		const message = {
-			type: 'activity_completed',
-			activityType : "gameplay", 
-			activityId: this.id,
-			studyId: this.study,
-			status: status,
-			user: participant
-		};
-		sendSimvaEventsToKafka([message]);
 		return await super.setCompletion(participant, status);
 	}
 

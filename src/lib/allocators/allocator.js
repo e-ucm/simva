@@ -6,7 +6,6 @@ var ObjectId = mongoose.Types.ObjectId;
 const validator = require('../utils/validator');
 
 var allocatorschema = validator.getSchema('#/components/schemas/allocator');
-var StudiesController = require('../studiescontroller');
 
 class Allocator {
 

@@ -10,7 +10,10 @@ const validator = require('../utils/validator');
 var activityschema = validator.getSchema('#/components/schemas/activity');
 
 var config = require('../config');
-const sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka');
+let { v4: uuidv4} = require('uuid');
+var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka');
+var { isoToDuration } = require('../utils/date');
+
 class Activity {
 
 	// ##########################################
@@ -183,8 +186,231 @@ class Activity {
 		return await this.save();
 	}
 	
+	async sendXAPITraceForActivity(user,verb, timestamp, resultScore=null, reasonExtension=null) {
+		try {
+			logger.info(`sendXAPITraceForActivity ${this.name}`);
+			logger.info(`User : ${user} | verb : ${verb} | timestamp : ${timestamp} | resultScore : ${resultScore}`);
+			if(!this.extra_data){
+				this.extra_data = { participants: {} };
+			}
+			if(!this.extra_data.participants){
+				this.extra_data.participants = {};
+			}
+			if(!this.extra_data.participants[user]){
+				this.extra_data.participants[user] = {};
+			}
+			let registrationid = this.extra_data.participants[user].registrationid;
+			let startedTimestamp = this.extra_data.participants[user].timestamp;
+			var attemptId= this.extra_data.participants[user].attemptId;
+			var suspended = this.extra_data.participants[user].suspended;
+			let verbXAPI;
+			let result, contextExtensions;
+			switch(verb) {
+				case "Initialized":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/initialized",
+						"display": {
+							"en-US": "initialized"
+						}
+					};
+					if(suspended) {
+						logger.info("Already Initialized");
+						verbXAPI = {
+							"id":"http://adlnet.gov/expapi/verbs/resumed",
+							"display": {
+								"en-US": "resumed"
+							}
+						};
+					} else {
+						registrationid=uuidv4();
+						this.extra_data.participants[user].registrationid = registrationid;
+					}
+					attemptId=uuidv4();
+					this.extra_data.participants[user].attemptId=attemptId;
+					this.extra_data.participants[user].timestamp=timestamp;
+					delete this.extra_data.participants[user].suspended;
+					await this.save();
+					break;
+				case "Terminated":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/terminated",
+						"display": {
+							"en-US": "terminated"
+						}
+					};
+					result= {
+						duration: isoToDuration(startedTimestamp, timestamp),
+					};
+					if(!registrationid) {
+						return;
+					}
+					break;
+				case "Progressed":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/progressed",
+						"display": {
+							"en-US": "progressed"
+						}
+					};
+					result= {
+						score: {
+							scaled: resultScore
+						}
+					};
+					if(!registrationid) {
+						return;
+					}
+					break;
+				case "Resumed":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/resumed",
+						"display": {
+							"en-US": "resumed"
+						}
+					};
+					this.extra_data.participants[user].timestamp=timestamp;
+					attemptId=uuidv4();
+					this.extra_data.participants[user].attemptId=attemptId;
+					await this.save();
+					if(!registrationid) {
+						return;
+					}
+					contextExtensions  = {
+						"http://reason": reasonExtension
+					};
+					break;
+				case "Suspended":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/suspended",
+						"display": {
+							"en-US": "suspended"
+						}
+					};
+					result= {
+						duration: isoToDuration(startedTimestamp, timestamp),
+					};
+					if(!registrationid) {
+						return;
+					}
+					contextExtensions  = {
+						"http://reason": reasonExtension
+					};
+					break;
+				case "Completed":
+					verbXAPI = {
+						"id":"http://adlnet.gov/expapi/verbs/completed",
+						"display": {
+							"en-US": "completed"
+						}
+					};
+					if(!registrationid) {
+						return;
+					}
+					break;
+				default:
+					logger.info(`${verb} not defined`);
+					return;
+			}
+			var statement = {
+				actor: {
+					account: {
+						homePage: config.external_url,
+						name: user
+					}
+				},
+				verb: verbXAPI,
+				object: {
+					id: `${config.external_url}/studies/${this.study}/activity/${this._id}`,
+					definition: {
+						name: {
+							"en-US": this.name
+						},
+						description:  {
+							"en-US":`An activity ${this.name} of study ${this.study}`
+						},
+						"type": "http://adlnet.gov/expapi/activities/lesson"
+					}
+				},
+				"context": {
+					grouping: [{
+						id: `${config.external_url}/studies/${this.study}`,
+						definition: {
+							name:  {
+								"en-US": `${this.study}`,
+							},
+							description:  {
+								"en-US":`The activity representing the study ${this.study}`
+							},
+							"type": "http://adlnet.gov/expapi/activities/course"
+						}
+					},
+					{
+						id: `${config.external_url}/studies/${this.study}/activity/${this._id}?id=${attemptId}`,
+						definition: {
+							name:  {
+								"en-US": `Attempt of activity ${this._id}`
+							},
+							description:  {
+								"en-US": `The activity representing an attempt of activity ${this._id} in study ${this.study}`
+							},
+							"type": "http://adlnet.gov/expapi/activities/attempt"
+						}
+					},
+					],
+					"contextActivities": {
+						"category": [{
+							"id":"https://w3id.org/xapi/scorm",
+							"definition": {
+								"type":"http://adlnet.gov/expapi/activities/profile"
+							}
+						}]
+					},
+					"registration": registrationid
+				},
+				"timestamp": timestamp
+			};
+			switch(verb) {
+				case "Terminated":
+					delete this.extra_data.participants[user].attemptId;
+					delete this.extra_data.participants[user].timestamp;
+					delete this.extra_data.participants[user].registrationid;
+					await this.save();
+					break;
+				case "Suspended":
+					delete this.extra_data.participants[user].attemptId;
+					delete this.extra_data.participants[user].timestamp;
+					await this.save();
+					break;
+				default:
+					logger.info("Nothing to do.");
+			}
+			if(result !== null) {
+				statement.result=result;
+			}
+			if(contextExtensions !== null) {
+				statement.context.extensions=contextExtensions;
+			}
+			logger.info(JSON.stringify(statement));
+			const LRS = require('./LRS');
+			var LRSManager = new LRS();
+			let res = await LRSManager.setStatement(this._id, user, [statement]);
+			logger.info(res);
+			return res;
+		} catch(e) {
+			logger.error(e);
+		}
+		return null;
+	}
 
 	async setResult(participant, result){
+		const message = {
+			type: 'activity_result',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		if(!this.extra_data){
 			this.extra_data = {}
 		}
@@ -370,6 +596,17 @@ class Activity {
 	}
 
 	async setProgress(participant, progress){
+		let num = parseFloat(progress); // Convert string to number
+		let roundedProgress = parseFloat(num.toFixed(3)); // Round to 3 decimal places
+		const message = {
+			type: 'activity_progressed',
+			activityType : this.type,
+			activityId: this.id,
+			studyId: this.study,
+			user: participant,
+			val: roundedProgress
+		};
+		sendSimvaEventsToKafka([message]);
 		if(!this.extra_data){
 			this.extra_data = {}
 		}
@@ -381,24 +618,44 @@ class Activity {
 		if(!this.extra_data.participants[participant]){
 			this.extra_data.participants[participant] = {}
 		}
-		if(progress <= 1) {
-			this.extra_data.participants[participant].progress = progress;
+		if(roundedProgress <= 1) {
+			this.extra_data.participants[participant].progress = roundedProgress;
 		}
 		return await this.save();
 	}
 
-	async setCompletion(participant, status){
-		if(this.type === "activity") {
-			const message = {
-				type: 'activity_completed',
-				activityType : "activity", 
-				activityId: this.id,
-				studyId: this.study,
-				status: status,
-				user: participant
-			};
-			sendSimvaEventsToKafka([message]);
+	async setSuspension(participant, status) {
+		if(!this.extra_data){
+			this.extra_data = {}
 		}
+
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
+		}
+
+		if(!this.extra_data.participants[participant]){
+			this.extra_data.participants[participant] = {}
+		}
+
+		if(status) {
+			this.extra_data.participants[participant].suspended = true;
+		} else {
+			delete this.extra_data.participants[participant].suspended;
+		}
+		
+		return await this.save();
+	}
+
+	async setCompletion(participant, status){
+		const message = {
+			type: 'activity_completed',
+			activityType : this.type, 
+			activityId: this.id,
+			studyId: this.study,
+			status: status,
+			user: participant
+		};
+		sendSimvaEventsToKafka([message]);
 		if(!this.extra_data){
 			this.extra_data = {}
 		}

@@ -1803,6 +1803,36 @@
         ]
       }
     },
+    "/activities/{id}/suspend": {
+      "post": {
+        "tags": [
+          "teachers",
+          "students"
+        ],
+        "summary": "suspend the activity",
+        "operationId": "setSuspension",
+        "description": "Set the suspend status of the activity for a student\n",
+        "responses": {
+          "200": {
+            "description": "if it is openable or not"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          },
+          {
+            "$ref": "#/components/parameters/user"
+          }
+        ]
+      }
+    },
     "/activities/{id}/completion": {
       "get": {
         "tags": [

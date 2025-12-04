@@ -22,7 +22,9 @@ class ManualActivity extends Activity {
 			if(params.uri){
 				this.extra_data.uri = params.uri;
 			}
-
+			if(!this.extra_data.participants){
+				this.extra_data.participants = [];
+			}
 			if(params.user_managed){
 				this.extra_data.user_managed = true;
 			}else{
@@ -58,7 +60,8 @@ class ManualActivity extends Activity {
 
 	async getDetails(){
 		return {
-			user_managed: this.extra_data.user_managed
+			user_managed: this.extra_data.user_managed,
+			uri: this.extra_data.uri
 		};
 	}
 
@@ -121,15 +124,6 @@ class ManualActivity extends Activity {
 	}
 
 	async setCompletion(participant, status){
-		const message = {
-			type: 'activity_completed',
-			activityType : "manual", 
-			activityId: this.id,
-			studyId: this.study,
-			user: participant,
-			status: status
-		};
-		sendSimvaEventsToKafka([message]);
 		return await super.setCompletion(participant, status);
 		
 	}
