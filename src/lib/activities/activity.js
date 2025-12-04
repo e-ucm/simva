@@ -624,6 +624,51 @@ class Activity {
 		return await this.save();
 	}
 
+	async setMultiCompletion(status){
+		if(!this.extra_data){
+			this.extra_data = {}
+		}
+		
+		if(!this.extra_data.participants){
+			this.extra_data.participants = {};
+		}
+		
+		var list=[];
+		for (let participant in this.extra_data.participants) {
+			if (this.extra_data.participants.hasOwnProperty(participant)) {
+				if(this.extra_data.participants[participant].completion != status) {
+					const message = {
+						type: 'activity_completed',
+						activityType : this.type, 
+						activityId: this.id,
+						studyId: this.study,
+						status: status,
+						user: participant
+					};
+					list.push(message);
+					this.extra_data.participants[participant].completion = status;
+				}
+			}
+		}
+		sendSimvaEventsToKafka(list);
+
+		return await this.save();
+	}
+
+	async setCompletion(participant, status){
+		if(this.type === "activity") {
+			const message = {
+				type: 'activity_completed',
+				activityType : "activity", 
+				activityId: this.id,
+				studyId: this.study,
+				status: status,
+				user: participant
+			};
+			sendSimvaEventsToKafka([message]);
+		}
+	}
+
 	async setSuspension(participant, status) {
 		if(!this.extra_data){
 			this.extra_data = {}

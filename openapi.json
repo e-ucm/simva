@@ -1891,6 +1891,32 @@
         ]
       }
     },
+    "/activities/{id}/multicompletion": {
+      "post": {
+        "tags": [
+          "teachers"
+        ],
+        "summary": "sets the completion status for all participants of the activity",
+        "operationId": "setCompletion",
+        "description": "Set the completion status of the activity for all participants\n",
+        "responses": {
+          "200": {
+            "description": "if it is openable or not"
+          },
+          "400": {
+            "description": "ID is not a valid ObjectId"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/testId"
+          }
+        ]
+      }
+    },
     "/activities/{id}/result": {
       "get": {
         "tags": [

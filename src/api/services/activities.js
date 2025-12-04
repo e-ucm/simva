@@ -589,6 +589,42 @@ module.exports.setCompletion = async (options) => {
 };
 
 /**
+ * Set Activity Completion Status for a user
+ * 
+ * @param {Object} options
+ * @param {String} options.id The Activity ID
+ * @param {Object} options.user the current user
+ * @param {Object} options.user.data the current user data
+ * @param {String} options.user.data.username the username of the current user
+ * @param {String} options.user.data.role the role of the current user
+ * @param {Object} options.body The Activity body
+ * @param {String} options.body.status The Activity body completion
+ * @throws {Error}
+ * @return {Promise}
+ */
+module.exports.setMultiCompletion = async (options) => {
+  let body = {
+    status: 200,
+    data: { }
+  }
+
+  try {
+    let activity = await ActivitiesController.loadActivity(options.id);
+    if(activity.owners.indexOf(options.user.data.username) !== -1){
+      body.data.result = await activity.setMultiCompletion(options.body.status);
+    }else{
+      body.status = 401;
+      body.data.message = 'You do not participate in the activity as owner';
+    }
+
+  }catch(e){
+    return {status: 500, data: e };
+  }
+
+  return body;
+};
+
+/**
  * Set Suspension Status for an Activity
  * 
  * @param {Object} options
