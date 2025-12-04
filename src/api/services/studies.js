@@ -9,6 +9,7 @@ var TestsController = require('../../lib/testscontroller');
 var ActivitiesController = require('../../lib/activitiescontroller');
 var sendSimvaTaskToKafka = require('../../lib/utils/SimvaTaskToKafka.js');
 var sendSimvaEventsToKafka = require('../../lib/utils/SimvaEventsToKafka.js');
+const config = require('../../lib/config.js');
 
 /**
  * @param {Object} options
@@ -285,8 +286,11 @@ module.exports.getSchedule = async (options) => {
           let test = await TestsController.getTest(testid);
 
           let schedule = {
+            url: `${config.external_url}/scheduler/${options.id}`,
             activities: {},
-            next: null
+            next: null,
+            study: options.id,
+            studyName : study.name,
           };
 
           for (var i = 0; i < test.activities.length; i++) {
@@ -297,32 +301,46 @@ module.exports.getSchedule = async (options) => {
             schedule.activities[activity._id] = {
               name: activity.name,
               type: activity.type,
+              test: activity.test,
+              study: activity.study,
               details: await activity.getDetails(),
               completed: iscompleted,
               result: (await activity.getResults([currentuser]))[currentuser]
             }
-
+          
+            var date = new Date();
             if(schedule.next == null && !iscompleted){
               schedule.next = activity._id;
-            }
-            if(i == 0 && !iscompleted) {
+              if(i!==0) {
+                const taskMessage = {
+                  task: 'sendXAPITraceForActivity',
+                  params: 'user,verb,timestamp',
+                  object: 'Activity',
+                  objectId: test.activities[i-1],
+                  user: currentuser,
+                  verb: 'Terminated',
+                  timestamp: date.toISOString()
+                };
+                sendSimvaTaskToKafka([taskMessage]);
+              }
+              const taskMessage2 = {
+                task: 'sendXAPITraceForActivity',
+                params: 'user,verb,timestamp',
+                object: 'Activity',
+                objectId: schedule.next,
+                user: currentuser,
+                verb: 'Initialized',
+                timestamp: date.toISOString()
+              };
+              sendSimvaTaskToKafka([taskMessage2]);
               const message = {
                 type: 'study_initialized',
                 studyId: options.id,
                 user: currentuser,
               };
               sendSimvaEventsToKafka([message]);
-              const taskMessage = {
-                task: 'sendXAPITrace',
-                params: 'user,verb,studyId',
-                object: 'Study',
-                objectId: options.id,
-                user: currentuser,
-                verb: 'initialized',
-                studyId: options.id
-              };
-              sendSimvaTaskToKafka([taskMessage]);              
-            } else if(i == test.activities.length-1 && schedule.next == null) {
+            }
+            if(i == test.activities.length-1 && schedule.next == null) {
               const message = {
                 type: 'study_completed',
                 studyId: options.id,
@@ -330,18 +348,18 @@ module.exports.getSchedule = async (options) => {
               };
               sendSimvaEventsToKafka([message]);
               const taskMessage = {
-                task: 'sendXAPITrace',
-                params: 'user,verb',
-                object: 'Study',
-                objectId: options.id,
+                task: 'sendXAPITraceForActivity',
+                params: 'user,verb,timestamp',
+                object: 'Activity',
+                objectId: test.activities[test.activities.length-1],
                 user: currentuser,
-                verb: 'terminated',
-                studyId: options.id
+                verb: 'Terminated',
+                timestamp: date.toISOString()
               };
               sendSimvaTaskToKafka([taskMessage]);
             }
           }
-
+          
           result =  { 
             status: 200,
             data: schedule

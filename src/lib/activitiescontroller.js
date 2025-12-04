@@ -3,8 +3,11 @@ const ServerError = require('./error');
 var mongoose = require('mongoose');
 
 var ActivitiesController = {};
-var {activityTypes, castActivityToClass} = require('./activities/activityTypes');
+var activityTypes = require('./activities/activityTypes');
 var types = activityTypes;
+
+const LRS = require('./activities/LRS');
+var LRSManager = new LRS();
 
 /**
  * Update an activity in the database for migration purpurses
@@ -16,6 +19,7 @@ var types = activityTypes;
  * 
  */
 ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activityid, studyid, owners) => {
+	let activityToSave=false;
 	let activity = await ActivitiesController.loadActivity(activityid);
 	if(activity.owners.length != owners.length) {
 		let toAdd=[];
@@ -25,6 +29,7 @@ ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activit
 			}
 		});
 		activity.addOwners(toAdd);
+		activityToSave=true;
 	}
 	if(activity.type == "limesurvey" && activity.extra_data) {
 		if(!activity.extra_data.language) {
@@ -32,22 +37,27 @@ ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activit
 				logger.info("StudyId already present in activity.");
 			} else {
 				activity.study = studyid;
-				await activity.save();
+				activityToSave=true;
 				logger.info("Language in limesurvey activity saved");
 			}
 		}
 		if(!activity.extra_data.lrsset) {
-			await activity.save();
+			activityToSave=true;
 			logger.info("LRS set");
 		}
-	} else if(activity.type == "gameplay"
-		&& activity.extra_data && activity.extra_data.config
-		&& (typeof activity.extra_data.config.trace_storage == "string" || typeof activity.extra_data.config.realtime == "string"  || typeof activity.extra_data.config.backup == "string")) {
+	} else if(activity.type == "gameplay" && activity.extra_data && activity.extra_data.config) {
+		if((typeof activity.extra_data.config.trace_storage == "string" || typeof activity.extra_data.config.realtime == "string"  || typeof activity.extra_data.config.backup == "string")) {
+			activityToSave=true;
+		}
+		if(!activity.extra_data.config.scorm_xapi_by_game) {
+			activity.extra_data.config.scorm_xapi_by_game=false;
+			activityToSave=true;
+		}
 		if(activity.study !== "") {
 			logger.info("StudyId already present in activity.");
 		} else {
 			activity.study = studyid;
-			await activity.save();
+			activityToSave=true;
 			logger.info("Fix config extra_data in gameplay activity saved");
 		}
 	} else {
@@ -55,9 +65,12 @@ ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activit
 			logger.info("StudyId already present in activity.");
 		} else {
 			activity.study = studyid;
-			await activity.save();
+			activityToSave=true;
 			logger.info("Activity saved");
 		}
+	}
+	if(activityToSave) {
+		await activity.save();
 	}
 }
 
@@ -144,7 +157,7 @@ ActivitiesController.loadActivity = async (id) => {
 	if(!activity){
 		throw {message: 'Unable to load activity.'}; 
 	}
-	return castActivityToClass(activity);
+	return ActivitiesController.castToClass(activity);
 }
 
 ActivitiesController.exportActivity = async (id, complete) => {

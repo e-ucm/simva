@@ -7,6 +7,7 @@ var StudiesController = {};
 var AllocatorsController = require('./allocatorscontroller');
 var GroupsController = require('./groupscontroller');
 var TestsController = require('./testscontroller');
+var Study = require('./study');
 const { groupBy } = require('async');
 const config=require("./config");
 
@@ -24,6 +25,16 @@ StudiesController.getStudies = async (params) => {
 	var res = await mongoose.model('study').find(params);
 
 	return res;
+};
+
+StudiesController.loadStudy = async (id) => {
+	var res = await mongoose.model('study').find({_id: id});
+
+	if(res.length > 0) {
+		return new Study(res[0]);
+	}else{
+		return null;
+	}
 };
 
 StudiesController.updateStudyIdInTestsAndActivitiesMigration = async () => {

@@ -139,4 +139,26 @@ function convertTimeToCron(durationMin) {
     return cronExpressions.join("\n");
 }
 
-module.exports = { now, convertTimeToCron }
+/**
+ * 
+ * @param {string} isoStart
+ * @param {string} isoEnd
+ * @returns {string}
+ */
+function isoToDuration(isoStart, isoEnd) {
+  const start = new Date(isoStart);
+  const end = new Date(isoEnd);
+
+  // Calculate the difference in milliseconds
+  const diffMs = Math.abs(end - start);
+
+  // Convert milliseconds to hours, minutes and seconds
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+  // Format as ISO duration (PT format)
+  return `PT${hours}H${minutes}M${seconds}S`;
+}
+
+module.exports = { now, convertTimeToCron , isoToDuration };

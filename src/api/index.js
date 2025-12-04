@@ -41,7 +41,7 @@ let createAdminUser = async function(){
 var mongoose = require('mongoose');
 const sendSimvaEventsToKafka = require('../lib/utils/SimvaEventsToKafka');
 const getActivityFromSurveyId = require('../lib/activities/limesurvey/getActivityFromSurveyId');
-mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true});
+mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true, useUnifiedTopology: true});
 var db = mongoose.connection;
 db.on('error', logger.error.bind(console, 'connection error:'));
 db.once('open', function() {

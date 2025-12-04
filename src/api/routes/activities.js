@@ -324,6 +324,28 @@ router.post('/:id/completion', Authenticator.auth, async (req, res, next) => {
   }
 });
 
+
+/**
+ * Set the suspension status of the activity for a student
+ * 
+ */
+router.post('/:id/suspend', Authenticator.auth, async (req, res, next) => {
+  const options = {
+    id: req.params['id'],
+    user: req.user,
+    postuser: req.body.user,
+    status: Boolean(req.body.status),
+    reason: req.body.reason
+  };
+
+  try {
+    const result = await activities.setSuspension(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * Set the completion status of the activity for a student
  * 
