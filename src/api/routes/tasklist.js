@@ -9,9 +9,9 @@ var sendSimvaTaskToKafka = require('../../lib/utils/SimvaTaskToKafka.js');
  * Obtains the list of activities for the current teacher.
  * 
  */
-router.get('/', Authenticator.auth, async (req, res, next) => {
+router.post('/', Authenticator.auth, async (req, res, next) => {
   try {
-    result=sendSimvaTaskToKafka(req.body);
+    result=await sendSimvaTaskToKafka(req.body);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({

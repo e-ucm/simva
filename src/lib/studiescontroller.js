@@ -233,6 +233,13 @@ StudiesController.getParticipants = async (study) => {
 	return participants;
 }
 
+StudiesController.getStudyUsersParticipants = async (studyid) => {
+	let study = await this.getStudy(studyid);
+	let participants = await this.getParticipants(study);
+	var UsersController = require('./userscontroller');
+	return await UsersController.getUsers({"username" : {"$in" : participants}});
+}
+
 StudiesController.removeOwners = async (study, owners) => {
 	for (var i = 0; i < study.tests.length; i++) {
 		await TestsController.removeOwners(study.tests[i], owners);

@@ -484,6 +484,7 @@ class LimeSurveyActivity extends Activity {
 							task: 'setProgress',
 							params: 'user,progress',
 							object: 'Activity',
+							objectLoad:true,
 							objectId: this.id,
 							user: username,
 							progress: 0
@@ -501,6 +502,7 @@ class LimeSurveyActivity extends Activity {
 								task: 'setProgress',
 								params: 'user,progress',
 								object: 'Activity',
+								objectLoad:true,
 								objectId: this.id,
 								user: username,
 								progress: value
@@ -514,6 +516,7 @@ class LimeSurveyActivity extends Activity {
 								task: 'setCompletion',
 								params: 'user,completion',
 								object: 'Activity',
+								objectLoad:true,
 								objectId: this.id,
 								user: username,
 								completion: true

@@ -27,14 +27,18 @@ if(config.kafka.consumeTaskMessage) {
         switch(msg.object) {
             case "Study":
                 var StudiesController = require("../studiescontroller");
-                const study = await StudiesController.loadStudy(msg.objectId);
-                logger.info(study.name);
-                res=await study[msg.task](...paramValue);
-                if(msg.objectUser == "true") {
+                if(msg.objectLoad == "true") {
+                    const study = await StudiesController.loadStudy(msg.objectId);
+                    logger.info(study.name);
+                    res=await study[msg.task](...paramValue);
+                } else {
+                   res= await StudiesController[msg.task](...paramValue);
+                }
+                if(msg.objectEvent == "true") {
                     const message = {
                         type: msg.task,
                         studyId: msg.objectId,
-                        user:req.user.data.username,
+                        user:req.user,
                         response:res
                     };
                     sendSimvaEventsToKafka([message]);
@@ -42,10 +46,14 @@ if(config.kafka.consumeTaskMessage) {
                 break;
             case "Activity":
                 var ActivitiesController = require("../activitiescontroller");
-                const act = await ActivitiesController.loadActivity(msg.objectId);
-                logger.info(act.name);
-                res=await act[msg.task](...paramValue);
-                if(msg.objectUser == "true") {
+                if(msg.objectLoad == "true") {
+                    const act = await ActivitiesController.loadActivity(msg.objectId);
+                    logger.info(act.name);
+                    res=await act[msg.task](...paramValue);
+                } else {
+                    res = await ActivitiesController[msg.task](...paramValue);
+                }
+                if(msg.objectEvent == "true") {
                     const message = {
                         type: msg.task,
                         activityId: msg.objectId,

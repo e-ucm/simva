@@ -225,6 +225,7 @@ class GameplayActivity extends Activity {
 							task: 'setProgress',
 							params: 'user,progress',
 							object: 'Activity',
+							objectLoad:true,
 							objectId: this.id,
 							user: participant,
 							progress: 0
@@ -244,6 +245,7 @@ class GameplayActivity extends Activity {
 								task: 'setProgress',
 								params: 'user,progress',
 								object: 'Activity',
+								objectLoad:true,
 								objectId: this.id,
 								user: participant,
 								progress: value
@@ -257,6 +259,7 @@ class GameplayActivity extends Activity {
 								task: 'setCompletion',
 								params: 'user,completion',
 								object: 'Activity',
+								objectLoad:true,
 								objectId: this.id,
 								user: participant,
 								completion: true
