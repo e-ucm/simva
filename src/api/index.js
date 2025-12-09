@@ -135,6 +135,7 @@ app.use('/activities', require('./routes/activities'));
 app.use('/activitytypes', require('./routes/activitytypes'));
 app.use('/allocatortypes', require('./routes/allocatortypes'));
 app.use('/lti', require('./routes/lti'));
+app.use('/tasklist', require('./routes/tasklist'));
 
 verifyHookdeckSignature = async function(
   req,

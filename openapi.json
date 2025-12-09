@@ -508,6 +508,27 @@
         ]
       }
     },
+    "/tasklist": {
+      "post": {
+        "tags": [
+          "teachers"
+        ],
+        "summary": "add to the task list",
+        "operationId": "addToTaskList",
+        "description": "Add an action to the task list\n",
+        "responses": {
+          "200": {
+            "description": "added to task list",
+            "content": {
+              "$ref": "#/components/schemas/study"
+            }
+          },
+          "400": {
+            "description": "invalid input, object invalid"
+          }
+        }
+      }
+    },
     "/groups/{id}/participants": {
       "get": {
         "tags": [

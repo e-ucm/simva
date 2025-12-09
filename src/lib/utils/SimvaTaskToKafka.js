@@ -22,18 +22,38 @@ if(config.kafka.consumeTaskMessage) {
         });
         logger.info(msg.task);
         logger.info(paramValue.join(","));
+        let res;
+        var sendSimvaEventsToKafka= require("./SimvaEventToKafka");
         switch(msg.object) {
             case "Study":
                 var StudiesController = require("../studiescontroller");
                 const study = await StudiesController.loadStudy(msg.objectId);
                 logger.info(study.name);
-                await study[msg.task](...paramValue);
+                res=await study[msg.task](...paramValue);
+                if(msg.objectUser == "true") {
+                    const message = {
+                        type: msg.task,
+                        studyId: msg.objectId,
+                        user:req.user.data.username,
+                        response:res
+                    };
+                    sendSimvaEventsToKafka([message]);
+                }
                 break;
             case "Activity":
                 var ActivitiesController = require("../activitiescontroller");
                 const act = await ActivitiesController.loadActivity(msg.objectId);
                 logger.info(act.name);
-                await act[msg.task](...paramValue);
+                res=await act[msg.task](...paramValue);
+                if(msg.objectUser == "true") {
+                    const message = {
+                        type: msg.task,
+                        activityId: msg.objectId,
+                        user:req.user.data.username,
+                        response:res
+                    };
+                    sendSimvaEventsToKafka([message]);
+                }
                 break;
             default:
                 logger.error("Object not defined!");
