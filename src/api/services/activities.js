@@ -648,18 +648,26 @@ module.exports.setSuspension = async (options) => {
   try {
     let activity = await ActivitiesController.loadActivity(options.id);
     let study = await ActivitiesController.getStudy(options.id);
-
+    let verb;
+    // For activities we use the standard xAPI Suspended/Resumed verbs 
+    if(options.status) {
+      verb="Suspended";
+    } else {
+      verb="Resumed";
+    }
+    if(activity.type == 'gameplay' || activity.type == 'manual') {
+      if(options.reason = 'unload_page') {
+        // If the reason is unload_page for gameplay activities we use the standard xAPI Terminated verbs
+        if(options.status) {
+          verb="Terminated";
+        } 
+      }
+    }
     let participants = await StudiesController.getParticipants(study);
     let date = new Date();
     if(participants.indexOf(options.user.data.username) !== -1){
       await activity.setSuspension(options.user.data.username, options.status);
       if(! (await activity.getCompletion([options.user.data.username]))[options.user.data.username]) {
-        let verb;
-        if(options.status) {
-          verb="Suspended";
-        } else {
-          verb="Resumed";
-        }
         sendSimvaTaskToKafka([{
           task: 'sendXAPITraceForActivity',
           params: 'user,verb,timestamp,result,reason',
@@ -678,12 +686,6 @@ module.exports.setSuspension = async (options) => {
         if(participants.indexOf(options.postuser) !== -1){
           await activity.setSuspension(options.postuser, options.status);
           if(! (await activity.getCompletion([options.postuser]))[options.postuser]) {
-            let verb;
-            if(options.status) {
-              verb="Suspended";
-            } else {
-              verb="Resumed";
-            }
             await sendSimvaTaskToKafka([{
               task: 'sendXAPITraceForActivity',
               params: 'user,verb,timestamp,result,reason',
