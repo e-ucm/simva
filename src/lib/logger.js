@@ -11,10 +11,14 @@ if (!fs.existsSync(logsFolder)) {
 
 // Safe timestamp for filename (no colons)
 const timestamp = new Date().toISOString().replace(/:/g, '-');
-const logFile = path.join(logsFolder, `${timestamp}.log`);
+const processTag = process.env.PROCESS_TAG || '[MAIN]';
+const logFile = path.join(logsFolder, `${processTag}_${timestamp}.log`);
 
 // Base logger options
 const options = {
+  base: {
+   tag: processTag
+  },
   level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
   redact: {
     paths: [
@@ -35,39 +39,30 @@ const options = {
     err: pino.stdSerializers.err,
     req: pino.stdSerializers.req,
     res: pino.stdSerializers.res
+  },
+  transport:{
+    targets: [
+      //{
+      //    target: 'pino/file',
+      //    level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
+      //    options: {
+      //        destination: logFile,
+      //        singleLine: true,
+      //        mkdir: true
+      //    }
+      //}
+    ]
   }
 };
 
-// Transport configuration
-let transportTargets = [];
-transportTargets.push({
-  target: 'pino-pretty',
-  level: options.level,
-  options: { colorize: true, ignore: 'pid,hostname' }
-});
-
-//if (process.env.NODE_ENV !== 'production') {
-//// Development: console pretty
-//  transportTargets.push({
-//    target: 'pino-pretty',
-//    level: options.level,
-//    options: { colorize: true, ignore: 'pid,hostname' }
-//  });
-//} else {
-//    // Production: optional file logging
-//    transportTargets.push({
-//    target: 'pino/file',
-//    level: options.level,
-//    options: {
-//        destination: logFile,
-//        mkdir: true,
-//        singleLine: true,
-//        ignore: 'pid,hostname'
-//    }
-//    });
+//if(process.env.NODE_ENV !== 'production') {
+  options.transport.targets.push(
+      {
+        target: 'pino-pretty',
+        options: { colorize: true, translateTime: 'yyyy-mm-dd HH:MM:ss', ignore: 'pid,hostname' }
+      }
+  );
 //}
-
-options.transport = { targets: transportTargets };
 
 // Create logger
 const logger = pino(options);

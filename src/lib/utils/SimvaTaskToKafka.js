@@ -75,8 +75,9 @@ if (enableConsumer) {
                 break;
         }
     });
+    logger.info("Kafka consumer enabled for this process.");
 } else {
-    console.log("Kafka consumer disabled for this process.");
+    logger.info("Kafka consumer disabled for this process.");
 }
 
 module.exports = sendSimvaTaskToKafka;

@@ -11,7 +11,8 @@ module.exports = {
         : "",
       restart_delay: 5000,
       env: {
-        ENABLE_TASK_CONSUMER: "false"
+        ENABLE_TASK_CONSUMER: "false",
+        PROCESS_TAG: "[MAIN]"
       }
     },
     {
@@ -25,7 +26,8 @@ module.exports = {
         : "",
       restart_delay: 5000,
       env: {
-        ENABLE_TASK_CONSUMER: "true"
+        ENABLE_TASK_CONSUMER: "true",
+        PROCESS_TAG: "[KAFKA]"
       }
     }
   ]
