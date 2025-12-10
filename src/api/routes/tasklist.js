@@ -11,7 +11,10 @@ var sendSimvaTaskToKafka = require('../../lib/utils/SimvaTaskToKafka.js');
  */
 router.post('/', Authenticator.auth, async (req, res, next) => {
   try {
-    result=await sendSimvaTaskToKafka(req.body);
+    result = { status: 400, data: { message: 'Task Sended.' } };
+    let body = req.body;
+    body.objectUser = req.user.data.username;
+    await sendSimvaTaskToKafka([body]);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({

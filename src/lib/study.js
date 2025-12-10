@@ -5,7 +5,7 @@ let fs = require('fs');
 var ObjectId = mongoose.Types.ObjectId;
 var config = require('./config');
 const { v4: uuidv4} = require('uuid');
-
+var sendSimvaTaskToKafka = require('./utils/SimvaTaskToKafka');
 const validator = require('./utils/validator');
 var studyschema = validator.getSchema('#/components/schemas/study');
 var { isoToDuration } = require("./utils/date");
@@ -58,6 +58,69 @@ class Study {
 
 	get id(){
 		return this._id;
+	}
+
+	async getStudyUsersParticipants() {
+		var UsersController = require('./userscontroller');
+		var participants= await UsersController.getUsers({"username" : {"$in" : this.participants}});
+		return participants;
+	}
+
+ 	async getStudyGroups() {
+		var GroupsController = require('./groupscontroller');
+		var groups = await GroupsController.getGroups({"_id" : {"$in" : this.groups}});
+		return groups;
+	}
+
+
+ 	async getStudyAllocator() {
+		var AllocatorsController = require('./allocatorscontroller');
+		var allocator = await AllocatorsController.getAllocator(this.allocator);
+		return allocator;
+	}
+
+	async getStudyTests(objectUser) {
+		this.tests.forEach(async element =>  {
+			var testTask={
+				task: 'getStudyTest',
+				params: 'objectId,objectUser',
+				object: 'Study',
+				objectEvent: 'true',
+				objectLoad: 'true',
+				objectUser:objectUser,
+				objectId: element
+			};
+			logger.debug(testTask);
+			try {
+				await sendSimvaTaskToKafka([testTask]);
+			} catch(e) {
+				logger.warn(e);
+			}
+		});
+	}
+
+	async getStudyTest(testId, objectUser) {
+		if(this.tests.includes(testId)) {
+			let test = await TestsController.getTest(testId);
+			test.activities.forEach(async element => {
+				var activityTask={
+					task: 'getActivity',
+					params: 'objectId',
+					object: 'Activity',
+					objectEvent: 'true',
+					objectLoad: 'true',
+					objectUser: objectUser,
+					objectId: element
+				};
+				logger.debug(activityTask);
+				try {
+					await sendSimvaTaskToKafka([activityTask]);
+				} catch(e) {
+					logger.warn(e);
+				}
+			});
+			return test;
+		}
 	}
 
 	async save(){

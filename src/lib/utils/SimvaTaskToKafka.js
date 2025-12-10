@@ -23,7 +23,7 @@ if(config.kafka.consumeTaskMessage) {
         logger.info(msg.task);
         logger.info(paramValue.join(","));
         let res;
-        var sendSimvaEventsToKafka= require("./SimvaEventToKafka");
+        var sendSimvaEventsToKafka=require("./SimvaEventsToKafka");
         switch(msg.object) {
             case "Study":
                 var StudiesController = require("../studiescontroller");
@@ -37,8 +37,10 @@ if(config.kafka.consumeTaskMessage) {
                 if(msg.objectEvent == "true") {
                     const message = {
                         type: msg.task,
+                        params:params,
+                        paramValues:paramValue,
                         studyId: msg.objectId,
-                        user:req.user,
+                        user:msg.objectUser,
                         response:res
                     };
                     sendSimvaEventsToKafka([message]);
@@ -56,6 +58,8 @@ if(config.kafka.consumeTaskMessage) {
                 if(msg.objectEvent == "true") {
                     const message = {
                         type: msg.task,
+                        params:params,
+                        paramValues:paramValue,
                         activityId: msg.objectId,
                         user:req.user.data.username,
                         response:res
