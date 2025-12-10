@@ -1,18 +1,19 @@
 {
   "name": "simva-api",
   "description": "Simva, AKA Simple Validator, AKA SurveyManager is the evolution of a tool created to integrate and ease the task of validating serious games using pre-post surveys as a control point. This version allows to create more complex studies with more variety of activities and different allocations.",
-  "version": "1.0.1",
+  "version": "0.0.1",
   "scripts": {
-    "start": "node src/bin/www $NODE_ARGS",
-    "dev": "nodemon --trace-warnings --inspect=0.0.0.0:9229 src/bin/www $NODE_ARGS",
-    "dev:profiling": "nodemon --inspect=0.0.0.0:9229 --prof --perf-basic-prof --interpreted-frames-native-stack src/bin/www $NODE_ARGS",
-    "dev:clinic:doctor": "clinic doctor $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
-    "dev:clinic:bubbleprof": "clinic bubbleprof $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
-    "dev:clinic:flame": "clinic flame $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
-    "dev:clinic:heapprofiler": "clinic heapprofiler $CLINIC_ARGS -- node src/bin/www $NODE_ARGS",
+    "start": "pm2-runtime ecosystem.config.js",
+    "dev": "pm2-runtime ecosystem.config.js",
+    "dev:profiling": "pm2-runtime ecosystem.config.js",
+    "dev:clinic:doctor": "clinic doctor $CLINIC_ARGS -- pm2-runtime ecosystem.config.js",
+    "dev:clinic:bubbleprof": "clinic bubbleprof $CLINIC_ARGS -- pm2-runtime ecosystem.config.js",
+    "dev:clinic:flame": "clinic flame $CLINIC_ARGS -- pm2-runtime ecosystem.config.js",
+    "dev:clinic:heapprofiler": "clinic heapprofiler $CLINIC_ARGS -- pm2-runtime ecosystem.config.js",
     "test": "set NODE_ENV=test&& mocha -R spec"
   },
   "dependencies": {
+    "pm2":"6.0.14",
     "@keycloak/keycloak-admin-client": "^25.0.4",
     "async": "^3.1.0",
     "axios": "^1.7.7",

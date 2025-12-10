@@ -1,73 +1,93 @@
 const pino = require('pino');
-const config = require('./config.js');
+const fs = require('fs');
 const path = require('path');
-const logsFolder =process.env.LOG_FOLDER || path.join(__dirname, '../../logs');
-var now = new Date();
-const logFile = `${logsFolder}/${now.toISOString()}.log`;
 
-/** @type {{targets:import('pino').TransportTargetOptions[]}} */
-let transport = {
-    targets: [
-        {
-            target: 'pino/file',
-            level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
-            options: {
-                destination: logFile,
-                mkdir: true
-            }
-        }
-    ]
-};
-if (process.env.NODE_ENV !== 'production') {
-    transport.targets.push(
-            {
-                target: 'pino-pretty',
-                level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
-                options: {
-                    ignore: 'pid,hostname'
-                }
-            }
-    );
-} else {
-    transport.targets.push(
-        {
-            target: 'pino/file',
-            level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
-            options: {
-                singleLine: true,
-                ignore: 'pid,hostname'
-            }
-        }
-    );   
+const logsFolder = process.env.LOG_FOLDER || path.join(__dirname, '../../logs');
+
+// Ensure logs folder exists
+if (!fs.existsSync(logsFolder)) {
+  fs.mkdirSync(logsFolder, { recursive: true });
 }
 
-/** @type {import('pino').LoggerOptions} */
+// Safe timestamp for filename (no colons)
+const timestamp = new Date().toISOString().replace(/:/g, '-');
+const logFile = path.join(logsFolder, `${timestamp}.log`);
+
+// Base logger options
 const options = {
-    level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
-    redact: {
-        paths: ['config.password', 'config.api.adminPassword', 'config.JWT.secret', 'config.limesurvey.adminPassword', 'config.sso.clientSecret', 'config.sso.adminPassword', 'config.a2.adminPassword', 'config.LTI.platform.mongo.password', 'config.LTI.platform.key'],
-        censor: '**REDACTED**'
-    },
-    customLevels: { log: 30 },
-    serializers: {
-        err: pino.stdSerializers.err,
-        req: pino.stdSerializers.req,
-        res: pino.stdSerializers.res
-    },
-    transport
-}
+  level: (process.env.LOG_LEVEL || 'info').toLowerCase(),
+  redact: {
+    paths: [
+      'config.password',
+      'config.api.adminPassword',
+      'config.JWT.secret',
+      'config.limesurvey.adminPassword',
+      'config.sso.clientSecret',
+      'config.sso.adminPassword',
+      'config.a2.adminPassword',
+      'config.LTI.platform.mongo.password',
+      'config.LTI.platform.key'
+    ],
+    censor: '**REDACTED**'
+  },
+  customLevels: { log: 30 },
+  serializers: {
+    err: pino.stdSerializers.err,
+    req: pino.stdSerializers.req,
+    res: pino.stdSerializers.res
+  }
+};
 
-
-const logger = pino(options);
-
-
-process.on('uncaughtException', err => {
-    logger.fatal(err, 'uncaughtException')
-    process.exitCode = 1
+// Transport configuration
+let transportTargets = [];
+transportTargets.push({
+  target: 'pino-pretty',
+  level: options.level,
+  options: { colorize: true, ignore: 'pid,hostname' }
 });
 
-process.on('unhandledRejection', reason =>
-    logger.fatal(reason, 'unhandledRejection')
-);
+//if (process.env.NODE_ENV !== 'production') {
+//// Development: console pretty
+//  transportTargets.push({
+//    target: 'pino-pretty',
+//    level: options.level,
+//    options: { colorize: true, ignore: 'pid,hostname' }
+//  });
+//} else {
+//    // Production: optional file logging
+//    transportTargets.push({
+//    target: 'pino/file',
+//    level: options.level,
+//    options: {
+//        destination: logFile,
+//        mkdir: true,
+//        singleLine: true,
+//        ignore: 'pid,hostname'
+//    }
+//    });
+//}
+
+options.transport = { targets: transportTargets };
+
+// Create logger
+const logger = pino(options);
+
+// Global exception handlers (safe fallback)
+process.on('uncaughtException', err => {
+  try {
+    logger.fatal(err, 'uncaughtException');
+  } catch {
+    console.error('uncaughtException', err);
+  }
+  process.exitCode = 1;
+});
+
+process.on('unhandledRejection', reason => {
+  try {
+    logger.fatal(reason, 'unhandledRejection');
+  } catch {
+    console.error('unhandledRejection', reason);
+  }
+});
 
 module.exports = logger;

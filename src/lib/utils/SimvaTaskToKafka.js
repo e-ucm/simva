@@ -11,10 +11,13 @@ async function sendSimvaTaskToKafka(events){
     await kafkaTaskClient.sendMessages(events.map(event => (typeof event === 'string' ? event : JSON.stringify(event))), 0);
 }
 
-if(config.kafka.consumeTaskMessage) {
-    async function processSimvaTaskMessage(message) {
+// Consumer enabled only if env var = true
+const enableConsumer = process.env.ENABLE_TASK_CONSUMER === "true";
+
+if (enableConsumer) {
+    kafkaTaskClient.consumeLatestMessages(async (message) => {
         var msg = JSON.parse(message.value);
-        logger.info(msg);
+        //logger.info(msg);
         let params = msg.params.split(",");
         let paramValue = [];
         params.forEach(element => {
@@ -71,9 +74,9 @@ if(config.kafka.consumeTaskMessage) {
                 logger.error("Object not defined!");
                 break;
         }
-    }
-    
-    kafkaTaskClient.consumeLatestMessages(processSimvaTaskMessage);
+    });
+} else {
+    console.log("Kafka consumer disabled for this process.");
 }
 
 module.exports = sendSimvaTaskToKafka;

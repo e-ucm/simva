@@ -61,13 +61,16 @@ class Study {
 	}
 
 	async getStudyUsersParticipants() {
+		var GroupsController = require('./groupscontroller');
+		var groups = await GroupsController.getGroups({"_id" : {"$in" : study.groups}});
+		let participants = groups.map(g => {return g.participants; }).flat();
+		participants = participants.filter((p,i) => participants.indexOf(p) === i);
 		var UsersController = require('./userscontroller');
-		var participants= await UsersController.getUsers({"username" : {"$in" : this.participants}});
+		participants= await UsersController.getUsers({"username" : {"$in" : participants}});
 		return participants;
 	}
 
  	async getStudyGroups() {
-		var GroupsController = require('./groupscontroller');
 		var groups = await GroupsController.getGroups({"_id" : {"$in" : this.groups}});
 		return groups;
 	}
@@ -90,17 +93,14 @@ class Study {
 				objectUser:objectUser,
 				objectId: element
 			};
-			logger.debug(testTask);
-			try {
-				await sendSimvaTaskToKafka([testTask]);
-			} catch(e) {
-				logger.warn(e);
-			}
+			logger.debug(JSON.stringify(testTask));
+			await sendSimvaTaskToKafka([testTask]);
 		});
 	}
 
 	async getStudyTest(testId, objectUser) {
 		if(this.tests.includes(testId)) {
+			var TestsController = require("./testscontroller");
 			let test = await TestsController.getTest(testId);
 			test.activities.forEach(async element => {
 				var activityTask={
@@ -112,12 +112,8 @@ class Study {
 					objectUser: objectUser,
 					objectId: element
 				};
-				logger.debug(activityTask);
-				try {
-					await sendSimvaTaskToKafka([activityTask]);
-				} catch(e) {
-					logger.warn(e);
-				}
+				logger.debug(JSON.stringify(activityTask));
+				await sendSimvaTaskToKafka([activityTask]);
 			});
 			return test;
 		}

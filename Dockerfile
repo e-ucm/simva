@@ -13,7 +13,7 @@ WORKDIR /home/node/app
 
 COPY --chown=node:node package*.json ./
 
-RUN npm install -g clinic
+RUN npm install -g clinic pm2
 
 USER node
 
@@ -27,4 +27,4 @@ RUN mkdir -p /home/node/logs && chown -R node:node /home/node/logs
 # Make port 443 available to the world outside this container
 EXPOSE 443
 
-CMD [ "npm", "start" ]
+CMD [ "pm2-runtime", "ecosystem.config.js" ]
