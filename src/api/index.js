@@ -7,9 +7,11 @@ const config = require('../lib/config');
 const logger = require('../lib/logger');
 const profiling = require('../lib/profiling');
 const crypto = require("crypto");
-
+var mongoose = require('mongoose');
 const AppManager = require('../lib/utils/appmanager');
 const SchemaValidationError = require('express-body-schema/SchemaValidationError'); 
+const sendSimvaEventsToKafka = require('../lib/utils/SimvaEventsToKafka');
+const getActivityFromSurveyId = require('../lib/activities/limesurvey/getActivityFromSurveyId');
 
 var isTest = (process.env.NODE_ENV !== 'production');
 
@@ -38,14 +40,11 @@ let createAdminUser = async function(){
   }
 }
 
-var mongoose = require('mongoose');
-const sendSimvaEventsToKafka = require('../lib/utils/SimvaEventsToKafka');
-const getActivityFromSurveyId = require('../lib/activities/limesurvey/getActivityFromSurveyId');
-mongoose.connect( !isTest ? config.mongo.url : config.mongo.test, {useNewUrlParser: true, useUnifiedTopology: true});
-var db = mongoose.connection;
-db.on('error', logger.error.bind(console, 'connection error:'));
+mongoose.connect( config.mongo.url, {useNewUrlParser: true, useUnifiedTopology: true});
+const db = mongoose.connection;
+db.on('error', logger.error.bind(logger, 'MongoDB connection error:'));
 db.once('open', function() {
-  logger.debug('connected');
+  logger.debug('MongoDB connected');
   const fs = require('fs');
 	const yaml = require('yaml');
 	const swaggerMongoose = require('swagger-mongoose');
@@ -61,8 +60,6 @@ db.once('open', function() {
       logger.error('Migration failed: ' + err);
     });
 });
-
-
 
 let multipartwith
 
