@@ -17,7 +17,7 @@ module.exports = {
     },
     {
       name: "process-kafka-queue",
-      script: "src/lib/utils/SimvaTaskToKafka.js",
+      script: "src/bin/kafka-queue.js",
       watch: process.env.NODE_ENV === "development",
       node_args: process.env.NODE_ENV === "development"
         ? ( process.env.PROFILING === "true"
