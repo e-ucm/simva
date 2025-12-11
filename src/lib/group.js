@@ -1,13 +1,13 @@
 const validator = require('./utils/validator');
-var testschema = validator.getSchema('#/components/schemas/test');
+var groupschema = validator.getSchema('#/components/schemas/group');
 var mongoose = require("mongoose");
 var ObjectId = mongoose.Types.ObjectId;
 const logger = require('./logger');
-const sendSimvaTaskToKafka = require('./utils/SimvaTaskToKafka');
+const UsersController= require('./userscontroller');
 
-class Test {
+class Group {
     constructor(params) {
-        this.activities =[];
+        this.participants =[];
 		this.owners = [];
 		if(ObjectId.isValid(params)){
 			this._id = params;
@@ -18,7 +18,7 @@ class Test {
 
 	toObject(){
 		var params = {};
-		for(var p in testschema.properties){
+		for(var p in groupschema.properties){
 			params[p] = this[p];
 		}
 		params['_id'] = this._id;
@@ -27,7 +27,7 @@ class Test {
 	}
 
 	set params(params){
-		for(var p in testschema.properties){
+		for(var p in groupschema.properties){
 			if(params[p]){
 				this[p] = params[p];
 			}
@@ -45,20 +45,10 @@ class Test {
 			this._id = id;
 		}
 	}
-	async getTestAndActivities(objectUser) {
-		this.activities.forEach(async element => {
-			var activityTask={
-				task: 'getCompleteActivity',
-				params: 'objectUser',
-				object: 'Activity',
-				objectEvent: 'true',
-				objectLoad: 'true',
-				objectUser: objectUser,
-				objectId: element
-			};
-			await sendSimvaTaskToKafka([activityTask]);
-		});
-		return this.toObject();
+
+	async getParticipants() {
+		var participants = this.participants.filter((p,i) => this.participants.indexOf(p) === i);
+		return await UsersController.getUsers({"username" : {"$in" : participants}});
 	}
 
 	get id(){
@@ -68,7 +58,7 @@ class Test {
     async save(){
         var params = {};
 
-        for(var p in testschema.properties){
+        for(var p in groupschema.properties){
             params[p] = this[p];
         }
 
@@ -77,21 +67,21 @@ class Test {
         }
 
         if(params._id){
-            var result = await mongoose.model('test').updateOne({ _id: this.id }, params);
+            var result = await mongoose.model('group').updateOne({ _id: this.id }, params);
             if(result.ok !== result.n){
-                throw { message: 'Error saving the test' };
+                throw { message: 'Error saving the group' };
             }
         }else{
-            var test = new mongoose.model('test')(params);
-            await test.save();
-            this.id = test._id;
+            var group = new mongoose.model('group')(params);
+            await group.save();
+            this.id = group._id;
         }
 
         return true;
     }
 
     async remove(){
-        await mongoose.model('test').deleteOne({_id: this.id});
+        await mongoose.model('group').deleteOne({_id: this.id});
         return true;
     }
 };
@@ -100,4 +90,4 @@ class Test {
 // Module exports
 // ##########################################
 
-module.exports = Test;
+module.exports = Group;

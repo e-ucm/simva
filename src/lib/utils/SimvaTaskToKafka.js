@@ -50,6 +50,28 @@ if (enableConsumer) {
                     sendSimvaEventsToKafka([message]);
                 }
                 break;
+            case "Group":
+                var GroupsController = require("../groupscontroller");
+                if(msg.objectLoad == "true") {
+                    const group = await GroupsController.loadGroup(msg.objectId);
+                    logger.debug(group.name);
+                    res=await group[msg.task](...paramValue);
+                } else {
+                   res= await GroupsController[msg.task](...paramValue);
+                }
+                if(msg.objectEvent == "true") {
+                    const message = {
+                        type: msg.task,
+                        params:params,
+                        paramValues:paramValue,
+                        groupId: msg.objectId,
+                        user:msg.objectUser,
+                        object: msg.object,
+                        response:res
+                    };
+                    sendSimvaEventsToKafka([message]);
+                }
+                break;
             case "Test":
                 var TestsController = require("../testscontroller");
                 const test = await TestsController.loadTest(msg.objectId);

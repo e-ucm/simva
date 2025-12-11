@@ -10,7 +10,7 @@ let app = require('../utils/appmanager').getApp();
 const validator = require('../utils/validator');
 
 var activityschema = validator.getSchema('#/components/schemas/activity');
-
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka');
 var GameplayActivity = require('./GameplayActivity');
 
 class ImsPackageActivity extends GameplayActivity {
@@ -42,6 +42,20 @@ class ImsPackageActivity extends GameplayActivity {
 		params['_id'] = this._id;
 
 		return params;
+	}
+
+	async getCompleteActivity(objectUser) { 
+		var activityResultTask={
+			task: 'hasResults',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityResultTask]);
+		return super.getCompleteActivity();
 	}
 
 	static getType(){

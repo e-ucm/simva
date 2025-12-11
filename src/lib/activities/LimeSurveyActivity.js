@@ -27,6 +27,7 @@ var LRS= require("./LRS.js");
 var LRSManager = new LRS();
 
 let controller = require('./limesurvey/controller');
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka');
 
 controller.setOptions(limeconfig.options);
 controller.setUser(limeconfig.user,limeconfig.password);
@@ -91,6 +92,31 @@ class LimeSurveyActivity extends Activity {
 
 	static getDescription(){
 		return 'A survey-based activity that uses LimeSurvey as service.';
+	}
+
+
+	async getCompleteActivity(objectUser) { 
+		var activityResultTask={
+			task: 'getResults',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityResultTask]);
+		var activitySurveyLanguagesTask={
+			task: 'getSurveyLanguages',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activitySurveyLanguagesTask]);
+		return super.getCompleteActivity();
 	}
 
 	static async getUtils(username){

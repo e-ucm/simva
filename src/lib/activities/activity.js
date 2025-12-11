@@ -12,6 +12,7 @@ var activityschema = validator.getSchema('#/components/schemas/activity');
 var config = require('../config');
 let { v4: uuidv4} = require('uuid');
 var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka');
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka');
 var { isoToDuration } = require('../utils/date');
 
 class Activity {
@@ -29,6 +30,52 @@ class Activity {
 		}else if(typeof params == 'object'){
 			this.params = params;
 		}
+	}
+
+	async getCompleteActivity(objectUser) {
+		var activityCompletionTask={
+			task: 'getCompletion',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityCompletionTask]);
+		var activityProgressTask={
+			task: 'getProgress',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityProgressTask]);
+		var activityCanBeOpenedTask={
+			task: 'canBeOpened',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityCanBeOpenedTask]);
+		if(this.canBeOpened) {
+			var activityTargetTask={
+				task: 'target',
+				params: '',
+				object: 'Activity',
+				objectEvent: 'true',
+				objectLoad: 'true',
+				objectUser: objectUser,
+				objectId: this._id
+			};
+			await sendSimvaTaskToKafka([activityTargetTask]);
+		}
+		return this.toObject();
 	}
 
 	toObject(){

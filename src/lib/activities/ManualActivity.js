@@ -8,7 +8,7 @@ var Activity = require('./activity');
 var UsersController = require('../userscontroller');
 var config = require('../config');
 const sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka');
-
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka');
 class ManualActivity extends Activity {
 
 	// ##########################################
@@ -52,6 +52,20 @@ class ManualActivity extends Activity {
 
 	static getDescription(){
 		return 'An activity that does not communicate with Simva and have to be managed manually.';
+	}
+
+	async getCompleteActivity(objectUser) { 
+		var activityResultTask={
+			task: 'hasResults',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityResultTask]);
+		return super.getCompleteActivity();
 	}
 
 	static async getUtils(username){

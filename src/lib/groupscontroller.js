@@ -1,6 +1,7 @@
 const logger = require('./logger');
 const ServerError = require('./error');
 var mongoose = require('mongoose');
+const Group = require('./group');
 
 var GroupsController = {};
 
@@ -20,6 +21,16 @@ GroupsController.getGroup = async (id) => {
 		return null;
 	}
 };
+
+GroupsController.loadGroup = async (id) => {
+	var group = await GroupsController.getGroup(id);
+	if(group) {
+		return new Group(group);
+	}else{
+		return null;
+	}
+};
+
 
 GroupsController.addGroup = async (group) => {
 	var Group = mongoose.model('group');

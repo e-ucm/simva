@@ -7,7 +7,7 @@ var Activity = require('./activity');
 
 var config = require('../config');
 var sendSimvaEventsToKafka = require('../utils/SimvaEventsToKafka.js');
-
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka');
 var Kafka = require('../kafka')
 logger.info('## MinioActivity: Connecting to Kafka: ' + config.kafka.url + " to topic : " + config.minio.traces_topic + " : " + config.kafka.traceClientId + " : " + config.kafka.traceGroupId);
 const kafkaClient = new Kafka(config.kafka.traceClientId, [ config.kafka.url ], config.kafka.traceGroupId, config.minio.traces_topic);
@@ -25,6 +25,20 @@ class MinioActivity extends Activity {
 		if(!this.extra_data.participants){
 			this.extra_data.participants = [];
 		}
+	}
+
+	async getCompleteActivity(objectUser) { 
+		var activityResultTask={
+			task: 'hasResults',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityResultTask]);
+		return super.getCompleteActivity();
 	}
 
 	async export(complete) {

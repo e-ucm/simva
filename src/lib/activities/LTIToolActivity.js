@@ -11,7 +11,7 @@ let LtiController = require('../lticontroller');
 const validator = require('../utils/validator');
 
 var activityschema = validator.getSchema('#/components/schemas/activity');
-
+var sendSimvaTaskToKafka = require('../utils/SimvaTaskToKafka');
 var Activity = require('./activity');
 
 /*
@@ -98,6 +98,20 @@ class LTIToolActivity extends Activity {
 
 	static getDescription(){
 		return 'An activity that allows the user to include a LTI tool as resource.';
+	}
+	
+	async getCompleteActivity(objectUser) { 
+		var activityResultTask={
+			task: 'hasResults',
+			params: '',
+			object: 'Activity',
+			objectEvent: 'true',
+			objectLoad: 'true',
+			objectUser: objectUser,
+			objectId: this._id
+		};
+		await sendSimvaTaskToKafka([activityResultTask]);
+		return super.getCompleteActivity();
 	}
 
 	static async getUtils(username){
