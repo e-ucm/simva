@@ -4,6 +4,7 @@ var mongoose = require("mongoose");
 var ObjectId = mongoose.Types.ObjectId;
 const logger = require('./logger');
 const UsersController= require('./userscontroller');
+const sendSimvaTaskToKafka = require('./utils/SimvaTaskToKafka');
 
 class Group {
     constructor(params) {
@@ -24,6 +25,24 @@ class Group {
 		params['_id'] = this._id;
 
 		return params;
+	}
+
+	async getCompleteGroup(objectUser) {
+		try {
+			const participantTask={
+				task: 'getParticipants',
+				params: '',
+				object: 'Group',
+				objectLoad: 'true',
+				objectEvent: 'true',
+				objectUser:objectUser,
+				objectId: this._id
+			};
+			await sendSimvaTaskToKafka([participantTask]);
+		} catch(e) {
+			logger.warn(e);
+		}
+		return this.toObject();
 	}
 
 	set params(params){
