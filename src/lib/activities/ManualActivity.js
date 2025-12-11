@@ -54,20 +54,6 @@ class ManualActivity extends Activity {
 		return 'An activity that does not communicate with Simva and have to be managed manually.';
 	}
 
-	async getCompleteActivity(objectUser) { 
-		var activityResultTask={
-			task: 'hasResults',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
-		await sendSimvaTaskToKafka([activityResultTask]);
-		return super.getCompleteActivity();
-	}
-
 	static async getUtils(username){
 		return {};
 	}

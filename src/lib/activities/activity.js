@@ -32,52 +32,6 @@ class Activity {
 		}
 	}
 
-	async getCompleteActivity(objectUser) {
-		var activityCompletionTask={
-			task: 'getCompletion',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
-		await sendSimvaTaskToKafka([activityCompletionTask]);
-		var activityProgressTask={
-			task: 'getProgress',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
-		await sendSimvaTaskToKafka([activityProgressTask]);
-		var activityCanBeOpenedTask={
-			task: 'canBeOpened',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
-		await sendSimvaTaskToKafka([activityCanBeOpenedTask]);
-		if(this.canBeOpened) {
-			var activityTargetTask={
-				task: 'target',
-				params: '',
-				object: 'Activity',
-				objectEvent: 'true',
-				objectLoad: 'true',
-				objectUser: objectUser,
-				objectId: this._id
-			};
-			await sendSimvaTaskToKafka([activityTargetTask]);
-		}
-		return this.toObject();
-	}
-
 	toObject(){
 		var params = {};
 		for(var p in activityschema.properties){

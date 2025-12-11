@@ -96,25 +96,9 @@ class LimeSurveyActivity extends Activity {
 
 
 	async getCompleteActivity(objectUser) { 
-		var activityResultTask={
-			task: 'getResults',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
+
 		await sendSimvaTaskToKafka([activityResultTask]);
-		var activitySurveyLanguagesTask={
-			task: 'getSurveyLanguages',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
+		
 		await sendSimvaTaskToKafka([activitySurveyLanguagesTask]);
 		return super.getCompleteActivity();
 	}

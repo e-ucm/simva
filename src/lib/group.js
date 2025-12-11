@@ -27,24 +27,6 @@ class Group {
 		return params;
 	}
 
-	async getCompleteGroup(objectUser) {
-		try {
-			const participantTask={
-				task: 'getParticipants',
-				params: '',
-				object: 'Group',
-				objectLoad: 'true',
-				objectEvent: 'true',
-				objectUser:objectUser,
-				objectId: this._id
-			};
-			await sendSimvaTaskToKafka([participantTask]);
-		} catch(e) {
-			logger.warn(e);
-		}
-		return this.toObject();
-	}
-
 	set params(params){
 		for(var p in groupschema.properties){
 			if(params[p]){

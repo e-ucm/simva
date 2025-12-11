@@ -99,20 +99,6 @@ class LTIToolActivity extends Activity {
 	static getDescription(){
 		return 'An activity that allows the user to include a LTI tool as resource.';
 	}
-	
-	async getCompleteActivity(objectUser) { 
-		var activityResultTask={
-			task: 'hasResults',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
-		await sendSimvaTaskToKafka([activityResultTask]);
-		return super.getCompleteActivity();
-	}
 
 	static async getUtils(username){
 		let tools = await LtiController.getLtiTools();

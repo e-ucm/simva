@@ -45,21 +45,6 @@ class Test {
 			this._id = id;
 		}
 	}
-	async getTestAndActivities(objectUser) {
-		this.activities.forEach(async element => {
-			var activityTask={
-				task: 'getCompleteActivity',
-				params: 'objectUser',
-				object: 'Activity',
-				objectEvent: 'true',
-				objectLoad: 'true',
-				objectUser: objectUser,
-				objectId: element
-			};
-			await sendSimvaTaskToKafka([activityTask]);
-		});
-		return this.toObject();
-	}
 
 	get id(){
 		return this._id;

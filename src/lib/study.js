@@ -41,66 +41,6 @@ class Study {
 		return params;
 	}
 
-	async getCompleteStudy(objectUser) {
-		try {
-			const participantTask={
-				task: 'getStudyUsersParticipants',
-				params: '',
-				object: 'Study',
-				objectLoad: 'true',
-				objectEvent: 'true',
-				objectUser:objectUser,
-				objectId: this._id
-			};
-			await sendSimvaTaskToKafka([participantTask]);
-		} catch(e) {
-			logger.warn(e);
-		}
-		try {
-			const groupTask={
-				task: 'getStudyGroups',
-				params: '',
-				object: 'Study',
-				objectLoad: 'true',
-				objectEvent: 'true',
-				objectUser:objectUser,
-				objectId: this._id
-			};
-			await sendSimvaTaskToKafka([groupTask]);
-        } catch(e) {
-			logger.warn(e);
-		}
-		try {
-			const allocatorTask={
-				task: 'getStudyAllocator',
-				params: '',
-				object: 'Study',
-				objectLoad: 'true',
-				objectEvent: 'true',
-				objectUser:objectUser,
-				objectId: this._id
-			};
-			await sendSimvaTaskToKafka([allocatorTask]);
-		} catch(e) {
-			logger.warn(e);
-		}
-		try {
-			const testTask={
-				task: 'getStudyTests',
-				params: 'objectUser',
-				object: 'Study',
-				objectLoad: 'true',
-				objectEvent: 'false',
-				objectUser:objectUser,
-				objectId: this._id
-			};
-			await sendSimvaTaskToKafka([testTask]);
-		} catch(e) {
-			logger.warn(e);
-		}
-		return this.toObject();
-	}
-
 	set params(params){
 		for(var p in studyschema.properties){
 			if(params[p]){
@@ -142,22 +82,6 @@ class Study {
  	async getStudyAllocator() {
 		var allocator = await AllocatorsController.getAllocator(this.allocator);
 		return allocator;
-	}
-
-	async getStudyTests(objectUser) {
-		this.tests.forEach(async element =>  {
-			var testTask={
-				task: 'getTestAndActivities',
-				params: 'objectUser',
-				object: 'Test',
-				objectEvent: 'true',
-				objectLoad: 'true',
-				objectUser:objectUser,
-				objectId: element
-			};
-			logger.debug(JSON.stringify(testTask));
-			await sendSimvaTaskToKafka([testTask]);
-		});
 	}
 
 	async save(){

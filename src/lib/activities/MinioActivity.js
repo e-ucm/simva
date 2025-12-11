@@ -27,20 +27,6 @@ class MinioActivity extends Activity {
 		}
 	}
 
-	async getCompleteActivity(objectUser) { 
-		var activityResultTask={
-			task: 'hasResults',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
-		await sendSimvaTaskToKafka([activityResultTask]);
-		return super.getCompleteActivity();
-	}
-
 	async export(complete) {
 		let activity = super.export();
 		return activity;

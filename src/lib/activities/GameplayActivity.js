@@ -95,20 +95,6 @@ class GameplayActivity extends Activity {
 		return {...mutils};
 	}
 
-	async getCompleteActivity(objectUser) { 
-		var activityResultTask={
-			task: 'hasResults',
-			params: '',
-			object: 'Activity',
-			objectEvent: 'true',
-			objectLoad: 'true',
-			objectUser: objectUser,
-			objectId: this._id
-		};
-		await sendSimvaTaskToKafka([activityResultTask]);
-		return super.getCompleteActivity();
-	}
-
 	async getDetails(){
 		return {
 			backup: this.extra_data.config.backup,
