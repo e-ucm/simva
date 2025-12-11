@@ -3,7 +3,13 @@ var logger = require('../lib/logger.js');
 var mongoose = require('mongoose');
 logger.info('Connecting to MongoDB');
 logger.info(`Connecting to MongoDB ${config.mongo.url}`);
-mongoose.connect( config.mongo.url, {useNewUrlParser: true, useUnifiedTopology: true});
+const isTest = (process.env.NODE_ENV !== 'production');
+mongoose.set('debug', isTest);
+mongoose.connection.on('error', err => {
+  console.error('Mongoose connection error:', err);
+});
+mongoose.connect( config.mongo.url, {useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 30000});
+
 const db = mongoose.connection;
 db.on('error', logger.error.bind(logger, 'MongoDB connection error:'));
 db.once('open', async function() {

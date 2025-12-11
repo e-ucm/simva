@@ -5,6 +5,7 @@ var mongoose = require('mongoose');
 
 var TestsController = {};
 var ActivitiesController = require('./activitiescontroller');
+const Test = require('./test');
 
 TestsController.getTests = async (params) => {
 	var res = await mongoose.model('test').find(params);
@@ -17,6 +18,15 @@ TestsController.getTest = async (id) => {
 
 	if(res.length > 0) {
 		return res[0];
+	}else{
+		return null;
+	}
+};
+
+TestsController.loadTest = async (id) => {
+	var test = await TestsController.getTest(id);
+	if(test) {
+		return new Test(test);
 	}else{
 		return null;
 	}
@@ -54,7 +64,7 @@ TestsController.updateTest = async (id, test) => {
 TestsController.updateStudyIdInTestsAndActivitiesMigration = async (testid, studyid, owners) => {
 	let test = await TestsController.getTest(testid);
 	delete test.id;
-	if(test.study !== "") {
+	if(test.study) {
 		logger.info("StudyId already present in test.");
 	} else {
 		test.study = studyid;

@@ -9,6 +9,11 @@ var sendSimvaTaskToKafka = require('./utils/SimvaTaskToKafka');
 const validator = require('./utils/validator');
 var studyschema = validator.getSchema('#/components/schemas/study');
 var { isoToDuration } = require("./utils/date");
+var GroupsController = require('./groupscontroller');
+var TestsController = require("./testscontroller");
+var AllocatorsController = require('./allocatorscontroller');
+var UsersController = require('./userscontroller');
+
 class Study {
     constructor(params) {
         this.extra_data = {};
@@ -61,11 +66,9 @@ class Study {
 	}
 
 	async getStudyUsersParticipants() {
-		var GroupsController = require('./groupscontroller');
-		var groups = await GroupsController.getGroups({"_id" : {"$in" : study.groups}});
+		var groups = await GroupsController.getGroups({"_id" : {"$in" : this.groups}});
 		let participants = groups.map(g => {return g.participants; }).flat();
 		participants = participants.filter((p,i) => participants.indexOf(p) === i);
-		var UsersController = require('./userscontroller');
 		participants= await UsersController.getUsers({"username" : {"$in" : participants}});
 		return participants;
 	}
@@ -77,7 +80,6 @@ class Study {
 
 
  	async getStudyAllocator() {
-		var AllocatorsController = require('./allocatorscontroller');
 		var allocator = await AllocatorsController.getAllocator(this.allocator);
 		return allocator;
 	}
@@ -85,9 +87,9 @@ class Study {
 	async getStudyTests(objectUser) {
 		this.tests.forEach(async element =>  {
 			var testTask={
-				task: 'getStudyTest',
-				params: 'objectId,objectUser',
-				object: 'Study',
+				task: 'getTestAndActivities',
+				params: 'objectUser',
+				object: 'Test',
 				objectEvent: 'true',
 				objectLoad: 'true',
 				objectUser:objectUser,
@@ -96,27 +98,6 @@ class Study {
 			logger.debug(JSON.stringify(testTask));
 			await sendSimvaTaskToKafka([testTask]);
 		});
-	}
-
-	async getStudyTest(testId, objectUser) {
-		if(this.tests.includes(testId)) {
-			var TestsController = require("./testscontroller");
-			let test = await TestsController.getTest(testId);
-			test.activities.forEach(async element => {
-				var activityTask={
-					task: 'getActivity',
-					params: 'objectId',
-					object: 'Activity',
-					objectEvent: 'true',
-					objectLoad: 'true',
-					objectUser: objectUser,
-					objectId: element
-				};
-				logger.debug(JSON.stringify(activityTask));
-				await sendSimvaTaskToKafka([activityTask]);
-			});
-			return test;
-		}
 	}
 
 	async save(){

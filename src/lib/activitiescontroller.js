@@ -33,7 +33,7 @@ ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activit
 	}
 	if(activity.type == "limesurvey" && activity.extra_data) {
 		if(!activity.extra_data.language) {
-			if(activity.study !== "") {
+			if(activity.study) {
 				logger.info("StudyId already present in activity.");
 			} else {
 				activity.study = studyid;
@@ -53,7 +53,7 @@ ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activit
 			activity.extra_data.config.scorm_xapi_by_game=false;
 			activityToSave=true;
 		}
-		if(activity.study !== "") {
+		if(activity.study) {
 			logger.info("StudyId already present in activity.");
 		} else {
 			activity.study = studyid;
@@ -61,7 +61,7 @@ ActivitiesController.updateStudyIdInTestsAndActivitiesMigration = async (activit
 			logger.info("Fix config extra_data in gameplay activity saved");
 		}
 	} else {
-		if(activity.study !== "") {
+		if(activity.study) {
 			logger.info("StudyId already present in activity.");
 		} else {
 			activity.study = studyid;

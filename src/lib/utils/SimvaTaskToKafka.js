@@ -32,7 +32,7 @@ if (enableConsumer) {
                 var StudiesController = require("../studiescontroller");
                 if(msg.objectLoad == "true") {
                     const study = await StudiesController.loadStudy(msg.objectId);
-                    logger.info(study.name);
+                    logger.debug(study.name);
                     res=await study[msg.task](...paramValue);
                 } else {
                    res= await StudiesController[msg.task](...paramValue);
@@ -44,6 +44,30 @@ if (enableConsumer) {
                         paramValues:paramValue,
                         studyId: msg.objectId,
                         user:msg.objectUser,
+                        object: msg.object,
+                        response:res
+                    };
+                    sendSimvaEventsToKafka([message]);
+                }
+                break;
+            case "Test":
+                var TestsController = require("../testscontroller");
+                const test = await TestsController.loadTest(msg.objectId);
+                if(msg.objectLoad == "true") {
+                    //logger.debug(test.name);
+                    res=await test[msg.task](...paramValue);
+                } else {
+                   res= await TestsController[msg.task](...paramValue);
+                }
+                if(msg.objectEvent == "true") {
+                    const message = {
+                        type: msg.task,
+                        params:params,
+                        paramValues:paramValue,
+                        studyId: test.study,
+                        testId: msg.objectId,
+                        object: msg.object,
+                        user:msg.objectUser,
                         response:res
                     };
                     sendSimvaEventsToKafka([message]);
@@ -51,9 +75,9 @@ if (enableConsumer) {
                 break;
             case "Activity":
                 var ActivitiesController = require("../activitiescontroller");
+                const act = await ActivitiesController.loadActivity(msg.objectId);
                 if(msg.objectLoad == "true") {
-                    const act = await ActivitiesController.loadActivity(msg.objectId);
-                    logger.info(act.name);
+                    logger.debug(act.name);
                     res=await act[msg.task](...paramValue);
                 } else {
                     res = await ActivitiesController[msg.task](...paramValue);
@@ -64,7 +88,10 @@ if (enableConsumer) {
                         params:params,
                         paramValues:paramValue,
                         activityId: msg.objectId,
-                        user:req.user.data.username,
+                        testId: act.test,
+                        studyId: act.study,
+                        object: msg.object,
+                        user:msg.objectUser,
                         response:res
                     };
                     sendSimvaEventsToKafka([message]);
