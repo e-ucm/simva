@@ -23,3 +23,10 @@ db.once('open', async function() {
     // Now you can require your Kafka task module safely
     require("../lib/utils/SimvaTaskToKafka.js");
 });
+
+process.on('SIGINT', async () => {
+  console.log('Shutting down DB pool...');
+  const db = require('../lib/db');
+  await db.end();
+  process.exit(0);
+});

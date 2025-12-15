@@ -101,3 +101,11 @@ async function onListening () {
   logger.info(ltijs.provider.keysetRoute());
   logger.info(ltijs.provider.dynRegRoute());
 }
+
+
+process.on('SIGINT', async () => {
+  console.log('Shutting down DB pool...');
+  const db = require('../config/db');
+  await db.end();
+  process.exit(0);
+});

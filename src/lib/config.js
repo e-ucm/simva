@@ -38,6 +38,14 @@ config.mongo.ltidb = process.env.LTI_MONGO_DB || '/lti_simva'
 config.mongo.url = 'mongodb://'+config.mongo.host+config.mongo.db
 config.mongo.ltiurl = 'mongodb://'+config.mongo.host+config.mongo.ltidb
 
+config.mysql = {}
+config.mysql.host = process.env.MYSQL_HOST || "localhost"
+config.mysql.port = process.env.MYSQL_PORT || 3306
+config.mysql.db = process.env.MYSQL_DATABASE || 'simva'
+config.mysql.ltidb = process.env.LTI_MYSQL_DB || 'lti_simva'
+config.mysql.db_user = process.env.MYSQL_DB_USER
+config.mysql.db_password = process.env.MYSQL_DB_PASSWORD
+
 config.kafka = {}
 config.kafka.host = process.env.KAFKA_HOST || 'kafka'
 config.kafka.port = process.env.KAFKA_PORT || 9092
