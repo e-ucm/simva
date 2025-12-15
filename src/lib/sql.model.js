@@ -1,3 +1,5 @@
+const logger = require("./logger");
+
 var Model = {};
 
 Model.selectAll = async (db, table) => {
@@ -9,17 +11,23 @@ Model.selectAll = async (db, table) => {
 
 
 Model.selectElementFromId = async (db, table, object_id, id) => {
-  const [rows] = await db.query(
-    `SELECT * FROM ${table} WHERE ${object_id} = ?`,
-    [id]
-  );
-  return rows[0] || null;
+    try {
+        const query = `SELECT * FROM ${table} WHERE ${object_id} = ?`; 
+        logger.info(query);
+        const [rows] = await db.query(query,[id]);
+        return rows[0] || null;
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 };
 
 Model.selectSpecificElementFromList = async (db, table, object_id, tab) => {
   try {
     const placeholders = tab.map(() => '?').join(', ');
-    const [rows] = await db.query(`SELECT * FROM ${table} WHERE ${object_id} IN (${placeholders})`, [...tab]);
+    const query = `SELECT * FROM ${table} WHERE ${object_id} IN (${placeholders})`;
+    logger.info(query);
+    const [rows] = await db.query(query, [...tab]);
     return rows;
   } catch (error) {
     console.error(error);
@@ -29,9 +37,10 @@ Model.selectSpecificElementFromList = async (db, table, object_id, tab) => {
 
 Model.insert = async (db, table, data) => {
   try {
-    const placeholders_keys = Object.keys(data).join(', ');
     const placeholders_values = Object.values(data).map(() => '?').join(', ');
-    await db.query(`INSERT INTO ${table} (${placeholders_keys}) VALUES (${placeholders_values})`, [...Object.values(data)]);
+    const query =`INSERT INTO ${table} (${Object.keys(data).join(', ')}) VALUES (${placeholders_values})`;
+    logger.info(query);
+    const [rows] = await db.query(query, [...Object.values(data)]);
   } catch (error) {
     console.error(error);
   }
@@ -40,17 +49,18 @@ Model.insert = async (db, table, data) => {
 Model.update = async (db, table, data, object_id, id) => {
   try {
     const placeholders_data = Object.keys(data).map((key) => `${key} = ?`).join(', ');
-    await db.query(`UPDATE ${table} SET ${placeholders_data} WHERE ${object_id} = ?`, [...Object.values(data), id]);
+    const query = `UPDATE ${table} SET ${placeholders_data} WHERE ${object_id} = ?`;
+    logger.info(query);
+    const [rows] = await db.query(query, [...Object.values(data), id]);
   } catch (error) {
     console.error(error);
   }
 };
 
 Model.deleteElementFromId = async (db, table, object_id, id) => {
-  await db.query(
-    `DELETE FROM ${table} WHERE ${object_id} = ?`,
-    [id]
-  );
+    const query = `DELETE FROM ${table} WHERE ${object_id} = ?`;
+    logger.info(query);
+    const [rows] = await db.query(query,[id]);
 };
 
 module.exports = Model;
