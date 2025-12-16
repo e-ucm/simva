@@ -36,7 +36,7 @@ Model.selectElementFromId = async (db, table, object_id, object_value) => {
 };
 
 /**
- * Select specific element from database table using WHERE condition and multiple AND/OR list conditions
+ * Select specific element from database table using WHERE condition and same multiple AND/OR list conditions
  * @param {*} db mysql database pool
  * @param {string} table table name
  * @param {Object} conditions conditions<key,value> to apply
@@ -47,15 +47,14 @@ Model.selectFromConditions= async(db, table, conditions, andOrOperator = '') => 
     let query = `SELECT * FROM ${table}`;
     let whereClause = '';
     for (let condition in conditions) {
+      logger.info(condition);
         if (!whereClause) {
             whereClause += ` WHERE ${condition} = ?`;
         } else {
-            if (andOrOperator === '') {
-                whereClause += ` AND ${condition} = ?`;
-                andOrOperator = 'AND';
-            } else if (andOrOperator === 'AND') {
+            if(andOrOperator == 'OR') {
                 whereClause += ` OR ${condition} = ?`;
-                andOrOperator = 'OR';
+            } else {
+                whereClause += ` AND ${condition} = ?`;
             }
         }
     }
@@ -64,7 +63,7 @@ Model.selectFromConditions= async(db, table, conditions, andOrOperator = '') => 
     }
     try {
         logger.info(query);
-        const [rows] = await db.query(query,[id]);
+        const [rows] = await db.query(query,[...Object.values(conditions)]);
         return rows;
     } catch (error) {
         console.error(error);
