@@ -5,9 +5,27 @@ var bcrypt = require('bcrypt');
 const KeycloakKeyManager = require('./utils/keycloakkeymanager');
 const KeycloakClient = require('./utils/keycloakclient');
 const jwt = require('jsonwebtoken');
-
 var config = require('./config');
 
+const sqldb = require('../lib/sql_model/db');
+
+let loginSqlite = async function(){
+  try {
+    await sqldb.sequelize.authenticate();
+    logger.info("Database connected");
+    //logger.info('## SQL Users :');
+    //const users = await sqldb.Table.User.findAll();
+    //logger.info(users.map(u => u.toJSON()));
+	logger.info('## Query View :');
+	//const simlets = await sqldb.functions.runViewQuery(sqldb.View.Simlet.byUsername,{ username : "memogames" });
+    //logger.info(simlets);
+	const permissions = await sqldb.functions.runViewQuery(sqldb.View.Simlet.DirectUserPermissionbyId,{ simlet_id : 1 });
+	logger.info('Permissions:');
+    logger.info(permissions);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
 var limeconfig = {
 	options: {
 		url: config.limesurvey.url + '/index.php/admin/remotecontrol',
@@ -60,6 +78,7 @@ UsersController.getUser = async (id) => {
 };
 
 UsersController.getUsers = async (params) => {
+	loginSqlite();
 	var res = await mongoose.model('user').find(params);
 
 	return res;

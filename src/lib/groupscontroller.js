@@ -2,21 +2,17 @@ const logger = require('./logger');
 const ServerError = require('./error');
 var mongoose = require('mongoose');
 const Group = require('./group');
-const db = require('./db');
-const model = require('./sql.model');
 
 var GroupsController = {};
 
 
 GroupsController.getGroups = async (params) => {
-	logger.info(await model.selectAll(db, "ParticipantGroups"));
 	var res = await mongoose.model('group').find(params);
 
 	return res;
 };
 
 GroupsController.getGroup = async (id) => {
-	logger.info(await model.selectElementFromId(db, "ParticipantGroups", "group_id", id));
 	var res = await mongoose.model('group').find({_id: id});
 
 	if(res.length > 0) {
