@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    created: {
-      type: DataTypes.DATETIME,
-      allowNull: false,
-    },
     use_new_generation: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -21,11 +17,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
     },
     createdAt:{
-      type: DataTypes.DATETIME,
+      type: DataTypes.DATE,
       allowNull: false,
     },
     updatedAt:{
-      type: DataTypes.DATETIME,
+      type: DataTypes.DATE,
       allowNull: false,
     }
   },

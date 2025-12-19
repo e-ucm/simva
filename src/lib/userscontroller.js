@@ -13,13 +13,13 @@ let loginSqlite = async function(){
   try {
     await sqldb.sequelize.authenticate();
     logger.info("Database connected");
-    //logger.info('## SQL Users :');
-    //const users = await sqldb.Table.User.findAll();
-    //logger.info(users.map(u => u.toJSON()));
+    logger.info('## SQL Users :');
+    const users = await sqldb.Tables.User.findAll();
+    logger.info(users.map(u => u.toJSON()));
 	logger.info('## Query View :');
-	//const simlets = await sqldb.functions.runViewQuery(sqldb.View.Simlet.byUsername,{ username : "memogames" });
-    //logger.info(simlets);
-	const permissions = await sqldb.functions.runViewQuery(sqldb.View.Simlet.DirectUserPermissionbyId,{ simlet_id : 1 });
+	const simlets = await sqldb.Functions.runViewQuery(sqldb.Views.Simlet.byUsername,{ username : "memogames" });
+    logger.info(simlets);
+	const permissions = await sqldb.Functions.runViewQuery(sqldb.Views.Simlet.DirectUserPermissionbyId,{ simlet_id : 1 });
 	logger.info('Permissions:');
     logger.info(permissions);
   } catch (error) {

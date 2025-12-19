@@ -23,12 +23,19 @@ These templates are:
 ## 2. File Structure
 
 ```text
-db/
+sql_model/
+├── models/
+│   ├── groups/
+│   │     ├── group.model.js
+│   │     └── groupParticipants.model.js
+│   ├── users/
+│   │     └── user.model.js
+│   └── index.js
 ├── views/
 │   ├── userView.queries.js
 │   ├── statsView.queries.js
 │   └── index.js
-├── runViewQuery.js
+├── functions.js
 └── generateQueryDocs.js
 ```
 

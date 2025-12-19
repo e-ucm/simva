@@ -13,12 +13,12 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // Import models (tables)
-db.Table = require("./models/index")(sequelize, Sequelize);
+db.Tables = require("./models/index")(sequelize, Sequelize);
 
 // Utilities
-db.functions = require("./functions")(sequelize);
+db.Functions = require("./functions")(sequelize);
 
 // Views (query templates only)
-db.View = require("./views/index");
+db.Views = require("./views/index");
 
 module.exports = db;
