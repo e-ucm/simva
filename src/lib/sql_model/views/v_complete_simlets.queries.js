@@ -17,7 +17,7 @@ module.exports = {
   },
   
   byUsername: {
-    description: "Get SIMLET by its ID",
+    description: "Get all SIMLETs for a certain User",
     sql: `
       SELECT *
       FROM v_complete_simlets_users_permissions
@@ -37,7 +37,7 @@ module.exports = {
     description: "Get Direct Users Permission for SIMLET by its ID",
     sql: `
       SELECT *
-      FROM v_direct_permissions
+      FROM v_direct_permissions_users
       WHERE object_id = :simlet_id AND object_type = "SIMLET"
     `,
     params: {

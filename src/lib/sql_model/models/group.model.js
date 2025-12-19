@@ -1,29 +1,24 @@
 module.exports = (sequelize, DataTypes) => {
-  const Model = sequelize.define("User", {
-    user_id: {
+  const Model = sequelize.define("ParticipantGroup", {
+    group_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
     },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    email: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    isToken: {
+    created: {
+      type: DataTypes.DATETIME,
+      allowNull: false,
+    },
+    use_new_generation: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
-    token: {
-      type: DataTypes.STRING,
+    group_owner_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
-    },
-    role: {
-      type: DataTypes.STRING,
-      allowNull: false,
     },
     createdAt:{
       type: DataTypes.DATETIME,
@@ -35,8 +30,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   },
   {
-    tableName: "Users",   // <-- use your existing table name
-    timestamps: true,    // disable createdAt/updatedAt if not in table
+    tableName: "ParticipantGroups",   // <-- use your existing table name
+    timestamps: true,      // disable createdAt/updatedAt if not in table
     freezeTableName: true, // prevent Sequelize from pluralizing table name
   });
 
