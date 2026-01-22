@@ -203,6 +203,30 @@ describe("Views Controller", () => {
       expect(response.body.message).toBe("Invalid session_id parameter");
     });
 
+    it("should handle array session_id parameter correctly", async () => {
+      const mockPermissions = [
+        { user_id: 1, object_id: 1, permission: "WRITE" }
+      ];
+      jest.spyOn(db.Functions, 'runViewQuery').mockResolvedValue(mockPermissions);
+
+      // Import and test the function directly since array params are unusual for Express
+      const { getSessionUserPermissionsController } = require("@/controlers/views.controller");
+      
+      const mockReq = {
+        params: { session_id: ["123", "456"] }, // This will trigger Array.isArray path
+        user: { data: { username: 'testuser', role: 'student' } }
+      };
+      
+      const mockRes = {
+        json: jest.fn()
+      };
+
+      await getSessionUserPermissionsController(mockReq, mockRes);
+      
+      expect(mockRes.json).toHaveBeenCalledWith(mockPermissions);
+      // The function should process the array session_id parameter (testing line 181)
+    });
+
     it("should return permissions for session", async () => {
       const mockPermissions = [
         { user_id: 1, object_id: 1, permission: "WRITE" }
