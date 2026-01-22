@@ -101,7 +101,7 @@ export function initializeModels(
     RandomAllocators: RandomAllocatorsFactory(sequelize, DataTypes),
     ActivityTemplates: ActivityTemplateFactory(sequelize, DataTypes),
     ActivityTemplatePermissions: ActivityTemplatePermissionsFactory(sequelize, DataTypes),
-    ManualTemplateActivities: ManualTemplateActivityFactory(sequelize, DataTypes),
+    ManualActivitiesTemplates: ManualTemplateActivityFactory(sequelize, DataTypes),
     GameplayActivitiesTemplates: GameplayActivitiesTemplateFactory(sequelize, DataTypes),
     LimesurveyActivitiesTemplates: LimesurveyActivitiesTemplateFactory(sequelize, DataTypes),
     SimletTagsList: SimletTagsListFactory(sequelize, DataTypes),

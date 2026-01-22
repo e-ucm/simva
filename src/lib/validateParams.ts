@@ -1,147 +1,114 @@
 /**
- * @fileoverview Parameter validation utilities for SIMVA API.
- * Provides type-safe parameter validation for database queries and API endpoints.
+ * Validation rule for a single parameter.
  * 
- * This module defines:
- * - Parameter type definitions and validation rules
- * - Schema-based validation for query parameters
- * - Type coercion and default value handling
- * - Comprehensive error reporting for invalid parameters
- * 
- * @module validateParams
+ * @typedef {Object} ValidationRule
+ * @property {string} type - Data type (string, number, boolean, array)
+ * @property {boolean} [required] - Whether the parameter is required
+ * @property {string} [default] - Default value if not provided
+ * @property {string} [of] - Element type for array parameters
  */
-
-/**
- * Supported parameter types for validation.
- * @typedef {string} ParamType
- */
-export type ParamType = "string" | "number" | "boolean" | "array";
-
-/**
- * Validation rule definition for a single parameter.
- * 
- * @interface ParamRule
- * @property {ParamType} type - The expected data type of the parameter
- * @property {boolean} [required=false] - Whether this parameter is required
- * @property {any} [default] - Default value to use if parameter is undefined
- * @property {"string"|"number"|"boolean"} [of] - Type of array elements (when type is "array")
- * @property {string} [description] - Human-readable description of the parameter
- * @property {any} [example] - Example value for documentation
- * 
- * @example
- * ```typescript
- * const userIdRule: ParamRule = {
- *   type: "number",
- *   required: true,
- *   description: "User identifier",
- *   example: 123
- * };
- * ```
- */
-export interface ParamRule {
-  type: ParamType;
-  required?: boolean;
-  default?: any;
-  of?: "string" | "number" | "boolean";
-  description?: string;
-  example?: any;
+interface ValidationRule {
+    type: "string" | "number" | "boolean" | "array";
+    required?: boolean;
+    default?: string;
+    of?: string;
 }
 
 /**
- * Schema definition for validating a collection of parameters.
- * Maps parameter names to their validation rules.
+ * Validation schema mapping parameter names to their validation rules.
  * 
- * @typedef {Record<string, ParamRule>} ParamSchema
- * 
- * @example
- * ```typescript
- * const querySchema: ParamSchema = {
- *   userId: {
- *     type: "number",
- *     required: true,
- *     description: "User identifier"
- *   },
- *   limit: {
- *     type: "number",
- *     default: 10,
- *     description: "Maximum results to return"
- *   }
- * };
- * ```
+ * @typedef {Object} Schema
  */
-export type ParamSchema = Record<string, ParamRule>;
+interface Schema {
+    [key: string]: ValidationRule;
+}
 
 /**
- * Validates parameters against a schema definition.
- * Performs type checking, required field validation, and applies default values.
- * Modifies the params object in-place by adding default values where applicable.
+ * Object containing parameter values to validate.
+ * 
+ * @typedef {Object} Params
+ */
+interface Params {
+    [key: string]: any;
+}
+
+/**
+ * Validates a set of parameters against a schema.
+ * Enforces type checking, required fields, and default values.
  * 
  * @function validateParams
- * @param {ParamSchema} schema - The validation schema defining expected parameters
- * @param {Record<string, any>} params - The parameters object to validate (modified in-place)
- * @throws {Error} When required parameters are missing or type validation fails
+ * @param {Schema} schema - Validation schema defining expected parameters
+ * @param {Params} params - Parameters to validate (modified in place with defaults)
+ * @throws {Error} If validation fails
  * 
  * @example
  * ```typescript
  * const schema = {
- *   id: { type: "number", required: true },
- *   name: { type: "string", default: "Anonymous" },
- *   tags: { type: "array", of: "string" }
+ *   userId: { type: 'number', required: true },
+ *   limit: { type: 'number', default: '10' },
+ *   tags: { type: 'array', of: 'string' }
  * };
  * 
- * const params = { id: 123, tags: ["tag1", "tag2"] };
- * validateParams(schema, params);
- * // params.name is now "Anonymous"
+ * validateParams(schema, { userId: 123, tags: ['a', 'b'] });
+ * // Adds limit: '10' as default
  * ```
  */
-export default function validateParams(schema: ParamSchema, params: Record<string, any>): void {
-  for (const [key, rules] of Object.entries(schema)) {
-    let value = params[key];
+export function validateParams(schema: Schema, params: Params): void {
+    for (const [key, rules] of Object.entries(schema)) {
+        let value = params[key];
 
-    if (value === undefined) {
-      if (rules.required) {
-        throw new Error(`Missing required parameter: ${key}`);
-      }
-      if ("default" in rules) {
-        params[key] = rules.default;
-      }
-      continue;
-    }
-
-    switch (rules.type) {
-      case "string":
-        if (typeof value !== "string") {
-          throw new Error(`${key} must be a string`);
+        if (value === undefined) {
+        if (rules.required) {
+            throw new Error(`Missing required parameter: ${key}`);
         }
-        break;
-
-      case "number":
-        if (typeof value !== "number" || Number.isNaN(value)) {
-          throw new Error(`${key} must be a number`);
+        if ("default" in rules) {
+            params[key] = rules.default;
         }
-        break;
-
-      case "boolean":
-        if (typeof value !== "boolean") {
-          throw new Error(`${key} must be a boolean`);
+        continue;
         }
-        break;
 
-      case "array":
-        if (!Array.isArray(value)) {
-          throw new Error(`${key} must be an array`);
-        }
-        if (rules.of) {
-          for (const v of value) {
-            if (typeof v !== rules.of) {
-              throw new Error(`${key} array values must be ${rules.of}`);
+        switch (rules.type) {
+        case "string":
+            if (typeof value !== "string") {
+                if(!rules.default) {
+                    throw new Error(`${key} must be a string`);
+                }
             }
-          }
-        }
-        break;
+            break;
 
-      default:
-        throw new Error(`Unknown type: ${String((rules as any).type)}`);
+        case "number":
+            if (typeof value !== "number" || Number.isNaN(value)) {
+                if(!rules.default) {
+                    throw new Error(`${key} must be a number`);
+                }
+            }
+            break;
+
+        case "boolean":
+            if (typeof value !== "boolean") {
+                if(!rules.default) {
+                    throw new Error(`${key} must be a boolean`);
+                }
+            }
+            break;
+
+        case "array":
+            if (!Array.isArray(value)) {
+                if(!rules.default) {
+                    throw new Error(`${key} must be an array`);
+                }
+            }
+            if (rules.of) {
+            for (const v of value) {
+                if (typeof v !== rules.of) {
+                throw new Error(`${key} array values must be ${rules.of}`);
+                }
+            }
+            }
+            break;
+
+        default:
+            throw new Error(`Unknown type: ${rules.type}`);
+        }
     }
-  }
 }

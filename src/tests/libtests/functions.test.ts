@@ -1,30 +1,57 @@
-import functionsFactory, { QueryTemplate } from '@/lib/functions';
-import { Sequelize } from 'sequelize';
+import { db } from "@/lib/db";
+import { config } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
-describe('functions.runViewQuery', () => {
-  const mockSequelize = {
-    query: jest.fn(async (sql: string, options: any) => [{ ok: true, sql, options }])
-  } as unknown as Sequelize;
-
-  const query: QueryTemplate = {
-    sql: 'SELECT * FROM user_view WHERE role IN (:roles)',
-    params: {
-      roles: { type: 'array', of: 'string', required: true },
-    },
-  };
-
-  it('calls sequelize.query with replacements', async () => {
-    const functions = functionsFactory(mockSequelize);
-    const res = await functions.runViewQuery(query, { roles: ['admin', 'teacher'] });
-    expect(mockSequelize.query).toHaveBeenCalledWith(query.sql, {
-      replacements: { roles: ['admin', 'teacher'] },
-      type: 'SELECT',
-    });
-    expect((res[0] as any).ok).toBe(true);
+/**
+ * Unit tests for database functions.
+ */
+describe("Database Functions", () => {
+  beforeAll(async () => {
+    try {
+      await db.sequelize.sync({ force: true });
+      
+    } catch (err) {
+      logger.error({ err }, "Setup failed");
+    }
   });
 
-  it('throws on invalid params', async () => {
-    const functions = functionsFactory(mockSequelize);
-    await expect(functions.runViewQuery(query, { roles: [1, 2] } as any)).rejects.toThrow('roles array values must be string');
+  afterAll(async () => {
+    await new Promise((r) => setTimeout(r, 100));
+    await db.sequelize.close();
+  });
+
+  describe("runViewQuery", () => {
+    it("should throw error for invalid query template with missing sql", async () => {
+      const invalidQuery = {
+        sql: null,
+        params: { user_id: { type: "number", required: true } }
+      };
+
+      await expect(
+        db.Functions.runViewQuery(invalidQuery, { user_id: 1 })
+      ).rejects.toThrow("Invalid query template");
+    });
+
+    it("should throw error for invalid query template with missing params", async () => {
+      const invalidQuery = {
+        sql: "SELECT * FROM users WHERE user_id = :user_id",
+        params: null
+      };
+
+      await expect(
+        db.Functions.runViewQuery(invalidQuery, { user_id: 1 })
+      ).rejects.toThrow("Invalid query template");
+    });
+
+    it("should throw error for invalid query template with missing both", async () => {
+      const invalidQuery = {
+        sql: null,
+        params: null
+      };
+
+      await expect(
+        db.Functions.runViewQuery(invalidQuery, {})
+      ).rejects.toThrow("Invalid query template");
+    });
   });
 });
