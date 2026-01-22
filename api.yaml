@@ -60,7 +60,7 @@ paths:
       summary: gets the list of users.
       operationId: getUsers
       description: |
-        Obtains the list of groups owned by current user.
+        Obtains the list of users owned by current user.
       responses:
         '200':
           description: the list of users

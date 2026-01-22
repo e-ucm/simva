@@ -80,7 +80,7 @@
         ],
         "summary": "gets the list of users.",
         "operationId": "getUsers",
-        "description": "Obtains the list of groups owned by current user.\n",
+        "description": "Obtains the list of users owned by current user.\n",
         "responses": {
           "200": {
             "description": "the list of users",

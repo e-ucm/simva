@@ -22,6 +22,9 @@ RUN npm install
 # Copy the current directory contents into the container at /app
 COPY --chown=node:node . .
 
+# Build TypeScript to dist
+RUN npm run build
+
 RUN mkdir -p /home/node/logs && chown -R node:node /home/node/logs
 
 # Make port 443 available to the world outside this container
