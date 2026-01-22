@@ -3,6 +3,17 @@ import { getMe } from '@/controlers/user.controller';
 import { AuthentificationError } from '@/lib/errors/appErrors';
 import * as userService from '@/services/users/user.service';
 
+// Extend Request type to include user property
+interface AuthenticatedRequest extends Request {
+  user?: {
+    data?: {
+      user_id?: number;
+      username?: string;
+      role?: string;
+    };
+  };
+}
+
 // Mock user service
 jest.mock('@/services/users/user.service');
 const mockedUserService = userService as jest.Mocked<typeof userService>;
@@ -13,7 +24,7 @@ describe('User Controller Unit Tests', () => {
   });
 
   describe('getMe function', () => {
-    let mockReq: Partial<Request>;
+    let mockReq: Partial<AuthenticatedRequest>;
     let mockRes: Partial<Response>;
     let mockNext: NextFunction;
 
@@ -44,7 +55,7 @@ describe('User Controller Unit Tests', () => {
 
       mockedUserService.getUserById.mockResolvedValue(mockUser as any);
 
-      await getMe(mockReq as Request, mockRes as Response, mockNext);
+      await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockedUserService.getUserById).toHaveBeenCalledWith(1);
       expect(mockRes.json).toHaveBeenCalledWith(mockUser);
@@ -60,7 +71,7 @@ describe('User Controller Unit Tests', () => {
         }
       };
 
-      await getMe(mockReq as Request, mockRes as Response, mockNext);
+      await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(AuthentificationError));
       const error = (mockNext as jest.Mock).mock.calls[0][0];
@@ -78,7 +89,7 @@ describe('User Controller Unit Tests', () => {
         }
       };
 
-      await getMe(mockReq as Request, mockRes as Response, mockNext);
+      await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(AuthentificationError));
       const error = (mockNext as jest.Mock).mock.calls[0][0];
@@ -95,7 +106,7 @@ describe('User Controller Unit Tests', () => {
         }
       };
 
-      await getMe(mockReq as Request, mockRes as Response, mockNext);
+      await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(AuthentificationError));
       const error = (mockNext as jest.Mock).mock.calls[0][0];
@@ -105,7 +116,7 @@ describe('User Controller Unit Tests', () => {
     it('throws AuthentificationError when auth data structure is completely missing', async () => {
       mockReq.user = undefined;
 
-      await getMe(mockReq as Request, mockRes as Response, mockNext);
+      await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(AuthentificationError));
       const error = (mockNext as jest.Mock).mock.calls[0][0];
@@ -118,7 +129,7 @@ describe('User Controller Unit Tests', () => {
         // Missing data property
       };
 
-      await getMe(mockReq as Request, mockRes as Response, mockNext);
+      await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(AuthentificationError));
       const error = (mockNext as jest.Mock).mock.calls[0][0];
@@ -138,7 +149,7 @@ describe('User Controller Unit Tests', () => {
 
       mockedUserService.getUserById.mockRejectedValue(serviceError);
 
-      await getMe(mockReq as Request, mockRes as Response, mockNext);
+      await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockedUserService.getUserById).toHaveBeenCalledWith(1);
       expect(mockNext).toHaveBeenCalledWith(serviceError);
