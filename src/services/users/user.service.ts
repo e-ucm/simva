@@ -44,12 +44,12 @@ interface SimplifiedUser {
  * Retrieves all users from the database.
  * 
  * @async
- * @function getUsers
+ * @function getAllUsers
  * @returns {Promise<Array>} Array of all user records
  * 
  * @example
  * ```typescript
- * const users = await getUsers();
+ * const users = await getAllUsers();
  * ```
  */
 export async function getAllUsers(): Promise<InstanceType<typeof db.Tables.User>[]> {
@@ -115,7 +115,13 @@ export async function getUserByUsername(username: string): Promise<InstanceType<
  * ```
  */
 export async function createUser(user : Partial<InstanceType<typeof db.Tables.User>>): Promise<InstanceType<typeof db.Tables.User>> {
-  return  db.Tables.User.create(user);
+  if(user.token == "" || user.token == null) {
+    user.isToken = false;
+  } else {
+    user.isToken = true;
+  }
+  logger.debug("Creating user: " + JSON.stringify(user));
+  return db.Tables.User.create(user);
 }
 
 
@@ -337,10 +343,18 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
  */
 export async function getUsersWithFilter(filter?: { username?: string }): Promise<InstanceType<typeof db.Tables.User>[]> {
   if (filter?.username) {
-    const user = await getUserByUsername(filter.username);
-    return user ? [user] : [];
+    try {
+      const user = await getUserByUsername(filter.username);
+      return [user];
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return [];
+      }
+      throw error;
+    }
+  } else {
+    return getAllUsers();
   }
-  return getAllUsers();
 }
 
 /**
@@ -396,10 +410,11 @@ async function createUserFromKeycloakJWT(decoded: any): Promise<InstanceType<typ
   logger.debug("createUserFromJWT: " + JSON.stringify(decoded));
   
   const userData = {
-    username: decoded.preferred_username || decoded.sub || decoded.username,
+    username: decoded.preferred_username || decoded.username || decoded.sub,
     email: decoded.email,
     role: getRoleFromKeycloakJWT(decoded)
   };
+  logger.info("createUserFromJWT - UserData: " + JSON.stringify(userData));
 
   return await createUser(userData);
 }
@@ -413,6 +428,11 @@ async function createUserFromKeycloakJWT(decoded: any): Promise<InstanceType<typ
  */
 function getRoleFromKeycloakJWT(decoded: any): string {
   logger.debug("getRoleFromJWT: " + JSON.stringify(decoded));
+  
+  // If no realm_access is provided at all, default to student
+  if (!decoded.realm_access) {
+    return 'student';
+  }
   
   let role = 'norole';
   
