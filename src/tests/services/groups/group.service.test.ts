@@ -10,9 +10,11 @@ import {
   deleteGroup,
   countGroups,
   countGroupsByType,
+  countGroupsByOwner,
   groupExists,
   getGroupsCreatedAfter,
-  getDistinctTypes
+  getDistinctTypes,
+  isGroupNameAvailable
 } from "@/services/groups/group.service";
 import { createUser } from "@/services/users/user.service";
 import { NotFoundError } from "@/lib/errors/appErrors";
@@ -125,6 +127,14 @@ describe("Group Service", () => {
       const groups = await searchGroupsByName("group");
       expect(groups).toHaveLength(2); // Both contain "Group"
     });
+
+    it("checks if group name is available", async () => {
+      const available = await isGroupNameAvailable("New Unique Group");
+      expect(available).toBe(true);
+
+      const taken = await isGroupNameAvailable("Test Group");
+      expect(taken).toBe(false);
+    });
   });
 
   describe("Group Statistics", () => {
@@ -139,6 +149,15 @@ describe("Group Service", () => {
 
       const oldGenCount = await countGroupsByType(false);
       expect(oldGenCount).toBe(1);
+    });
+
+    it("counts groups by owner", async () => {
+      const ownerCount = await countGroupsByOwner(testUser.user_id);
+      expect(ownerCount).toBe(2);
+
+      // Test with non-existent owner
+      const noGroupsOwner = await countGroupsByOwner(999);
+      expect(noGroupsOwner).toBe(0);
     });
 
     it("checks if group exists", async () => {

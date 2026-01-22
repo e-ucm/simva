@@ -5,6 +5,16 @@ import {
   getGroupPermissionsByGroup,
   getGroupPermissionsByUser,
   getGroupPermissionsByType,
+  getGroupPermissions,
+  getUserPermissions,
+  getPermission,
+  hasPermission,
+  grantPermission,
+  revokePermission,
+  revokeAllUserPermissionsInGroup,
+  revokeAllGroupPermissions,
+  getUsersWithPermission,
+  getGroupPermissionTypes,
   checkUserGroupPermission,
   createGroupPermission,
   updateGroupPermission,
@@ -122,6 +132,27 @@ describe("GroupPermissions Service", () => {
       expect(writePermissions).toHaveLength(1);
       expect(writePermissions[0].permission).toBe("write");
     });
+
+    it("fetches permissions using getGroupPermissions function", async () => {
+      const groupPermissions = await getGroupPermissions(testGroup.group_id);
+      expect(groupPermissions).toHaveLength(2);
+    });
+
+    it("fetches permissions using getUserPermissions function", async () => {
+      const userPermissions = await getUserPermissions(testUser.user_id);
+      expect(userPermissions).toHaveLength(2);
+    });
+
+    it("fetches specific permission using getPermission function", async () => {
+      const permission = await getPermission(testGroup.group_id, testUser.user_id, "read");
+      expect(permission).toBeDefined();
+      expect(permission.permission).toBe("read");
+    });
+
+    it("throws NotFoundError when getting non-existent permission", async () => {
+      await expect(getPermission(testGroup.group_id, testUser.user_id, "nonexistent"))
+        .rejects.toThrow(NotFoundError);
+    });
   });
 
   describe("Permission Checking", () => {
@@ -139,6 +170,14 @@ describe("GroupPermissions Service", () => {
         "admin"
       );
       expect(hasAdminPermission).toBe(false);
+    });
+
+    it("checks permission using hasPermission function", async () => {
+      const hasRead = await hasPermission(testGroup.group_id, testUser.user_id, "read");
+      expect(hasRead).toBe(true);
+
+      const hasAdmin = await hasPermission(testGroup.group_id, testUser.user_id, "admin");
+      expect(hasAdmin).toBe(false);
     });
   });
 
@@ -172,10 +211,102 @@ describe("GroupPermissions Service", () => {
       expect(types).toContain("write");
       expect(types).toHaveLength(2);
     });
+
+    it("gets users with specific permission", async () => {
+      const readUsers = await getUsersWithPermission(testGroup.group_id, "read");
+      expect(readUsers).toContain(testUser.user_id);
+      expect(readUsers).toHaveLength(1);
+
+      const writeUsers = await getUsersWithPermission(testGroup.group_id, "write");
+      expect(writeUsers).toContain(testUser.user_id);
+      expect(writeUsers).toHaveLength(1);
+    });
+
+    it("gets group permission types", async () => {
+      const permissionTypes = await getGroupPermissionTypes(testGroup.group_id);
+      expect(permissionTypes).toContain("read");
+      expect(permissionTypes).toContain("write");
+      expect(permissionTypes).toHaveLength(2);
+    });
+  });
+
+  describe("Permission Management", () => {
+    let secondUser: any;
+
+    beforeAll(async () => {
+      // Create a second user for permission management tests
+      secondUser = await createUser({
+        user_id: 2,
+        username: "permission_user_2",
+        email: "user2@example.com",
+        isToken: false,
+        token: null,
+        role: "teacher"
+      });
+    });
+
+    it("grants permission to user", async () => {
+      const permission = await grantPermission(testGroup.group_id, secondUser.user_id, "admin");
+      expect(permission).toBeDefined();
+      expect(permission.group_id).toBe(testGroup.group_id);
+      expect(permission.user_id).toBe(secondUser.user_id);
+      expect(permission.permission).toBe("admin");
+
+      // Verify the permission exists
+      const hasAdmin = await hasPermission(testGroup.group_id, secondUser.user_id, "admin");
+      expect(hasAdmin).toBe(true);
+    });
+
+    it("revokes specific permission from user", async () => {
+      await revokePermission(testGroup.group_id, secondUser.user_id, "admin");
+
+      // Verify the permission is removed
+      const hasAdmin = await hasPermission(testGroup.group_id, secondUser.user_id, "admin");
+      expect(hasAdmin).toBe(false);
+    });
+
+    it("throws NotFoundError when revoking non-existent permission", async () => {
+      await expect(revokePermission(testGroup.group_id, secondUser.user_id, "nonexistent"))
+        .rejects.toThrow(NotFoundError);
+    });
+
+    it("revokes all user permissions in group", async () => {
+      // Grant multiple permissions first
+      await grantPermission(testGroup.group_id, secondUser.user_id, "admin");
+      await grantPermission(testGroup.group_id, secondUser.user_id, "read");
+
+      const revokedCount = await revokeAllUserPermissionsInGroup(testGroup.group_id, secondUser.user_id);
+      expect(revokedCount).toBeGreaterThanOrEqual(2);
+
+      // Verify permissions are removed
+      const hasAdmin = await hasPermission(testGroup.group_id, secondUser.user_id, "admin");
+      const hasRead = await hasPermission(testGroup.group_id, secondUser.user_id, "read");
+      expect(hasAdmin).toBe(false);
+      expect(hasRead).toBe(false);
+    });
+
+    it("revokes all group permissions", async () => {
+      // Grant some permissions first
+      await grantPermission(testGroup.group_id, secondUser.user_id, "admin");
+
+      const revokedCount = await revokeAllGroupPermissions(testGroup.group_id);
+      expect(revokedCount).toBeGreaterThanOrEqual(1);
+
+      // Verify all permissions for the group are removed
+      const groupPermissions = await getGroupPermissions(testGroup.group_id);
+      expect(groupPermissions).toHaveLength(0);
+    });
   });
 
   describe("GroupPermission Update", () => {
     it("updates group permission successfully", async () => {
+      // First create a permission to update
+      await createGroupPermission({
+        group_id: testGroup.group_id,
+        user_id: testUser.user_id,
+        permission: "read"
+      });
+
       const updatedPermission = await updateGroupPermission(
         testGroup.group_id,
         testUser.user_id,
@@ -193,7 +324,15 @@ describe("GroupPermissions Service", () => {
 
   describe("GroupPermission Deletion", () => {
     it("deletes group permission successfully", async () => {
-      await deleteGroupPermission(testGroup.group_id, testUser.user_id);
+      // Create a permission to delete
+      await createGroupPermission({
+        group_id: testGroup.group_id,
+        user_id: testUser.user_id,
+        permission: "read"
+      });
+
+      const deletedCount = await deleteGroupPermission(testGroup.group_id, testUser.user_id);
+      expect(deletedCount).toBeGreaterThanOrEqual(1);
       
       // Verify permission is deleted
       await expect(getGroupPermissionById(testGroup.group_id, testUser.user_id)).rejects.toThrow(NotFoundError);

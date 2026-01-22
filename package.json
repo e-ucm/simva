@@ -10,9 +10,9 @@
     "update:openapi": "node dist/updateOpenAPI.js",
     "update:docs": "node dist/updateQueryDocs.js",
     "rebuild-sqlite": "npm rebuild sqlite3",
-    "test": "npm run rebuild-sqlite && NODE_ENV=test jest --verbose --runInBand",
-    "test:watch": "npm run rebuild-sqlite && NODE_ENV=test jest --watchAll --verbose --runInBand",
-    "test:coverage": "npm run rebuild-sqlite && NODE_ENV=test jest --coverage --verbose --runInBand"
+    "test": "npm run rebuild-sqlite && NODE_ENV=test jest --verbose",
+    "test:watch": "npm run rebuild-sqlite && NODE_ENV=test jest --watchAll --verbose",
+    "test:coverage": "npm run rebuild-sqlite && NODE_ENV=test jest --coverage --verbose"
   },
   "dependencies": {
     "@types/express": "^5.0.6",

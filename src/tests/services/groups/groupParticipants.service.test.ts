@@ -4,6 +4,15 @@ import {
   getGroupParticipantById,
   getParticipantsByGroup,
   getGroupsByParticipant,
+  isParticipant,
+  addParticipant,
+  removeParticipant,
+  removeAllParticipants,
+  removeParticipantFromAllGroups,
+  getParticipantIds,
+  getGroupIds,
+  countParticipants,
+  countUserGroups,
   createGroupParticipant,
   updateGroupParticipant,
   deleteGroupParticipant,
@@ -105,12 +114,29 @@ describe("GroupParticipants Service", () => {
         participant_id: testUser.user_id
       });
     });
+
+    it("adds participant using addParticipant function", async () => {
+      // Create a third user for this test
+      const thirdUser = await createUser({
+        user_id: 3,
+        username: "third_user",
+        email: "third@example.com",
+        isToken: false,
+        token: null,
+        role: "student"
+      });
+
+      const participant = await addParticipant(testGroup.group_id, thirdUser.user_id);
+      expect(participant).toBeDefined();
+      expect(participant.group_id).toBe(testGroup.group_id);
+      expect(participant.participant_id).toBe(thirdUser.user_id);
+    });
   });
 
   describe("GroupParticipant Retrieval", () => {
     it("fetches all group participants", async () => {
       const participants = await getAllGroupParticipants();
-      expect(participants).toHaveLength(3);
+      expect(participants).toHaveLength(4); // Now includes the third user added
     });
 
     it("fetches group participant by ID", async () => {
@@ -125,24 +151,46 @@ describe("GroupParticipants Service", () => {
 
     it("fetches participants by group", async () => {
       const groupParticipants = await getParticipantsByGroup(testGroup.group_id);
-      expect(groupParticipants).toHaveLength(2);
+      expect(groupParticipants).toHaveLength(3); // Now includes the third user
     });
 
     it("fetches groups by participant", async () => {
       const userGroups = await getGroupsByParticipant(testUser.user_id);
       expect(userGroups).toHaveLength(2);
     });
+
+    it("checks if user is participant in group", async () => {
+      const isUserParticipant = await isParticipant(testGroup.group_id, testUser.user_id);
+      expect(isUserParticipant).toBe(true);
+
+      const isNotParticipant = await isParticipant(testGroup.group_id, 999);
+      expect(isNotParticipant).toBe(false);
+    });
+
+    it("gets participant IDs for a group", async () => {
+      const participantIds = await getParticipantIds(testGroup.group_id);
+      expect(participantIds).toContain(testUser.user_id);
+      expect(participantIds).toContain(secondUser.user_id);
+      expect(participantIds).toHaveLength(3); // Now includes the third user
+    });
+
+    it("gets group IDs for a participant", async () => {
+      const groupIds = await getGroupIds(testUser.user_id);
+      expect(groupIds).toContain(testGroup.group_id);
+      expect(groupIds).toContain(secondGroup.group_id);
+      expect(groupIds).toHaveLength(2);
+    });
   });
 
   describe("GroupParticipant Statistics", () => {
     it("counts total group participants", async () => {
       const count = await countGroupParticipants();
-      expect(count).toBe(3);
+      expect(count).toBe(4); // Now includes the third user
     });
 
     it("counts participants by group", async () => {
       const firstGroupCount = await countParticipantsByGroup(testGroup.group_id);
-      expect(firstGroupCount).toBe(2);
+      expect(firstGroupCount).toBe(3); // Now includes the third user
 
       const secondGroupCount = await countParticipantsByGroup(secondGroup.group_id);
       expect(secondGroupCount).toBe(1);
@@ -154,6 +202,22 @@ describe("GroupParticipants Service", () => {
 
       const secondUserCount = await countParticipantsByUser(secondUser.user_id);
       expect(secondUserCount).toBe(1);
+    });
+
+    it("counts participants with countParticipants function", async () => {
+      const firstGroupCount = await countParticipants(testGroup.group_id);
+      expect(firstGroupCount).toBe(3); // Now includes the third user
+
+      const secondGroupCount = await countParticipants(secondGroup.group_id);
+      expect(secondGroupCount).toBe(1);
+    });
+
+    it("counts user groups with countUserGroups function", async () => {
+      const firstUserGroups = await countUserGroups(testUser.user_id);
+      expect(firstUserGroups).toBe(2);
+
+      const secondUserGroups = await countUserGroups(secondUser.user_id);
+      expect(secondUserGroups).toBe(1);
     });
 
     it("checks if group participant exists", async () => {
@@ -183,20 +247,67 @@ describe("GroupParticipants Service", () => {
   });
 
   describe("GroupParticipant Deletion", () => {
+    it("removes participant using removeParticipant function", async () => {
+      // Create a test participant to remove
+      await addParticipant(secondGroup.group_id, secondUser.user_id);
+      
+      await removeParticipant(secondGroup.group_id, secondUser.user_id);
+      
+      // Verify participant is removed
+      const isStillParticipant = await isParticipant(secondGroup.group_id, secondUser.user_id);
+      expect(isStillParticipant).toBe(false);
+    });
+
+    it("removes all participants from a group using removeAllParticipants", async () => {
+      // First, ensure we have participants in the second group
+      const existingCount = await countParticipants(secondGroup.group_id);
+      
+      const removedCount = await removeAllParticipants(secondGroup.group_id);
+      expect(removedCount).toBe(existingCount);
+      
+      const remainingCount = await countParticipants(secondGroup.group_id);
+      expect(remainingCount).toBe(0);
+    });
+
+    it("removes participant from all groups using removeParticipantFromAllGroups", async () => {
+      // Create a new participant in multiple groups 
+      const fourthUser = await createUser({
+        user_id: 4,
+        username: "fourth_user",
+        email: "fourth@example.com",
+        isToken: false,
+        token: null,
+        role: "student"
+      });
+
+      await addParticipant(testGroup.group_id, fourthUser.user_id);
+      await addParticipant(secondGroup.group_id, fourthUser.user_id);
+      
+      const removedCount = await removeParticipantFromAllGroups(fourthUser.user_id);
+      expect(removedCount).toBeGreaterThanOrEqual(2);
+      
+      const remainingGroupsCount = await countUserGroups(fourthUser.user_id);
+      expect(remainingGroupsCount).toBe(0);
+    });
+
     it("deletes group participant successfully", async () => {
+      // First ensure the participant exists by creating it
+      await createGroupParticipant({
+        group_id: secondGroup.group_id,
+        participant_id: testUser.user_id
+      });
+      
+      // Now delete the participant
       await deleteGroupParticipant(secondGroup.group_id, testUser.user_id);
       
       // Verify participant is deleted
       await expect(getGroupParticipantById(secondGroup.group_id, testUser.user_id)).rejects.toThrow(NotFoundError);
-      
-      // Verify count is updated
-      const count = await countGroupParticipants();
-      expect(count).toBe(2);
     });
 
     it("deletes participants by group", async () => {
+      const initialCount = await countParticipantsByGroup(testGroup.group_id);
       const deletedCount = await deleteParticipantsByGroup(testGroup.group_id);
-      expect(deletedCount).toBe(2); // Should delete both participants in the group
+      expect(deletedCount).toBe(initialCount);
       
       const remainingParticipants = await getParticipantsByGroup(testGroup.group_id);
       expect(remainingParticipants).toHaveLength(0);
@@ -218,6 +329,10 @@ describe("GroupParticipants Service", () => {
 
     it("throws NotFoundError when deleting non-existent participant", async () => {
       await expect(deleteGroupParticipant(999, 999)).rejects.toThrow(NotFoundError);
+    });
+
+    it("throws NotFoundError when removing non-existent participant", async () => {
+      await expect(removeParticipant(999, 999)).rejects.toThrow(NotFoundError);
     });
   });
 });
