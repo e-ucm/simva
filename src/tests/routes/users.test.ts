@@ -10,6 +10,7 @@ jest.mock('@/middlewares/auth.middleware', () => ({
     // Mock user for tests
     req.user = {
       data: {
+        user_id: 1,
         username: 'testuser',
         role: 'admin'
       }
@@ -178,6 +179,132 @@ describe('User Controller Routes', () => {
       const res = await request(app).delete('/users/1');
       
       expect(res.status).toBe(500);
+    });
+  });
+
+  describe('PATCH /users/:username', () => {
+    it('updates user successfully', async () => {
+      const mockUser = { 
+        user_id: 1, 
+        username: 'alice', 
+        email: 'alice@example.com', 
+        role: 'student' 
+      };
+      
+      const updateData = { role: 'teacher' };
+      
+      const updatedUser = { 
+        ...mockUser, 
+        role: 'teacher',
+        updatedAt: new Date().toISOString()
+      };
+      
+      mockedUserService.getUserByUsername.mockResolvedValue(mockUser as any);
+      mockedUserService.updateUserById.mockResolvedValue(updatedUser as any);
+      
+      const res = await request(app)
+        .patch('/users/alice')
+        .send(updateData);
+      
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(updatedUser);
+      expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('alice');
+      expect(mockedUserService.updateUserById).toHaveBeenCalledWith(1, updateData);
+    });
+
+    it('returns 404 when updating non-existent user', async () => {
+      const updateData = { role: 'teacher' };
+      
+      mockedUserService.getUserByUsername.mockResolvedValue(null as any);
+      
+      const res = await request(app)
+        .patch('/users/nonexistent')
+        .send(updateData);
+      
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('message');
+      expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('nonexistent');
+      expect(mockedUserService.updateUserById).not.toHaveBeenCalled();
+    });
+
+    it('handles database errors during update', async () => {
+      const mockUser = { 
+        user_id: 1, 
+        username: 'alice', 
+        email: 'alice@example.com', 
+        role: 'student' 
+      };
+      
+      const updateData = { role: 'teacher' };
+      
+      mockedUserService.getUserByUsername.mockResolvedValue(mockUser as any);
+      mockedUserService.updateUserById.mockRejectedValue(new Error('Database error'));
+      
+      const res = await request(app)
+        .patch('/users/alice')
+        .send(updateData);
+      
+      expect(res.status).toBe(500);
+      expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('alice');
+      expect(mockedUserService.updateUserById).toHaveBeenCalledWith(1, updateData);
+    });
+
+    it('handles validation errors during update', async () => {
+      const mockUser = { 
+        user_id: 1, 
+        username: 'alice', 
+        email: 'alice@example.com', 
+        role: 'student' 
+      };
+      
+      const invalidUpdateData = { email: 'invalid-email' };
+      
+      mockedUserService.getUserByUsername.mockResolvedValue(mockUser as any);
+      mockedUserService.updateUserById.mockRejectedValue(new Error('Validation failed'));
+      
+      const res = await request(app)
+        .patch('/users/alice')
+        .send(invalidUpdateData);
+      
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('GET /users/me', () => {
+    it('returns current authenticated user', async () => {
+      const mockUser = { 
+        user_id: 1, 
+        username: 'testuser', 
+        email: 'testuser@example.com', 
+        role: 'admin' 
+      };
+      
+      mockedUserService.getUserById.mockResolvedValue(mockUser as any);
+      
+      const res = await request(app).get('/users/me');
+      
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(mockUser);
+      expect(mockedUserService.getUserById).toHaveBeenCalledWith(1); // user_id from mocked auth
+    });
+
+    it('returns 404 when authenticated user not found in database', async () => {
+      mockedUserService.getUserById.mockRejectedValue(new NotFoundError('User not found'));
+      
+      const res = await request(app).get('/users/me');
+      
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('message');
+      expect(mockedUserService.getUserById).toHaveBeenCalledWith(1);
+    });
+
+    it('handles database errors when fetching current user', async () => {
+      mockedUserService.getUserById.mockRejectedValue(new Error('Database error'));
+      
+      const res = await request(app).get('/users/me');
+      
+      expect(res.status).toBe(500);
+      expect(mockedUserService.getUserById).toHaveBeenCalledWith(1);
     });
   });
 });
