@@ -1,3 +1,21 @@
+/**
+ * @fileoverview Centralized logging configuration for SIMVA API.
+ * Provides structured logging with file output, console formatting, and error handling.
+ * 
+ * Features:
+ * - File-based logging with timestamped files
+ * - Console pretty-printing for development
+ * - Sensitive data redaction
+ * - Global error handlers for uncaught exceptions
+ * - Configurable log levels and output directories
+ * 
+ * @module logger
+ * @requires pino
+ * @requires fs
+ * @requires path
+ * @requires @/lib/config
+ */
+
 import pino from 'pino';
 import fs from 'fs';
 import path from 'path';

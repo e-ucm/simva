@@ -1,5 +1,36 @@
+/**
+ * @fileoverview Query documentation generator for SIMVA API.
+ * Automatically generates Markdown documentation from database view query definitions.
+ * 
+ * This module:
+ * - Parses view query definitions from the views index
+ * - Generates formatted Markdown documentation
+ * - Creates parameter tables with types and descriptions
+ * - Formats SQL queries with syntax highlighting
+ * - Provides comprehensive API documentation for database views
+ * 
+ * @module generateQueryDocs
+ * @requires ./views/index
+ */
+
 import views from "./views/index";
 
+/**
+ * Formats parameter types for documentation display.
+ * Handles array types with element type specification.
+ * 
+ * @function formatType
+ * @param {Object} param - Parameter definition object
+ * @param {string} param.type - The parameter type (string, number, boolean, array)
+ * @param {string} [param.of] - Element type for arrays
+ * @returns {string} Formatted type string for documentation
+ * 
+ * @example
+ * ```typescript
+ * formatType({ type: "array", of: "string" }); // returns "array<string>"
+ * formatType({ type: "number" }); // returns "number"
+ * ```
+ */
 function formatType(param: { type: string; of?: string }): string {
   if (param.type === "array") {
     return `array<${param.of}>`;
@@ -7,6 +38,31 @@ function formatType(param: { type: string; of?: string }): string {
   return param.type;
 }
 
+/**
+ * Generates comprehensive Markdown documentation for all database view queries.
+ * Iterates through all views and queries to create formatted documentation.
+ * 
+ * @function generateDocs
+ * @returns {string} Complete Markdown documentation string
+ * 
+ * Generated documentation includes:
+ * - View organization with hierarchical headers
+ * - Query descriptions and purposes
+ * - Formatted SQL code blocks
+ * - Parameter tables with types, requirements, and examples
+ * - Cross-references between related queries
+ * 
+ * @example
+ * ```typescript
+ * import generateDocs from '@/lib/generateQueryDocs';
+ * 
+ * const docs = generateDocs();
+ * console.log(docs); // Complete Markdown documentation
+ * 
+ * // Write to file
+ * fs.writeFileSync('QUERY_DOCS.md', docs);
+ * ```
+ */
 function generateDocs(): string {
   let md = "# Database View Queries\n\n";
 
@@ -43,4 +99,10 @@ function generateDocs(): string {
   return md;
 }
 
+/**
+ * Default export of the documentation generator function.
+ * 
+ * @function default
+ * @see generateDocs
+ */
 export default generateDocs;

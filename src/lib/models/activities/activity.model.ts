@@ -1,5 +1,32 @@
+/**
+ * @fileoverview Activity model for SIMVA API.
+ * Represents learning activities within sessions that can be of various types.
+ * 
+ * @module models/activities/activity
+ */
+
 import { Sequelize, Model } from "sequelize";
 
+/**
+ * Activity model representing learning activities in SIMVA sessions.
+ * Activities are the core learning components that users interact with.
+ * 
+ * @class Activity
+ * @extends Model
+ * 
+ * @property {number} session_id - Foreign key to the session containing this activity
+ * @property {number} activity_id - Primary key identifier for the activity
+ * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
+ * @property {string} name - Display name of the activity
+ * @property {string} activity_type - Type of activity (default, manual, limesurvey, gameplay, lti_tool)
+ * @property {string|null} presignedUrl - Pre-signed URL for activity resources
+ * @property {Date|null} generated_at - Timestamp when the activity was generated
+ * @property {number|null} expire_on_seconds - Expiration time in seconds
+ * @property {boolean} trace_storage - Whether to store user interaction traces
+ * @property {string} description - Detailed description of the activity
+ * @property {Date} createdAt - Timestamp when the activity was created
+ * @property {Date} updatedAt - Timestamp when the activity was last updated
+ */
 export class Activity extends Model {
   declare session_id: number;
   declare activity_id: number;
@@ -15,6 +42,26 @@ export class Activity extends Model {
   declare updatedAt: Date;
 }
 
+/**
+ * Factory function to initialize the Activity model with Sequelize.
+ * Defines the database schema, constraints, and relationships for activities.
+ * 
+ * @function ActivityFactory
+ * @param {Sequelize} sequelize - The Sequelize instance
+ * @param {typeof import("sequelize").DataTypes} DataTypes - Sequelize data types
+ * @returns {typeof Activity} The initialized Activity model
+ * 
+ * @example
+ * ```typescript
+ * const Activity = ActivityFactory(sequelize, DataTypes);
+ * const activity = await Activity.create({
+ *   session_id: 1,
+ *   name: 'Quiz 1',
+ *   activity_type: 'manual',
+ *   description: 'Introduction quiz'
+ * });
+ * ```
+ */
 export function ActivityFactory(
   sequelize: Sequelize,
   DataTypes: typeof import("sequelize").DataTypes
