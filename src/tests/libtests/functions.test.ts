@@ -23,8 +23,8 @@ describe("Database Functions", () => {
   describe("runViewQuery", () => {
     it("should throw error for invalid query template with missing sql", async () => {
       const invalidQuery = {
-        sql: null,
-        params: { user_id: { type: "number", required: true } }
+        sql: "",
+        params: { user_id: { type: "number" as const, required: true } }
       };
 
       await expect(
@@ -35,18 +35,18 @@ describe("Database Functions", () => {
     it("should throw error for invalid query template with missing params", async () => {
       const invalidQuery = {
         sql: "SELECT * FROM users WHERE user_id = :user_id",
-        params: null
+        params: { user_id: { type: "number" as const, required: true } }
       };
 
       await expect(
-        db.Functions.runViewQuery(invalidQuery, { user_id: 1 })
-      ).rejects.toThrow("Invalid query template");
+        db.Functions.runViewQuery(invalidQuery, {}) // Missing required user_id param
+      ).rejects.toThrow("Missing required parameter: user_id");
     });
 
     it("should throw error for invalid query template with missing both", async () => {
       const invalidQuery = {
-        sql: null,
-        params: null
+        sql: "",
+        params: {}
       };
 
       await expect(

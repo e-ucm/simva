@@ -6,12 +6,16 @@
  * @property {boolean} [required] - Whether the parameter is required
  * @property {string} [default] - Default value if not provided
  * @property {string} [of] - Element type for array parameters
+ * @property {string} [description] - Description of the parameter
+ * @property {string} [example] - Example value for the parameter
  */
-interface ValidationRule {
+export interface ValidationRule {
     type: "string" | "number" | "boolean" | "array";
     required?: boolean;
     default?: string;
     of?: string;
+    description?: string;
+    example?: string;
 }
 
 /**
@@ -19,7 +23,7 @@ interface ValidationRule {
  * 
  * @typedef {Object} Schema
  */
-interface Schema {
+export interface Schema {
     [key: string]: ValidationRule;
 }
 

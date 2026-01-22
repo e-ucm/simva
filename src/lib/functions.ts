@@ -13,7 +13,7 @@
  * @requires sequelize
  */
 
-import validateParams, { ParamSchema } from "./validateParams";
+import { validateParams, Schema } from "./validateParams";
 import { Sequelize, QueryTypes } from "sequelize";
 
 /**
@@ -23,12 +23,12 @@ import { Sequelize, QueryTypes } from "sequelize";
  * @interface QueryTemplate
  * @property {string} [description] - Human-readable description of the query
  * @property {string} sql - SQL query string with named parameters (e.g., :param_name)
- * @property {ParamSchema} params - Parameter validation schema
+ * @property {Schema} params - Parameter validation schema
  */
 export interface QueryTemplate {
   description?: string;
   sql: string;
-  params: ParamSchema;
+  params: Schema;
 }
 
 /**
