@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.3",
     "keycloak-public-key": "^1.0.2",
     "pino": "^10.1.0",
+    "pino-pretty": "^10.1.0",
     "sequelize": "^6.35.0",
     "sqlite3": "^5.1.7",
     "uuid": "^13.0.0",
