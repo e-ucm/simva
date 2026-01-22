@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as userService from "@/services/users/user.service";
-import { NotFoundError } from "@/lib/errors/appErrors";
+import { NotFoundError, AuthentificationError } from "@/lib/errors/appErrors";
+import { logger } from "@/lib/logger";
 
 /**
  * Retrieves users from the database.
@@ -93,6 +94,81 @@ export async function deleteUserById(
   try {
     await userService.deleteUserById(Number(req.params.id));
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Updates/modifies a user by username.
+ * Used for updating user properties like role, email, etc.
+ * 
+ * @async
+ * @param {Request} req - Express request object containing username in URL params and update data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes validation or database errors to next middleware
+ * 
+ * @example
+ * // PATCH /users/john
+ * // Body: { role: "teacher" }
+ * // Returns: updated user object
+ */
+export async function patchUser(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const username = String(req.params.username);
+    const user = await userService.getUserByUsername(username);
+    
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+    
+    const updatedUser = await userService.updateUserById(user.user_id, req.body);
+    res.json(updatedUser);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Gets the current authenticated user's information.
+ * Based on the authentication token provided in headers.
+ * 
+ * @async
+ * @param {Request} req - Express request object with authentication headers
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes authentication or database errors to next middleware
+ * 
+ * @example
+ * // GET /users/me
+ * // Headers: { Authorization: "Bearer <token>" }
+ * // Returns: current user object
+ */
+export async function getMe(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    // Extract user information from authenticated request
+    // Assuming authentication middleware sets req.user.data
+    const userId = (req as any).user?.data?.user_id;
+    
+    if (!userId) {
+      throw new AuthentificationError("User not authenticated");
+    }
+    
+    const user = await userService.getUserById(userId);
+    logger.info(`getMe: Retrieved user with ID ${userId}`);
+    
+    res.json(user);
   } catch (err) {
     next(err);
   }
