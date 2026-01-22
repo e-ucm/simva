@@ -25,6 +25,15 @@ tags:
   - name: lrsmanagers
     description: Operations available to users that manage lrs
 paths:
+  /health:
+    get:
+      summary: health check endpoint
+      operationId: getHealth
+      description: |
+        Simple health check endpoint to verify that the API is running
+      responses:
+        '200':
+          description: Service is healthy
   /events:
     get:
       summary: send Server Side Events to Client
