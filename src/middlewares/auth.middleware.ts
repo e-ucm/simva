@@ -22,16 +22,20 @@ import { logger } from '@/lib/logger';
 import fs from 'fs';
 import yaml from 'yaml';
 import jwt from 'jsonwebtoken';
-import { getUserByUsername, validateJWT } from '@/services/users/user.service';
+import { getOrCreateUserByUsername, validateJWT } from '@/services/users/user.service';
+import { AuthentificationError, NotFoundError } from '@/lib/errors/appErrors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from '@/lib/config';
+import { db } from '@/lib/db';
 
 /**
  * Interface for JWT payload structure used throughout SIMVA.
  * Supports both internal and Keycloak token formats.
  */
 interface JWTPayload {
+  sql: Partial<InstanceType<typeof db.Tables.User>>,
+  jwt: string,
   data: {
     username: string;
     role?: string;
@@ -213,27 +217,6 @@ export class Authenticator {
   }
 
   /**
-   * Validate JWT token using the enhanced user service validation.
-   * Delegates to user service for comprehensive token validation.
-   * 
-   * @private
-   * @static
-   * @method validateJWT
-   * @param {string} token - JWT token to validate
-   * @returns {Promise<JWTPayload>} Validated and decoded token payload
-   * @throws {Error} If token validation fails
-   * 
-   * @example
-   * ```typescript
-   * const payload = await validateJWT('eyJ0eXAiOiJKV1QiLCJ...');
-   * console.log(payload.data.username);
-   * ```
-   */
-  private static async validateJWT(token: string): Promise<JWTPayload> {
-    return validateJWT(token);
-  }
-
-  /**
    * Main authentication middleware function.
    * Validates JWT tokens and enforces role-based access control.
    * 
@@ -255,49 +238,88 @@ export class Authenticator {
     if (!this.initialized) {
       this.initPaths();
     }
+    
+    // Skip authentication for public endpoints
+    const publicEndpoints = [
+      '/health'
+    ];
+    
+    const requestPath = req.path;
+    const isPublicEndpoint = publicEndpoints.some(endpoint => requestPath === endpoint || requestPath.startsWith(endpoint));
+    
+    if (isPublicEndpoint) {
+      logger.debug(`[AUTH] Public endpoint ${req.method} ${req.path} - skipping authentication`);
+      return next();
+    }
+    
+    logger.debug(`[AUTH] Starting authentication for ${req.method} ${req.path}`);
+    logger.debug('[AUTH] Request details Headers:');
+    logger.debug(req.headers);
+    logger.debug('[AUTH] Query parameters:');
+    logger.debug(req.query);
     let token: string | undefined = typeof req.headers.authorization === 'string' ? req.headers.authorization : undefined;
     if (!token && req.query && typeof (req.query as any).token === 'string' && (req.query as any).token) {
       token = `Bearer ${(req.query as any).token}`;
+      logger.debug('[AUTH] Token found in query parameters');
     }
     
+    logger.info(`Authenticating request for ${req.path} ${req.method}`);
+    
     if (!token) {
-      res.status(401).send({ message: 'No authorization header' });
-      return;
+      logger.debug('[AUTH] No authorization token found');
+      throw new AuthentificationError('No authorization header');
     }
 
     if (typeof token !== 'string' || token.indexOf('Bearer') !== 0) {
-      res.status(401).send({ message: 'Auth header is not a valid Bearer.' });
-      return;
+      logger.debug('[AUTH] Invalid Bearer token format');
+      throw new AuthentificationError('Auth header is not a valid Bearer.');
     }
 
     token = token.substring(7);
+    logger.debug(`[AUTH] Extracted token: ${token.substring(0, 20)}...`);
     
     try {
-      const result = await this.validateJWT(token);
+      logger.debug('[AUTH] Starting JWT validation');
+      const result = await validateJWT(token);
+      logger.debug(`[AUTH] JWT validation successful for user: ${result.data.username}`);
+      // Attach user data to result
       
-      // Get user from database
-      const users = await getUserByUsername(result.data.username);
-      if (!users) {
-        res.status(401).send({ message: 'Username not found' });
-        return;
+      
+      logger.info((req as any).user, `[AUTH] User authenticated: ${result.data.username}`);
+      //Get user from database
+      var user : Partial<InstanceType<typeof db.Tables.User>> | null = null;
+      try {
+        logger.debug(`[AUTH] Looking up user in database: ${result.data.username}`);
+          user = await getOrCreateUserByUsername({ username : result.data.username, email: result.data.email, role : Authenticator.getRoleFromRealmAccessRoles(result.data) });
+      } catch (e) {
+        logger.info({ error: e instanceof Error ? e.message : String(e) }, '[AUTH] Error fetching user from database:');
+      }
+      if(user) {
+        result.sql = user;
+        result.jwt = token;
+        req.user = result;
       }
 
-      // Attach user data to result
-      result.data = { ...result.data, ...users.toJSON() };
-      
-      req.user = result;
       // Decode JWT defensively; do not block the request on decode issues
       try {
         req.jwt = jwt.decode(token, { complete: true });
+        logger.debug('[AUTH] JWT decoded successfully');
       } catch (e) {
+        logger.debug('[AUTH] JWT decode failed, continuing anyway');
         // swallow decode errors
       }
-
+      logger.debug(`[AUTH] Authentication successful for user: ${result.data.username}`);
       // After successful authentication and user resolution, proceed
       return next();
     } catch (error) {
-      res.status(401).send({ message: 'JWT token is not valid.', error: error });
-      return;
+      logger.error({
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+        path: req.path,
+        method: req.method
+      }, '[AUTH] Authentication failed');
+      logger.debug(`[AUTH] JWT validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new AuthentificationError('JWT token is not valid.');
     }
   };
 
@@ -320,13 +342,17 @@ export class Authenticator {
   static roleAllowed = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     const method = req.method.toLowerCase();
     const url = req.originalUrl.split('?')[0];
+    
+    logger.debug(`[ROLE] Checking authorization for ${method.toUpperCase()} ${url}`);
 
     // Allow health endpoints for any role
     if (url.startsWith('/health')) {
+      logger.debug('[ROLE] Health endpoint access allowed');
       return next();
     }
     
     if (!req.user?.data) {
+      logger.debug('[ROLE] No user data found in request');
       res.status(401).send({ message: 'No user data found' });
       return;
     }
@@ -335,24 +361,24 @@ export class Authenticator {
     let userRole = req.user.data.role;
     if (!userRole && req.user.data.realm_access) {
       userRole = this.getRoleFromRealmAccessRoles(req.user.data);
+      logger.debug(`[ROLE] Derived role from realm access: ${userRole}`);
     }
+    
+    logger.debug(`[ROLE] User: ${req.user.data.username}, Role: ${userRole}`);
 
     if (!userRole) {
+      logger.debug('[ROLE] No role found for user');
       res.status(401).send({ message: 'No role found for user' });
       return;
     }
 
-    // Pragmatic fallback for tests: allow common admin/teacher GET access to /users
-    if ((userRole === 'admin' || userRole === 'teacher') && method === 'get' && this.compareRoutes('/users', url)) {
-      return next();
-    }
-
     // Check if role has any allowed routes for this method
     if (!this.allowedRoutes[userRole] || !this.allowedRoutes[userRole][method]) {
+      logger.debug(`[ROLE] No routes found for role ${userRole} and method ${method}`);
       // Also check wildcard routes
       if (!this.allowedRoutes['*'] || !this.allowedRoutes['*'][method]) {
-        res.status(404).send({ message: 'The route you are trying to access does not exist.' });
-        return;
+        logger.debug('[ROLE] No wildcard routes found either');
+        throw new NotFoundError('The route you are trying to access does not exist.');
       }
     }
 
@@ -366,18 +392,18 @@ export class Authenticator {
     if (this.allowedRoutes['*']?.[method]) {
       allowedList = allowedList.concat(this.allowedRoutes['*'][method]);
     }
+    
+    logger.debug(`[ROLE] Checking against ${allowedList.length} allowed routes`);
 
     for (let i = 0; i < allowedList.length; i++) {
       if (this.compareRoutes(allowedList[i], url)) {
-        logger.debug('Access allowed');
+        logger.debug(`[ROLE] Access allowed - matched route: ${allowedList[i]}`);
         return next();
       }
     }
 
-    // No additional fallback here
-
-    res.status(401).send({ message: 'You are not authorized to access this route.' });
-    return;
+    logger.debug(`[ROLE] Access denied - no matching route found for ${url}`);
+    throw new AuthentificationError('You are not authorized to access this route.');
   };
 
   /**
@@ -406,7 +432,7 @@ export class Authenticator {
 
     try {
       const tokenString = token.substring(7);
-      const result = await this.validateJWT(tokenString);
+      const result = await validateJWT(tokenString);
       
       const users = await getUserByUsername(result.data.username);
       if (users) {

@@ -88,16 +88,12 @@ const options = {
   }
 };
 
-//if(process.env.NODE_ENV !== 'production') {
-if (process.env.NODE_ENV !== 'test') {
-  options.transport.targets.push(
-      {
-        target: 'pino-pretty',
-        options: { colorize: true, translateTime: 'yyyy-mm-dd HH:MM:ss', ignore: 'pid,hostname' }
-      }
-  );
-}
-//}
+options.transport.targets.push(
+    {
+      target: 'pino-pretty',
+      options: { colorize: true, translateTime: 'yyyy-mm-dd HH:MM:ss', ignore: 'pid,hostname' }
+    }
+);
 
 // Create logger
 const logger = pino(options);

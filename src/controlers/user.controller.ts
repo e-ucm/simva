@@ -159,7 +159,8 @@ export async function getMe(
   try {
     // Extract user information from authenticated request
     // Assuming authentication middleware sets req.user.data
-    const userId = (req as any).user?.data?.user_id;
+    logger.info((req as any).user, 'getMe: Fetching current user info');
+    const userId = (req as any).user?.sql?.user_id;
     
     if (!userId) {
       throw new AuthentificationError("User not authenticated");

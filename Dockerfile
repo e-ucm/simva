@@ -18,4 +18,6 @@ RUN npm run build
 USER node
 
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+
+# Default CMD, can be overridden by docker-compose
+CMD ["npm", "start"]

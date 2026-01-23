@@ -6,16 +6,11 @@ import { config } from "@/lib/config";
 import { KeycloakKeyManager } from "@/lib/keycloakKeyManager";
 
 /**
- * Interface for decoded JWT payload
- */
-interface DecodedJWT {
-  data: any;
-}
-
-/**
  * Interface for decoded Keycloak JWT payload
  */
 interface KeycloakJWTPayload {
+  sql: Partial<InstanceType<typeof db.Tables.User>>;
+  jwt: string;
   data: {
     iss: string;
     sub: string;
@@ -26,17 +21,6 @@ interface KeycloakJWTPayload {
       roles: string[];
     };
     [key: string]: any;
-  }
-}
-
-/**
- * Interface for simplified user object
- */
-interface SimplifiedUser {
-  data: {
-    username: string;
-    email: string;
-    role: string;
   }
 }
 
@@ -98,6 +82,17 @@ export async function getUserByUsername(username: string): Promise<InstanceType<
     throw new NotFoundError("User not found");
   }
   return result;
+}
+
+export async function getOrCreateUserByUsername(user : Partial<InstanceType<typeof db.Tables.User>>): Promise<InstanceType<typeof db.Tables.User>> {
+  try {
+    let userOptained =  await getUserByUsername(user!.username!);
+    return userOptained;
+  } catch (error : Error | any) {
+    // User not found, create new
+    let newUserData = await createUser(user);
+    return newUserData;
+  }
 }
 
 /**
@@ -265,14 +260,14 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       }
 
       // Determine username from common claims
-      const inferredUsername = decodedPayloadOnly.username || decodedPayloadOnly.preferred_username || decodedPayloadOnly.sub;
+      const inferredUsername = decodedPayloadOnly.preferred_username || decodedPayloadOnly.username || decodedPayloadOnly.sub;
       if (!inferredUsername) {
         return reject(new Error('Token missing required user identification'));
       }
 
       // Attempt verification for integrity, but do not fail if signature mismatch
       try {
-        jwt.verify(token, config.auth.jwt_secret || 'default-secret', { ignoreExpiration: true } as any);
+        jwt.verify(token, config.sso.jwt_secret || 'default-secret', { ignoreExpiration: true } as any);
       } catch (e) {
         // Ignore verification errors to support decode-only behavior when secrets differ
         logger.debug('JWT signature verification failed, proceeding with decoded payload');
@@ -280,13 +275,13 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
 
       // If issuer indicates Keycloak realm, try enhanced handling with key manager
       if (decodedPayloadOnly.iss) {
-        const keycloakRealmUrl = `${config.auth.url}/realms/${config.auth.realm}`;
+        const keycloakRealmUrl = `${config.sso.url}/realms/${config.sso.realm}`;
         if (decodedPayloadOnly.iss === keycloakRealmUrl && KeycloakKeyManager.isEnabled()) {
           const decodedWithHeader = jwt.decode(token, { complete: true }) as any;
           const header = decodedWithHeader?.header;
           if (!header?.kid) {
             // If no kid, fall back to decoded
-            const result = { data: { ...decodedPayloadOnly, username: inferredUsername } };
+            const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
             return resolve(result);
           }
           KeycloakKeyManager.checkKey(header.kid, token)
@@ -295,7 +290,7 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
               jwt.verify(token, publicKey, async (error: Error | null, verifiedPayload: any) => {
                 if (error) {
                   // Fall back to decoded payload
-                  const result = { data: { ...decodedPayloadOnly, username: inferredUsername } };
+                  const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
                   resolve(result);
                 } else {
                   try {
@@ -309,7 +304,7 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
             })
             .catch(() => {
               // Fall back to decoded payload on key issues
-              const result = { data: { ...decodedPayloadOnly, username: inferredUsername } };
+              const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
               resolve(result);
             });
           return; // prevent continuing below until async resolves
@@ -317,7 +312,8 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       }
 
       // Default: return decoded payload with normalized username
-      const result = { data: { ...decodedPayloadOnly, username: inferredUsername } };
+      const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
+      logger.debug({result});
       resolve(result);
     } catch (error) {
       logger.error({ error }, 'JWT validation error:');

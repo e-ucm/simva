@@ -18,8 +18,8 @@ export class KeycloakKeyManager {
    * Initialize the Keycloak certificates client
    */
   static initialize(): void {
-    if (!this.keyCloakCerts && config.auth.keycloak_url && config.auth.keycloak_realm) {
-      this.keyCloakCerts = new KeyCloakCerts(config.auth.keycloak_url, config.auth.keycloak_realm);
+    if (!this.keyCloakCerts && config.sso.url && config.sso.realm) {
+      this.keyCloakCerts = new KeyCloakCerts(config.sso.url, config.sso.realm);
       this.log('KeycloakKeyManager initialized');
     }
   }
@@ -147,7 +147,7 @@ export class KeycloakKeyManager {
    * @returns True if Keycloak is configured and enabled
    */
   static isEnabled(): boolean {
-    return !!(config.auth.keycloak_url && config.auth.keycloak_realm);
+    return !!(config.sso.url && config.sso.realm);
   }
 
   /**

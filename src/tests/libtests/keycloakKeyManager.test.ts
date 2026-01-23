@@ -26,9 +26,9 @@ jest.mock('@/lib/logger', () => ({
 jest.mock('@/lib/config', () => ({
   config: {
     debug: false,
-    auth: {
-      keycloak_url: 'http://localhost:8080',
-      keycloak_realm: 'test-realm'
+    sso: {
+      url: 'http://localhost:8080',
+      realm: 'test-realm'
     }
   }
 }));
@@ -51,13 +51,13 @@ describe('KeycloakKeyManager', () => {
 
     it('should detect when Keycloak is not configured', () => {
       // Temporarily modify config
-      const originalConfig = config.auth;
-      config.auth = { ...originalConfig, keycloak_url: '' };
+      const originalConfig = config.sso;
+      config.sso = { ...originalConfig, url: '' };
       
       expect(KeycloakKeyManager.isEnabled()).toBe(false);
       
       // Restore config
-      config.auth = originalConfig;
+      config.sso = originalConfig;
     });
   });
 

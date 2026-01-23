@@ -336,7 +336,7 @@ describe("User Service", () => {
         preferred_username: "test_user",
         email: "test@example.com",
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`
+        iss: `${config.sso.protocol}://${config.sso.host}:${config.sso.port}/realms/${config.sso.realm}`
       };
 
       mockedJwt.decode.mockReturnValue(mockPayload);
@@ -360,7 +360,7 @@ describe("User Service", () => {
         username: "keycloak_user",
         email: "keycloak@example.com",
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`
+        iss: `${config.sso.protocol}://${config.sso.host}:${config.sso.port}/realms/${config.sso.realm}`
       };
 
       mockedJwt.decode.mockImplementation((token, options) => {
@@ -388,7 +388,7 @@ describe("User Service", () => {
         username: "fallback_user",
         email: "fallback@example.com",
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`
+        iss: `${config.sso.url}/realms/${config.sso.realm}`
       };
 
       mockedJwt.decode.mockImplementation((token, options) => {
@@ -431,7 +431,7 @@ describe("User Service", () => {
         username: "standard_user",
         email: "standard@example.com",
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`
+        iss: `${config.sso.url}/realms/${config.sso.realm}`
       };
 
       mockedJwt.decode.mockImplementation((token, options) => {
@@ -478,7 +478,7 @@ describe("User Service", () => {
         preferred_username: "new_kc_user",
         email: "newkc@example.com",
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`,
+        iss: `${config.sso.url}/realms/${config.sso.realm}`,
         realm_access: {
           roles: ["teacher"]
         }
@@ -525,7 +525,7 @@ describe("User Service", () => {
         preferred_username: "existing_kc_user",
         email: "existing@example.com",
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`,
+        iss: `${config.sso.url}/realms/${config.sso.realm}`,
         realm_access: {
           roles: ["admin", "teacher"]
         }
@@ -564,7 +564,7 @@ describe("User Service", () => {
         username: "realm_user", 
         email: "realm@example.com",
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`,
+        iss: `${config.sso.url}/realms/${config.sso.realm}`,
         realm_access: {
           roles: ["student", "user"]
         },
@@ -606,7 +606,7 @@ describe("User Service", () => {
         username: "no_role_user",
         email: "norole@example.com", 
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`,
+        iss: `${config.sso.url}/realms/${config.sso.realm}`,
         realm_access: {
           roles: ["norole"] // This should map to 'norole' not 'student'
         }
@@ -644,7 +644,7 @@ describe("User Service", () => {
         username: "minimal_user",
         email: "minimal@example.com", // Add email to prevent database errors
         exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: `${config.auth.url}/realms/${config.auth.realm}`
+        iss: `${config.sso.url}/realms/${config.sso.realm}`
       };
 
       mockedJwt.decode.mockImplementation((token, options) => {
