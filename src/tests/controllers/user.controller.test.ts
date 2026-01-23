@@ -6,8 +6,12 @@ import * as userService from '@/services/users/user.service';
 // Extend Request type to include user property
 interface AuthenticatedRequest extends Request {
   user?: {
-    data?: {
+    sql?: {
       user_id?: number;
+      username?: string;
+      role?: string;
+    };
+    data?: {
       username?: string;
       role?: string;
     };
@@ -46,8 +50,12 @@ describe('User Controller Unit Tests', () => {
       };
 
       mockReq.user = {
-        data: {
+        sql: {
           user_id: 1,
+          username: 'testuser',
+          role: 'admin'
+        },
+        data: {
           username: 'testuser',
           role: 'admin'
         }
@@ -64,10 +72,14 @@ describe('User Controller Unit Tests', () => {
 
     it('throws AuthentificationError when user_id is missing from auth data', async () => {
       mockReq.user = {
-        data: {
+        sql: {
           username: 'testuser',
           role: 'admin'
           // Missing user_id
+        },
+        data: {
+          username: 'testuser',
+          role: 'admin'
         }
       };
 
@@ -82,8 +94,12 @@ describe('User Controller Unit Tests', () => {
 
     it('throws AuthentificationError when user_id is null', async () => {
       mockReq.user = {
-        data: {
+        sql: {
           user_id: null,
+          username: 'testuser',
+          role: 'admin'
+        },
+        data: {
           username: 'testuser',
           role: 'admin'
         }
@@ -99,8 +115,12 @@ describe('User Controller Unit Tests', () => {
 
     it('throws AuthentificationError when user_id is undefined', async () => {
       mockReq.user = {
-        data: {
+        sql: {
           user_id: undefined,
+          username: 'testuser',
+          role: 'admin'
+        },
+        data: {
           username: 'testuser',
           role: 'admin'
         }
@@ -124,9 +144,13 @@ describe('User Controller Unit Tests', () => {
       expect(mockedUserService.getUserById).not.toHaveBeenCalled();
     });
 
-    it('throws AuthentificationError when user.data is missing', async () => {
+    it('throws AuthentificationError when user.sql is missing', async () => {
       mockReq.user = {
-        // Missing data property
+        data: {
+          username: 'testuser',
+          role: 'admin'
+        }
+        // Missing sql property
       };
 
       await getMe(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
@@ -140,8 +164,12 @@ describe('User Controller Unit Tests', () => {
       const serviceError = new Error('Database connection failed');
       
       mockReq.user = {
-        data: {
+        sql: {
           user_id: 1,
+          username: 'testuser',
+          role: 'admin'
+        },
+        data: {
           username: 'testuser',
           role: 'admin'
         }

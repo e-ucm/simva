@@ -9,8 +9,12 @@ jest.mock('@/middlewares/auth.middleware', () => ({
   auth: (req: any, res: any, next: any) => {
     // Mock user for tests
     req.user = {
-      data: {
+      sql: {
         user_id: 1,
+        username: 'testuser',
+        role: 'admin'
+      },
+      data: {
         username: 'testuser',
         role: 'admin'
       }
