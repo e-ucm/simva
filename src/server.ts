@@ -9,17 +9,17 @@
  * - Logs server status and errors
  * 
  * @module server
- * @requires ./app
- * @requires ./lib/db
- * @requires ./lib/config
- * @requires ./lib/logger
+ * @requires @/app
+ * @requires @/lib/db
+ * @requires @/lib/config
+ * @requires @/lib/logger
  */
 
+import { app } from '@/app.js';
+import { db } from '@/lib/db';
+import { config } from '@/lib/config';
+import { logger } from '@/lib/logger';
 import { Server } from 'http';
-import { app } from './app.js';
-import { db } from './lib/db';
-import { config } from './lib/config';
-import { logger } from './lib/logger';
 
 const PORT = config.api.port;
 
@@ -32,11 +32,19 @@ async function shutdown(signal: string) {
   logger.info(`${signal} received, shutting down gracefully`);
   
   if (server) {
-    server.close(() => {
+    server.close(async () => {
       logger.info('HTTP server closed');
-      process.exit(0);
+      
+      try {
+        await db.sequelize.close();
+        logger.info('Database connection closed');
+        process.exit(0);
+      } catch (err) {
+        logger.error({err},'Error closing database connection');
+        process.exit(1);
+      }
     });
-
+    
     // Force close after 3 seconds
     setTimeout(() => {
       logger.warn('Forcing shutdown after timeout');
@@ -46,33 +54,7 @@ async function shutdown(signal: string) {
     process.exit(0);
   }
 }
-/**
- * Event listener for HTTP server "error" event.
- */
-function onError (error: any) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
 
-  const bind = typeof PORT === 'string' ? `Pipe ${PORT}` : `Port ${PORT}`;
-
-  logger.info(error.code);
-  logger.error(error);
-
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      logger.fatal(`${bind} requires elevated privileges`);
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      logger.fatal(`${bind} is already in use`);
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-}
 /**
  * Initializes and starts the SIMVA API server.
  * 
@@ -92,14 +74,12 @@ async function start() {
 
   server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 SIMVA API running on 0.0.0.0:${PORT} => external : ${config.api.url}`);
-    logger.info(config);
   });
-  server.on('error', onError);
   
   // Handle graceful shutdown
-  server.on('SIGTERM', () => shutdown('SIGTERM'));
-  server.on('SIGINT', () => shutdown('SIGINT'));
-  server.on('SIGHUP', () => shutdown('SIGHUP'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGHUP', () => shutdown('SIGHUP'));
 }
 
 start().catch(err => {
