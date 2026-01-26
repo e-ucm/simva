@@ -10,10 +10,10 @@
  * - Provides comprehensive API documentation for database views
  * 
  * @module generateQueryDocs
- * @requires ./views/index
+ * @requires @/lib/views/index
  */
 
-import views from "./views/index";
+import views from "@/lib/views/index";
 
 /**
  * Formats parameter types for documentation display.

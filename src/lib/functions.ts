@@ -9,11 +9,11 @@
  * - Consistent error handling for database operations
  * 
  * @module functions
- * @requires ./validateParams
+ * @requires @/lib/validateParams
  * @requires sequelize
  */
 
-import { validateParams, Schema } from "./validateParams";
+import { validateParams, Schema } from "@/lib/validateParams";
 import { Sequelize, QueryTypes } from "sequelize";
 
 /**

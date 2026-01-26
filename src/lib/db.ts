@@ -12,19 +12,19 @@
  * 
  * @module db
  * @requires sequelize
- * @requires ./logger
- * @requires ./models/index
- * @requires ./functions
- * @requires ./views/index
- * @requires ./config
+ * @requires @/lib/logger
+ * @requires @/lib/models/index
+ * @requires @/lib/functions
+ * @requires @/lib/views/index
+ * @requires @/lib/config
  */
 
 import { Sequelize, DataTypes } from 'sequelize';
-import { logger } from './logger';
-import { initializeModels } from './models/index';
+import { logger } from '@/lib/logger';
+import { initializeModels } from '@/lib/models/index';
 import initFunctions from '@/lib/functions';
 import views from '@/lib/views/index';
-import { config } from './config';
+import { config } from '@/lib/config';
 
 /**
  * Database interface type definition.

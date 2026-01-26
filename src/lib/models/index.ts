@@ -13,35 +13,35 @@
  */
 
 import { Sequelize } from "sequelize";
-import { UserFactory } from "./users/user.model";
-import { GroupFactory } from "./groups/group.model";
-import { GroupParticipantsFactory } from "./groups/groupParticipants.model";
-import { GroupPermissionsFactory } from "./groups/groupPermissions.model";
-import { ActivityFactory } from "./activities/activity.model";
-import { ActivityCompletionFactory } from "./activities/activityCompletion.model";
-import { ManualActivityFactory } from "./activities/manualActivity.model";
-import { GameplayActivityFactory } from "./activities/gameplayActivity.model";
-import { LimesurveyActivityFactory } from "./activities/limesurveyActivity.model";
-import { SimletFactory } from "./simlets/simlet.model";
-import { SimletGroupsFactory } from "./simlets/simletGroups.model";
-import { SimletShlinksFactory } from "./simlets/simletShlinks.model";
-import { SimletPermissionsFactory } from "./simlets/simletPermissions.model";
-import { SimletTagsFactory } from "./simlets/simletTags.model";
-import { SessionFactory } from "./sessions/session.model";
-import { SessionPermissionsFactory } from "./sessions/sessionPermissions.model";
-import { SessionTagsFactory } from "./sessions/sessionTags.model";
-import { AllocatorFactory } from "./allocators/allocator.model";
-import { ExperimentalParticipantsFactory } from "./allocators/experimentalParticipants.model";
-import { RandomAllocatorsFactory } from "./allocators/randomAllocators.model";
-import { ActivityTemplateFactory } from "./templates/activityTemplate.model";
-import { ActivityTemplatePermissionsFactory } from "./templates/activityTemplatePermissions.model";
-import { ManualTemplateActivityFactory } from "./templates/manualTemplateActivity.model";
-import { GameplayActivitiesTemplateFactory } from "./templates/gameplayActivitiesTemplate.model";
-import { LimesurveyActivitiesTemplateFactory } from "./templates/limesurveyActivitiesTemplate.model";
-import { SimletTagsListFactory } from "./tags/simletTagsList.model";
-import { SessionTagsListFactory } from "./tags/sessionTagsList.model";
-import { SubjectAreaListFactory } from "./tags/subjectAreaList.model";
-import { CategoryListFactory } from "./tags/categoryList.model";
+import { UserFactory } from "@/lib/models/users/user.model";
+import { GroupFactory } from "@/lib/models/groups/group.model";
+import { GroupParticipantsFactory } from "@/lib/models/groups/groupParticipants.model";
+import { GroupPermissionsFactory } from "@/lib/models/groups/groupPermissions.model";
+import { ActivityFactory } from "@/lib/models/activities/activity.model";
+import { ActivityCompletionFactory } from "@/lib/models/activities/activityCompletion.model";
+import { ManualActivityFactory } from "@/lib/models/activities/manualActivity.model";
+import { GameplayActivityFactory } from "@/lib/models/activities/gameplayActivity.model";
+import { LimesurveyActivityFactory } from "@/lib/models/activities/limesurveyActivity.model";
+import { SimletFactory } from "@/lib/models/simlets/simlet.model";
+import { SimletGroupsFactory } from "@/lib/models/simlets/simletGroups.model";
+import { SimletShlinksFactory } from "@/lib/models/simlets/simletShlinks.model";
+import { SimletPermissionsFactory } from "@/lib/models/simlets/simletPermissions.model";
+import { SimletTagsFactory } from "@/lib/models/simlets/simletTags.model";
+import { SessionFactory } from "@/lib/models/sessions/session.model";
+import { SessionPermissionsFactory } from "@/lib/models/sessions/sessionPermissions.model";
+import { SessionTagsFactory } from "@/lib/models/sessions/sessionTags.model";
+import { AllocatorFactory } from "@/lib/models/allocators/allocator.model";
+import { ExperimentalParticipantsFactory } from "@/lib/models/allocators/experimentalParticipants.model";
+import { RandomAllocatorsFactory } from "@/lib/models/allocators/randomAllocators.model";
+import { ActivityTemplateFactory } from "@/lib/models/templates/activityTemplate.model";
+import { ActivityTemplatePermissionsFactory } from "@/lib/models/templates/activityTemplatePermissions.model";
+import { ManualTemplateActivityFactory } from "@/lib/models/templates/manualTemplateActivity.model";
+import { GameplayActivitiesTemplateFactory } from "@/lib/models/templates/gameplayActivitiesTemplate.model";
+import { LimesurveyActivitiesTemplateFactory } from "@/lib/models/templates/limesurveyActivitiesTemplate.model";
+import { SimletTagsListFactory } from "@/lib/models/tags/simletTagsList.model";
+import { SessionTagsListFactory } from "@/lib/models/tags/sessionTagsList.model";
+import { SubjectAreaListFactory } from "@/lib/models/tags/subjectAreaList.model";
+import { CategoryListFactory } from "@/lib/models/tags/categoryList.model";
 
 /**
  * Initialize all SIMVA models with the provided Sequelize instance.

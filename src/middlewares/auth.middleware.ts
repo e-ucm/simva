@@ -25,7 +25,6 @@ import jwt from 'jsonwebtoken';
 import { getOrCreateUserByUsername, validateJWT } from '@/services/users/user.service';
 import { AuthentificationError, NotFoundError } from '@/lib/errors/appErrors';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { config } from '@/lib/config';
 import { db } from '@/lib/db';
 
@@ -430,30 +429,33 @@ export class Authenticator {
    * ```
    */
   static optional = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
-    const token = req.headers.authorization || `Bearer ${req.query.token}`;
-    
-    if (!token || typeof token !== 'string' || token.indexOf('Bearer') !== 0) {
-      return next(); // Continue without authentication
-    }
-
     try {
-      const tokenString = token.substring(7);
-      const result = await validateJWT(tokenString);
-      logger.info((req as any).user, `[AUTH] User authenticated: ${result.data.username}`);
-      //Get user from database
-      var user : Partial<InstanceType<typeof db.Tables.User>> | null = null;
-      logger.debug(`[AUTH] Looking up user in database: ${result.data.username}`);
-      user = await getOrCreateUserByUsername({ username : result.data.username, email: result.data.email, role : Authenticator.getRoleFromRealmAccessRoles(result.data) });
-      if(user) {
-        result.sql = user;
-        result.jwt = token;
-        req.user = result;
-      }
+        const token = req.headers.authorization || `Bearer ${req.query.token}`;
+        if (!token || typeof token !== 'string' || token.indexOf('Bearer') !== 0) {
+          return next(); // Continue without authentication
+        }
+
+        try {
+          const tokenString = token.substring(7);
+          const result = await validateJWT(tokenString);
+          logger.info((req as any).user, `[AUTH] User authenticated: ${result.data.username}`);
+          //Get user from database
+          var user : Partial<InstanceType<typeof db.Tables.User>> | null = null;
+          logger.debug(`[AUTH] Looking up user in database: ${result.data.username}`);
+          user = await getOrCreateUserByUsername({ username : result.data.username, email: result.data.email, role : Authenticator.getRoleFromRealmAccessRoles(result.data) });
+          if(user) {
+            result.sql = user;
+            result.jwt = token;
+            req.user = result;
+          }
+        } catch (e) {
+          // Swallow authentication errors and continue
+          logger.debug('[AUTH] Optional authentication failed, continuing without user context');
+        }
+        next();
     } catch (e) {
-      // Swallow authentication errors and continue
-      logger.debug('[AUTH] Optional authentication failed, continuing without user context');
+      next(e);
     }
-    next();
   };
 }
 

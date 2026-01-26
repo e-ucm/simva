@@ -12,14 +12,14 @@
  * require multiple table joins when accessed directly.
  * 
  * @module views/index
- * @requires ./userView.queries
- * @requires ./v_complete_simlets.queries  
- * @requires ./v_complete_sessions.queries
+ * @requires @/lib/views/userView.queries
+ * @requires @/lib/views/v_complete_simlets.queries  
+ * @requires @/lib/views/v_complete_sessions.queries
  */
 
-import User from "./userView.queries";
-import Simlet from "./v_complete_simlets.queries";
-import Session from "./v_complete_sessions.queries";
+import User from "@/lib/views/userView.queries";
+import Simlet from "@/lib/views/v_complete_simlets.queries";
+import Session from "@/lib/views/v_complete_sessions.queries";
 
 /**
  * Main views object containing all database view query definitions.
