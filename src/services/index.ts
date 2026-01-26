@@ -12,6 +12,12 @@ export * from "@/services/groups/group.service";
 export * from "@/services/groups/groupPermissions.service";
 export * from "@/services/groups/groupParticipants.service";
 
+// Simlet Services
+export * from "@/services/simlets/simlet.service";
+
+// Views Services  
+export * from "@/services/views/views.service";
+
 // Activity Services
 //export * from "@/services/activities/activity.service";
 //export * from "@/services/activities/gameplayActivity.service";

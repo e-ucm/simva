@@ -6,7 +6,7 @@ import {
   getSessionByIdController,
   getSessionBySimletIdAndUsernameController,
   getSessionUserPermissionsController
-} from "@/controlers/views.controller";
+} from "@/controlers/views/views.controller";
 
 /**
  * Views router for view-based API endpoints in SIMVA.
@@ -50,6 +50,7 @@ router.get("/simlets/:simlet_id", getSimletByIdController);
  * Base path: /views/sessions/
  * Note: More specific routes must come before parameterized routes
  */
+router.get("/sessions/simlet/:simlet_id", getSessionBySimletIdAndUsernameController);
 router.get("/sessions/simlet/:simlet_id/user/:username", getSessionBySimletIdAndUsernameController);
 router.get("/sessions/:session_id/permissions", getSessionUserPermissionsController);
 router.get("/sessions/:session_id", getSessionByIdController);

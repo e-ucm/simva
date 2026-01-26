@@ -5,7 +5,7 @@ import {
   deleteUserById, 
   patchUser,
   getMe
-} from "@/controlers/user.controller";
+} from "@/controlers/users/user.controller";
 
 /**
  * Express router for user-related API endpoints.

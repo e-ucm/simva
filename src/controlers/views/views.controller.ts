@@ -6,7 +6,7 @@ import {
   getSessionById,
   getSessionBySimletIdAndUsername,
   getSessionUserPermissions
-} from "@/services/views.service";
+} from "@/services/views/views.service";
 import { BadRequestError, NotFoundError } from "@/lib/errors/appErrors";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 

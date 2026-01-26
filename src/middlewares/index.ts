@@ -8,8 +8,8 @@
  * - Authenticator class for advanced auth configuration
  * 
  * @module middlewares/index
- * @requires ./auth.middleware
- * @requires ./error.middleware
+ * @requires @/middlewares/auth.middleware
+ * @requires @/middlewares/error.middleware
  */
 
 // Authentication middleware exports
