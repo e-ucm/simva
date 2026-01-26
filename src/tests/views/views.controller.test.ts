@@ -210,7 +210,7 @@ describe("Views Controller", () => {
       jest.spyOn(db.Functions, 'runViewQuery').mockResolvedValue(mockPermissions);
 
       // Import and test the function directly since array params are unusual for Express
-      const { getSessionUserPermissionsController } = require("@/controlers/views.controller");
+      const { getSessionUserPermissionsController } = require("@/controlers/views/views.controller");
       
       const mockReq = {
         params: { session_id: ["123", "456"] }, // This will trigger Array.isArray path

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getMe } from '@/controlers/user.controller';
+import { getMe } from '@/controlers/users/user.controller';
 import { AuthentificationError } from '@/lib/errors/appErrors';
 import * as userService from '@/services/users/user.service';
 
