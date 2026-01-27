@@ -375,7 +375,8 @@ describe("User Service", () => {
 
       const result = await validateJWT("keycloak.jwt.token");
       expect(result).toBeDefined();
-      expect(result.data).toBeDefined();
+      expect(result.sso).toBeDefined();
+      expect(result.sql).toBeDefined();
     });
 
     it("handles Keycloak validation errors and falls back to standard validation", async () => {
@@ -402,7 +403,7 @@ describe("User Service", () => {
       });
 
       const result = await validateJWT("fallback.jwt.token");
-      expect(result.data.username).toBe("fallback_user");
+      expect(result.sql.username).toBe("fallback_user");
     });
 
     it("validates realm URL correctly", async () => {
@@ -417,7 +418,7 @@ describe("User Service", () => {
       mockedJwt.decode.mockReturnValue(mockPayload);
 
       const result = await validateJWT("wrong.realm.token");
-      expect(result.data.username).toBe("realm_user");
+      expect(result.sql.username).toBe("realm_user");
     });
 
     it("handles Keycloak verification failure with standard verification error", async () => {
@@ -449,7 +450,7 @@ describe("User Service", () => {
       });
 
       const result = await validateJWT("dual.failed.token");
-      expect(result.data.username).toBe("standard_user");
+      expect(result.sql.username).toBe("standard_user");
     });
   });
 
@@ -501,10 +502,10 @@ describe("User Service", () => {
       const result = await validateJWT("new.keycloak.jwt");
       
       expect(result).toBeDefined();
-      expect(result.data).toBeDefined();
-      expect(result.data.username).toBe("new_kc_user");
-      expect(result.data.email).toBe("newkc@example.com");
-      expect(result.data.role).toBe("teacher");
+      expect(result.sql).toBeDefined();
+      expect(result.sql.username).toBe("new_kc_user");
+      expect(result.sql.email).toBe("newkc@example.com");
+      expect(result.sql.role).toBe("teacher");
     });
 
     it("updates existing user from Keycloak JWT with realm access roles", async () => {
@@ -548,9 +549,9 @@ describe("User Service", () => {
       const result = await validateJWT("update.keycloak.jwt");
       
       expect(result).toBeDefined();
-      expect(result.data.username).toBe("existing_kc_user");
-      expect(result.data.email).toBe("existing@example.com");
-      expect(result.data.role).toBe("admin");
+      expect(result.sql.username).toBe("existing_kc_user");
+      expect(result.sql.email).toBe("existing@example.com");
+      expect(result.sql.role).toBe("admin");
     });
 
     it("handles Keycloak JWT with no specific client roles using realm roles", async () => {
@@ -592,7 +593,7 @@ describe("User Service", () => {
       const result = await validateJWT("realm.roles.jwt");
       
       expect(result).toBeDefined();
-      expect(result.data.role).toBe("student");
+      expect(result.sql.role).toBe("student");
     });
 
     it("defaults to student role when no valid roles found", async () => {
@@ -630,7 +631,7 @@ describe("User Service", () => {
       
       expect(result).toBeDefined();
       // The role mapping likely preserves the original role from realm_access
-      expect(result.data.role).toBe("norole");
+      expect(result.sql.role).toBe("norole");
     });
 
     it("handles user with minimal JWT claims and username fallback", async () => {
@@ -664,9 +665,9 @@ describe("User Service", () => {
       const result = await validateJWT("minimal.claims.jwt");
       
       expect(result).toBeDefined();
-      expect(result.data.username).toBe("minimal_user");
-      expect(result.data.role).toBe("student");
-      expect(result.data.email).toBe("minimal@example.com");
+      expect(result.sql.username).toBe("minimal_user");
+      expect(result.sql.role).toBe("student");
+      expect(result.sql.email).toBe("minimal@example.com");
     });
   });
 
