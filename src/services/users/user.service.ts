@@ -8,14 +8,13 @@ import { KeycloakKeyManager } from "@/lib/keycloakKeyManager";
 /**
  * Interface for decoded Keycloak JWT payload
  */
-interface KeycloakJWTPayload {
+export interface KeycloakJWTPayload {
   sql: Partial<InstanceType<typeof db.Tables.User>>;
   jwt: string;
-  data: {
+  sso: {
     iss: string;
     sub: string;
     preferred_username: string;
-    username: string;
     email: string;
     realm_access?: {
       roles: string[];
@@ -82,17 +81,6 @@ export async function getUserByUsername(username: string): Promise<InstanceType<
     throw new NotFoundError("User not found");
   }
   return result;
-}
-
-export async function getOrCreateUserByUsername(user : Partial<InstanceType<typeof db.Tables.User>>): Promise<InstanceType<typeof db.Tables.User>> {
-  try {
-    let userOptained =  await getUserByUsername(user!.username!);
-    return userOptained;
-  } catch (error : Error | any) {
-    // User not found, create new
-    let newUserData = await createUser(user);
-    return newUserData;
-  }
 }
 
 /**
@@ -245,26 +233,30 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
     try {
       logger.debug('Token validation starting');
 
+      let jwtPayload: KeycloakJWTPayload;
       // First, try to decode structurally
-      const decodedPayloadOnly = jwt.decode(token) as any;
+      const decodedPayloadOnly = jwt.decode(token);
       if (!decodedPayloadOnly || typeof decodedPayloadOnly !== 'object') {
         return reject(new Error('JWT validation failed'));
       }
-
+      jwtPayload = { sso: decodedPayloadOnly as any, jwt: token, sql: {} };
       // Enforce expiration if present
-      if (typeof decodedPayloadOnly.exp === 'number') {
+      if (typeof jwtPayload.sso.exp === 'number') {
         const now = Math.floor(Date.now() / 1000);
-        if (decodedPayloadOnly.exp < now) {
+        if (jwtPayload.sso.exp < now) {
           return reject(new Error('Token has expired'));
         }
       }
 
       // Determine username from common claims
-      const inferredUsername = decodedPayloadOnly.preferred_username || decodedPayloadOnly.username || decodedPayloadOnly.sub;
-      if (!inferredUsername) {
+      jwtPayload.sql.username = jwtPayload.sso.preferred_username || jwtPayload.sso.username || jwtPayload.sso.sub;
+      if (!jwtPayload.sql.username) {
         return reject(new Error('Token missing required user identification'));
       }
-
+      jwtPayload.sql.email = jwtPayload.sso.email;
+      if (!jwtPayload.sql.email) {
+        return reject(new Error('Email missing required user identification'));
+      }
       // Attempt verification for integrity, but do not fail if signature mismatch
       try {
         jwt.verify(token, config.sso.jwt_secret || 'default-secret', { ignoreExpiration: true } as any);
@@ -272,17 +264,16 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
         // Ignore verification errors to support decode-only behavior when secrets differ
         logger.debug('JWT signature verification failed, proceeding with decoded payload');
       }
-
       // If issuer indicates Keycloak realm, try enhanced handling with key manager
-      if (decodedPayloadOnly.iss) {
+      if (jwtPayload.sso.iss) {
         const keycloakRealmUrl = `${config.sso.url}/realms/${config.sso.realm}`;
-        if (decodedPayloadOnly.iss === keycloakRealmUrl && KeycloakKeyManager.isEnabled()) {
+        if (jwtPayload.sso.iss === keycloakRealmUrl && KeycloakKeyManager.isEnabled()) {
           const decodedWithHeader = jwt.decode(token, { complete: true }) as any;
           const header = decodedWithHeader?.header;
+          logger.info(header);
           if (!header?.kid) {
-            // If no kid, fall back to decoded
-            const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
-            return resolve(result);
+            
+            return resolve(jwtPayload);
           }
           KeycloakKeyManager.checkKey(header.kid, token)
             .then(() => KeycloakKeyManager.getKey(header.kid))
@@ -290,31 +281,26 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
               jwt.verify(token, publicKey, async (error: Error | null, verifiedPayload: any) => {
                 if (error) {
                   // Fall back to decoded payload
-                  const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
-                  resolve(result);
+                  resolve(await createOrUpdateKeycloakUser(jwtPayload));
                 } else {
                   try {
-                    const result = await createOrUpdateKeycloakUser(verifiedPayload);
-                    resolve(result);
+                    resolve(await createOrUpdateKeycloakUser(jwtPayload));
                   } catch (userError) {
                     reject(userError);
                   }
                 }
               });
             })
-            .catch(() => {
-              // Fall back to decoded payload on key issues
-              const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
-              resolve(result);
+            .catch(async () => {
+              resolve(await createOrUpdateKeycloakUser(jwtPayload));
             });
           return; // prevent continuing below until async resolves
         }
       }
 
       // Default: return decoded payload with normalized username
-      const result = { data: { ...decodedPayloadOnly }, jwt: token, sql : { username : inferredUsername } };
-      logger.debug({result});
-      resolve(result);
+      logger.debug({jwtPayload});
+      resolve(jwtPayload);
     } catch (error) {
       logger.error({ error }, 'JWT validation error:');
       reject(new Error('JWT validation failed'));
@@ -358,35 +344,37 @@ export async function getUsersWithFilter(filter?: { username?: string }): Promis
  * 
  * @async
  * @function createOrUpdateKeycloakUser
- * @param {any} decoded - Decoded Keycloak JWT payload
+ * @param {KeycloakJWTPayload} decoded - Decoded Keycloak JWT payload
  * @returns {Promise<KeycloakJWTPayload>} Keycloak JWT payload with user data
  */
-async function createOrUpdateKeycloakUser(decoded: any): Promise<KeycloakJWTPayload> {
+async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<KeycloakJWTPayload> {
   logger.debug("CreateOrUpdateKeycloakUser - Decoded: " + JSON.stringify(decoded));
   
   if (!KeycloakKeyManager.isEnabled()) {
-    return { data: decoded };
+    return decoded;
   }
 
   try {
     // Look for existing user by email
-    const users = await db.Tables.User.findAll({ where: { email: decoded.email } });
+    const users = await db.Tables.User.findAll({ where: decoded.sql });
     
     if (users.length !== 0) {
       const user = users[0];
+      decoded.sql = user;
       const newRole = getRoleFromKeycloakJWT(decoded);
       
       if (user.role !== newRole) {
         // Update user role
         await user.update({ role: newRole });
-        return simplifyUser(user);
+        return decoded;
       } else {
-        return simplifyUser(user);
+        return decoded;
       }
     } else {
       // Create new user from JWT
       const newUser = await createUserFromKeycloakJWT(decoded);
-      return simplifyUser(newUser);
+      decoded.sql = newUser;
+      return decoded;
     }
   } catch (error) {
     logger.error({error}, 'Error creating/updating user from Keycloak:');
@@ -399,19 +387,18 @@ async function createOrUpdateKeycloakUser(decoded: any): Promise<KeycloakJWTPayl
  * 
  * @async
  * @function createUserFromKeycloakJWT
- * @param {any} decoded - Decoded Keycloak JWT payload
- * @returns {Promise<SimplifiedUser>} Created user instance
+ * @param {Partial<KeycloakJWTPayload>} decoded - Decoded Keycloak JWT payload
+ * @returns {Promise<InstanceType<typeof db.Tables.User>>} Created user instance
  */
-async function createUserFromKeycloakJWT(decoded: any): Promise<InstanceType<typeof db.Tables.User>> {
+async function createUserFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): Promise<InstanceType<typeof db.Tables.User>> {
   logger.debug("createUserFromJWT: " + JSON.stringify(decoded));
   
   const userData = {
-    username: decoded.preferred_username || decoded.username || decoded.sub,
-    email: decoded.email,
+    username: decoded.sso?.preferred_username || decoded.sso?.username || decoded.sso?.sub,
+    email: decoded.sso?.email,
     role: getRoleFromKeycloakJWT(decoded)
   };
   logger.info("createUserFromJWT - UserData: " + JSON.stringify(userData));
-
   return await createUser(userData);
 }
 
@@ -419,21 +406,21 @@ async function createUserFromKeycloakJWT(decoded: any): Promise<InstanceType<typ
  * Extract role from Keycloak JWT token
  * 
  * @function getRoleFromKeycloakJWT
- * @param {any} decoded - Decoded Keycloak JWT payload
+ * @param {Partial<KeycloakJWTPayload>} decoded - Decoded Keycloak JWT payload
  * @returns {string} User role
  */
-function getRoleFromKeycloakJWT(decoded: any): string {
+function getRoleFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): string {
   logger.debug("getRoleFromJWT: " + JSON.stringify(decoded));
   
   // If no realm_access is provided at all, default to student
-  if (!decoded.realm_access) {
+  if (!decoded.sso!.realm_access) {
     return 'student';
   }
   
   let role = 'norole';
   
-  if (decoded.realm_access?.roles) {
-    const roles = decoded.realm_access.roles;
+  if (decoded.sso!.realm_access?.roles) {
+    const roles = decoded.sso!.realm_access.roles;
     
     if (roles.includes("admin")) {
       role = 'admin';
@@ -453,28 +440,4 @@ function getRoleFromKeycloakJWT(decoded: any): string {
   }
 
   return role;
-}
-
-/**
- * Simplify user object for JWT response
- * 
- * @function simplifyUser
- * @param {any} user - User instance from database
- * @returns {KeycloakJWTPayload} Keycloak JWT payload with user data
- */
-function simplifyUser(user: any): KeycloakJWTPayload {
-  logger.debug("simplifyUser - User: " + JSON.stringify(user));
-  
-  const userData = user.toJSON ? user.toJSON() : user;
-  
-  return {
-    data: {
-      iss: '',
-      sub: userData.username || '',
-      preferred_username: userData.username || '',
-      username: userData.username,
-      email: userData.email,
-      role: userData.role
-    }
-  };
 }

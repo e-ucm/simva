@@ -22,27 +22,11 @@ import { logger } from '@/lib/logger';
 import fs from 'fs';
 import yaml from 'yaml';
 import jwt from 'jsonwebtoken';
-import { getOrCreateUserByUsername, validateJWT } from '@/services/users/user.service';
+import { validateJWT, KeycloakJWTPayload } from '@/services/users/user.service';
 import { AuthentificationError, NotFoundError } from '@/lib/errors/appErrors';
 import path from 'path';
 import { config } from '@/lib/config';
 import { db } from '@/lib/db';
-
-/**
- * Interface for JWT payload structure used throughout SIMVA.
- * Supports both internal and Keycloak token formats.
- */
-interface JWTPayload {
-  sql: Partial<InstanceType<typeof db.Tables.User>>,
-  jwt: string,
-  data: {
-    username: string;
-    role?: string;
-    realm_access?: {
-      roles: string[];
-    };
-  };
-}
 
 /**
  * Extended Express Request interface that includes authenticated user data.
@@ -50,12 +34,10 @@ interface JWTPayload {
  * 
  * @interface AuthenticatedRequest
  * @extends Request
- * @property {JWTPayload} [user] - Decoded and validated user data from JWT
- * @property {any} [jwt] - Raw JWT token data
+ * @property {KeycloakJWTPayload} [user] - Decoded and validated user data from JWT
  */
 export interface AuthenticatedRequest extends Request {
-  user?: JWTPayload;
-  jwt?: any;
+  user?: KeycloakJWTPayload;
 }
 
 /**
@@ -192,23 +174,25 @@ export class Authenticator {
    * @private
    * @static
    * @method getRoleFromRealmAccessRoles
-   * @param {any} userdata - Decoded JWT payload containing realm_access
+   * @param {KeycloakJWTPayload} userdata - Decoded JWT payload containing realm_access
    * @returns {string} Mapped SIMVA role (teacher, student, or norole)
    * 
    * @example
    * ```typescript
    * const role = getRoleFromRealmAccessRoles({
-   *   realm_access: { roles: ['teacher', 'researcher'] }
+   *   sso: {
+   *     realm_access: { roles: ['teacher', 'researcher'] }
+   *   }
    * });
    * // Returns 'teacher'
    * ```
    */
-  private static getRoleFromRealmAccessRoles(userdata: any): string {
+  private static getRoleFromRealmAccessRoles(userdata: KeycloakJWTPayload): string {
     let role = 'norole';
-    if (userdata.realm_access?.roles) {
-      if (userdata.realm_access.roles.includes('teacher') || userdata.realm_access.roles.includes('researcher')) {
+    if (userdata.sso.realm_access?.roles) {
+      if (userdata.sso.realm_access.roles.includes('teacher') || userdata.sso.realm_access.roles.includes('researcher')) {
         role = 'teacher';
-      } else if (userdata.realm_access.roles.includes('teaching-assistant') || userdata.realm_access.roles.includes('student')) {
+      } else if (userdata.sso.realm_access.roles.includes('teaching-assistant') || userdata.sso.realm_access.roles.includes('student')) {
         role = 'student';
       }
     }
@@ -280,35 +264,8 @@ export class Authenticator {
         
         try {
           logger.debug('[AUTH] Starting JWT validation');
-          const result = await validateJWT(token);
-          logger.debug(`[AUTH] JWT validation successful for user: ${result.data.username}`);
-          // Attach user data to result
-          
-          
-          logger.info((req as any).user, `[AUTH] User authenticated: ${result.data.username}`);
-          //Get user from database
-          var user : Partial<InstanceType<typeof db.Tables.User>> | null = null;
-          try {
-            logger.debug(`[AUTH] Looking up user in database: ${result.data.username}`);
-              user = await getOrCreateUserByUsername({ username : result.data.username, email: result.data.email, role : Authenticator.getRoleFromRealmAccessRoles(result.data) });
-          } catch (e) {
-            logger.info({ error: e instanceof Error ? e.message : String(e) }, '[AUTH] Error fetching user from database:');
-          }
-          if(user) {
-            result.sql = user;
-            result.jwt = token;
-            req.user = result;
-          }
-
-          // Decode JWT defensively; do not block the request on decode issues
-          try {
-            req.jwt = jwt.decode(token, { complete: true });
-            logger.debug('[AUTH] JWT decoded successfully');
-          } catch (e) {
-            logger.debug('[AUTH] JWT decode failed, continuing anyway');
-            // swallow decode errors
-          }
-          logger.debug(`[AUTH] Authentication successful for user: ${result.data.username}`);
+          req.user = await validateJWT(token);
+          logger.debug(req.user,`[AUTH] JWT validation successful for user: ${req.user.sql.username}`);
           // After successful authentication and user resolution, proceed
           return next();
         } catch (error) {
@@ -355,20 +312,19 @@ export class Authenticator {
         return next();
       }
       
-      if (!req.user?.data) {
+      if (!req.user?.sso) {
         logger.debug('[ROLE] No user data found in request');
         throw new NotFoundError('No user data found');
       }
 
       // Get user role - use database role or derive from realm access
-      let userRole = req.user.data.role;
-      if (!userRole && req.user.data.realm_access) {
-        userRole = this.getRoleFromRealmAccessRoles(req.user.data);
+      let userRole = req.user.sso.role;
+      if (!userRole && req.user.sso.realm_access) {
+        userRole = this.getRoleFromRealmAccessRoles(req.user);
         logger.debug(`[ROLE] Derived role from realm access: ${userRole}`);
       }
       
-      logger.debug(`[ROLE] User: ${req.user.data.username}, Role: ${userRole}`);
-
+      logger.debug(`[ROLE] User: ${req.user.sql.username}, Role: ${userRole}`);
       if (!userRole) {
         logger.debug('[ROLE] No role found for user');
         throw new NotFoundError('No role found for user');
@@ -437,17 +393,8 @@ export class Authenticator {
 
         try {
           const tokenString = token.substring(7);
-          const result = await validateJWT(tokenString);
-          logger.info((req as any).user, `[AUTH] User authenticated: ${result.data.username}`);
-          //Get user from database
-          var user : Partial<InstanceType<typeof db.Tables.User>> | null = null;
-          logger.debug(`[AUTH] Looking up user in database: ${result.data.username}`);
-          user = await getOrCreateUserByUsername({ username : result.data.username, email: result.data.email, role : Authenticator.getRoleFromRealmAccessRoles(result.data) });
-          if(user) {
-            result.sql = user;
-            result.jwt = token;
-            req.user = result;
-          }
+          req.user = await validateJWT(tokenString);
+          logger.info(req.user, `[AUTH] User authenticated: ${req.user.sql.username}`);
         } catch (e) {
           // Swallow authentication errors and continue
           logger.debug('[AUTH] Optional authentication failed, continuing without user context');
