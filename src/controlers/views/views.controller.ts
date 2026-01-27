@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { 
-  getSimletById,
+  getSimletViewById,
   getSimletsByUsername,
   getSimletUserPermissions,
   getSessionById,
@@ -39,7 +39,7 @@ export async function getSimletByIdController(req: AuthenticatedRequest, res: Re
     throw new BadRequestError("Invalid simlet_id parameter");
   }
 
-  const simlets = await getSimletById(simlet_id);
+  const simlets = await getSimletViewById(simlet_id);
   
   if (simlets.length === 0) {
     throw new NotFoundError("Simlet not found");

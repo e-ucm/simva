@@ -57,7 +57,7 @@ export interface UserPermission {
  * const simlet = await getSimletById(123);
  * ```
  */
-export async function getSimletById(simlet_id: number): Promise<CompleteSimlet[]> {
+export async function getSimletViewById(simlet_id: number): Promise<CompleteSimlet[]> {
   const results = await db.Functions.runViewQuery(
     db.Views.Simlet.byId,
     { simlet_id }
