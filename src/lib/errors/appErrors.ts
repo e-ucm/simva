@@ -66,3 +66,23 @@ export class AuthentificationError extends Error {
     this.name = "AuthentificationError";
   }
 }
+
+/**
+ * Custom error class for handling validation errors.
+ * Extends the standard Error class and sets the error name to "ValidationError".
+ *
+ * @class ValidationError
+ * @extends {Error}
+ * @example
+ * throw new ValidationError("Invalid input data");
+ */
+export class ValidationError extends Error {
+  /**
+   * Creates a new ValidationError instance.
+   * @param message - The error message describing the validation issue
+   */
+  constructor(message: string) {
+    super(message);
+    this.name = "ValidationError";
+  }
+}

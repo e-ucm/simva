@@ -21,6 +21,9 @@
 import express, { NextFunction, Request, Response } from 'express';
 import userRoutes from '@/routes/users/user.routes';
 import viewsRoutes from '@/routes/views/views.routes';
+import groupRoutes from '@/routes/groups/group.routes';
+import groupParticipantsRoutes from '@/routes/groups/groupParticipants.routes';
+import groupPermissionsRoutes from '@/routes/groups/groupPermissions.routes';
 import { errorMiddleware } from '@/middlewares/error.middleware';
 import { auth } from "@/middlewares/auth.middleware";
 import { logger } from '@/lib/logger';
@@ -54,5 +57,8 @@ app.get('/health', (_req: Request, res: Response) => {
 
 app.use('/users', userRoutes);
 app.use('/views', viewsRoutes);
+app.use('/groups', groupRoutes);
+app.use('/group-participants', groupParticipantsRoutes);
+app.use('/group-permissions', groupPermissionsRoutes);
 
 app.use(errorMiddleware);

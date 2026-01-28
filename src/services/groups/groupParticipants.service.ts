@@ -456,3 +456,11 @@ export async function groupParticipantExists(group_id: number, participant_id: n
   const count = await GroupParticipants.count({ where: { group_id, participant_id } });
   return count > 0;
 }
+
+// Aliases for test compatibility
+export const getGroupParticipants = getParticipantsByGroup;
+export const addParticipantToGroup = addParticipant;
+export const removeParticipantFromGroup = removeParticipant;
+export const getParticipantGroups = getGroupsByParticipant;
+export const isParticipantInGroup = isParticipant;
+export const getGroupParticipantsCount = countParticipants;

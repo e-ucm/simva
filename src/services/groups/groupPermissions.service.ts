@@ -601,3 +601,24 @@ export async function getDistinctPermissionTypes(): Promise<string[]> {
   
   return records.map(record => record.permission);
 }
+
+// Aliases for test compatibility
+export const getUserGroupPermissions = getUserPermissions;
+export const addGroupPermission = grantPermission;
+export const removeGroupPermission = revokePermission;
+export const hasGroupPermission = hasPermission;
+export const getGroupUsersWithPermission = async (group_id: number, permission: string): Promise<GroupPermissions[]> => {
+  return getUsersWithPermission(group_id, permission);
+};
+export const getUserGroups = async (user_id: number): Promise<any[]> => {
+  // Get all group permissions for user, then return unique groups
+  const permissions = await getUserPermissions(user_id);
+  const uniqueGroups = permissions.reduce((acc: any[], perm) => {
+    const existing = acc.find(g => g.group_id === perm.group_id);
+    if (!existing) {
+      acc.push({ group_id: perm.group_id });
+    }
+    return acc;
+  }, []);
+  return uniqueGroups;
+};

@@ -14,16 +14,21 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * 
  * @async
  * @function getAllGroups
- * @returns {Promise<Group[]>} Array of all groups
+ * @param {number} [limit] - Maximum number of groups to return
+ * @param {number} [offset] - Number of groups to skip for pagination
+ * @returns {Promise<Group[]>} Array of groups
  * 
  * @example
  * ```typescript
  * const groups = await getAllGroups();
+ * const paginatedGroups = await getAllGroups(10, 20);
  * ```
  */
-export async function getAllGroups(): Promise<Group[]> {
+export async function getAllGroups(limit?: number, offset?: number): Promise<Group[]> {
   return await Group.findAll({
-    order: [['group_id', 'ASC']]
+    order: [['group_id', 'ASC']],
+    limit,
+    offset
   });
 }
 
@@ -238,8 +243,22 @@ export async function countGroupsByOwner(group_owner_id: number): Promise<number
   return await Group.count({ where: { group_owner_id } });
 }
 
-/**
- * Check if a group exists by ID.
+/** * Get total count of all groups.
+ * 
+ * @async
+ * @function getGroupCount
+ * @returns {Promise<number>} Total number of groups
+ * 
+ * @example
+ * ```typescript
+ * const count = await getGroupCount();
+ * ```
+ */
+export async function getGroupCount(): Promise<number> {
+  return await Group.count();
+}
+
+/** * Check if a group exists by ID.
  * 
  * @async
  * @function groupExists
