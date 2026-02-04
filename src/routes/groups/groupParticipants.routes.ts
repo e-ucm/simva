@@ -6,7 +6,7 @@ import {
   getParticipantGroups,
   isParticipantInGroup,
   getGroupParticipantsCount
-} from "@/controlers/groups/groupParticipants.controller";
+} from "@/controlers/groups/groupParticipants.controler";
 
 /**
  * Express router for group participants-related API endpoints.

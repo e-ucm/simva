@@ -7,7 +7,7 @@
  * @property {string} [default] - Default value if not provided
  * @property {string} [of] - Element type for array parameters
  * @property {string} [description] - Description of the parameter
- * @property {string} [example] - Example value for the parameter
+ * @property {string | number | boolean | Array<string | number | boolean>} [example] - Example value for the parameter
  */
 export interface ValidationRule {
     type: "string" | "number" | "boolean" | "array";
@@ -15,7 +15,7 @@ export interface ValidationRule {
     default?: string;
     of?: string;
     description?: string;
-    example?: string;
+    example?: string | number | boolean | Array<string | number | boolean>;
 }
 
 /**

@@ -1,11 +1,9 @@
 import { Router } from "express";
 import { 
   getUsers, 
-  createUser, 
-  deleteUserById, 
   patchUser,
   getMe
-} from "@/controlers/users/user.controller";
+} from "@/controlers/users/user.controler";
 
 /**
  * Express router for user-related API endpoints.
@@ -36,9 +34,6 @@ const router = Router();
 
 // Base user operations
 router.get("/", getUsers);
-router.post("/", createUser);
-router.delete("/:id", deleteUserById);
-
 // User-specific operations
 router.patch("/:username", patchUser);
 

@@ -24,9 +24,13 @@ import viewsRoutes from '@/routes/views/views.routes';
 import groupRoutes from '@/routes/groups/group.routes';
 import groupParticipantsRoutes from '@/routes/groups/groupParticipants.routes';
 import groupPermissionsRoutes from '@/routes/groups/groupPermissions.routes';
+import simletRoutes from '@/routes/simlets/simlet.routes';
+import activitiesTypesRoutes from '@/routes/activitiesTypes/activitiesTypes.routes';
+import allocatorsTypesRoutes from '@/routes/allocatorsTypes/allocatorsTypes.routes';
 import { errorMiddleware } from '@/middlewares/error.middleware';
-import { auth } from "@/middlewares/auth.middleware";
+import { auth, roleAllowed } from "@/middlewares/auth.middleware";
 import { logger } from '@/lib/logger';
+import { checkDatabaseConnection } from '@/lib/db';
 
 /**
  * Main Express application instance for SIMVA API.
@@ -35,24 +39,24 @@ import { logger } from '@/lib/logger';
  * - JSON body parsing middleware
  * - Global authentication middleware 
  * - Health check endpoint
- * - User and views route handlers
+ * - User, views, groups, simlets, and activity types route handlers
  * - Global error handling middleware
  * 
  * @type {express.Express}
  */
 export const app: express.Express = express();
 
+app.use(express.json());
 app.use((req: Request, _: Response, next : NextFunction) => {
   logger.info(`${req.method} at ${req.originalUrl} with body ${req.body}`);
   next();
 })
-
-app.use(express.json());
 app.use(auth);
+app.use(roleAllowed);
 
 // Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok' });
+app.get('/health', async (_req: Request, res: Response) => {
+  res.json({ status: 'ok', db: { status: await checkDatabaseConnection() } });
 });
 
 app.use('/users', userRoutes);
@@ -60,5 +64,8 @@ app.use('/views', viewsRoutes);
 app.use('/groups', groupRoutes);
 app.use('/group-participants', groupParticipantsRoutes);
 app.use('/group-permissions', groupPermissionsRoutes);
+app.use('/studies', simletRoutes);
+app.use('/activitytypes', activitiesTypesRoutes);
+app.use('/allocatortypes', allocatorsTypesRoutes);
 
 app.use(errorMiddleware);

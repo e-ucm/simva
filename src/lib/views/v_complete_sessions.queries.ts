@@ -1,25 +1,8 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
-  byId: {
-    description: "Get Session by its ID",
-    sql: `
-      SELECT *
-      FROM v_complete_simlets_sessions
-      WHERE session_id = :session_id
-    `,
-    params: {
-      session_id: {
-        type: "number",
-        required: true,
-        description: "Session Identifier",
-        example: "1",
-      },
-    },
-  },
-  
-  byIdAndUsername: {
-    description: "Get all SIMLETs and Users permissions of a Session by its ID",
+  bySimletIdAndUsername: {
+    description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions",
     sql: `
       SELECT *
       FROM v_complete_sessions_users_permissions 
@@ -41,7 +24,7 @@ const queries: Record<string, QueryTemplate> = {
     },
   },
 
-  UserPermissionbyId: {
+  userPermissionbyId: {
     description: "Get Users Direct Permissions for Session by its ID",
     sql: `
       SELECT *
@@ -55,6 +38,23 @@ const queries: Record<string, QueryTemplate> = {
         description: "Simlet Identifier",
         example: "1",
       },
+    },
+  },
+      
+  allocatedParticipantsBySessionId: {
+    description: "Get all allocated participants for a certain Session ID",
+    sql: `
+    SELECT *
+    FROM v_complete_allocation_participants 
+    WHERE session_id = :session_id
+    `,
+    params: {
+        session_id: {
+            type: "number",
+            required: true,
+            description: "Session Identifier",
+            example: 1
+        },
     },
   },
 };

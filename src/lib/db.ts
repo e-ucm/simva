@@ -87,3 +87,15 @@ if (!globalForDb.db) {
  * ```
  */
 export const db = globalForDb.db!;
+
+export async function checkDatabaseConnection() {
+  try {
+    await db.sequelize.authenticate(); // Try to connect
+    console.log('✅ Database connection has been established successfully.');
+    return true;
+  } catch (error) {
+    console.error('❌ Unable to connect to the database:', (error as Error).message);
+    //process.exit(1); // Exit with error code
+    return false;
+  }
+}

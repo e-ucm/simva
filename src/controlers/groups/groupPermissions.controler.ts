@@ -221,7 +221,7 @@ export async function getGroupPermissionsByType(
       throw new ValidationError("Permission cannot be empty");
     }
 
-    const permissions = await groupPermissionsService.getGroupUsersWithPermission(groupId, permission);
+    const permissions = await groupPermissionsService.getUsersWithPermission(groupId, permission);
     res.json(permissions);
   } catch (err) {
     next(err);

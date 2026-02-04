@@ -1,10 +1,23 @@
+/**
+ * @fileoverview Service for Simlet entity operations.
+ * Handles all CRUD operations and business logic for SIMVA simlets.
+ * 
+ * A Simlet (Simulation Learning Environment Template) is the top-level learning container
+ * that contains sessions and activities for educational research studies.
+ * 
+ * @module services/simlets/simlet
+ * @requires @/lib/db
+ * @requires @/lib/errors/appErrors
+ * @requires sequelize
+ */
+
 import { db } from "@/lib/db";
-import { NotFoundError } from "@/lib/errors/appErrors";
 import { Op } from "sequelize";
+import { NotFoundError } from "@/lib/errors/appErrors";
 
 /**
  * Service for Simlet entity operations.
- * Handles all CRUD operations and business logic for simlets (Simulation Learning Environment Templates).
+ * Handles all CRUD operations and business logic for simlets.
  * 
  * @namespace SimletService
  */
@@ -14,16 +27,24 @@ import { Op } from "sequelize";
  * 
  * @async
  * @function getAllSimlets
- * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of all simlets
+ * @param {number} [limit] - Maximum number of simlets to return
+ * @param {number} [offset] - Number of simlets to skip for pagination
+ * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets
  * 
  * @example
  * ```typescript
  * const simlets = await getAllSimlets();
+ * const paginatedSimlets = await getAllSimlets(10, 20);
  * ```
  */
-export async function getAllSimlets(): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
+export async function getAllSimlets(
+  limit?: number,
+  offset?: number
+): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
   return await db.Tables.Simlets.findAll({
-    order: [['simlet_id', 'ASC']]
+    order: [['simlet_id', 'ASC']],
+    limit,
+    offset
   });
 }
 
@@ -64,7 +85,9 @@ export async function getSimletById(simlet_id: number): Promise<InstanceType<typ
  * const simlets = await getSimletsByCoordinator(123);
  * ```
  */
-export async function getSimletsByCoordinator(simlet_coordinator_id: number): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
+export async function getSimletsByCoordinator(
+  simlet_coordinator_id: number
+): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
   return await db.Tables.Simlets.findAll({
     where: { simlet_coordinator_id },
     order: [['name', 'ASC']]
@@ -72,27 +95,7 @@ export async function getSimletsByCoordinator(simlet_coordinator_id: number): Pr
 }
 
 /**
- * Retrieve simlets by allocator ID.
- * 
- * @async
- * @function getSimletsByAllocator
- * @param {number} allocator_id - The allocator's ID
- * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets using the allocator
- * 
- * @example
- * ```typescript
- * const simlets = await getSimletsByAllocator(456);
- * ```
- */
-export async function getSimletsByAllocator(allocator_id: number): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
-  return await db.Tables.Simlets.findAll({
-    where: { allocator_id },
-    order: [['name', 'ASC']]
-  });
-}
-
-/**
- * Search simlets by name pattern.
+ * Search simlets by name.
  * 
  * @async
  * @function searchSimletsByName
@@ -116,26 +119,48 @@ export async function searchSimletsByName(name: string): Promise<InstanceType<ty
 }
 
 /**
- * Search simlets by description pattern.
+ * Retrieve simlets by allocator ID.
  * 
  * @async
- * @function searchSimletsByDescription
- * @param {string} description - The description pattern to search for
- * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets matching the description pattern
+ * @function getSimletsByAllocator
+ * @param {number} allocator_id - The allocator's ID
+ * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets with the specified allocator
  * 
  * @example
  * ```typescript
- * const simlets = await searchSimletsByDescription('learning');
+ * const simlets = await getSimletsByAllocator(456);
  * ```
  */
-export async function searchSimletsByDescription(description: string): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
+export async function getSimletsByAllocator(
+  allocator_id: number
+): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
+  return await db.Tables.Simlets.findAll({
+    where: { allocator_id },
+    order: [['name', 'ASC']]
+  });
+}
+
+/**
+ * Get simlets created after a specific date.
+ * 
+ * @async
+ * @function getSimletsCreatedAfter
+ * @param {Date} date - The date to compare against
+ * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets created after the date
+ * 
+ * @example
+ * ```typescript
+ * const recentSimlets = await getSimletsCreatedAfter(new Date('2023-01-01'));
+ * ```
+ */
+export async function getSimletsCreatedAfter(date: Date): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
   return await db.Tables.Simlets.findAll({
     where: {
-      description: {
-        [Op.like]: `%${description}%`
+      createdAt: {
+        [Op.gt]: date
       }
     },
-    order: [['name', 'ASC']]
+    order: [['createdAt', 'DESC']]
   });
 }
 
@@ -144,25 +169,27 @@ export async function searchSimletsByDescription(description: string): Promise<I
  * 
  * @async
  * @function createSimlet
- * @param {Partial<InstanceType<typeof db.Tables.Simlets>>} simletData - The simlet data to create
+ * @param {Partial<InstanceType<typeof db.Tables.Simlets>>} simletData - The simlet data for creation
  * @returns {Promise<InstanceType<typeof db.Tables.Simlets>>} The created simlet
  * 
  * @example
  * ```typescript
  * const newSimlet = await createSimlet({
- *   name: 'Mathematics Learning',
- *   description: 'Interactive math problems',
- *   simlet_coordinator_id: 123,
- *   allocator_id: 456
+ *   name: 'Mathematics Learning Environment',
+ *   description: 'Interactive mathematics simulation',
+ *   allocator_id: 1,
+ *   simlet_coordinator_id: 123
  * });
  * ```
  */
-export async function createSimlet(simletData: Partial<InstanceType<typeof db.Tables.Simlets>>): Promise<InstanceType<typeof db.Tables.Simlets>> {
+export async function createSimlet(
+  simletData: Partial<InstanceType<typeof db.Tables.Simlets>>
+): Promise<InstanceType<typeof db.Tables.Simlets>> {
   return await db.Tables.Simlets.create(simletData);
 }
 
 /**
- * Update a simlet by ID.
+ * Update an existing simlet by ID.
  * 
  * @async
  * @function updateSimlet
@@ -174,15 +201,20 @@ export async function createSimlet(simletData: Partial<InstanceType<typeof db.Ta
  * @example
  * ```typescript
  * const updatedSimlet = await updateSimlet(123, {
- *   name: 'Updated Mathematics Learning',
- *   description: 'Enhanced interactive math problems'
+ *   name: 'Updated Simlet Name',
+ *   description: 'Updated description'
  * });
  * ```
  */
-export async function updateSimlet(simlet_id: number, updateData: Partial<InstanceType<typeof db.Tables.Simlets>>): Promise<InstanceType<typeof db.Tables.Simlets>> {
+export async function updateSimlet(
+  simlet_id: number,
+  updateData: Partial<InstanceType<typeof db.Tables.Simlets>>
+): Promise<InstanceType<typeof db.Tables.Simlets>> {
   const simlet = await getSimletById(simlet_id);
   
   await simlet.update(updateData);
+  await simlet.reload();
+  
   return simlet;
 }
 
@@ -209,124 +241,154 @@ export async function deleteSimlet(simlet_id: number): Promise<void> {
  * Count total number of simlets.
  * 
  * @async
- * @function getSimletCount
+ * @function countSimlets
  * @returns {Promise<number>} Total count of simlets
  * 
  * @example
  * ```typescript
- * const count = await getSimletCount();
+ * const count = await countSimlets();
  * ```
  */
-export async function getSimletCount(): Promise<number> {
+export async function countSimlets(): Promise<number> {
   return await db.Tables.Simlets.count();
 }
 
 /**
- * Get simlets with pagination.
+ * Count simlets by coordinator.
  * 
  * @async
- * @function getSimletsPaginated
- * @param {number} [limit=10] - Maximum number of simlets to return
- * @param {number} [offset=0] - Number of simlets to skip
- * @returns {Promise<{simlets: InstanceType<typeof db.Tables.Simlets>[], total: number}>} Paginated simlets with total count
+ * @function countSimletsByCoordinator
+ * @param {number} simlet_coordinator_id - The coordinator's user ID
+ * @returns {Promise<number>} Count of simlets coordinated by the user
  * 
  * @example
  * ```typescript
- * const result = await getSimletsPaginated(10, 0);
- * // Returns: { simlets: [...], total: 25 }
+ * const count = await countSimletsByCoordinator(123);
  * ```
  */
-export async function getSimletsPaginated(limit: number = 10, offset: number = 0): Promise<{
-  simlets: InstanceType<typeof db.Tables.Simlets>[];
-  total: number;
-}> {
-  const { rows: simlets, count: total } = await db.Tables.Simlets.findAndCountAll({
-    limit,
-    offset,
-    order: [['simlet_id', 'ASC']]
-  });
-
-  return { simlets, total };
+export async function countSimletsByCoordinator(simlet_coordinator_id: number): Promise<number> {
+  return await db.Tables.Simlets.count({ where: { simlet_coordinator_id } });
 }
 
 /**
- * Search simlets with multiple criteria.
+ * Count simlets by allocator.
  * 
  * @async
- * @function searchSimlets
- * @param {Object} searchCriteria - Search criteria object
- * @param {string} [searchCriteria.name] - Name pattern to search for
- * @param {string} [searchCriteria.description] - Description pattern to search for
- * @param {number} [searchCriteria.coordinator_id] - Coordinator ID to filter by
- * @param {number} [searchCriteria.allocator_id] - Allocator ID to filter by
- * @param {number} [limit=10] - Maximum number of results
- * @param {number} [offset=0] - Number of results to skip
- * @returns {Promise<{simlets: InstanceType<typeof db.Tables.Simlets>[], total: number}>} Search results with total count
+ * @function countSimletsByAllocator
+ * @param {number} allocator_id - The allocator's ID
+ * @returns {Promise<number>} Count of simlets with the specified allocator
  * 
  * @example
  * ```typescript
- * const results = await searchSimlets({
- *   name: 'math',
- *   coordinator_id: 123
- * }, 5, 0);
+ * const count = await countSimletsByAllocator(456);
  * ```
  */
-export async function searchSimlets(
-  searchCriteria: {
-    name?: string;
-    description?: string;
-    coordinator_id?: number;
-    allocator_id?: number;
-  },
-  limit: number = 10,
-  offset: number = 0
-): Promise<{
-  simlets: InstanceType<typeof db.Tables.Simlets>[];
-  total: number;
-}> {
-  const where: any = {};
+export async function countSimletsByAllocator(allocator_id: number): Promise<number> {
+  return await db.Tables.Simlets.count({ where: { allocator_id } });
+}
 
-  if (searchCriteria.name) {
-    where.name = { [Op.like]: `%${searchCriteria.name}%` };
-  }
+/**
+ * Check if a simlet exists by ID.
+ * 
+ * @async
+ * @function simletExists
+ * @param {number} simlet_id - The simlet's ID
+ * @returns {Promise<boolean>} True if simlet exists, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * const exists = await simletExists(123);
+ * ```
+ */
+export async function simletExists(simlet_id: number): Promise<boolean> {
+  const count = await db.Tables.Simlets.count({ where: { simlet_id } });
+  return count > 0;
+}
 
-  if (searchCriteria.description) {
-    where.description = { [Op.like]: `%${searchCriteria.description}%` };
-  }
+/**
+ * Check if a simlet name is available (not taken).
+ * 
+ * @async
+ * @function isSimletNameAvailable
+ * @param {string} name - The simlet name to check
+ * @returns {Promise<boolean>} True if name is available, false if taken
+ * 
+ * @example
+ * ```typescript
+ * const available = await isSimletNameAvailable('New Learning Environment');
+ * ```
+ */
+export async function isSimletNameAvailable(name: string): Promise<boolean> {
+  const count = await db.Tables.Simlets.count({ where: { name } });
+  return count === 0;
+}
 
-  if (searchCriteria.coordinator_id) {
-    where.simlet_coordinator_id = searchCriteria.coordinator_id;
-  }
-
-  if (searchCriteria.allocator_id) {
-    where.allocator_id = searchCriteria.allocator_id;
-  }
-
-  const { rows: simlets, count: total } = await db.Tables.Simlets.findAndCountAll({
-    where,
-    limit,
-    offset,
+/**
+ * Get simlets with sandbox sessions.
+ * 
+ * @async
+ * @function getSimletsWithSandbox
+ * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets that have sandbox sessions
+ * 
+ * @example
+ * ```typescript
+ * const sandboxSimlets = await getSimletsWithSandbox();
+ * ```
+ */
+export async function getSimletsWithSandbox(): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
+  return await db.Tables.Simlets.findAll({
+    where: {
+      sandbox_session_id: {
+        [Op.not]: null
+      }
+    },
     order: [['name', 'ASC']]
   });
-
-  return { simlets, total };
 }
 
 /**
- * Get simlets by MongoDB ID.
+ * Get simlets with objectives defined.
  * 
  * @async
- * @function getSimletByMongoId
- * @param {string} mongo_id - The MongoDB ID
- * @returns {Promise<InstanceType<typeof db.Tables.Simlets> | null>} The simlet or null if not found
+ * @function getSimletsWithObjectives
+ * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets that have objectives defined
  * 
  * @example
  * ```typescript
- * const simlet = await getSimletByMongoId('507f1f77bcf86cd799439011');
+ * const objectiveSimlets = await getSimletsWithObjectives();
  * ```
  */
-export async function getSimletByMongoId(mongo_id: string): Promise<InstanceType<typeof db.Tables.Simlets> | null> {
-  return await db.Tables.Simlets.findOne({
-    where: { mongo_id }
+export async function getSimletsWithObjectives(): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
+  return await db.Tables.Simlets.findAll({
+    where: {
+      objective: {
+        [Op.not]: null
+      }
+    },
+    order: [['name', 'ASC']]
+  });
+}
+
+/**
+ * Search simlets by description.
+ * 
+ * @async
+ * @function searchSimletsByDescription
+ * @param {string} description - The description pattern to search for
+ * @returns {Promise<InstanceType<typeof db.Tables.Simlets>[]>} Array of simlets matching the description pattern
+ * 
+ * @example
+ * ```typescript
+ * const simlets = await searchSimletsByDescription('interactive');
+ * ```
+ */
+export async function searchSimletsByDescription(description: string): Promise<InstanceType<typeof db.Tables.Simlets>[]> {
+  return await db.Tables.Simlets.findAll({
+    where: {
+      description: {
+        [Op.like]: `%${description}%`
+      }
+    },
+    order: [['name', 'ASC']]
   });
 }

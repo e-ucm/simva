@@ -21,12 +21,10 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '@/lib/logger';
 import fs from 'fs';
 import yaml from 'yaml';
-import jwt from 'jsonwebtoken';
 import { validateJWT, KeycloakJWTPayload } from '@/services/users/user.service';
 import { AuthentificationError, NotFoundError } from '@/lib/errors/appErrors';
 import path from 'path';
 import { config } from '@/lib/config';
-import { db } from '@/lib/db';
 
 /**
  * Extended Express Request interface that includes authenticated user data.
@@ -233,7 +231,7 @@ export class Authenticator {
         
         if (isPublicEndpoint) {
           logger.debug(`[AUTH] Public endpoint ${req.method} ${req.path} - skipping authentication`);
-          return next();
+          return this.optional(req, res, next);
         }
         
         logger.debug(`[AUTH] Starting authentication for ${req.method} ${req.path}`);
@@ -318,7 +316,7 @@ export class Authenticator {
       }
 
       // Get user role - use database role or derive from realm access
-      let userRole = req.user.sso.role;
+      let userRole = req.user.sql.role;
       if (!userRole && req.user.sso.realm_access) {
         userRole = this.getRoleFromRealmAccessRoles(req.user);
         logger.debug(`[ROLE] Derived role from realm access: ${userRole}`);
@@ -426,12 +424,3 @@ export const auth = Authenticator.auth;
  * @type {Function}
  */
 export const roleAllowed = Authenticator.roleAllowed;
-
-/**
- * Optional authentication middleware export.
- * For public routes that benefit from user context when available.
- * 
- * @function optionalAuth
- * @type {Function}
- */
-export const optionalAuth = Authenticator.optional;

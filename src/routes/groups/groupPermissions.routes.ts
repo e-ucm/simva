@@ -7,7 +7,7 @@ import {
   hasGroupPermission,
   getGroupPermissionsByType,
   getUserGroups
-} from "@/controlers/groups/groupPermissions.controller";
+} from "@/controlers/groups/groupPermissions.controler";
 
 /**
  * Express router for group permissions-related API endpoints.

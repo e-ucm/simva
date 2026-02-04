@@ -17,7 +17,6 @@
  * @requires @/lib/views/v_complete_sessions.queries
  */
 
-import User from "@/lib/views/userView.queries";
 import Simlet from "@/lib/views/v_complete_simlets.queries";
 import Session from "@/lib/views/v_complete_sessions.queries";
 
@@ -42,7 +41,6 @@ import Session from "@/lib/views/v_complete_sessions.queries";
  * ```
  */
 const views = {
-  User,
   Simlet,
   Session,
 };

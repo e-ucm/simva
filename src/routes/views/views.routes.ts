@@ -1,12 +1,11 @@
 import { Router } from "express";
-import { 
-  getSimletByIdController,
+import {
   getSimletsByUsernameController,
   getSimletUserPermissionsController,
   getSessionByIdController,
   getSessionBySimletIdAndUsernameController,
   getSessionUserPermissionsController
-} from "@/controlers/views/views.controller";
+} from "@/controlers/views/views.controler";
 
 /**
  * Views router for view-based API endpoints in SIMVA.
@@ -18,14 +17,13 @@ import {
  * Available view endpoints:
  * 
  * Simlet views:
- * - GET /views/simlets/:simlet_id - Get simlet by ID
- * - GET /views/simlets/user/:username - Get simlets for a user
+ * - GET /views/simlets/ - Get simlets by username (by current or query param)
  * - GET /views/simlets/:simlet_id/permissions - Get user permissions for a simlet
  * 
  * Session views:
- * - GET /views/sessions/:session_id - Get session by ID
- * - GET /views/sessions/simlet/:simlet_id/user/:username - Get sessions by simlet and user
- * - GET /views/sessions/:session_id/permissions - Get user permissions for a session
+ * - GET /views/simlets/:simlet_id/sessions/ - Get sessions by simlet ID and username (query param)
+ * - GET /views/simlets/:simlet_id/sessions/:session_id - Get session by ID
+ * - GET /views/simlets/:simlet_id/sessions/:session_id/permissions - Get user permissions for a session
  * 
  * @example
  * ```typescript
@@ -41,18 +39,16 @@ const router = Router();
  * Base path: /views/simlets/
  * Note: More specific routes must come before parameterized routes
  */
-router.get("/simlets/user/:username", getSimletsByUsernameController);
+router.get("/simlets", getSimletsByUsernameController);
 router.get("/simlets/:simlet_id/permissions", getSimletUserPermissionsController);
-router.get("/simlets/:simlet_id", getSimletByIdController);
 
 /**
  * Session view routes  
- * Base path: /views/sessions/
+ * Base path: /views/simlets/:simlet_id/sessions/
  * Note: More specific routes must come before parameterized routes
  */
-router.get("/sessions/simlet/:simlet_id", getSessionBySimletIdAndUsernameController);
-router.get("/sessions/simlet/:simlet_id/user/:username", getSessionBySimletIdAndUsernameController);
-router.get("/sessions/:session_id/permissions", getSessionUserPermissionsController);
-router.get("/sessions/:session_id", getSessionByIdController);
+router.get("/simlets/:simlet_id/sessions/", getSessionBySimletIdAndUsernameController);
+router.get("/simlets/:simlet_id/sessions/:session_id", getSessionByIdController);
+router.get("/simlets/:simlet_id/sessions/:session_id/permissions", getSessionUserPermissionsController);
 
 export default router;

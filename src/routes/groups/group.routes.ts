@@ -6,7 +6,7 @@ import {
   updateGroup,
   deleteGroup,
   getGroupCount
-} from "@/controlers/groups/group.controller";
+} from "@/controlers/groups/group.controler";
 
 /**
  * Express router for group-related API endpoints.

@@ -44,28 +44,6 @@ export interface UserPermission {
 }
 
 /**
- * Retrieves a simlet by its ID.
- * Uses the v_complete_simlets view to get aggregated data.
- * 
- * @async
- * @function getSimletById
- * @param {number} simlet_id - The simlet identifier
- * @returns {Promise<CompleteSimlet[]>} Array with simlet record
- * 
- * @example
- * ```typescript
- * const simlet = await getSimletById(123);
- * ```
- */
-export async function getSimletViewById(simlet_id: number): Promise<CompleteSimlet[]> {
-  const results = await db.Functions.runViewQuery(
-    db.Views.Simlet.byId,
-    { simlet_id }
-  );
-  return results as CompleteSimlet[];
-}
-
-/**
  * Retrieves all simlets for a specific user.
  * Uses the v_complete_simlets_users_permissions view to get user's simlets.
  * 
@@ -103,7 +81,7 @@ export async function getSimletsByUsername(username: string): Promise<CompleteSi
  */
 export async function getSimletUserPermissions(simlet_id: number): Promise<UserPermission[]> {
   const results = await db.Functions.runViewQuery(
-    db.Views.Simlet.DirectUserPermissionbyId,
+    db.Views.Simlet.directUserPermissionbyId,
     { simlet_id }
   );
   return results as UserPermission[];
@@ -115,18 +93,20 @@ export async function getSimletUserPermissions(simlet_id: number): Promise<UserP
  * 
  * @async
  * @function getSessionById
+ * @param {string} username - The username to filter permissions
+ * @param {number} simlet_id - The simlet identifier
  * @param {number} session_id - The session identifier
  * @returns {Promise<CompleteSession[]>} Array with session record
  * 
  * @example
  * ```typescript
- * const session = await getSessionById(456);
+ * const session = await getSessionById('john_doe', 123, 456);
  * ```
  */
-export async function getSessionById(session_id: number): Promise<CompleteSession[]> {
+export async function getSessionById(username: string, simlet_id: number, session_id: number): Promise<CompleteSession[]> {
   const results = await db.Functions.runViewQuery(
-    db.Views.Session.byId,
-    { session_id }
+    db.Views.Session.bySimletIdSessionIdAndUsername,
+    { username, simlet_id, session_id }
   );
   return results as CompleteSession[];
 }
@@ -144,12 +124,12 @@ export async function getSessionById(session_id: number): Promise<CompleteSessio
  * 
  * @example
  * ```typescript
- * const sessions = await getSessionBySimletIdAndUsername(123, 'john_doe');
+ * const sessions = await getSessionBySimletIdAndUsername('john_doe', 123);
  * ```
  */
-export async function getSessionBySimletIdAndUsername(simlet_id: number, username: string): Promise<CompleteSession[]> {
+export async function getSessionBySimletIdAndUsername(username: string, simlet_id: number): Promise<CompleteSession[]> {
   const results = await db.Functions.runViewQuery(
-    db.Views.Session.byIdAndUsername,
+    db.Views.Session.bySimletIdAndUsername,
     { simlet_id, username }
   );
   return results as CompleteSession[];
@@ -171,7 +151,7 @@ export async function getSessionBySimletIdAndUsername(simlet_id: number, usernam
  */
 export async function getSessionUserPermissions(session_id: number): Promise<UserPermission[]> {
   const results = await db.Functions.runViewQuery(
-    db.Views.Session.UserPermissionbyId,
+    db.Views.Session.userPermissionbyId,
     { session_id }
   );
   return results as UserPermission[];

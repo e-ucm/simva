@@ -607,9 +607,7 @@ export const getUserGroupPermissions = getUserPermissions;
 export const addGroupPermission = grantPermission;
 export const removeGroupPermission = revokePermission;
 export const hasGroupPermission = hasPermission;
-export const getGroupUsersWithPermission = async (group_id: number, permission: string): Promise<GroupPermissions[]> => {
-  return getUsersWithPermission(group_id, permission);
-};
+
 export const getUserGroups = async (user_id: number): Promise<any[]> => {
   // Get all group permissions for user, then return unique groups
   const permissions = await getUserPermissions(user_id);

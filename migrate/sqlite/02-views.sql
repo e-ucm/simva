@@ -142,11 +142,11 @@ SELECT
     sim.objective,
     al.allocator_type,
     shlink.short_url,
-    COUNT(DISTINCT g.group_id) as total_groups,
-    COUNT(DISTINCT ses.session_id) as total_sessions,
+    JSON_GROUP_ARRAY(DISTINCT g.group_id) as groups,
+    JSON_GROUP_ARRAY(DISTINCT ses.session_id) as sessions,
     GROUP_CONCAT(tag_list.simlet_tag_name) as tags,
-    COUNT(DISTINCT upsim.user_id) as total_direct_supervisors,
-    COUNT(DISTINCT upses.user_id) as total_direct_coordinators
+    JSON_GROUP_ARRAY(DISTINCT upsim.user_id) as direct_supervisors,
+    JSON_GROUP_ARRAY(DISTINCT upses.user_id) as direct_coordinators
 FROM SIMLETs sim
 LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
 LEFT JOIN SIMLETs_groups g ON sim.simlet_id = g.simlet_id
@@ -171,10 +171,10 @@ SELECT
     ses.active,
     ses.session_start_date,
     ses.session_end_date,
-    COUNT(DISTINCT act.activity_id) as total_activities,
+    JSON_GROUP_ARRAY(DISTINCT act.activity_id) as activities,
     GROUP_CONCAT(tag_list.session_tag_name) as tags,
-    COUNT(DISTINCT upsim.user_id) as total_direct_supervisors,
-    COUNT(DISTINCT upses.user_id) as total_direct_coordinators
+    JSON_GROUP_ARRAY(DISTINCT upsim.user_id) as direct_supervisors,
+    JSON_GROUP_ARRAY(DISTINCT upses.user_id) as direct_coordinators
 FROM Sessions ses
 LEFT JOIN Activities act ON ses.session_id = act.session_id
 LEFT JOIN Sessions_tags tag ON ses.session_id = tag.session_id
@@ -196,8 +196,8 @@ SELECT
     act.expire_on_seconds,
     act.trace_storage,
     act.description,
-    COUNT(DISTINCT upsim.user_id) as total_direct_supervisors,
-    COUNT(DISTINCT upses.user_id) as total_direct_coordinators
+    JSON_GROUP_ARRAY(DISTINCT upsim.user_id) as direct_supervisors,
+    JSON_GROUP_ARRAY(DISTINCT upses.user_id) as direct_coordinators
 FROM Activities act
 LEFT JOIN v_simlet_to_activity upsim ON upsim.object_type = "ACTIVITY" AND act.activity_id = upsim.object_id
 LEFT JOIN v_session_to_activity upses ON upses.object_type = "ACTIVITY" AND act.activity_id = upses.object_id
@@ -210,8 +210,8 @@ SELECT
     g.name,
     g.createdAt,
     g.use_new_generation,
-    COUNT(DISTINCT p.participant_id) as total_participants,
-    COUNT(DISTINCT o.user_id)+1 as total_permissions_owners
+    JSON_GROUP_ARRAY(DISTINCT p.participant_id) as participants,
+    JSON_GROUP_ARRAY(DISTINCT o.user_id)+1 as permissions_owners
 FROM ParticipantGroups g
 LEFT JOIN ParticipantGroups_participants p ON g.group_id = p.group_id AND p.participant_id is not NULL
 LEFT JOIN ParticipantGroups_permissions o ON g.group_id = o.group_id AND o.user_id is not NULL

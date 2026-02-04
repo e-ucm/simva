@@ -83,25 +83,6 @@ paths:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
-    post:
-      summary: adds a user.
-      operationId: addUser
-      description: |
-        Creates a new group for the current user as owner.
-      responses:
-        '200':
-          description: item created
-        '400':
-          description: 'invalid input, object invalid'
-        '409':
-          description: an existing item already exists
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/user'
-        required: true
-  /users/{username}:
     patch:
       summary: Modifies the logged user, for exemple it's role.
       tags:
@@ -324,7 +305,7 @@ paths:
           description: 'invalid input'
       parameters:
         - $ref: '#/components/parameters/groupId'
-  /groups/{id}/studies:
+  /groups/{id}/simlets:
     get:
       tags:
         - teachers
@@ -385,7 +366,25 @@ paths:
           description: 'Group not found'
       parameters:
         - $ref: '#/components/parameters/groupId'
-  /studies:
+    post:
+      summary: adds a user.
+      operationId: addUser
+      description: |
+        Creates a new user for the current group.
+      responses:
+        '200':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+        required: true
+  /simlets:
     get:
       tags:
         - admins
@@ -433,7 +432,7 @@ paths:
             schema:
               $ref: '#/components/schemas/add_study_body'
         description: Study to be created
-  /studies/import:
+  /simlets/import:
     post:
         tags:
           - teachers
@@ -459,7 +458,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/upload_file'
           description: Study to be created
-  /studies/{studyid}:
+  /simlets/{studyid}:
     get:
       tags:
         - admins
@@ -520,7 +519,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/export:
+  /simlets/{studyid}/export:
     get:
       tags:
         - admins
@@ -542,7 +541,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/events:
+  /simlets/{studyid}/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -557,7 +556,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/events/getPresignedUrl:
+  /simlets/{studyid}/events/getPresignedUrl:
     get:
       tags:
         - teachers
@@ -574,7 +573,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/schedule:
+  /simlets/{studyid}/schedule:
     get:
       tags:
         - teachers
@@ -606,7 +605,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/schedule/events:
+  /simlets/{studyid}/schedule/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -621,7 +620,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/schedule/events/getPresignedUrl:
+  /simlets/{studyid}/schedule/events/getPresignedUrl:
     get:
       tags:
         - teachers
@@ -639,7 +638,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/groups:
+  /simlets/{studyid}/groups:
     get:
       tags:
         - admins
@@ -663,7 +662,7 @@ paths:
           description: 'Study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/tests:
+  /simlets/{studyid}/tests:
     get:
       tags:
         - teachers
@@ -710,7 +709,7 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         required: true
-  /studies/{studyid}/participants:
+  /simlets/{studyid}/participants:
     get:
       tags:
         - teachers
@@ -733,7 +732,7 @@ paths:
           description: 'study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /studies/{studyid}/tests/{testid}:
+  /simlets/{studyid}/tests/{testid}:
     get:
       tags:
         - teachers
@@ -822,7 +821,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/studyStudyId'
         - $ref: '#/components/parameters/testId'
-  /studies/{studyid}/tests/{testid}/activities:
+  /simlets/{studyid}/tests/{testid}/activities:
     get:
       tags:
         - teachers
@@ -869,7 +868,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activity'
-  /studies/{studyid}/allocator:
+  /simlets/{studyid}/allocator:
     get:
       tags:
         - teachers
