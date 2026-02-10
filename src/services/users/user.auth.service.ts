@@ -1,9 +1,15 @@
 import { db } from "@/lib/db";
-import { NotFoundError } from "@/lib/errors/appErrors";
 import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
 import { config } from "@/lib/config";
 import { KeycloakKeyManager } from "@/lib/keycloakKeyManager";
+
+/**
+ * @fileoverview Authentication service for user JWT validation and Keycloak integration.
+ * Contains only authentication-related functions, CRUD operations have been moved to User model.
+ * 
+ * @module services/users/userAuth
+ */
 
 /**
  * Interface for decoded Keycloak JWT payload
@@ -21,186 +27,6 @@ export interface KeycloakJWTPayload {
     };
     [key: string]: any;
   }
-}
-
-/**
- * Retrieves all users from the database.
- * 
- * @async
- * @function getAllUsers
- * @returns {Promise<Array>} Array of all user records
- * 
- * @example
- * ```typescript
- * const users = await getAllUsers();
- * ```
- */
-export async function getAllUsers(): Promise<InstanceType<typeof db.Tables.User>[]> {
-  return db.Tables.User.findAll();
-}
-
-/**
- * Retrieves a single user by their ID.
- * 
- * @async
- * @function getUserById
- * @param {number} user_id - The user identifier
- * @returns {Promise<InstanceType<typeof db.Tables.User>>} The user record
- * @throws {NotFoundError} If user with given ID does not exist
- * 
- * @example
- * ```typescript
- * const user = await getUserById(123);
- * ```
- */
-export async function getUserById(user_id : number): Promise<InstanceType<typeof db.Tables.User>> {
-    const result = await db.Tables.User.findByPk(user_id);
-    if (!result) {
-      throw new NotFoundError("User not found");
-    }
-    return result;
-}
-
-/**
- * Retrieves a user by their username.
- * 
- * @async
- * @function getUserByUsername
- * @param {string} username - The username to search for
- * @returns {Promise<InstanceType<typeof db.Tables.User>>} The user record
- * @throws {NotFoundError} If user with given username does not exist
- * 
- * @example
- * ```typescript
- * const user = await getUserByUsername('john_doe');
- * ```
- */
-export async function getUserByUsername(username: string): Promise<InstanceType<typeof db.Tables.User>> {
-  const result = await db.Tables.User.findOne({ where: { username } });
-  if (!result) {
-    throw new NotFoundError("User not found");
-  }
-  return result;
-}
-
-/**
- * Creates a new user in the database.
- * 
- * @async
- * @function createUser
- * @param {Partial<InstanceType<typeof db.Tables.User>>} user - Partial user data (username, email, role required)
- * @returns {Promise<InstanceType<typeof db.Tables.User>>} The created user record
- * @throws {Error} If database operation fails
- * 
- * @example
- * ```typescript
- * const user = await createUser({ username: 'john', email: 'john@example.com', role: 'student' });
- * ```
- */
-export async function createUser(user : Partial<InstanceType<typeof db.Tables.User>>): Promise<InstanceType<typeof db.Tables.User>> {
-  if(user.token == "" || user.token == null) {
-    user.isToken = false;
-  } else {
-    user.isToken = true;
-  }
-  logger.debug("Creating user: " + JSON.stringify(user));
-  return db.Tables.User.create(user);
-}
-
-
-/**
- * Updates multiple users matching a condition.
- * 
- * @async
- * @function updateUsers
- * @param {Object} where - Condition to find users to update
- * @param {Object} payload - Partial user data to update
- * @returns {Promise<number>} Number of affected rows
- * 
- * @example
- * ```typescript
- * const updated = await updateUsers({ role: 'student' }, { role: 'teacher' });
- * ```
- */
-export async function updateUsers(where: Partial<InstanceType<typeof db.Tables.User>>, payload : Partial<InstanceType<typeof db.Tables.User>>): Promise<number> {
-  const [affectedRows] = await db.Tables.User.update(payload, { where : where });
-  if (affectedRows === 0) {
-    throw new NotFoundError("User not found");
-  }
-  return affectedRows;
-}
-
-/**
- * Updates a single user by ID within a transaction.
- * 
- * @async
- * @function updateUserById
- * @param {number} userId - The user identifier
- * @param {Partial<InstanceType<typeof db.Tables.User>>} payload - Partial user data to update
- * @returns {Promise<InstanceType<typeof db.Tables.User>>} The updated user record
- * 
- * @throws {NotFoundError} If user with given ID does not exist
- * 
- * @example
- * ```typescript
- * const updated = await updateUserById(123, { email: 'newemail@example.com' });
- * ```
- */
-export async function updateUserById(userId: number, payload: Partial<InstanceType<typeof db.Tables.User>>): Promise<InstanceType<typeof db.Tables.User>> {
-  return db.sequelize.transaction(async (t) => {
-    const user = await db.Tables.User.findByPk(userId, { transaction: t });
-    if (!user) {
-      throw new NotFoundError("User not found");
-    }
-    await user.update(payload, { transaction: t });
-    return user;
-  });
-}
-
-/**
- * Deletes a single user by ID within a transaction.
- * 
- * @async
- * @function deleteUserById
- * @param {number} userId - The user identifier
- * @returns {Promise<void>}
- * 
- * @throws {NotFoundError} If user with given ID does not exist
- * 
- * @example
- * ```typescript
- * await deleteUserById(123);
- * ```
- */
-export async function deleteUserById(userId: number): Promise<void> {
-  return db.sequelize.transaction(async (t) => {
-    const user = await db.Tables.User.findByPk(userId, { transaction: t });
-    if (!user) {
-      throw new NotFoundError("User not found");
-    }
-    await user.destroy({ transaction: t });
-  });
-}
-
-/**
- * Deletes multiple users matching a condition.
- * 
- * @async
- * @function deleteUsers
- * @param {Partial<InstanceType<typeof db.Tables.User>>} where - Condition to find users to delete
- * @returns {Promise<number>} Number of deleted rows
- * 
- * @example
- * ```typescript
- * const deleted = await deleteUsers({ role: 'guest' });
- * ```
- */
-export async function deleteUsers(where: Partial<InstanceType<typeof db.Tables.User>>): Promise<number> {
-  const affectedRows = await db.Tables.User.destroy({ where });
-  if (affectedRows === 0) {
-    throw new NotFoundError("User not found");
-  }
-  return affectedRows;
 }
 
 /**
@@ -309,37 +135,6 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
 }
 
 /**
- * Get users with optional filtering by username.
- * Compatible with the original simva getUsers interface.
- * 
- * @async
- * @function getUsersWithFilter
- * @param {Object} filter - Optional filter parameters
- * @param {string} filter.username - Filter by username
- * @returns {Promise<Array>} Array of user records
- * 
- * @example
- * ```typescript
- * const users = await getUsersWithFilter({ username: 'john_doe' });
- * ```
- */
-export async function getUsersWithFilter(filter?: { username?: string }): Promise<InstanceType<typeof db.Tables.User>[]> {
-  if (filter?.username) {
-    try {
-      const user = await getUserByUsername(filter.username);
-      return [user];
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return [];
-      }
-      throw error;
-    }
-  } else {
-    return getAllUsers();
-  }
-}
-
-/**
  * Create or update a user from Keycloak JWT token
  * 
  * @async
@@ -355,7 +150,7 @@ async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<
   }
 
   try {
-    // Look for existing user by email
+    // Look for existing user by email using model method
     const users = await db.Tables.User.findAll({ where: decoded.sql });
     
     if (users.length !== 0) {
@@ -364,14 +159,14 @@ async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<
       const newRole = getRoleFromKeycloakJWT(decoded);
       
       if (user.role !== newRole) {
-        // Update user role
+        // Update user role using model method
         await user.update({ role: newRole });
         return decoded;
       } else {
         return decoded;
       }
     } else {
-      // Create new user from JWT
+      // Create new user from JWT using model method
       const newUser = await createUserFromKeycloakJWT(decoded);
       decoded.sql = newUser;
       return decoded;
@@ -396,10 +191,13 @@ async function createUserFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): 
   const userData = {
     username: decoded.sso?.preferred_username || decoded.sso?.username || decoded.sso?.sub,
     email: decoded.sso?.email,
-    role: getRoleFromKeycloakJWT(decoded)
+    role: getRoleFromKeycloakJWT(decoded),
+    isToken: false // Default value for new users
   };
+  
   logger.info("createUserFromJWT - UserData: " + JSON.stringify(userData));
-  return await createUser(userData);
+  // Use model method instead of service method
+  return await db.Tables.User.createUser(userData);
 }
 
 /**

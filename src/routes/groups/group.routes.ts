@@ -5,7 +5,8 @@ import {
   createGroup, 
   updateGroup,
   deleteGroup,
-  getGroupCount
+  getGroupCount,
+  getGroupParticipants
 } from "@/controlers/groups/group.controler";
 
 /**
@@ -18,6 +19,7 @@ import {
  * - PUT /:id - Update an existing group
  * - DELETE /:id - Delete a group by ID
  * - GET /count - Get total count of groups
+ * - GET /:id/participants - Get participants of a group
  * 
  * @type {Router}
  * 
@@ -32,17 +34,18 @@ import {
  * // PUT /groups/5 - update group
  * // DELETE /groups/5 - delete group
  * // GET /groups/count - count groups
+ * // GET /groups/5/participants - get participants of group 5
  * ```
  */
 const router = Router();
 
 // Base group operations
 router.get("/", getGroups);
-router.get("/count", getGroupCount);
 router.post("/", createGroup);
 
 // Individual group operations
 router.get("/:id", getGroupById);
+router.get("/:id/participants", getGroupParticipants);
 router.put("/:id", updateGroup);
 router.delete("/:id", deleteGroup);
 

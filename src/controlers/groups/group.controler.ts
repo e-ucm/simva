@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import * as groupService from "@/services/groups/group.service";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
-
+import { db } from "@/lib/db";
+import * as groupService from "@/services/groups/group.service";
+import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 /**
  * Retrieves all groups from the database.
  * Supports optional pagination through limit and offset query parameters.
@@ -23,22 +24,12 @@ import { logger } from "@/lib/logger";
  * // Returns 10 groups starting from offset 20
  */
 export async function getGroups(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-    const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
-
-    if (limit !== undefined && (isNaN(limit) || limit < 0)) {
-      throw new ValidationError("Invalid limit parameter");
-    }
-    if (offset !== undefined && (isNaN(offset) || offset < 0)) {
-      throw new ValidationError("Invalid offset parameter");
-    }
-
-    const groups = await groupService.getAllGroups(limit, offset);
+    const groups = await groupService.getGroups(req.user!.sql.user_id as number, req.query.use_new_generation === 'true');
     res.json(groups);
   } catch (err) {
     next(err);
@@ -49,7 +40,7 @@ export async function getGroups(
  * Retrieves a single group by its ID.
  * 
  * @async
- * @param {Request} req - Express request object with group ID in params
+ * @param {AuthenticatedRequest} req - Express request object with group ID in params
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -61,7 +52,7 @@ export async function getGroups(
  * // Returns group with ID 123
  */
 export async function getGroupById(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
@@ -71,7 +62,7 @@ export async function getGroupById(
       throw new ValidationError("Invalid group ID");
     }
 
-    const group = await groupService.getGroupById(groupId);
+    const group = await groupService.getGroup(groupId, req.user!.sql.user_id as number);
     res.json(group);
   } catch (err) {
     next(err);
@@ -82,7 +73,7 @@ export async function getGroupById(
  * Creates a new group in the database.
  * 
  * @async
- * @param {Request} req - Express request object with group data in body
+ * @param {AuthenticatedRequest} req - Express request object with group data in body
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -94,12 +85,12 @@ export async function getGroupById(
  * // Creates a new group
  */
 export async function createGroup(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const group = await groupService.createGroup(req.body);
+    const group = await db.Tables.Group.createGroup(req.body);
     res.status(201).json(group);
   } catch (err) {
     next(err);
@@ -123,7 +114,7 @@ export async function createGroup(
  * // Updates group with ID 123
  */
 export async function updateGroup(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
@@ -133,7 +124,7 @@ export async function updateGroup(
       throw new ValidationError("Invalid group ID");
     }
 
-    const group = await groupService.updateGroup(groupId, req.body);
+    const group = await db.Tables.Group.updateGroup(groupId, req.body);
     res.json(group);
   } catch (err) {
     next(err);
@@ -156,7 +147,7 @@ export async function updateGroup(
  * // Deletes group with ID 123
  */
 export async function deleteGroup(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
@@ -166,7 +157,7 @@ export async function deleteGroup(
       throw new ValidationError("Invalid group ID");
     }
 
-    await groupService.deleteGroup(groupId);
+    await db.Tables.Group.deleteGroup(groupId);
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -188,14 +179,32 @@ export async function deleteGroup(
  * // Returns: { "count": 42 }
  */
 export async function getGroupCount(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const count = await groupService.getGroupCount();
+    const count = await db.Tables.Group.countGroups();
     res.json({ count });
   } catch (err) {
     next(err);
   }
+}
+
+export async function getGroupParticipants(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const groupId = parseInt(req.params.id as string);
+    if (isNaN(groupId) || groupId <= 0) {
+      throw new ValidationError("Invalid group ID");
+    }
+
+    const participants = await groupService.getGroupParticipants(groupId);
+    res.json(participants);
+  } catch (err) {
+    next(err);
+  } 
 }

@@ -19,6 +19,7 @@
 
 import Simlet from "@/lib/views/v_complete_simlets.queries";
 import Session from "@/lib/views/v_complete_sessions.queries";
+import Group from "@/lib/views/v_groups.queries";
 
 /**
  * Main views object containing all database view query definitions.
@@ -28,6 +29,7 @@ import Session from "@/lib/views/v_complete_sessions.queries";
  * @property {Object} User - User-related view queries
  * @property {Object} Simlet - SIMLET-related view queries  
  * @property {Object} Session - Session-related view queries
+ * @property {Object} Group - Group-related view queries
  * 
  * @example
  * ```typescript
@@ -43,6 +45,7 @@ import Session from "@/lib/views/v_complete_sessions.queries";
 const views = {
   Simlet,
   Session,
+  Group
 };
 
 export default views;

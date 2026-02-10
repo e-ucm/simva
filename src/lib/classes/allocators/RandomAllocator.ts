@@ -1,4 +1,4 @@
-import { Allocator } from "@/services/allocators/libs/Allocator";
+import { Allocator } from "@/lib/classes/allocators/Allocator";
 
 export class RandomAllocator extends Allocator {
     static getType(){
@@ -25,5 +25,10 @@ export class RandomAllocator extends Allocator {
         return {
             allocatedSessions: [] // Fetch allocated sessions related to this allocator
         };
+    }
+    
+    constructor(data: any) {
+        super(data);
+        // Additional initialization for GroupAllocator if needed
     }
 }

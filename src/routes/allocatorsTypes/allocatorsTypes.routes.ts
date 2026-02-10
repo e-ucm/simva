@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllocatorTypes } from "@/services/allocators/allocatorsTypes.service";
+import { getAllocatorTypes } from "@/controlers/allocatorTypes/allocatorTypes.controler";
 
 /**
  * Express router for allocator type-related API endpoints.
@@ -10,7 +10,7 @@ import { getAllocatorTypes } from "@/services/allocators/allocatorsTypes.service
  * 
  * @example
  * ```typescript
- * import allocatorsTypesRoutes from '@/routes/allocatorTypes/allocatorTypes.routes';
+ * import allocatorsTypesRoutes from '@/routes/allocatorsTypes/allocatorsTypes.routes';
  * app.use('/allocatortypes', allocatorsTypesRoutes);
  * // GET /allocatortypes - all allocator types
  * // GET /allocatortypes?type=random - allocator type with type 'random'

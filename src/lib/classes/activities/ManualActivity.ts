@@ -1,6 +1,20 @@
-import { Activity } from "@/services/activities/libs/Activity";
+import { Activity } from "@/lib/classes/activities/Activity";
+import { db } from "@/lib/db";
 
 export class ManualActivity extends Activity {
+	user_managed:boolean=false;
+	ressource_type: string='';
+	ressource_url: string='';
+
+	constructor(data: any) {
+		super(data);
+		db.Tables.ManualActivities.findOne({ where: { activity_id: this.activity_id } }).then((activityData) => {
+			if (activityData) {
+				Object.assign(this, activityData);
+			}
+		});
+	}
+	
 	static getType(){
 		return 'manual';
 	}

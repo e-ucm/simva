@@ -64,6 +64,8 @@ config.db = {};
 config.db.path = process.env.SQLLITE_DB_PATH || '/data/db';
 config.db.file = process.env.SQLLITE_DB_FILE || 'simva_data.db';
 config.db.complete_path = path.join(config.db.path, config.db.file);
+config.db.view_file_path = process.env.SQL_VIEW_FILE || 'migrate/sqlite/02-views.sql';
+config.db.view_complete_path = path.join(config.appFolder, config.db.view_file_path);
 
 config.api = {};
 config.api.host = process.env.SIMVA_API_HOST || 'simva.external.test';

@@ -7,23 +7,18 @@
  * - Health check endpoint
  * - Authentication middleware (applied globally)
  * - User management routes (feature-based: @/routes/users/)
- * - Views/analytics routes (feature-based: @/routes/views/)
  * - Error handling middleware
  * 
  * @module app
  * @requires express
  * @requires @/routes/users/user.routes
- * @requires @/routes/views/views.routes
  * @requires @/middlewares/error.middleware
  * @requires @/middlewares/auth.middleware
  */
 
 import express, { NextFunction, Request, Response } from 'express';
 import userRoutes from '@/routes/users/user.routes';
-import viewsRoutes from '@/routes/views/views.routes';
 import groupRoutes from '@/routes/groups/group.routes';
-import groupParticipantsRoutes from '@/routes/groups/groupParticipants.routes';
-import groupPermissionsRoutes from '@/routes/groups/groupPermissions.routes';
 import simletRoutes from '@/routes/simlets/simlet.routes';
 import activitiesTypesRoutes from '@/routes/activitiesTypes/activitiesTypes.routes';
 import allocatorsTypesRoutes from '@/routes/allocatorsTypes/allocatorsTypes.routes';
@@ -39,7 +34,7 @@ import { checkDatabaseConnection } from '@/lib/db';
  * - JSON body parsing middleware
  * - Global authentication middleware 
  * - Health check endpoint
- * - User, views, groups, simlets, and activity types route handlers
+ * - User, groups, simlets, and activity types route handlers
  * - Global error handling middleware
  * 
  * @type {express.Express}
@@ -60,11 +55,8 @@ app.get('/health', async (_req: Request, res: Response) => {
 });
 
 app.use('/users', userRoutes);
-app.use('/views', viewsRoutes);
 app.use('/groups', groupRoutes);
-app.use('/group-participants', groupParticipantsRoutes);
-app.use('/group-permissions', groupPermissionsRoutes);
-app.use('/studies', simletRoutes);
+app.use('/simlets', simletRoutes);
 app.use('/activitytypes', activitiesTypesRoutes);
 app.use('/allocatortypes', allocatorsTypesRoutes);
 

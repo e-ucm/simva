@@ -14,10 +14,10 @@
 
 import { Request, Response, NextFunction } from "express";
 import * as simletService from "@/services/simlets/simlet.service";
-import { NotFoundError, AuthentificationError } from "@/lib/errors/appErrors";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
-import { getSimletsByUsername } from "@/services/views/views.service";
+import { db } from "@/lib/db";
+
 /**
  * Retrieves simlets from the database.
  * Supports pagination via query parameters and optional filtering by coordinator.
@@ -33,14 +33,6 @@ import { getSimletsByUsername } from "@/services/views/views.service";
  * @example
  * // GET /simlets
  * // Returns all simlets
- * 
- * @example
- * // GET /simlets?limit=10&offset=20
- * // Returns paginated simlets
- * 
- * @example
- * // GET /simlets
- * // Returns simlets
  */
 export async function getAllSimlets(
   req: AuthenticatedRequest,
@@ -52,13 +44,8 @@ export async function getAllSimlets(
     let simlets;
     switch(currentUser?.role) {
       case "admin":
-        const limit = req.query.limit ? parseInt(String(req.query.limit)) : undefined;
-        const offset = req.query.offset ? parseInt(String(req.query.offset)) : undefined;
-        simlets = await simletService.getAllSimlets(limit, offset);
-        res.json(simlets);
-        break;
-    case "teacher":
-        simlets = await getSimletsByUsername(currentUser.username || "");
+      case "teacher":
+        simlets = await simletService.getSimletsByUserId(currentUser.user_id);
         res.json(simlets);
         break;
     }
@@ -72,7 +59,7 @@ export async function getAllSimlets(
  * 
  * @async
  * @function getSimletById
- * @param {Request} req - Express request object containing simlet ID in URL params
+ * @param {AuthenticatedRequest} req - Express request object containing simlet ID in URL params
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -88,9 +75,18 @@ export async function getSimletById(
   next: NextFunction
 ): Promise<void> {
   try {
-    const simletId = parseInt(String(req.params?.id));
-    const simlet = await simletService.getSimletById(simletId);
-    res.json(simlet);
+    const currentUser = req.user?.sql;
+    const simlet_id = parseInt(String(req.params?.id));
+    let simlet;
+    switch(currentUser?.role) {
+      case "admin":
+      case "teacher":
+        // For teachers, we could add additional permission checking here if needed
+        simlet = await simletService.getSimletBySimletIdAndUserId(simlet_id, currentUser!.user_id);
+        logger.info({simlet} , "getSimletById results");
+        res.json(simlet);
+        break;
+    }
   } catch (err) {
     next(err);
   }
@@ -101,7 +97,7 @@ export async function getSimletById(
  * 
  * @async
  * @function createSimlet
- * @param {Request} req - Express request object containing simlet data in body
+ * @param {AuthenticatedRequest} req - Express request object containing simlet data in body
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -118,11 +114,12 @@ export async function getSimletById(
  * // Returns: 201 Created with simlet object
  */
 export async function createSimlet(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
+    req.body.simlet_coordinator_id = req.user?.sql.user_id;
     const simlet = await simletService.createSimlet(req.body);
     res.status(201).json(simlet);
   } catch (err) {
@@ -135,7 +132,7 @@ export async function createSimlet(
  * 
  * @async
  * @function updateSimlet
- * @param {Request} req - Express request object containing simlet ID in params and update data in body
+ * @param {AuthenticatedRequest} req - Express request object containing simlet ID in params and update data in body
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -147,7 +144,7 @@ export async function createSimlet(
  * // Returns: 200 OK with updated simlet object
  */
 export async function updateSimlet(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
@@ -165,7 +162,7 @@ export async function updateSimlet(
  * 
  * @async
  * @function deleteSimlet
- * @param {Request} req - Express request object containing simlet ID in URL params
+ * @param {AuthenticatedRequest} req - Express request object containing simlet ID in URL params
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -176,57 +173,14 @@ export async function updateSimlet(
  * // Returns: 204 No Content
  */
 export async function deleteSimlet(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.id as string);
-    await simletService.deleteSimlet(simletId);
+    await db.Tables.Simlets.deleteSimlet(simletId);
     res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * Retrieves the count of all simlets or by specific filters.
- * 
- * @async
- * @function getSimletsCount
- * @param {Request} req - Express request object with optional query parameters (coordinator, allocator)
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next middleware function for error handling
- * @returns {Promise<void>}
- * @throws {Error} Passes errors to next middleware
- * 
- * @example
- * // GET /simlets/count
- * // Returns: { count: 42 }
- * 
- * @example
- * // GET /simlets/count?coordinator=123
- * // Returns: { count: 5 }
- */
-export async function getSimletsCount(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const coordinator = req.query.coordinator ? parseInt(String(req.query.coordinator)) : undefined;
-    const allocator = req.query.allocator ? parseInt(String(req.query.allocator)) : undefined;
-
-    let count;
-    if (coordinator) {
-      count = await simletService.countSimletsByCoordinator(coordinator);
-    } else if (allocator) {
-      count = await simletService.countSimletsByAllocator(allocator);
-    } else {
-      count = await simletService.countSimlets();
-    }
-
-    res.json({ count });
   } catch (err) {
     next(err);
   }
@@ -237,7 +191,7 @@ export async function getSimletsCount(
  * 
  * @async
  * @function searchSimlets
- * @param {Request} req - Express request object with query parameter 'q' for search term
+ * @param {AuthenticatedRequest} req - Express request object with query parameter 'q' for search term
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -248,7 +202,7 @@ export async function getSimletsCount(
  * // Returns simlets matching 'mathematics' in name or description
  */
 export async function searchSimlets(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
@@ -261,8 +215,8 @@ export async function searchSimlets(
     }
 
     const [nameResults, descriptionResults] = await Promise.all([
-      simletService.searchSimletsByName(searchTerm),
-      simletService.searchSimletsByDescription(searchTerm)
+      db.Tables.Simlets.searchSimletsByName(searchTerm),
+      db.Tables.Simlets.searchSimletsByDescription(searchTerm)
     ]);
 
     // Combine and deduplicate results
@@ -281,92 +235,32 @@ export async function searchSimlets(
   }
 }
 
-/**
- * Checks if a simlet exists by ID.
- * 
- * @async
- * @function checkSimletExists
- * @param {Request} req - Express request object containing simlet ID in URL params
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next middleware function for error handling
- * @returns {Promise<void>}
- * @throws {Error} Passes errors to next middleware
- * 
- * @example
- * // GET /simlets/123/exists
- * // Returns: { exists: true }
- */
-export async function checkSimletExists(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const simletId = parseInt(req.params.id as string);
-    const exists = await simletService.simletExists(simletId);
-    res.json({ exists });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * Gets simlets that have sandbox sessions.
- * 
- * @async
- * @function getSimletsWithSandbox
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next middleware function for error handling
- * @returns {Promise<void>}
- * @throws {Error} Passes errors to next middleware
- * 
- * @example
- * // GET /simlets/sandbox
- * // Returns array of simlets with sandbox sessions
- */
-export async function getSimletsWithSandbox(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const simlets = await simletService.getSimletsWithSandbox();
-    res.json(simlets);
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * Gets current user's simlets (simlets they coordinate).
- * Requires authentication.
- * 
- * @async
- * @function getMySimlets
- * @param {AuthenticatedRequest} req - Express request object with authenticated user
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next middleware function for error handling
- * @returns {Promise<void>}
- * @throws {AuthentificationError} If user is not authenticated
- * 
- * @example
- * // GET /simlets/me
- * // Returns array of simlets coordinated by the current user
- */
-export async function getMySimlets(
+export async function getAllocatorFromSimlet(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const userId = req.user?.sql?.user_id;
-    if (!userId) {
-      throw new AuthentificationError("User not authenticated");
-    }
+    const simletId = parseInt(req.params.id as string);
+    logger.info({simletId} , "Getting allocator for simlet ID");
+    const allocator = await simletService.getAllocatorFromSimlet(simletId);
+    res.json(allocator);
+  } catch (err) {
+    next(err);
+  }
+}
 
-    const simlets = await simletService.getSimletsByCoordinator(userId);
-    res.json(simlets);
+export async function getSimletParticipants(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.id as string);
+    logger.info({simletId} , "Getting participants for simlet ID");
+    const participants = await simletService.getSimletParticipants(simletId);
+    logger.info({participants} , "Participants retrieved for simlet ID");
+    res.json(participants);
   } catch (err) {
     next(err);
   }

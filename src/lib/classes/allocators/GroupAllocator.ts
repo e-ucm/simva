@@ -1,4 +1,4 @@
-import { Allocator } from "@/services/allocators/libs/Allocator";
+import { Allocator } from "@/lib/classes/allocators/Allocator";
 
 export class GroupAllocator extends Allocator {
     static getType(){
@@ -25,5 +25,10 @@ export class GroupAllocator extends Allocator {
         return {
             allocatedGroups: [] // Fetch allocated groups related to this allocator
         };
+    }
+
+    constructor(data: any) {
+        super(data);
+        // Additional initialization for GroupAllocator if needed
     }
 }   

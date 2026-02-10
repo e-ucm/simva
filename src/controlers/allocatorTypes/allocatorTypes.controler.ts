@@ -32,20 +32,23 @@ export async function getAllocatorTypes(
     switch(currentUser?.role) {
       case 'admin':
         if(req.query.type) {
-          const allocatorType = await allocatorTypesservice.getAllocatorTypes(String(req.query.type));
+          const allocatorType = await allocatorTypesservice.getAllocatorTypes();
           if (!allocatorType) {
             throw new NotFoundError("Allocator type not found");
           }
-          return res.json(allocatorType);
+          logger.info({allocatorType});
+          res.json(allocatorType);
         } else {
-          const allocatorTypes = await allocatorTypesservice.getAllocatorTypes(currentUser?.username || "");
-          return res.json(allocatorTypes);
+          const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
+          logger.info({allocatorTypes});
+          res.json(allocatorTypes);
         }
       case 'teacher':
       case 'student':
         if(currentUser.user_id) {
-          const allocatorTypes = await allocatorTypesservice.getAllocatorTypes(currentUser?.username || "");
-          return res.json(allocatorTypes);
+          const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
+          logger.info({allocatorTypes});
+          res.json(allocatorTypes);
         }
         break;
       default:

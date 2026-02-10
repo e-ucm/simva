@@ -17,11 +17,9 @@ import {
   createSimlet,
   updateSimlet,
   deleteSimlet,
-  getSimletsCount,
   searchSimlets,
-  checkSimletExists,
-  getSimletsWithSandbox,
-  getMySimlets
+  getAllocatorFromSimlet,
+  getSimletParticipants
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -30,10 +28,7 @@ import {
  * Routes:
  * - GET / - Retrieve all simlets with optional pagination and filtering
  * - POST / - Create a new simlet
- * - GET /count - Get total count of simlets with optional filters
  * - GET /search - Search simlets by name or description
- * - GET /sandbox - Get simlets with sandbox sessions
- * - GET /me - Get current user's coordinated simlets
  * - GET /:id - Retrieve a simlet by ID
  * - PUT /:id - Update a simlet by ID
  * - DELETE /:id - Delete a simlet by ID
@@ -63,17 +58,15 @@ import {
 const router = Router();
 
 // Collection endpoints (should come before parameterized routes)
-router.get("/count", getSimletsCount);
 router.get("/search", searchSimlets);
-router.get("/sandbox", getSimletsWithSandbox);
-router.get("/me", getMySimlets);
 router.get("/", getAllSimlets);
 router.post("/", createSimlet);
 
 // Individual resource endpoints
+router.get("/:id/allocator", getAllocatorFromSimlet)
+router.get("/:id/participants", getSimletParticipants);
 router.get("/:id", getSimletById);
 router.put("/:id", updateSimlet);
 router.delete("/:id", deleteSimlet);
-router.get("/:id/exists", checkSimletExists);
 
 export default router;

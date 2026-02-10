@@ -1,6 +1,19 @@
-import { Activity } from "@/services/activities/libs/Activity";
+import { Activity } from "@/lib/classes/activities/Activity";
+import { db } from "@/lib/db";
 
 export class LimesurveyActivity extends Activity {
+	survey_id: number=-1;
+	language: string='';
+	lrsset: number=-1;
+	constructor(data: any) {
+		super(data);
+		db.Tables.LimesurveyActivities.findOne({ where: { activity_id: this.activity_id } }).then((activityData) => {
+			if (activityData) {
+				Object.assign(this, activityData);
+			}
+		});
+	}
+	
 	static getType(){
 		return 'limesurvey';
 	}

@@ -21,7 +21,7 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '@/lib/logger';
 import fs from 'fs';
 import yaml from 'yaml';
-import { validateJWT, KeycloakJWTPayload } from '@/services/users/user.service';
+import { validateJWT, KeycloakJWTPayload } from '@/services/users/user.auth.service';
 import { AuthentificationError, NotFoundError } from '@/lib/errors/appErrors';
 import path from 'path';
 import { config } from '@/lib/config';

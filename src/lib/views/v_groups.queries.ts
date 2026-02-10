@@ -1,12 +1,35 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
-    byVersion: {
-        description: "Get all Groups for a certain Version",
+    byGroupIdAndUserId: {
+        description: "Get current Group for a certain Group ID and User ID",
         sql: `
         SELECT *
-        FROM v_complete_groups
-        WHERE use_new_generation IS :version
+        FROM v_complete_groups_users_permissions
+        WHERE user_id = :user_id AND group_id = :group_id
+        `,
+        params: {
+            user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            group_id: {
+                type: "number",
+                required: true,
+                description: "Group Identifier",
+                example: 1
+            },
+        },
+    },
+
+    byVersionAndUserId: {
+        description: "Get all Groups for a certain Version and User ID",
+        sql: `
+        SELECT *
+        FROM v_complete_groups_users_permissions
+        WHERE use_new_generation IS :version AND user_id = :user_id
         `,
         params: {
             version: {
@@ -14,6 +37,12 @@ const queries: Record<string, QueryTemplate> = {
                 required: true,
                 description: "Version flag indicating whether to use new generation",
                 example: true
+            },
+            user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
             },
         },
     },

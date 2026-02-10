@@ -101,27 +101,12 @@ paths:
       responses:
         '200':
           description: User updated
-          schema:
-              $ref: '#/components/schemas/user'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
         '400':
           description: 'invalid input, object invalid'
-  /users/login:
-    post:
-      summary: logs in the user obtaining an auth token
-      operationId: loginUser
-      description: |
-        Creates a new group for the current user as owner.
-      responses:
-        '200':
-          description: Success including the auth token to be used
-        '400':
-          description: 'invalid input'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/login_body'
-        required: true
   /users/me:
     get:
       tags:
@@ -135,24 +120,6 @@ paths:
       responses:
         '200':
           description: The user
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/user'
-        '400':
-          description: 'invalid input'
-  /users/islimesurveyadmin:
-    get:
-      tags:
-        - admins
-        - teachers
-      summary: Is Limesurvey Admin.
-      operationId: isUserLimesurveyAdmin
-      description: |
-        Based on the current auth header obtains the user 
-      responses:
-        '200':
-          description: is user Present in Limesurvey 
           content:
             application/json:
               schema:
@@ -458,7 +425,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/upload_file'
           description: Study to be created
-  /simlets/{studyid}:
+  /simlets/{simletid}:
     get:
       tags:
         - admins
@@ -519,7 +486,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/export:
+  /simlets/{simletid}/export:
     get:
       tags:
         - admins
@@ -541,7 +508,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/events:
+  /simlets/{simletid}/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -556,7 +523,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/events/getPresignedUrl:
+  /simlets/{simletid}/events/getPresignedUrl:
     get:
       tags:
         - teachers
@@ -573,7 +540,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/schedule:
+  /simlets/{simletid}/schedule:
     get:
       tags:
         - teachers
@@ -605,7 +572,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/schedule/events:
+  /simlets/{simletid}/schedule/events:
     get:
       summary: send Server Side Events to Client for this study
       operationId: GetEvent
@@ -620,7 +587,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/schedule/events/getPresignedUrl:
+  /simlets/{simletid}/schedule/events/getPresignedUrl:
     get:
       tags:
         - teachers
@@ -638,7 +605,7 @@ paths:
           description: 'One or both of the JWT are not valid'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/groups:
+  /simlets/{simletid}/groups:
     get:
       tags:
         - admins
@@ -662,7 +629,7 @@ paths:
           description: 'Study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/tests:
+  /simlets/{simletid}/sessions:
     get:
       tags:
         - teachers
@@ -709,7 +676,7 @@ paths:
             schema:
               $ref: '#/components/schemas/test'
         required: true
-  /simlets/{studyid}/participants:
+  /simlets/{simletid}/participants:
     get:
       tags:
         - teachers
@@ -732,7 +699,7 @@ paths:
           description: 'study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-  /simlets/{studyid}/tests/{testid}:
+  /simlets/{simletid}/sessions/{sessionid}:
     get:
       tags:
         - teachers
@@ -752,8 +719,8 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/studyStudyId'
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
     put:
       tags:
         - teachers
@@ -770,8 +737,8 @@ paths:
         '404':
           description: 'Requested study does not exist'
       parameters:
-        - $ref: '#/components/parameters/studyStudyId'
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
       requestBody:
         content:
           application/json:
@@ -786,8 +753,8 @@ paths:
       description: |
         Modifies the test
       parameters:
-        - $ref: '#/components/parameters/studyStudyId'
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
       requestBody:
         content:
           application/json:
@@ -819,9 +786,9 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/studyStudyId'
-        - $ref: '#/components/parameters/testId'
-  /simlets/{studyid}/tests/{testid}/activities:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+  /simlets/{simletid}/sessions/{sessionid}/activities:
     get:
       tags:
         - teachers
@@ -839,8 +806,8 @@ paths:
                 items: 
                   $ref: '#/components/schemas/activity'
       parameters:
-        - $ref: '#/components/parameters/studyStudyId'
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
     post:
       tags:
         - teachers
@@ -860,15 +827,15 @@ paths:
         '409':
           description: an existing item already exists
       parameters:
-        - $ref: '#/components/parameters/studyStudyId'
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/activity'
-  /simlets/{studyid}/allocator:
+  /simlets/{simletid}/allocator:
     get:
       tags:
         - teachers
@@ -979,7 +946,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
     put:
       tags:
         - teachers
@@ -1011,7 +978,7 @@ paths:
       description: |
         Modifies the activity
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
       requestBody:
         content:
           application/json:
@@ -1039,7 +1006,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
   /activities/{id}/export:
     get:
       tags:
@@ -1061,7 +1028,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
   /activities/{id}/surveyowner:
     patch:
       tags:
@@ -1115,7 +1082,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
   /activities/{id}/openable:
     get:
       tags:
@@ -1138,7 +1105,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
   /activities/{id}/open:
     get:
       tags:
@@ -1157,7 +1124,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
   /activities/{id}/target:
     get:
       tags:
@@ -1176,7 +1143,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
   /activities/{id}/progress:
     get:
       tags:
@@ -1194,7 +1161,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
   /activities/{id}/suspend:
     post:
@@ -1213,7 +1180,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/completion:
     get:
@@ -1232,7 +1199,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
     post:
       tags:
@@ -1250,7 +1217,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/multicompletion:
     post:
@@ -1268,7 +1235,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
   /activities/{id}/result:
     get:
       tags:
@@ -1286,7 +1253,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
     post:
@@ -1305,7 +1272,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/hasresult:
     get:
@@ -1345,7 +1312,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/time'
         - $ref: '#/components/parameters/user'
   /activities/{id}/presignedurl:
@@ -1387,7 +1354,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
     post:
@@ -1409,7 +1376,7 @@ paths:
         '409':
           description: 'Conflict in statementId'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
     put:
       tags:
@@ -1430,7 +1397,7 @@ paths:
         '409':
           description: 'Conflict in statementId'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/agents:
     get:
@@ -1452,7 +1419,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
   /activities/{id}/agents/profile:
@@ -1475,7 +1442,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
     post:
@@ -1495,7 +1462,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
     put:
       tags:
@@ -1516,7 +1483,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
     delete:
       tags:
@@ -1537,7 +1504,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/activities:
     get:
@@ -1559,7 +1526,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
   /activities/{id}/activities/profile:
@@ -1582,7 +1549,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
     post:
@@ -1602,7 +1569,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
     put:
       tags:
@@ -1623,7 +1590,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
     delete:
       tags:
@@ -1644,7 +1611,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/activities/status:
     get:
@@ -1666,7 +1633,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
     post:
@@ -1686,7 +1653,7 @@ paths:
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
     put:
       tags:
@@ -1707,7 +1674,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
     delete:
       tags:
@@ -1728,7 +1695,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/about:
     get:
@@ -1750,7 +1717,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
   /activities/{id}/extensions/{extensionId}:
@@ -1773,7 +1740,7 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/testId'
+        - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
   /activitytypes:
@@ -2267,30 +2234,22 @@ components:
         example: "peter"
       format: username
       description: The username of a specific user
-    studyId:
+    simletId:
       in: path
-      name: id
+      name: simletid
       required: true
       schema:
         type: string
         example: "5d07a0767c1405004bc702af"
-      description: The study ID
-    studyStudyId:
+      description: The SIMLET ID
+    sessionId:
       in: path
-      name: studyid
-      required: true
-      schema:
-        type: string
-        example: "5d07a0767c1405004bc702af"
-      description: The study ID
-    testId:
-      in: path
-      name: testid
+      name: sessionid
       required: true
       schema:
         type: string
         example: "5d07a0767c1405004bc702at"
-      description: The test ID
+      description: The session ID
     searchString:
       in: query
       name: searchString
@@ -2466,7 +2425,6 @@ components:
       required:
         - username
         - email
-        - password
         - role
       properties:
         username:
@@ -2475,9 +2433,6 @@ components:
         email:
           type: string
           example: "email"
-        password:
-          type: string
-          example: "Pass12345"
         isToken:
           type: string
           example: "True"
@@ -2518,9 +2473,6 @@ components:
         email:
           type: string
           example: "email"
-        password:
-          type: string
-          example: "Pass12345"
         role:
           type: string
           description: |
@@ -2616,8 +2568,7 @@ components:
           format: date-time
           example: "2017-07-21T17:32:28Z"
         active:
-          type: string
-          format: boolean
+          type: boolean
           example: true
         version:
           type: integer
@@ -2672,8 +2623,7 @@ components:
         extra_data:
           type: object
         active:
-          type: string
-          format: boolean
+          type: boolean
           example: true
         study:
           type: string

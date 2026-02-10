@@ -1,8 +1,8 @@
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { Response, NextFunction } from "express";
-import * as userService from "@/services/users/user.service";
 import { NotFoundError, AuthentificationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
+import { db } from "@/lib/db";
 
 /**
  * Retrieves users from the database.
@@ -31,27 +31,28 @@ export async function getUsers(
 ) {
   try {
     let currentUser = req.user?.sql;
+    const limit = req.query.limit ? parseInt(String(req.query.limit)) : undefined;
+    const offset = req.query.offset ? parseInt(String(req.query.offset)) : undefined;
+    
     switch(currentUser?.role) {
       case 'admin':
         if(req.query.username) {
-          const user = await userService.getUserByUsername(String(req.query.username));
-          if (!user) {
-            throw new NotFoundError("User not found");
-          }
+          const user = await db.Tables.User.getUserByUsername(String(req.query.username));
           return res.json(user);
         } else {
-          const users = await userService.getAllUsers();
+          const users = await db.Tables.User.getAllUsers(limit, offset);
           return res.json(users);
         }
       case 'teacher':
       case 'student':
         if(currentUser.user_id) {
-          const users = await userService.getUserById(currentUser.user_id);
+          const users = await db.Tables.User.getUserById(currentUser.user_id);
           return res.json(users);
+        } else {
+          throw new AuthentificationError("User not authenticated");
         }
-        break;
       default:
-        throw new AuthentificationError("Insufficient permissions to access user data");
+        throw new AuthentificationError("Insufficient permissions");
     }
   } catch (err) {
     next(err);
@@ -84,7 +85,7 @@ export async function patchUser(
     if (!currentUser?.user_id) {
       throw new AuthentificationError("Current user ID not found");
     }
-    const updatedUser = await userService.updateUserById(currentUser.user_id, { role: req.body.role });
+    const updatedUser = await db.Tables.User.updateUser(currentUser.user_id, req.body);
     res.json(updatedUser);
   } catch (err) {
     next(err);
@@ -122,7 +123,7 @@ export async function getMe(
       throw new AuthentificationError("User not authenticated");
     }
     
-    const user = await userService.getUserById(userId);
+    const user = await db.Tables.User.getUserById(userId);
     logger.info(`getMe: Retrieved user with ID ${userId}`);
     
     res.json(user);

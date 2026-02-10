@@ -1,6 +1,23 @@
-import { Activity } from "@/services/activities/libs/Activity";
+import { Activity } from "@/lib/classes/activities/Activity";
+import {db } from "@/lib/db";
 
 export class GamePlayActivity extends Activity {
+	backup: boolean= false;
+	scorm_xapi_by_game: boolean = false;
+	category_id?: number;
+	subject_area_id?: number;
+	game_type?: string;
+	game_url?: string;
+	
+	constructor(data: any) {
+		super(data);
+		db.Tables.GamePlayActivities.findOne({ where: { activity_id: this.activity_id } }).then((activityData) => {
+			if (activityData) {
+				Object.assign(this, activityData);
+			}
+		});
+	}
+
 	static getType(){
 		return 'gameplay';
 	}

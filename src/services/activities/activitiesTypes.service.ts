@@ -1,7 +1,7 @@
-import { Activity } from "@/services/activities/libs/Activity";
-import { GamePlayActivity } from "@/services/activities/libs/GameplayActivity";
-import { LimesurveyActivity } from "@/services/activities/libs/LimesurveyActivity";
-import { ManualActivity } from "@/services/activities/libs/ManualActivity";
+import { Activity } from "@/lib/classes/activities/Activity";
+import { GamePlayActivity } from "@/lib/classes/activities/GameplayActivity";
+import { LimesurveyActivity } from "@/lib/classes/activities/LimesurveyActivity";
+import { ManualActivity } from "@/lib/classes/activities/ManualActivity";
 
 class ActivityType {
 	type: string | undefined;
