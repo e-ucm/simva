@@ -139,7 +139,7 @@ export async function getSimletParticipants(simletId: number): Promise<SimletPar
 
 export async function getSimletGroups(simletId: number): Promise<SimletGroup[]> {
   const groups = await db.Functions.runViewQuery(
-    db.Views.Simlet.GroupBySimletId,
+    db.Views.Simlet.GroupsBySimletId,
     { simlet_id: simletId }
   );
   logger.debug({groups} , "Groups data from view");

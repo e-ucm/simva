@@ -67,6 +67,8 @@ export function validateParams(schema: Schema, params: Params): void {
         }
         if ("default" in rules) {
             params[key] = rules.default;
+        } else {
+            params[key] = null;
         }
         continue;
         }

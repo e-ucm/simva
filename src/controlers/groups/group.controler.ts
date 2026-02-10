@@ -29,7 +29,11 @@ export async function getGroups(
   next: NextFunction
 ) {
   try {
-    const groups = await groupService.getGroups(req.user!.sql.user_id as number, req.query.use_new_generation === 'true');
+    let version= null;
+    if(req.query.use_new_generation) {
+      version = (req.query.use_new_generation === 'true');
+    }
+    const groups = await groupService.getGroups(req.user!.sql.user_id as number, version);
     res.json(groups);
   } catch (err) {
     next(err);

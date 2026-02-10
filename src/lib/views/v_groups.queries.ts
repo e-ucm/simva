@@ -29,20 +29,20 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT *
         FROM v_complete_groups_users_permissions
-        WHERE use_new_generation IS :version AND user_id = :user_id
+        WHERE user_id = :user_id AND (:version IS NULL OR use_new_generation = :version)
         `,
         params: {
-            version: {
-                type: "boolean",
-                required: true,
-                description: "Version flag indicating whether to use new generation",
-                example: true
-            },
             user_id: {
                 type: "number",
                 required: true,
                 description: "User Identifier",
                 example: 123,
+            },
+            version: {
+                type: "boolean",
+                required: false,
+                description: "Version flag indicating whether to use new generation",
+                example: true
             },
         },
     },

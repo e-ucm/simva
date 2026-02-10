@@ -57,6 +57,23 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
+
+  GroupsBySimletId : {
+    description: "Get Simlet Group By Simlet Identifier",
+    sql: `
+      SELECT *
+      FROM v_complete_groups_simlets
+      WHERE simlet_id = :simlet_id
+    `,
+    params: {
+      simlet_id: {
+        type: "number",
+        required: true,
+        description: "Simlet Identifier",
+        example: 1,
+      },
+    },
+  },
   
   AllocatedParticipantsBySimletId: {
     description: "Get all allocated participants for a certain Simlet ID",

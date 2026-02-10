@@ -17,8 +17,13 @@ import { logger } from "@/lib/logger";
  * @param version
  * @returns 
  */
-export async function getGroups(user_id: number, version: boolean = true): Promise<Group[]> {
-    let groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, {version, user_id});
+export async function getGroups(user_id: number, version: boolean | null = null): Promise<Group[]> {
+    let groups;
+    if(version == null) {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id});
+    } else {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, {version, user_id});
+    }
     return groups.map((groupData: any) => new Group(groupData));
 }
 
