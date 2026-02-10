@@ -16,12 +16,12 @@ import { Simlet } from "@/lib/classes/simlet/Simlet";
 import { logger } from "@/lib/logger";
 import { ValidationError } from "@/lib/errors/appErrors";
 import { Allocator } from "@/lib/classes/allocators/Allocator";
-import { AllocatorToClass } from "@/lib/classes/allocators/SelectAllocatorFromType";
+import { AllocatorToClass } from "@/lib/classes/allocators/AllocatorToClass";
 import { SimletParticipant } from "@/lib/classes/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/classes/simlet/SimletGroup";
 import { Session } from "@/lib/classes/session/Session";
 import { Activity } from "@/lib/classes/activities/Activity";
-import { ActivityToClass } from "@/lib/classes/activities/SelectActivityFromType";
+import { ActivityToClass } from "@/lib/classes/activities/ActivityToClass";
 
 /**
  * Service for Simlet entity operations.

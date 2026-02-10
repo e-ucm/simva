@@ -1,4 +1,4 @@
-import { ActivityToClass } from "@/lib/classes/activities/SelectActivityFromType";
+import { ActivityToClass } from "@/lib/classes/activities/ActivityToClass";
 import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
