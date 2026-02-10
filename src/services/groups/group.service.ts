@@ -29,12 +29,12 @@ export async function getGroup(group_id: number, user_id: number): Promise<Group
     } else if (groups.length > 1) {
         throw new Error(`Multiple groups found with ID ${group_id} for user ${user_id}`);
     }
-    logger.info({ groupData: groups[0] }, `Group data retrieved for group ID ${group_id} and user ID ${user_id}`);
+    logger.debug({ groupData: groups[0] }, `Group data retrieved for group ID ${group_id} and user ID ${user_id}`);
     return new Group(groups[0]);
 }
 
 export async function getGroupParticipants(group_id: number): Promise<GroupParticipant[]> {
     let participantsData = await db.Functions.runViewQuery(db.Views.Group.participantsById, {group_id});
-    logger.info({ participantsData }, `Group data retrieved for group ID ${group_id}`);
+    logger.debug({ participantsData }, `Group data retrieved for group ID ${group_id}`);
     return participantsData.map((participant: any) => new GroupParticipant(participant));
 }

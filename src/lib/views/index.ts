@@ -18,7 +18,7 @@
  */
 
 import Simlet from "@/lib/views/v_complete_simlets.queries";
-import Session from "@/lib/views/v_complete_sessions.queries";
+import Activity from "@/lib/views/v_complete_activities.queries";
 import Group from "@/lib/views/v_groups.queries";
 
 /**
@@ -28,7 +28,7 @@ import Group from "@/lib/views/v_groups.queries";
  * @type {Object}
  * @property {Object} User - User-related view queries
  * @property {Object} Simlet - SIMLET-related view queries  
- * @property {Object} Session - Session-related view queries
+ * @property {Object} Activity - Activity-related view queries
  * @property {Object} Group - Group-related view queries
  * 
  * @example
@@ -44,7 +44,7 @@ import Group from "@/lib/views/v_groups.queries";
  */
 const views = {
   Simlet,
-  Session,
+  Activity,
   Group
 };
 

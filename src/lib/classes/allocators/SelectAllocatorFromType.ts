@@ -5,7 +5,7 @@ import { GroupAllocator } from "@/lib/classes/allocators/GroupAllocator";
 import { logger } from "@/lib/logger";
 
 export function AllocatorToClass(data: any) : Allocator {
-    logger.info({data}, data.allocator_type);
+    logger.debug({data}, data.allocator_type);
     switch (data.allocator_type) {
         case SessionAllocator.getType():
             return new SessionAllocator(data);

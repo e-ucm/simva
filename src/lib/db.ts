@@ -64,7 +64,7 @@ if (!globalForDb.db) {
     Views: views,
   } as DbType;
   globalForDb.db.Functions.runSqlFile(config.db.view_complete_path).then(() => {
-    logger.info('Database views initialized successfully');
+    logger.debug('Database views initialized successfully');
   }).catch((err) => {
     logger.error({err}, 'Error initializing database views:', (err as Error).message);
   });

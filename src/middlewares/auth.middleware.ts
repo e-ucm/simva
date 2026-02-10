@@ -117,9 +117,9 @@ export class Authenticator {
         }
       }
 
-      logger.info('####################### FINAL TREE OF ALLOWED ROUTES #######################');
-      logger.info(JSON.stringify(this.allowedRoutes, null, 2));
-      logger.info('############################################################################');
+      logger.debug('####################### FINAL TREE OF ALLOWED ROUTES #######################');
+      logger.debug(JSON.stringify(this.allowedRoutes, null, 2));
+      logger.debug('############################################################################');
 
       this.initialized = true;
     } catch (error) {
@@ -245,7 +245,7 @@ export class Authenticator {
           logger.debug('[AUTH] Token found in query parameters');
         }
         
-        logger.info(`Authenticating request for ${req.path} ${req.method}`);
+        logger.debug(`Authenticating request for ${req.path} ${req.method}`);
         
         if (!token) {
           logger.debug('[AUTH] No authorization token found');
@@ -392,7 +392,7 @@ export class Authenticator {
         try {
           const tokenString = token.substring(7);
           req.user = await validateJWT(tokenString);
-          logger.info(req.user, `[AUTH] User authenticated: ${req.user.sql.username}`);
+          logger.debug(req.user, `[AUTH] User authenticated: ${req.user.sql.username}`);
         } catch (e) {
           // Swallow authentication errors and continue
           logger.debug('[AUTH] Optional authentication failed, continuing without user context');

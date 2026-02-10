@@ -354,4 +354,12 @@ SELECT
     a.createdAt,
     a.updatedAt
 FROM Allocators a
-JOIN SIMLETs s ON a.allocator_id = s.allocator_id
+JOIN SIMLETs s ON a.allocator_id = s.allocator_id;
+
+DROP VIEW IF EXISTS v_complete_groups_simlets;
+CREATE VIEW v_complete_groups_simlets AS
+SELECT
+    sg.simlet_id,
+    g.*
+FROM SIMLETs_groups sg
+LEFT JOIN vv_complete_groups g ON sg.group_id = g.group_id;

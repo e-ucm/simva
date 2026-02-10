@@ -28,7 +28,6 @@ export class Session {
         this.simlet_id = data.simlet_id;
         this.username = data.username || "";
         this.name = data.name || "";
-        db.Functions.parseStringArraysToTypedArrays(this, Session.keys, 'number');
-        Object.assign(this, data);
+        Object.assign(this, db.Functions.parseStringArraysToTypedArrays(data, Session.keys, 'number'));
     }
 }

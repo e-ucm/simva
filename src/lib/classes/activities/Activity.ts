@@ -23,9 +23,9 @@ export class Activity {
 		this.expires_on_seconds = data.expires_on_seconds;
 		this.trace_storage = data.trace_storage || false; // Default to false if not provided
 		this.description = data.description || ""; // Default to empty string if not provided
-		this.direct_supervisors = data.direct_supervisors || []; // Default to empty array if not provided
-		this.direct_coordinators = data.direct_coordinators || []; // Default to empty array if not provided
+		Object.assign(this, data);
 	}
+	
 	static getType(){
 		return 'activity';
     }

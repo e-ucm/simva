@@ -19,7 +19,11 @@ import {
   deleteSimlet,
   searchSimlets,
   getAllocatorFromSimlet,
-  getSimletParticipants
+  getSimletParticipants,
+  getSimletGroups,
+  getSimletSessions,
+  getSimletSession,
+  getSessionActivities
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -29,10 +33,15 @@ import {
  * - GET / - Retrieve all simlets with optional pagination and filtering
  * - POST / - Create a new simlet
  * - GET /search - Search simlets by name or description
- * - GET /:id - Retrieve a simlet by ID
- * - PUT /:id - Update a simlet by ID
- * - DELETE /:id - Delete a simlet by ID
- * - GET /:id/exists - Check if a simlet exists by ID
+ * - GET /:simlet_id - Retrieve a simlet by ID
+ * - PUT /:simlet_id - Update a simlet by ID
+ * - DELETE /:simlet_id - Delete a simlet by ID
+ * - GET /:simlet_id/exists - Check if a simlet exists by ID
+ * - GET /:simlet_id/allocator - Get allocator data for a simlet
+ * - GET /:simlet_id/participants - Get participants allocated to a simlet
+ * - GET /:simlet_id/groups - Get groups associated with a simlet
+ * - GET /:simlet_id/sessions - Get sessions of a simlet
+ * - GET /:simlet_id/sessions/:session_id - Get details of a specific session in a simlet
  * 
  * @type {Router}
  * 
@@ -43,16 +52,17 @@ import {
  * 
  * // GET /simlets - all simlets
  * // GET /simlets?limit=10&offset=20 - paginated simlets
- * // GET /simlets?coordinator=123 - simlets by coordinator
  * // POST /simlets - create simlet
  * // PUT /simlets/123 - update simlet
  * // DELETE /simlets/123 - delete simlet
- * // GET /simlets/count - total count
  * // GET /simlets/search?q=math - search simlets
- * // GET /simlets/sandbox - sandbox simlets
  * // GET /simlets/me - current user's simlets
  * // GET /simlets/123 - single simlet
- * // GET /simlets/123/exists - check existence
+ * // GET /simlets/123/allocator - simlet's allocator
+ * // GET /simlets/123/participants - simlet's participants
+ * // GET /simlets/123/groups - simlet's groups
+ * // GET /simlets/123/sessions - simlet's sessions
+ * // GET /simlets/123/sessions/456 - specific session in simlet
  * ```
  */
 const router = Router();
@@ -63,10 +73,14 @@ router.get("/", getAllSimlets);
 router.post("/", createSimlet);
 
 // Individual resource endpoints
-router.get("/:id/allocator", getAllocatorFromSimlet)
-router.get("/:id/participants", getSimletParticipants);
-router.get("/:id", getSimletById);
-router.put("/:id", updateSimlet);
-router.delete("/:id", deleteSimlet);
+router.get("/:simlet_id/allocator", getAllocatorFromSimlet);
+router.get("/:simlet_id/participants", getSimletParticipants);
+router.get("/:simlet_id/groups", getSimletGroups);
+router.get("/:simlet_id/sessions", getSimletSessions);
+router.get("/:simlet_id/sessions/:session_id", getSimletSession);
+router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
+router.get("/:simlet_id", getSimletById);
+router.put("/:simlet_id", updateSimlet);
+router.delete("/:simlet_id", deleteSimlet);
 
 export default router;

@@ -45,7 +45,7 @@ export async function getAllSimlets(
     switch(currentUser?.role) {
       case "admin":
       case "teacher":
-        simlets = await simletService.getSimletsByUserId(currentUser.user_id);
+        simlets = await simletService.getSimletsByUserId(currentUser!.user_id as number);
         res.json(simlets);
         break;
     }
@@ -76,14 +76,14 @@ export async function getSimletById(
 ): Promise<void> {
   try {
     const currentUser = req.user?.sql;
-    const simlet_id = parseInt(String(req.params?.id));
+    const simlet_id = parseInt(req.params.simlet_id as string);
     let simlet;
     switch(currentUser?.role) {
       case "admin":
       case "teacher":
         // For teachers, we could add additional permission checking here if needed
-        simlet = await simletService.getSimletBySimletIdAndUserId(simlet_id, currentUser!.user_id);
-        logger.info({simlet} , "getSimletById results");
+        simlet = await simletService.getSimletBySimletIdAndUserId(simlet_id, currentUser!.user_id as number);
+        logger.debug({simlet} , "getSimletById results");
         res.json(simlet);
         break;
     }
@@ -149,7 +149,7 @@ export async function updateSimlet(
   next: NextFunction
 ): Promise<void> {
   try {
-    const simletId = parseInt(req.params.id as string);
+    const simletId = parseInt(req.params.simlet_id as string);
     const simlet = await simletService.updateSimlet(simletId, req.body);
     res.json(simlet);
   } catch (err) {
@@ -178,7 +178,7 @@ export async function deleteSimlet(
   next: NextFunction
 ): Promise<void> {
   try {
-    const simletId = parseInt(req.params.id as string);
+    const simletId = parseInt(req.params.simlet_id as string);
     await db.Tables.Simlets.deleteSimlet(simletId);
     res.status(204).send();
   } catch (err) {
@@ -241,8 +241,8 @@ export async function getAllocatorFromSimlet(
   next: NextFunction
 ): Promise<void> {
   try {
-    const simletId = parseInt(req.params.id as string);
-    logger.info({simletId} , "Getting allocator for simlet ID");
+    const simletId = parseInt(req.params.simlet_id as string);
+    logger.debug({simletId} , "Getting allocator for simlet ID");
     const allocator = await simletService.getAllocatorFromSimlet(simletId);
     res.json(allocator);
   } catch (err) {
@@ -256,11 +256,79 @@ export async function getSimletParticipants(
   next: NextFunction
 ): Promise<void> {
   try {
-    const simletId = parseInt(req.params.id as string);
-    logger.info({simletId} , "Getting participants for simlet ID");
+    const simletId = parseInt(req.params.simlet_id as string);
+    logger.debug({simletId} , "Getting participants for simlet ID");
     const participants = await simletService.getSimletParticipants(simletId);
-    logger.info({participants} , "Participants retrieved for simlet ID");
+    logger.debug({participants} , "Participants retrieved for simlet ID");
     res.json(participants);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSimletGroups(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    logger.debug({simletId} , "Getting groups for simlet ID");
+    const groups = await simletService.getSimletGroups(simletId);
+    logger.debug({groups} , "Groups retrieved for simlet ID");
+    res.json(groups);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSimletSessions(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const userId = req.user?.sql.user_id;
+    logger.debug({simletId, userId} , "Getting sessions for simlet ID and user ID");
+    const sessions = await simletService.getSimletSessions(simletId, userId!);
+    logger.debug({sessions} , "Sessions retrieved for simlet ID and user ID");
+    res.json(sessions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSimletSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    const userId = req.user?.sql.user_id;
+    logger.debug({simletId, sessionId, userId} , "Getting session for simlet ID, session ID and user ID");
+    const session = await simletService.getSimletSession(simletId, sessionId, userId!);
+    logger.debug({session} , "Session retrieved for simlet ID, session ID and user ID");
+    res.json(session);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSessionActivities(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const sessionId = parseInt(req.params.session_id as string);
+    const userId = req.user?.sql.user_id;
+    logger.debug({sessionId, userId} , "Getting activities for session ID and user ID");
+    const activities = await simletService.getSessionActivities(sessionId, userId!);
+    logger.debug({activities} , "Activities retrieved for session ID and user ID");
+    res.json(activities);
   } catch (err) {
     next(err);
   }

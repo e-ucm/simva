@@ -12,7 +12,7 @@ class AllocatorType {
 }
 
 export async function getAllocatorTypes() {
-	let types = [ Allocator, GroupAllocator]; //, SessionAllocator, RandomAllocator ];
+	let types = [ Allocator, GroupAllocator, SessionAllocator, RandomAllocator ];
 	let allocatortypes : AllocatorType[] = [];
 	for (let i = 0; i < types.length; i++) {
 		let allocatortype : AllocatorType = {
@@ -21,9 +21,9 @@ export async function getAllocatorTypes() {
 			description : types[i].getDescription(),
 			utils : await types[i].getUtils("")	
 		};
-		logger.info(`Loaded allocator type: ${allocatortype.type}`);
+		logger.debug(`Loaded allocator type: ${allocatortype.type}`);
 		allocatortypes.push(allocatortype);
 	}
-	//logger.info({allocatortypes});
+	logger.debug({allocatortypes});
 	return allocatortypes;
 }

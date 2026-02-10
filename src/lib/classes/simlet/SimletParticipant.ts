@@ -13,7 +13,7 @@ export class SimletParticipant {
     [key: string]: any;
 
     constructor(data: any) {
-        logger.info(data);
+        logger.debug(data);
         this.simlet_id = data.simlet_id;
         this.allocator_id = data.allocator_id;
         this.group_id = data.group_id;
@@ -27,6 +27,6 @@ export class SimletParticipant {
     }
 
     printInfo() {
-        logger.info({ SimletParticipant : this }, `SimletParticipant information - Simlet ID: ${this.simlet_id}, Allocator ID: ${this.allocator_id}, Group ID: ${this.group_id}, Participant ID: ${this.participant_id}, Username: ${this.username}, Role: ${this.role}`);
+        logger.debug({ SimletParticipant : this }, `SimletParticipant information - Simlet ID: ${this.simlet_id}, Allocator ID: ${this.allocator_id}, Group ID: ${this.group_id}, Participant ID: ${this.participant_id}, Username: ${this.username}, Role: ${this.role}`);
     }
 }

@@ -21,9 +21,9 @@ export class Simlet {
         this.description = data.description || ""; // Ensure description is included in the data
         this.username = data.username || "";
         this.permission = data.permission || "NO"; // Ensure permission is included in the data
-        logger.info({data} , "Initializing Simlet with data");
+        logger.debug({data} , "Initializing Simlet with data");
         if(typeof data === typeof db.Tables.Simlets) {
-            logger.info("Data is of type Simlets, fetching additional details from the database");
+            logger.debug("Data is of type Simlets, fetching additional details from the database");
             db.Functions.runViewQuery(
                 db.Views.Simlet.bySimletIdAndUserId,
                 { simlet_id: this.simlet_id, user_id : data.simlet_coordinator_id }
@@ -34,19 +34,17 @@ export class Simlet {
                     logger.warn(`Multiple simlets found with ID ${this.simlet_id} for user ID ${data.simlet_coordinator_id}. Using the first one.`);
                 }
                 let result = resultTable[0]; // Use the first result if multiple are returned
-                logger.info({result} , "Simlet data fetched from database");
-                const processedResults = db.Functions.parseStringArraysToTypedArrays(data, Simlet.keys, 'number');
-                Object.assign(this, processedResults);
+                logger.debug({result} , "Simlet data fetched from database");
+                Object.assign(this, db.Functions.parseStringArraysToTypedArrays(data, Simlet.keys, 'number'));
             });
         } else {
-            logger.info("Data is not of type Simlets, using provided data directly");
-            const processedResults = db.Functions.parseStringArraysToTypedArrays(data, Simlet.keys, 'number');
-            Object.assign(this, processedResults);
+            logger.debug("Data is not of type Simlets, using provided data directly");
+            Object.assign(this, db.Functions.parseStringArraysToTypedArrays(data, Simlet.keys, 'number'));
         }
     }
 
     // Additional methods related to Simlet can be added here
     printInfo() {
-        logger.info({ Simlet : this }, "Simlet information");
+        logger.debug({ Simlet : this }, "Simlet information");
     }
 }

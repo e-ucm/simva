@@ -36,18 +36,18 @@ export async function getAllocatorTypes(
           if (!allocatorType) {
             throw new NotFoundError("Allocator type not found");
           }
-          logger.info({allocatorType});
+          logger.debug({allocatorType});
           res.json(allocatorType);
         } else {
           const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
-          logger.info({allocatorTypes});
+          logger.debug({allocatorTypes});
           res.json(allocatorTypes);
         }
       case 'teacher':
       case 'student':
         if(currentUser.user_id) {
           const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
-          logger.info({allocatorTypes});
+          logger.debug({allocatorTypes});
           res.json(allocatorTypes);
         }
         break;

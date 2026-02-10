@@ -9,7 +9,6 @@ export * from "@/services/users/user.auth.service";
 
 // Group Services
 export * from "@/services/groups/group.service";
-export * from "@/services/groups/groupParticipants.service";
 
 // Simlet Services
 export * from "@/services/simlets/simlet.service";

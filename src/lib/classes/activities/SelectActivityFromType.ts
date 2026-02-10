@@ -5,7 +5,7 @@ import { ManualActivity } from "@/lib/classes/activities/ManualActivity";
 import { logger } from "@/lib/logger";
 
 export function ActivityToClass(data: any) : Activity {
-    logger.info({data}, data.activity_type);
+    logger.debug({data}, data.activity_type);
     switch (data.activity_type) {
         case GamePlayActivity.getType():
             return new GamePlayActivity(data);

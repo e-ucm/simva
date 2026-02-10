@@ -96,7 +96,7 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
         if (jwtPayload.sso.iss === keycloakRealmUrl && KeycloakKeyManager.isEnabled()) {
           const decodedWithHeader = jwt.decode(token, { complete: true }) as any;
           const header = decodedWithHeader?.header;
-          logger.info(header);
+          logger.debug(header);
           if (!header?.kid) {
             
             return resolve(jwtPayload);
@@ -195,7 +195,7 @@ async function createUserFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): 
     isToken: false // Default value for new users
   };
   
-  logger.info("createUserFromJWT - UserData: " + JSON.stringify(userData));
+  logger.debug("createUserFromJWT - UserData: " + JSON.stringify(userData));
   // Use model method instead of service method
   return await db.Tables.User.createUser(userData);
 }

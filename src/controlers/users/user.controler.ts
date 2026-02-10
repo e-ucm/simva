@@ -116,7 +116,7 @@ export async function getMe(
   try {
     // Extract user information from authenticated request
     // Assuming authentication middleware sets req.user.sql
-    logger.info(req.user, 'getMe: Fetching current user info');
+    logger.debug(req.user, 'getMe: Fetching current user info');
     const userId = req.user?.sql?.user_id;
     
     if (!userId) {
@@ -124,7 +124,7 @@ export async function getMe(
     }
     
     const user = await db.Tables.User.getUserById(userId);
-    logger.info(`getMe: Retrieved user with ID ${userId}`);
+    logger.debug(`getMe: Retrieved user with ID ${userId}`);
     
     res.json(user);
   } catch (err) {

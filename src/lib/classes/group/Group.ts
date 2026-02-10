@@ -22,6 +22,6 @@ export class Group {
 
     // Additional methods related to Group can be added here
     printInfo() {
-        logger.info({ Group : this }, "Group information");
+        logger.debug({ Group : this }, "Group information");
     }
 }

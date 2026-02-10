@@ -20,6 +20,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import userRoutes from '@/routes/users/user.routes';
 import groupRoutes from '@/routes/groups/group.routes';
 import simletRoutes from '@/routes/simlets/simlet.routes';
+import activitiesRoutes from './routes/activities/activities.routes';
 import activitiesTypesRoutes from '@/routes/activitiesTypes/activitiesTypes.routes';
 import allocatorsTypesRoutes from '@/routes/allocatorsTypes/allocatorsTypes.routes';
 import { errorMiddleware } from '@/middlewares/error.middleware';
@@ -57,6 +58,7 @@ app.get('/health', async (_req: Request, res: Response) => {
 app.use('/users', userRoutes);
 app.use('/groups', groupRoutes);
 app.use('/simlets', simletRoutes);
+app.use('/activities', activitiesRoutes);
 app.use('/activitytypes', activitiesTypesRoutes);
 app.use('/allocatortypes', allocatorsTypesRoutes);
 
