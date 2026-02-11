@@ -18,16 +18,19 @@ export class Session {
     session_end_date?: Date;
     activities?: number[];
     tags?: string[];
-    direct_coordinators?: number[];
-    direct_supervisors?: number[];
+    direct_coordinators?: string[];
+    indirect_supervisors?: string[];
     [key: string]: any;
-    static keys = ['activities', 'tags', 'direct_coordinators', 'direct_supervisors'];
+    static numericKeys = ['activities', 'tags'];
+    static stringKeys = ['direct_coordinators', 'indirect_supervisors'];
 
     constructor(data: any) {
         this.session_id = data.session_id;
         this.simlet_id = data.simlet_id;
         this.username = data.username || "";
         this.name = data.name || "";
-        Object.assign(this, db.Functions.parseStringArraysToTypedArrays(data, Session.keys, 'number'));
+        let result = db.Functions.parseStringArraysToTypedArrays(data, Session.numericKeys, 'number');
+        result = db.Functions.parseStringArraysToTypedArrays(result, Session.stringKeys, 'string')
+        Object.assign(this, result);
     }
 }

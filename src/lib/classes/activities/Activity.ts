@@ -1,3 +1,5 @@
+import { db } from "@/lib/db";
+
 export class Activity {
  	session_id: number;
 	activity_id: number;
@@ -9,8 +11,12 @@ export class Activity {
 	expires_on_seconds?: number;
 	trace_storage:boolean;
 	description?: string;
-	direct_supervisors?: number[];
-	direct_coordinators?: number[];
+	indirect_supervisors_read?: string[];
+	indirect_supervisors_write?: string[];
+	indirect_coordinators_read?: string[];
+	indirect_coordinators_write?: string[];
+	[key: string]: any;
+	static stringKeys = ['indirect_supervisors_read', 'indirect_supervisors_write', 'indirect_coordinators_read', 'indirect_coordinators_write'];
 
 	constructor(data: any) {
 		this.session_id = data.session_id;
@@ -23,7 +29,8 @@ export class Activity {
 		this.expires_on_seconds = data.expires_on_seconds;
 		this.trace_storage = data.trace_storage || false; // Default to false if not provided
 		this.description = data.description || ""; // Default to empty string if not provided
-		Object.assign(this, data);
+		let result = db.Functions.parseStringArraysToTypedArrays(data, Activity.stringKeys, 'string');
+		Object.assign(this, result);
 	}
 	
 	static getType(){

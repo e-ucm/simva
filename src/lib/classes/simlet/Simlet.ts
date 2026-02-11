@@ -9,11 +9,14 @@ export class Simlet {
     permission: string;
     sessions?: number[]
     groups?: number[];
-    direct_supervisors?: number[]
-    direct_coordinators?: number[];
-    tags?: number[];
+    direct_supervisors_read?: string[]
+    direct_supervisors_write?: string[]
+    indirect_coordinators_read?: string[];
+    indirect_coordinators_write?: string[];
+    tags?: string[];
     [key: string]: any;
-    static keys = ['sessions', 'groups', 'direct_supervisors', 'direct_coordinators', 'tags'];
+    static numericKeys = ['sessions', 'groups'];
+    static stringKeys = ['direct_supervisors_read','direct_supervisors_write',  'indirect_coordinators_read', 'indirect_coordinators_write', 'tags'];
 
     constructor(data: any) {
         this.simlet_id = data.simlet_id; // Ensure simlet_id is included in the data
@@ -35,11 +38,18 @@ export class Simlet {
                 }
                 let result = resultTable[0]; // Use the first result if multiple are returned
                 logger.debug({result} , "Simlet data fetched from database");
-                Object.assign(this, db.Functions.parseStringArraysToTypedArrays(data, Simlet.keys, 'number'));
+                result = db.Functions.parseStringArraysToTypedArrays(result, Simlet.numericKeys, 'number');
+                result = db.Functions.parseStringArraysToTypedArrays(result, Simlet.stringKeys, 'string');
+                logger.debug({result} , "Simlet data after parsing string and numerics arrays");
+                Object.assign(this, result);
             });
         } else {
             logger.debug("Data is not of type Simlets, using provided data directly");
-            Object.assign(this, db.Functions.parseStringArraysToTypedArrays(data, Simlet.keys, 'number'));
+            logger.debug({data} , "Simlet data before parsing string and numerics arrays");
+            let result = db.Functions.parseStringArraysToTypedArrays(data, Simlet.numericKeys, 'number');
+            result = db.Functions.parseStringArraysToTypedArrays(result, Simlet.stringKeys, 'string');
+            logger.debug({result} , "Simlet data after parsing string and numerics arrays");
+            Object.assign(this, result);
         }
     }
 

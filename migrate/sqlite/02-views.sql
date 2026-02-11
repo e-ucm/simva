@@ -133,8 +133,10 @@ SELECT
     JSON_GROUP_ARRAY(DISTINCT g.group_id) as groups,
     JSON_GROUP_ARRAY(DISTINCT ses.session_id) as sessions,
     JSON_GROUP_ARRAY(tag_list.simlet_tag_name) as tags,
-    JSON_GROUP_ARRAY(DISTINCT upsim.user_id) as direct_supervisors,
-    JSON_GROUP_ARRAY(DISTINCT upses.user_id) as direct_coordinators
+    JSON_GROUP_ARRAY(DISTINCT upsim_read.username) as direct_supervisors_read,
+    JSON_GROUP_ARRAY(DISTINCT upsim_write.username) as direct_supervisors_write,
+    JSON_GROUP_ARRAY(DISTINCT upses_read.username) as indirect_coordinators_read,
+    JSON_GROUP_ARRAY(DISTINCT upses_write.username) as indirect_coordinators_write
 FROM SIMLETs sim
 LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
 LEFT JOIN SIMLETs_groups g ON sim.simlet_id = g.simlet_id
@@ -143,8 +145,10 @@ LEFT JOIN SIMLETs_tags tag ON sim.simlet_id = tag.simlet_id
 LEFT JOIN SIMLETs_tags_list tag_list ON tag_list.simlet_tag_id = tag.tag_id
 LEFT JOIN Allocators al ON sim.allocator_id = al.allocator_id
 LEFT JOIN Users sandbox ON sim.sandbox_session_id = sandbox.user_id
-LEFT JOIN vv_session_to_simlet upses ON upses.object_type = "SIMLET" AND sim.simlet_id = upses.object_id
-LEFT JOIN vv_direct_permissions upsim ON upsim.object_type = "SIMLET" AND sim.simlet_id = upsim.object_id
+LEFT JOIN vv_session_to_simlet upses_read ON upses_read.object_type = "SIMLET" AND sim.simlet_id = upses_read.object_id and upses_read.permission = "READ"
+LEFT JOIN vv_session_to_simlet upses_write ON upses_write.object_type = "SIMLET" AND sim.simlet_id = upses_write.object_id and upses_write.permission = "WRITE"
+LEFT JOIN vv_direct_permissions_users upsim_read ON upsim_read.object_type = "SIMLET" AND sim.simlet_id = upsim_read.object_id and upsim_read.permission = "READ"
+LEFT JOIN vv_direct_permissions_users upsim_write ON upsim_write.object_type = "SIMLET" AND sim.simlet_id = upsim_write.object_id and upsim_write.permission = "WRITE"
 GROUP BY sim.simlet_id;
 
 DROP VIEW IF EXISTS vv_complete_simlets_sessions;
@@ -162,14 +166,18 @@ SELECT
     ses.session_end_date,
     JSON_GROUP_ARRAY(DISTINCT act.activity_id) as activities,
     GROUP_CONCAT(tag_list.session_tag_name) as tags,
-    JSON_GROUP_ARRAY(DISTINCT upsim.user_id) as direct_supervisors,
-    JSON_GROUP_ARRAY(DISTINCT upses.user_id) as direct_coordinators
+    JSON_GROUP_ARRAY(DISTINCT upsim_read.username) as indirect_supervisors_read,
+    JSON_GROUP_ARRAY(DISTINCT upsim_write.username) as indirect_supervisors_write,
+    JSON_GROUP_ARRAY(DISTINCT upses_read.username) as direct_coordinators_read,
+    JSON_GROUP_ARRAY(DISTINCT upses_write.username) as direct_coordinators_write
 FROM Sessions ses
 LEFT JOIN Activities act ON ses.session_id = act.session_id
 LEFT JOIN Sessions_tags tag ON ses.session_id = tag.session_id
 LEFT JOIN Sessions_tags_list tag_list ON tag_list.session_tag_id = tag.tag_id
-LEFT JOIN vv_simlet_to_session upsim ON upsim.object_type = "SESSION" AND ses.simlet_id = upsim.object_id
-LEFT JOIN vv_direct_permissions upses ON upses.object_type = "SESSION" AND ses.session_id = upses.object_id
+LEFT JOIN vv_simlet_to_session upsim_read ON upsim_read.object_type = "SESSION" AND ses.simlet_id = upsim_read.object_id and upsim_read.permission = "READ"
+LEFT JOIN vv_simlet_to_session upsim_write ON upsim_write.object_type = "SESSION" AND ses.simlet_id = upsim_write.object_id and upsim_write.permission = "WRITE"
+LEFT JOIN vv_direct_permissions_users upses_read ON upses_read.object_type = "SESSION" AND ses.simlet_id = upses_read.object_id and upses_read.permission = "READ"
+LEFT JOIN vv_direct_permissions_users upses_write ON upses_write.object_type = "SESSION" AND ses.simlet_id = upses_write.object_id and upses_write.permission = "WRITE"
 GROUP BY ses.simlet_id, ses.session_id;
 
 DROP VIEW IF EXISTS vv_complete_sessions_activities;
@@ -187,11 +195,15 @@ SELECT
     act.expire_on_seconds,
     act.trace_storage,
     act.description,
-    JSON_GROUP_ARRAY(DISTINCT upsim.user_id) as direct_supervisors,
-    JSON_GROUP_ARRAY(DISTINCT upses.user_id) as direct_coordinators
+    JSON_GROUP_ARRAY(DISTINCT upsim_read.username) as indirect_supervisors_read,
+    JSON_GROUP_ARRAY(DISTINCT upsim_write.username) as indirect_supervisors_write,
+    JSON_GROUP_ARRAY(DISTINCT upses_read.username) as indirect_coordinators_read,
+    JSON_GROUP_ARRAY(DISTINCT upses_write.username) as indirect_coordinators_write
 FROM Activities act
-LEFT JOIN vv_simlet_to_activity upsim ON upsim.object_type = "ACTIVITY" AND act.activity_id = upsim.object_id
-LEFT JOIN vv_session_to_activity upses ON upses.object_type = "ACTIVITY" AND act.activity_id = upses.object_id
+LEFT JOIN vv_simlet_to_activity upsim_read ON upsim_read.object_type = "ACTIVITY" AND act.activity_id = upsim_read.object_id and upsim_read.permission = "READ"
+LEFT JOIN vv_simlet_to_activity upsim_write ON upsim_write.object_type = "ACTIVITY" AND act.activity_id = upsim_write.object_id and upsim_write.permission = "WRITE"
+LEFT JOIN vv_session_to_activity upses_read ON upses_read.object_type = "ACTIVITY" AND act.activity_id = upses_read.object_id and upses_read.permission = "READ"
+LEFT JOIN vv_session_to_activity upses_write ON upses_write.object_type = "ACTIVITY" AND act.activity_id = upses_write.object_id and upses_write.permission = "WRITE"
 GROUP BY act.session_id, act.activity_id;
 
 DROP VIEW IF EXISTS v_complete_simlets_users_permissions;
@@ -204,7 +216,7 @@ SELECT
     up.permission,
     up.permission_type,
     s.*
-FROM vv_complete_simlets s 
+FROM vv_complete_simlets s
 LEFT JOIN vv_user_permissions up ON s.simlet_id = up.object_id AND up.object_type = "SIMLET";
 
 DROP VIEW IF EXISTS vv_complete_simlets_group_id;
@@ -284,11 +296,13 @@ SELECT
     u.email as group_owner_email,
     u.role as group_owner_role,
     JSON_GROUP_ARRAY(DISTINCT p.participant_id) as participants,
-    JSON_GROUP_ARRAY(DISTINCT gp.user_id) as coordinators
+    JSON_GROUP_ARRAY(DISTINCT gp_read.username) as coordinators_read,
+    JSON_GROUP_ARRAY(DISTINCT gp_write.username) as coordinators_write
 FROM ParticipantGroups g
 LEFT JOIN Users u ON u.user_id = g.group_owner_id
 LEFT JOIN ParticipantGroups_participants p ON g.group_id = p.group_id AND p.participant_id is not NULL
-LEFT JOIN vv_group_ownerlist_permissions gp ON g.group_id = gp.group_id
+LEFT JOIN vv_group_ownerlist_permissions gp_read ON g.group_id = gp_read.group_id AND gp_read.permission = "READ"
+LEFT JOIN vv_group_ownerlist_permissions gp_write ON g.group_id = gp_write.group_id AND gp_write.permission = "WRITE"
 GROUP BY g.group_id;
 
 DROP VIEW IF EXISTS v_complete_groups_users_permissions;
