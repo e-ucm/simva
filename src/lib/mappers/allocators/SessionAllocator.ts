@@ -1,4 +1,4 @@
-import { Allocator } from "@/lib/classes/allocators/Allocator";
+import { Allocator } from "@/lib/mappers/allocators/Allocator";
 
 export class SessionAllocator extends Allocator {
     static getType(){

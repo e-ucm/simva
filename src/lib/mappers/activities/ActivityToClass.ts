@@ -1,7 +1,7 @@
-import { Activity } from "@/lib/classes/activities/Activity";
-import { GamePlayActivity } from "@/lib/classes/activities/GameplayActivity";
-import { LimesurveyActivity } from "@/lib/classes/activities/LimesurveyActivity";
-import { ManualActivity } from "@/lib/classes/activities/ManualActivity";
+import { Activity } from "@/lib/mappers/activities/Activity";
+import { GamePlayActivity } from "@/lib/mappers/activities/GameplayActivity";
+import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
+import { ManualActivity } from "@/lib/mappers/activities/ManualActivity";
 import { logger } from "@/lib/logger";
 
 export function ActivityToClass(data: any) : Activity {

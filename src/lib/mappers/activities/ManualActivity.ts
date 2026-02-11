@@ -1,4 +1,4 @@
-import { Activity } from "@/lib/classes/activities/Activity";
+import { Activity } from "@/lib/mappers/activities/Activity";
 import { db } from "@/lib/db";
 
 export class ManualActivity extends Activity {
