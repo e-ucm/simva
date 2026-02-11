@@ -11,12 +11,7 @@ export class Activity {
 	expires_on_seconds?: number;
 	trace_storage:boolean;
 	description?: string;
-	indirect_supervisors_read?: string[];
-	indirect_supervisors_write?: string[];
-	indirect_coordinators_read?: string[];
-	indirect_coordinators_write?: string[];
 	[key: string]: any;
-	static stringKeys = ['indirect_supervisors_read', 'indirect_supervisors_write', 'indirect_coordinators_read', 'indirect_coordinators_write'];
 
 	constructor(data: any) {
 		this.session_id = data.session_id;
@@ -29,8 +24,7 @@ export class Activity {
 		this.expires_on_seconds = data.expires_on_seconds;
 		this.trace_storage = data.trace_storage || false; // Default to false if not provided
 		this.description = data.description || ""; // Default to empty string if not provided
-		let result = db.Functions.parseStringArraysToTypedArrays(data, Activity.stringKeys, 'string');
-		Object.assign(this, result);
+		Object.assign(this, data);
 	}
 	
 	static getType(){
