@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { UserPermission } from "../group/UserPermission";
 
 export class Simlet {
     simlet_id: number;
@@ -9,10 +10,7 @@ export class Simlet {
     permission: string;
     sessions?: number[]
     groups?: number[];
-    direct_supervisors_read?: string[]
-    direct_supervisors_write?: string[]
-    indirect_coordinators_read?: string[];
-    indirect_coordinators_write?: string[];
+    //direct_permissions?: UserPermission[] = [];
     tags?: string[];
     [key: string]: any;
     static numericKeys = ['sessions', 'groups'];
@@ -40,6 +38,7 @@ export class Simlet {
                 logger.debug({result} , "Simlet data fetched from database");
                 result = db.Functions.parseStringArraysToTypedArrays(result, Simlet.numericKeys, 'number');
                 result = db.Functions.parseStringArraysToTypedArrays(result, Simlet.stringKeys, 'string');
+                this.setDirectPermissions(result);
                 logger.debug({result} , "Simlet data after parsing string and numerics arrays");
                 Object.assign(this, result);
             });
@@ -48,8 +47,24 @@ export class Simlet {
             logger.debug({data} , "Simlet data before parsing string and numerics arrays");
             let result = db.Functions.parseStringArraysToTypedArrays(data, Simlet.numericKeys, 'number');
             result = db.Functions.parseStringArraysToTypedArrays(result, Simlet.stringKeys, 'string');
+            this.setDirectPermissions(result);
             logger.debug({result} , "Simlet data after parsing string and numerics arrays");
             Object.assign(this, result);
+        }
+    }
+
+    setDirectPermissions(data: any) {
+        if (!this.direct_permissions) {
+           this.direct_permissions = [];
+        }
+        if(data.direct_supervisors_read.length > 0) {    
+            this.direct_permissions.push(...data.direct_supervisors_read.map((username: string) => new UserPermission({ username, permission: 'read' })));
+        }
+        if(data.direct_supervisors_write.length > 0) {    
+            this.direct_permissions.push(...data.direct_supervisors_write.map((username: string) => new UserPermission({ username, permission: 'write' })));
+        }
+        if(data.direct_supervisor_owner) {
+            this.direct_permissions.push(new UserPermission({ username: data.direct_supervisor_owner, permission: 'owner' }));
         }
     }
 

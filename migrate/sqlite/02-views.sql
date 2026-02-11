@@ -133,6 +133,7 @@ SELECT
     JSON_GROUP_ARRAY(DISTINCT g.group_id) as groups,
     JSON_GROUP_ARRAY(DISTINCT ses.session_id) as sessions,
     JSON_GROUP_ARRAY(tag_list.simlet_tag_name) as tags,
+    coordinator.username as direct_supervisor_owner,
     JSON_GROUP_ARRAY(DISTINCT upsim_read.username) as direct_supervisors_read,
     JSON_GROUP_ARRAY(DISTINCT upsim_write.username) as direct_supervisors_write,
     JSON_GROUP_ARRAY(DISTINCT upses_read.username) as indirect_coordinators_read,
@@ -145,6 +146,7 @@ LEFT JOIN SIMLETs_tags tag ON sim.simlet_id = tag.simlet_id
 LEFT JOIN SIMLETs_tags_list tag_list ON tag_list.simlet_tag_id = tag.tag_id
 LEFT JOIN Allocators al ON sim.allocator_id = al.allocator_id
 LEFT JOIN Users sandbox ON sim.sandbox_session_id = sandbox.user_id
+LEFT JOIN Users coordinator ON sim.simlet_coordinator_id = coordinator.user_id
 LEFT JOIN vv_session_to_simlet upses_read ON upses_read.object_type = "SIMLET" AND sim.simlet_id = upses_read.object_id and upses_read.permission = "READ"
 LEFT JOIN vv_session_to_simlet upses_write ON upses_write.object_type = "SIMLET" AND sim.simlet_id = upses_write.object_id and upses_write.permission = "WRITE"
 LEFT JOIN vv_direct_permissions_users upsim_read ON upsim_read.object_type = "SIMLET" AND sim.simlet_id = upsim_read.object_id and upsim_read.permission = "READ"
@@ -169,11 +171,13 @@ SELECT
     JSON_GROUP_ARRAY(DISTINCT upsim_read.username) as indirect_supervisors_read,
     JSON_GROUP_ARRAY(DISTINCT upsim_write.username) as indirect_supervisors_write,
     JSON_GROUP_ARRAY(DISTINCT upses_read.username) as direct_coordinators_read,
-    JSON_GROUP_ARRAY(DISTINCT upses_write.username) as direct_coordinators_write
+    JSON_GROUP_ARRAY(DISTINCT upses_write.username) as direct_coordinators_write,
+    coordinator.username as direct_coordinator_owner
 FROM Sessions ses
 LEFT JOIN Activities act ON ses.session_id = act.session_id
 LEFT JOIN Sessions_tags tag ON ses.session_id = tag.session_id
 LEFT JOIN Sessions_tags_list tag_list ON tag_list.session_tag_id = tag.tag_id
+LEFT JOIN Users coordinator ON ses.session_supervisor_id = coordinator.user_id
 LEFT JOIN vv_simlet_to_session upsim_read ON upsim_read.object_type = "SESSION" AND ses.simlet_id = upsim_read.object_id and upsim_read.permission = "READ"
 LEFT JOIN vv_simlet_to_session upsim_write ON upsim_write.object_type = "SESSION" AND ses.simlet_id = upsim_write.object_id and upsim_write.permission = "WRITE"
 LEFT JOIN vv_direct_permissions_users upses_read ON upses_read.object_type = "SESSION" AND ses.simlet_id = upses_read.object_id and upses_read.permission = "READ"
@@ -292,9 +296,9 @@ SELECT
     g.createdAt,
     g.use_new_generation,
     g.group_owner_id,
-    u.username as group_owner_username,
-    u.email as group_owner_email,
-    u.role as group_owner_role,
+    u.username as coordinator_owner,
+    u.email as coordinator_owner_email,
+    u.role as coordinator_owner_role,
     JSON_GROUP_ARRAY(DISTINCT p.participant_id) as participants,
     JSON_GROUP_ARRAY(DISTINCT gp_read.username) as coordinators_read,
     JSON_GROUP_ARRAY(DISTINCT gp_write.username) as coordinators_write
