@@ -1,8 +1,8 @@
-import { Group } from "@/lib/classes/group/Group";
+import { Group } from "@/lib/mappers/group/Group";
 import { Op } from "sequelize";
 import { NotFoundError } from "@/lib/errors/appErrors";
 import { db } from "@/lib/db";
-import { GroupParticipant } from "@/lib/classes/group/GroupParticipant";
+import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 import { logger } from "@/lib/logger";
 
 /**

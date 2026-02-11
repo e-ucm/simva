@@ -1,7 +1,7 @@
-import { Allocator } from "@/lib/classes/allocators/Allocator";
-import { SessionAllocator } from "@/lib/classes/allocators/SessionAllocator";
-import { RandomAllocator } from "@/lib/classes/allocators/RandomAllocator";
-import { GroupAllocator } from "@/lib/classes/allocators/GroupAllocator";
+import { Allocator } from "@/lib/mappers/allocators/Allocator";
+import { SessionAllocator } from "@/lib/mappers/allocators/SessionAllocator";
+import { RandomAllocator } from "@/lib/mappers/allocators/RandomAllocator";
+import { GroupAllocator } from "@/lib/mappers/allocators/GroupAllocator";
 import { logger } from "@/lib/logger";
 
 class AllocatorType {

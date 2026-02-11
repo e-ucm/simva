@@ -1,8 +1,8 @@
-import { ActivityToClass } from "@/lib/classes/activities/ActivityToClass";
+import { ActivityToClass } from "@/lib/mappers/activities/ActivityToClass";
 import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
-import { Activity } from "@/lib/classes/activities/Activity";
+import { Activity } from "@/lib/mappers/activities/Activity";
 
 export async function getActivity(activityId: number, user_id: number): Promise<Activity> {
   const results = await db.Functions.runViewQuery(
