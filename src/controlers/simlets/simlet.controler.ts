@@ -42,7 +42,12 @@ export async function getAllSimlets(
   try {
     const searchString = String(req.query.search || '');
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-    const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
+    let offset;
+    if(limit !== undefined && req.query.offset === undefined) {
+        offset = 0;
+    } else {
+        offset = parseInt(req.query.offset as string)|| undefined;
+    }
     const currentUser = req.user?.sql;
     let simlets;
     switch(currentUser?.role) {
@@ -297,7 +302,12 @@ export async function getSimletSessions(
   try {
     const searchString = String(req.query.search || '');
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-    const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
+    let offset;
+    if(limit !== undefined && req.query.offset === undefined) {
+        offset = 0;
+    } else {
+        offset = parseInt(req.query.offset as string)|| undefined;
+    }
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting sessions for simlet ID and user ID");

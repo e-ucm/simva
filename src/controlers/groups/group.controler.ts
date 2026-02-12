@@ -30,9 +30,15 @@ export async function getGroups(
 ) {
   try {
     let version = req.query.use_new_generation? (req.query.use_new_generation === 'true') : undefined;
-    const searchString = req.query.searchString as string | undefined;
+    const searchString = req.query.searchstring as string | undefined;
     const limit = parseInt(req.query.limit as string) || undefined;
-    const offset = parseInt(req.query.offset as string) || undefined;
+    let offset;
+    if(limit !== undefined && req.query.offset === undefined) {
+        offset = 0;
+    } else {
+        offset = parseInt(req.query.offset as string)|| undefined;
+    }
+    logger.debug({version, searchString, limit, offset}, "Getting groups with query parameters");
     const groups = await groupService.getGroups(req.user!.sql.user_id as number, version, searchString, limit, offset);
     res.json(groups);
   } catch (err) {

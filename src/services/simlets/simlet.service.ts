@@ -44,25 +44,15 @@ import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
  */
 export async function getSimletsByUserId(user_id: number, searchString?: string, limit?: number, offset?: number): Promise<Simlet[]> {
   let results;
-  if(searchString !== undefined && limit === undefined && offset === undefined) {
-    results = await db.Functions.runViewQuery(
-      db.Views.Simlet.byUserId,
-      { user_id }
-    );
-  } else if(searchString !== undefined && searchString.length >= 3) {
-    results = await db.Functions.runViewQuery(
-      db.Views.Simlet.byUserId,
-      { user_id, search: `%${searchString}%` }
-    );
-  } else if(limit !== undefined && offset !== undefined) {
+  if(limit !== undefined && offset !== undefined) {
     results = await db.Functions.runViewQuery(
       db.Views.Simlet.byUserIdWithPagination,
-      { user_id, limit, offset }
+      { user_id, limit, offset, search: searchString }
     );
   } else {
     results = await db.Functions.runViewQuery(
-      db.Views.Simlet.byUserIdWithPagination,
-      { user_id, search: `%${searchString}%`, limit, offset }
+      db.Views.Simlet.byUserId,
+      { user_id, search: searchString }
     );
   }
   logger.debug({results} , "getSimletsByUserId results");

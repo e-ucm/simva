@@ -230,25 +230,15 @@ export class Simlet {
 
     async getSessions(searchString?: string, limit?: number, offset?: number): Promise<Session[]> {
         let sessions;
-        if(searchString !== undefined && limit !== undefined && offset !== undefined) { 
+        if(limit !== undefined && offset !== undefined) {
             sessions = await db.Functions.runViewQuery( 
                 db.Views.Session.bySimletIdAndUserIdWithPagination, 
                 { simlet_id: this.simlet_id, user_id: this.user_id, search: searchString, limit, offset } 
             ); 
-        } else if(searchString !== undefined) {
-            sessions = await db.Functions.runViewQuery(
-                db.Views.Session.bySimletIdAndUserId,
-                { simlet_id: this.simlet_id, user_id: this.user_id, search: searchString }
-            );
-        } else if(limit !== undefined && offset !== undefined) {
-            sessions = await db.Functions.runViewQuery(
-                db.Views.Session.bySimletIdAndUserIdWithPagination,
-                { simlet_id: this.simlet_id, user_id: this.user_id, limit, offset }
-            );
         } else {
             sessions = await db.Functions.runViewQuery(
                 db.Views.Session.bySimletIdAndUserId,
-                { simlet_id: this.simlet_id, user_id: this.user_id }
+                { simlet_id: this.simlet_id, user_id: this.user_id, search: searchString }
             );
         }
         logger.debug({sessions} , "Sessions data from view");
