@@ -1,9 +1,37 @@
+/**
+ * @fileoverview Service for Allocator Type management and registration.
+ * Provides metadata about available participant allocation strategies.
+ * 
+ * Allocator types define different strategies for assigning participants to studies:
+ * - Allocator: Base allocator type
+ * - GroupAllocator: Assigns participants based on group membership
+ * - SessionAllocator: Assigns participants to specific sessions
+ * - RandomAllocator: Randomly assigns participants to conditions
+ * 
+ * @module services/allocators/allocatorsTypes
+ * @requires @/lib/mappers/allocators/Allocator
+ * @requires @/lib/mappers/allocators/SessionAllocator
+ * @requires @/lib/mappers/allocators/RandomAllocator
+ * @requires @/lib/mappers/allocators/GroupAllocator
+ * @requires @/lib/logger
+ */
+
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { SessionAllocator } from "@/lib/mappers/allocators/SessionAllocator";
 import { RandomAllocator } from "@/lib/mappers/allocators/RandomAllocator";
 import { GroupAllocator } from "@/lib/mappers/allocators/GroupAllocator";
 import { logger } from "@/lib/logger";
 
+/**
+ * Represents metadata about an allocator type.
+ * Contains type identification, display information, and utility functions.
+ * 
+ * @class AllocatorType
+ * @property {string | undefined} type - Unique identifier for the allocator type
+ * @property {string | undefined} name - Human-readable name for display
+ * @property {string | undefined} description - Description of the allocation strategy
+ * @property {any} utils - Type-specific utility functions and configuration
+ */
 class AllocatorType {
 	type: string | undefined;
 	name: string | undefined;
@@ -11,6 +39,58 @@ class AllocatorType {
 	utils: any;
 }
 
+/**
+ * Retrieves all available allocator types with their metadata and utilities.
+ * Each allocator type provides specific configuration and utility functions
+ * for participant assignment strategies in educational research studies.
+ * 
+ * @async
+ * @function getAllocatorTypes
+ * @returns {Promise<AllocatorType[]>} Array of allocator type objects with metadata
+ * 
+ * @throws {Error} If allocator type utilities cannot be loaded
+ * 
+ * @example
+ * ```typescript
+ * const allocatorTypes = await getAllocatorTypes();
+ * allocatorTypes.forEach(type => {
+ *   console.log(`${type.name}: ${type.description}`);
+ *   // Access type-specific utilities
+ *   console.log(type.utils);
+ * });
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Example response structure:
+ * [
+ *   {
+ *     type: "base",
+ *     name: "Base Allocator",
+ *     description: "Base allocator implementation",
+ *     utils: { ... }
+ *   },
+ *   {
+ *     type: "group", 
+ *     name: "Group Allocator",
+ *     description: "Assigns participants based on group membership",
+ *     utils: { ... }
+ *   },
+ *   {
+ *     type: "session",
+ *     name: "Session Allocator", 
+ *     description: "Assigns participants to specific sessions",
+ *     utils: { ... }
+ *   },
+ *   {
+ *     type: "random",
+ *     name: "Random Allocator",
+ *     description: "Randomly assigns participants to conditions",
+ *     utils: { ... }
+ *   }
+ * ]
+ * ```
+ */
 export async function getAllocatorTypes() {
 	let types = [ Allocator, GroupAllocator, SessionAllocator, RandomAllocator ];
 	let allocatortypes : AllocatorType[] = [];

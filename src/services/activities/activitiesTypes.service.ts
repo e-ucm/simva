@@ -14,7 +14,6 @@
  * @requires @/lib/mappers/activities/ManualActivity
  */
 
-import { Activity } from "@/lib/mappers/activities/Activity";
 import { GamePlayActivity } from "@/lib/mappers/activities/GameplayActivity";
 import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
 import { ManualActivity } from "@/lib/mappers/activities/ManualActivity";
@@ -85,7 +84,7 @@ let activitytypes : ActivityType[] = [];
  * ]
  * ```
  */
-export async function getActivityTypes(user : string) {
+export async function getActivityTypes(user : string) : Promise<ActivityType[]> {
 	let types = [ GamePlayActivity, LimesurveyActivity, ManualActivity ];
 	let activitytypes : ActivityType[] = [];
 

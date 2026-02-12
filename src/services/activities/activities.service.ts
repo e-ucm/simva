@@ -13,10 +13,8 @@
  * @requires @/lib/errors/appErrors
  */
 
-import { ActivityToClass } from "@/lib/mappers/activities/ActivityToClass";
 import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
-import { db } from "@/lib/db";
 import { Activity } from "@/lib/mappers/activities/Activity";
 
 /**

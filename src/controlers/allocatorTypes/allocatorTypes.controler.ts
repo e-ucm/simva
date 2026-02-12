@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Controller for allocator types metadata operations.
+ * Handles HTTP requests and responses for retrieving available allocator types.
+ * 
+ * Allocator types provide metadata about different participant assignment strategies
+ * available in the system (random, group, session, etc.).
+ * 
+ * @module controllers/allocatorTypes/allocatorTypes
+ * @requires @/services/allocators/allocatorsTypes.service
+ * @requires @/middlewares/auth.middleware
+ * @requires express
+ */
+
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { Response, NextFunction } from "express";
 import * as allocatorTypesservice from "@/services/allocators/allocatorsTypes.service";
@@ -5,10 +18,13 @@ import { NotFoundError, AuthentificationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
 /**
- * Retrieves allocator types from the database.
+ * Retrieves all available allocator types with their metadata and utilities.
+ * Each allocator type provides configuration options and assignment strategies
+ * for distributing participants across experimental conditions.
  * 
  * @async
- * @param {AuthenticatedRequest} req - Express request object with optional username query parameter
+ * @function getAllocatorTypes
+ * @param {AuthenticatedRequest} req - Express request object
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
@@ -16,11 +32,12 @@ import { logger } from "@/lib/logger";
  * 
  * @example
  * // GET /allocatortypes
- * // Returns all allocator types
- * 
- * @example
-* // GET /allocatortypes?type=random
- * // Returns allocator type with type 'random'
+ * // Returns all allocator types with metadata:
+ * // [
+ * //   { type: "random", name: "Random Allocator", description: "...", utils: {...} },
+ * //   { type: "group", name: "Group Allocator", description: "...", utils: {...} },
+ * //   { type: "session", name: "Session Allocator", description: "...", utils: {...} }
+ * // ]
  */
 export async function getAllocatorTypes(
   req: AuthenticatedRequest,

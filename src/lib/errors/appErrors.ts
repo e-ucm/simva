@@ -22,14 +22,14 @@ export class NotFoundError extends Error {
 }
 
 /**
- * Custom error class for handling "not found" scenarios.
- * Extends the standard Error class and sets the error name to "NotFoundError".
+ * Custom error class for handling bad request scenarios.
+ * Extends the standard Error class and sets the error name to "BadRequestError".
  *
- * @class NotFoundError
+ * @class BadRequestError
  * @extends {Error}
  *
  * @example
- * throw new BadRequestError("Invalid request");
+ * throw new BadRequestError("Invalid request parameters");
  */
 export class BadRequestError extends Error {
   /**
@@ -45,21 +45,21 @@ export class BadRequestError extends Error {
 }
 
 /**
- * Custom error class for handling "not found" scenarios.
- * Extends the standard Error class and sets the error name to "NotFoundError".
+ * Custom error class for handling authentication failures.
+ * Extends the standard Error class and sets the error name to "AuthentificationError".
  *
- * @class NotFoundError
+ * @class AuthentificationError
  * @extends {Error}
  *
  * @example
- * throw new AuthentificationError("Invalid request");
+ * throw new AuthentificationError("Invalid credentials");
  */
 export class AuthentificationError extends Error {
   /**
    * Creates a new AuthentificationError instance.
    *
    * @constructor
-   * @param {string} message - The error message describing the bad request
+   * @param {string} message - The error message describing the authentication failure
    */
   constructor(message: string) {
     super(message);

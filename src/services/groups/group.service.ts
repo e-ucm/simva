@@ -12,9 +12,8 @@
  * @requires @/lib/errors/appErrors
  */
 
+import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 import { Group } from "@/lib/mappers/group/Group";
-import { Op } from "sequelize";
-import { NotFoundError } from "@/lib/errors/appErrors";
 import { db } from "@/lib/db";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 import { logger } from "@/lib/logger";
