@@ -4,15 +4,15 @@ import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity"
 import { ManualActivity } from "@/lib/mappers/activities/ManualActivity";
 import { logger } from "@/lib/logger";
 
-export function ActivityToClass(data: any) : Activity {
+export async function ActivityToClass(data: any) : Promise<Activity> {
     logger.debug({data}, data.activity_type);
     switch (data.activity_type) {
         case GamePlayActivity.getType():
-            return new GamePlayActivity(data);
+            return await GamePlayActivity.createWithDbData(data);
         case LimesurveyActivity.getType():
-            return new LimesurveyActivity(data);
+            return await LimesurveyActivity.createWithDbData(data);
         case ManualActivity.getType():
-            return new ManualActivity(data);
+            return await ManualActivity.createWithDbData(data);
         case Activity.getType():
             return new Activity(data);
         default:

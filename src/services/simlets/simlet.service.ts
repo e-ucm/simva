@@ -175,5 +175,5 @@ export async function getSessionActivities(sessionId: number, userId: number): P
     { session_id: sessionId, user_id: userId }
   );
   logger.debug({activities} , "Activities data from view");
-  return activities.map((activity: any) => ActivityToClass(activity));
+  return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity)));
 }

@@ -14,5 +14,5 @@ export async function getActivity(activityId: number, user_id: number): Promise<
     } else if (results.length > 1) {
         logger.warn(`Multiple activities found with ID ${activityId} for user ID ${user_id}. Using the first one.`);
     }
-    return ActivityToClass(results[0]);
+    return await ActivityToClass(results[0]);
 }
