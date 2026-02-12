@@ -3,20 +3,51 @@ import { SessionAllocator } from "@/lib/mappers/allocators/SessionAllocator";
 import { RandomAllocator } from "@/lib/mappers/allocators/RandomAllocator";
 import { GroupAllocator } from "@/lib/mappers/allocators/GroupAllocator";
 import { logger } from "@/lib/logger";
+import { db } from "@/lib/db";
+import { NotFoundError } from "@/lib/errors/appErrors";
 
-export function AllocatorToClass(data: any) : Allocator {
-    logger.debug({data}, data.allocator_type);
-    switch (data.allocator_type) {
+/**
+ * Factory function that creates appropriate Allocator subclass instances based on allocator type.
+ * Handles polymorphic creation of allocator objects for participant assignment strategies.
+ * 
+ * @function AllocatorToClass
+ * @param {any} data - Raw allocator data object containing allocator_type and other properties
+ * @returns {Allocator} The appropriate Allocator subclass instance
+ * 
+ * @description Factory function that:
+ * - Analyzes the allocator_type property in the data
+ * - Creates and returns the appropriate Allocator subclass instance
+ * - Handles SessionAllocator, RandomAllocator, and GroupAllocator types
+ * - Falls back to base Allocator class for unknown types
+ * - Uses synchronous constructors for immediate object creation
+ * 
+ * @example
+ * const allocator = AllocatorToClass({ allocator_type: 'random', allocator_id: 456 });
+ * // Returns a RandomAllocator instance
+ */
+export async function AllocatorToClass(simlet_id: number) : Promise<Allocator> {
+    const allocators = await db.Functions.runViewQuery(
+        db.Views.Simlet.AllocatorBySimletId,
+        { simlet_id }
+    );
+    if(!allocators || allocators.length === 0){
+        throw new NotFoundError(`Allocator with ID ${simlet_id} not found.`);
+    } else if(allocators.length > 1){
+        logger.warn(`Multiple allocators found with ID ${simlet_id}. Using the first one.`);
+    }
+    const allocator = allocators[0];
+    logger.debug({allocator}, allocator.allocator_type);
+    switch (allocator.allocator_type) {
         case SessionAllocator.getType():
-            return new SessionAllocator(data);
+            return new SessionAllocator(allocator);
         case RandomAllocator.getType():
-            return new RandomAllocator(data);
+            return new RandomAllocator(allocator);
         case GroupAllocator.getType():
-            return new GroupAllocator(data);
+            return new GroupAllocator(allocator);
         case Allocator.getType():
-            return new Allocator(data);
+            return new Allocator(allocator);
         default:
-            logger.warn(`Unknown allocator type: ${data.allocator_type}, returning default Allocator instance.`);
-            return new Allocator(data);
+            logger.warn(`Unknown allocator type: ${allocator.allocator_type}, returning default Allocator instance.`);
+            return new Allocator(allocator);
     }
 }

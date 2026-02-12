@@ -205,8 +205,8 @@ export async function getGroupParticipants(
     if (isNaN(groupId) || groupId <= 0) {
       throw new ValidationError("Invalid group ID");
     }
-
-    const participants = await groupService.getGroupParticipants(groupId);
+    let currentUser = req.user?.sql;
+    const participants = await groupService.getGroupParticipants(groupId, currentUser!.user_id as number);
     res.json(participants);
   } catch (err) {
     next(err);

@@ -3,12 +3,41 @@ import { LRSActivity } from "@/lib/mappers/activities/LRSActivity";
 import { db } from "@/lib/db";
 import { config } from "@/lib/config";
 
-
+/**
+ * LimeSurvey Activity mapper class extending base Activity.
+ * Represents activities that integrate with LimeSurvey platform for surveys and questionnaires.
+ * 
+ * @class LimesurveyActivity
+ * @extends Activity
+ * @description Handles LimeSurvey-specific properties and provides survey management functionality.
+ * Integrates with LimeSurvey API for survey deployment and data collection.
+ */
 export class LimesurveyActivity extends Activity {
+	/**
+	 * ID of the survey in LimeSurvey system
+	 * @default -1
+	 */
 	survey_id: number=-1;
+	
+	/**
+	 * Language code for the survey (e.g., 'en', 'es')
+	 * @default ''
+	 */
 	language: string='';
+	
+	/**
+	 * Learning Record Store (LRS) set identifier for xAPI data
+	 * @default -1
+	 */
 	lrsset: number=-1;
 	
+	/**
+	 * Creates a new LimesurveyActivity instance
+	 * 
+	 * @param {any} data - Raw data object containing activity and LimeSurvey-specific properties
+	 * @description Initializes base activity properties and LimeSurvey-specific fields.
+	 * Uses nullish coalescing for safe default value assignment.
+	 */
 	constructor(data: any) {
 		super(data);
 		// Assign limesurvey-specific properties if provided in data
@@ -17,8 +46,17 @@ export class LimesurveyActivity extends Activity {
 		this.lrsset = data.lrsset ?? -1;
 	}
 	
-	// Static factory method to create instance with database data
-	static async createWithDbData(activityData: any): Promise<LimesurveyActivity> {
+	/**
+	 * Creates a LimesurveyActivity instance with database-loaded data
+	 * 
+	 * @static
+	 * @async
+	 * @param {any} activityData - Raw activity data object
+	 * @returns {Promise<LimesurveyActivity>} Fully initialized LimesurveyActivity instance
+	 * @description Factory method that creates instance and loads additional data from database.
+	 * Handles database errors gracefully and ensures proper initialization.
+	 */
+	static async getFromDbData(activityData: any): Promise<LimesurveyActivity> {
 		const instance = new LimesurveyActivity(activityData);
 		
 		try {
@@ -64,9 +102,6 @@ export class LimesurveyActivity extends Activity {
 	}
 
 	async getDetails(){
-		return {
-			surveys: [], // Fetch surveys related to this activity
-			responses: [] // Fetch responses related to this activity
-		};
+		return {};
 	}
 }

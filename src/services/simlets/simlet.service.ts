@@ -73,107 +73,51 @@ export async function getSimletsByUserId(user_id: number): Promise<Simlet[]> {
  * ```
  */
 export async function getSimletBySimletIdAndUserId(simlet_id: number, user_id: number): Promise<Simlet> {
-  const result = await db.Functions.runViewQuery(
-    db.Views.Simlet.byUserIdAndSimletId,
-    { user_id, simlet_id }
-  );
-  logger.debug({result} , "getSimletBySimletIdAndUserId results");
-  if(result.length === 0){
-    throw new ValidationError(`Simlet with ID ${simlet_id} not found for user ID ${user_id}.`);
-  } else if(result.length > 1){
-    logger.warn(`Multiple simlets found with ID ${simlet_id} for user ID ${user_id}. Using the first one.`);
-  }
-  let simlet = new Simlet(result[0]);
+  let simlet = await Simlet.getFromDbData(simlet_id, user_id);
   simlet.printInfo(); // Example of using the Simlet class to log info about the first simlet
   return simlet;
 }
 
 export async function createSimlet(simletData: any): Promise<Simlet> {
-  logger.debug({simletData} , "Creating simlet with data");
-  if(await db.Tables.Simlets.count({where : {name : simletData.name}}) > 0){
-    throw new ValidationError(`Simlet name ${simletData.name} is already taken. Please choose a different name.`);
-  }
-  const allocator = await db.Tables.Allocators.create({ allocator_type: simletData.allocator_type || "default" });
-  logger.debug({allocator} , "Allocator created");
-  simletData.allocator_id = allocator.allocator_id;
-  if(simletData.description === undefined){
-    simletData.description = "";
-  }
-  const createdSimlet = await db.Tables.Simlets.create(simletData);
-  return new Simlet(createdSimlet);
+  return await Simlet.createSimlet(simletData);
 }
 
-export async function updateSimlet(simletId: number, simletData: any): Promise<Simlet> {
-  if(await db.Tables.Simlets.count({where : {name : simletData.name}}) > 0){
-    throw new ValidationError(`Simlet name ${simletData.name} is already taken. Please choose a different name.`);
-  }
-  return new Simlet(await db.Tables.Simlets.updateSimlet(simletId, simletData));
+export async function patch(simletId: number, user_id: number, simletData: any): Promise<Simlet> {
+  let simlet = await Simlet.getFromDbData(simletId, user_id);
+  return await simlet.patch(simletData);
 }
 
-export async function deleteSimlet(simletId: number): Promise<void> {
-  await db.Tables.Simlets.deleteSimlet(simletId);
+export async function deleteSimlet(simletId: number, user_id: number): Promise<void> {
+  let simlet = await Simlet.getFromDbData(simletId, user_id);
+  await simlet.remove();
 }
 
-export async function getAllocatorFromSimlet(simletId: number): Promise<Allocator> {
-  const allocator = await db.Functions.runViewQuery(
-    db.Views.Simlet.AllocatorBySimletId,
-    { simlet_id: simletId }
-  );
-  logger.debug({allocator} , "Allocator data from view");
-  if(allocator.length === 0){
-    throw new ValidationError(`No allocator found for simlet ID ${simletId}`);
-  } else if(allocator.length > 1){
-    logger.warn(`Multiple allocators found for simlet ID ${simletId}. Returning the first one.`);
-  }
-  return AllocatorToClass(allocator[0]);
+export async function getAllocatorFromSimlet(simletId: number, user_id: number): Promise<Allocator> {
+  let simlet = await Simlet.getFromDbData(simletId, user_id);
+  return await simlet.getAllocator();
 }
 
-export async function getSimletParticipants(simletId: number): Promise<SimletParticipant[]> {
-  const allocated = await db.Functions.runViewQuery(
-    db.Views.Simlet.AllocatedParticipantsBySimletId,
-    { simlet_id: simletId }
-  );
-  logger.debug({allocated} , "Participants data from view");
-  return allocated.map((participant: any) => new SimletParticipant(participant));
+export async function getSimletParticipants(simletId: number, user_id: number): Promise<SimletParticipant[]> {
+  let simlet = await Simlet.getFromDbData(simletId, user_id);
+  return await simlet.getAllocatedParticipants();
 }
 
-export async function getSimletGroups(simletId: number): Promise<SimletGroup[]> {
-  const groups = await db.Functions.runViewQuery(
-    db.Views.Simlet.GroupsBySimletId,
-    { simlet_id: simletId }
-  );
-  logger.debug({groups} , "Groups data from view");
-  return groups.map((group: any) => new SimletGroup(group));
+export async function getSimletGroups(simletId: number, user_id: number): Promise<SimletGroup[]> {
+  let simlet = await Simlet.getFromDbData(simletId, user_id);
+  return await simlet.getGroups();
 }
 
-export async function getSimletSessions(simletId: number, userId: number): Promise<Session[]> {
-  const sessions = await db.Functions.runViewQuery(
-    db.Views.Simlet.SessionsBySimletIdAndUserId,
-    { simlet_id: simletId, user_id: userId }
-  );
-  logger.debug({sessions} , "Sessions data from view");
-  return sessions.map((session: any) => new Session(session));
+export async function getSimletSessions(simletId: number, user_id: number): Promise<Session[]> {
+  let simlet = await Simlet.getFromDbData(simletId, user_id);
+  return await simlet.getSessions();
 }
 
-export async function getSimletSession(simletId: number, sessionId: number, userId: number): Promise<Session> {
-  const session = await db.Functions.runViewQuery(
-    db.Views.Simlet.SessionBySimletIdSessionIdAndUserId,
-    { session_id: sessionId, user_id: userId, simlet_id: simletId }
-  );
-  logger.debug({session} , "Session data from view");
-  if(session.length === 0){
-    throw new ValidationError(`Session with ID ${sessionId} not found.`);
-  } else if(session.length > 1){
-    logger.warn(`Multiple sessions found with ID ${sessionId}. Using the first one.`);
-  }
-  return new Session(session[0]);
+export async function getSimletSession(simletId: number, sessionId: number, user_id: number): Promise<Session> {
+  let simlet = await Simlet.getFromDbData(simletId, user_id);
+  return await simlet.getSession(sessionId);
 }
 
-export async function getSessionActivities(sessionId: number, userId: number): Promise<Activity[]> {
-  const activities = await db.Functions.runViewQuery(
-    db.Views.Activity.bySessionIdUserId,
-    { session_id: sessionId, user_id: userId }
-  );
-  logger.debug({activities} , "Activities data from view");
-  return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity)));
+export async function getSessionActivities(simlet_id: number, sessionId: number, user_id: number): Promise<Activity[]> {
+  let session = await Session.getFromDbData(simlet_id, sessionId, user_id);
+  return await session.getActivities();
 }

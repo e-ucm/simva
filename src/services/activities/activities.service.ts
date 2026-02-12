@@ -1,18 +1,50 @@
+/**
+ * @fileoverview Service for Activity entity operations.
+ * Handles business logic for activity management and access control.
+ * 
+ * Activities in SIMVA represent individual learning tasks within sessions,
+ * such as gameplay activities, LimeSurvey questionnaires, or manual activities.
+ * Each activity type has specific behaviors and data requirements.
+ * 
+ * @module services/activities/activities
+ * @requires @/lib/mappers/activities/Activity
+ * @requires @/lib/mappers/activities/ActivityToClass
+ * @requires @/lib/db
+ * @requires @/lib/errors/appErrors
+ */
+
 import { ActivityToClass } from "@/lib/mappers/activities/ActivityToClass";
 import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { Activity } from "@/lib/mappers/activities/Activity";
 
+/**
+ * Retrieves a single activity by ID for a specific user.
+ * Validates user permissions and ensures the activity is accessible.
+ * 
+ * @async
+ * @function getActivity
+ * @param {number} activityId - The unique identifier of the activity
+ * @param {number} user_id - The ID of the user requesting the activity
+ * @returns {Promise<Activity>} The requested Activity object with user-specific data
+ * 
+ * @throws {NotFoundError} If the activity doesn't exist or user lacks access
+ * @throws {ValidationError} If the provided parameters are invalid
+ * @throws {Error} If database query fails
+ * 
+ * @example
+ * ```typescript
+ * try {
+ *   const activity = await getActivity(789, 123);
+ *   console.log(activity.name, activity.type);
+ * } catch (error) {
+ *   if (error instanceof NotFoundError) {
+ *     console.log('Activity not found or access denied');
+ *   }
+ * }
+ * ```
+ */
 export async function getActivity(activityId: number, user_id: number): Promise<Activity> {
-  const results = await db.Functions.runViewQuery(
-        db.Views.Activity.byActivityIdAndUserId,
-        { activity_id: activityId, user_id }
-    );
-    if (results.length === 0) {
-        throw new NotFoundError(`Activity with ID ${activityId} not found for user ID ${user_id}.`);
-    } else if (results.length > 1) {
-        logger.warn(`Multiple activities found with ID ${activityId} for user ID ${user_id}. Using the first one.`);
-    }
-    return await ActivityToClass(results[0]);
+    return Activity.getFromDbData(activityId, user_id);
 }

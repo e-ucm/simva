@@ -212,28 +212,6 @@ export class Session extends Model {
   }
 
   /**
-   * Create a new session.
-   * 
-   * @async
-   * @function createSession
-   * @param {Partial<Session>} sessionData - The session data for creation
-   * @returns {Promise<Session>} The created session
-   * 
-   * @example
-   * ```typescript
-   * const newSession = await Session.createSession({
-   *   simlet_id: 1,
-   *   name: 'Test Session',
-   *   description: 'A test learning session',
-   *   session_supervisor_id: 123
-   * });
-   * ```
-   */
-  static async createSession(sessionData: Partial<Session>): Promise<Session> {
-    return await Session.create(sessionData);
-  }
-
-  /**
    * Update an existing session by ID.
    * 
    * @async

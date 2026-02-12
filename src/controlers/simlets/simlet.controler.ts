@@ -131,7 +131,7 @@ export async function createSimlet(
  * Updates an existing simlet by ID.
  * 
  * @async
- * @function updateSimlet
+ * @function patch
  * @param {AuthenticatedRequest} req - Express request object containing simlet ID in params and update data in body
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
@@ -143,14 +143,15 @@ export async function createSimlet(
  * // Body: { name: "Updated Simlet Name", description: "Updated description" }
  * // Returns: 200 OK with updated simlet object
  */
-export async function updateSimlet(
+export async function patchSimlet(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    const simlet = await simletService.updateSimlet(simletId, req.body);
+    let currentUser = req.user?.sql;
+    const simlet = await simletService.patch(simletId, currentUser!.user_id as number, req.body);
     res.json(simlet);
   } catch (err) {
     next(err);
@@ -243,7 +244,8 @@ export async function getAllocatorFromSimlet(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     logger.debug({simletId} , "Getting allocator for simlet ID");
-    const allocator = await simletService.getAllocatorFromSimlet(simletId);
+    let currentUser = req.user?.sql;
+    const allocator = await simletService.getAllocatorFromSimlet(simletId, currentUser!.user_id as number);
     res.json(allocator);
   } catch (err) {
     next(err);
@@ -257,8 +259,9 @@ export async function getSimletParticipants(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
+    let currentUser = req.user?.sql;
     logger.debug({simletId} , "Getting participants for simlet ID");
-    const participants = await simletService.getSimletParticipants(simletId);
+    const participants = await simletService.getSimletParticipants(simletId, currentUser!.user_id as number);
     logger.debug({participants} , "Participants retrieved for simlet ID");
     res.json(participants);
   } catch (err) {
@@ -273,8 +276,9 @@ export async function getSimletGroups(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
+    let currentUser = req.user?.sql;
     logger.debug({simletId} , "Getting groups for simlet ID");
-    const groups = await simletService.getSimletGroups(simletId);
+    const groups = await simletService.getSimletGroups(simletId, currentUser!.user_id as number);
     logger.debug({groups} , "Groups retrieved for simlet ID");
     res.json(groups);
   } catch (err) {
@@ -289,9 +293,9 @@ export async function getSimletSessions(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    const userId = req.user?.sql.user_id;
-    logger.debug({simletId, userId} , "Getting sessions for simlet ID and user ID");
-    const sessions = await simletService.getSimletSessions(simletId, userId!);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id} , "Getting sessions for simlet ID and user ID");
+    const sessions = await simletService.getSimletSessions(simletId, currentUser!.user_id as number);
     logger.debug({sessions} , "Sessions retrieved for simlet ID and user ID");
     res.json(sessions);
   } catch (err) {
@@ -323,10 +327,11 @@ export async function getSessionActivities(
   next: NextFunction
 ): Promise<void> {
   try {
+    const simletId = parseInt(req.params.simlet_id as string);
     const sessionId = parseInt(req.params.session_id as string);
-    const userId = req.user?.sql.user_id;
-    logger.debug({sessionId, userId} , "Getting activities for session ID and user ID");
-    const activities = await simletService.getSessionActivities(sessionId, userId!);
+    let currentUser = req.user?.sql;
+    logger.debug({sessionId, userId: currentUser?.user_id} , "Getting activities for session ID and user ID");
+    const activities = await simletService.getSessionActivities(simletId, sessionId, currentUser!.user_id as number);
     logger.debug({activities} , "Activities retrieved for session ID and user ID");
     res.json(activities);
   } catch (err) {

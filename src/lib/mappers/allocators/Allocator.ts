@@ -1,30 +1,104 @@
+import { db } from "@/lib/db";
+import { NotFoundError } from "@/lib/errors/appErrors";
+import { logger } from "@/lib/logger";
+
+/**
+ * Base Allocator mapper class for managing participant allocation to sessions.
+ * Allocators determine how participants are assigned to different experimental conditions.
+ * 
+ * @class Allocator
+ * @description Base class for all allocator types that handle participant assignment logic.
+ * Can be extended by specific allocator types like RandomAllocator, GroupAllocator, etc.
+ */
 export class Allocator {
+    /**
+     * ID of the simlet (study) this allocator belongs to
+     */
     simlet_id: number;
+    
+    /**
+     * Unique identifier for this allocator
+     */
     allocator_id: number;
+    
+    /**
+     * Type of allocator (e.g., 'random', 'group', 'session')
+     */
     allocator_type: string;
+    
+    /**
+     * Timestamp when the allocator was created
+     */
     createdAt: Date;
+    
+    /**
+     * Timestamp when the allocator was last updated
+     */
     updatedAt: Date;
 
+    /**
+     * Gets the allocator type identifier
+     * 
+     * @static
+     * @returns {string} The allocator type string
+     * @description Returns the base allocator type. Should be overridden by subclasses.
+     */
     static getType(){
         return 'default';
     }
     
+    /**
+     * Gets the human-readable name for this allocator type
+     * 
+     * @static
+     * @returns {string} The allocator type name
+     * @description Returns a user-friendly name for the allocator type.
+     */
     static getName(){
         return 'Default Allocator';
     }
 
+    /**
+     * Gets a description of this allocator type
+     * 
+     * @static
+     * @returns {string} The allocator type description
+     * @description Returns a detailed description of how this allocator works.
+     */
     static getDescription(){
         return 'A basic allocator that allocate to the first session.';
     }
 
+    /**
+     * Gets utility functions specific to this allocator type for a given user
+     * 
+     * @static
+     * @async
+     * @param {string} username - The username to get utilities for
+     * @returns {Promise<object>} Object containing utility functions
+     * @description Returns allocator-specific utility functions. Base implementation returns empty object.
+     */
     static async getUtils(username : string){
         return {};
     }
 
+    /**
+     * Gets detailed information about this allocator instance
+     * 
+     * @async
+     * @returns {Promise<object>} Object containing allocator details
+     * @description Returns instance-specific details. Base implementation returns empty object.
+     */
     async getDetails(){
         return {};
     }
 
+    /**
+     * Creates a new Allocator instance
+     * 
+     * @param {any} data - Raw data object containing allocator properties
+     * @description Initializes allocator properties from provided data object.
+     */
     constructor(data: any) {
         this.simlet_id = data.simlet_id;
         this.allocator_id = data.allocator_id;

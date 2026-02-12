@@ -15,7 +15,7 @@ import {
   getAllSimlets,
   getSimletById,
   createSimlet,
-  updateSimlet,
+  patchSimlet,
   deleteSimlet,
   searchSimlets,
   getAllocatorFromSimlet,
@@ -80,7 +80,7 @@ router.get("/:simlet_id/sessions", getSimletSessions);
 router.get("/:simlet_id/sessions/:session_id", getSimletSession);
 router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
 router.get("/:simlet_id", getSimletById);
-router.put("/:simlet_id", updateSimlet);
+router.put("/:simlet_id", patchSimlet);
 router.delete("/:simlet_id", deleteSimlet);
 
 export default router;
