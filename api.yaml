@@ -307,7 +307,13 @@ paths:
         '200':
           description: added to task list
           content:
-            $ref: '#/components/schemas/study'
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Task added successfully"
         '400':
           description: 'invalid input, object invalid'
   /groups/{id}/participants:
@@ -692,7 +698,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  type: string
+                  $ref: '#/components/schemas/simlet_participant'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -730,6 +736,10 @@ paths:
       responses:
         '200':
           description: item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/test'
         '401':
           description: 'Teacher does not own the class'
         '400':
@@ -763,8 +773,10 @@ paths:
       responses:
         '200':
           description: Test updated
-          schema:
-              $ref: '#/components/schemas/test'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/test'
         '401':
           description: 'Teacher does not own the class'
         '400':
@@ -849,9 +861,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/allocator'
+                $ref: '#/components/schemas/allocator'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -868,6 +878,10 @@ paths:
       responses:
         '200':
           description: updated correctly
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/allocator'
         '400':
           description: 'invalid input, object invalid'
       parameters:
@@ -987,8 +1001,10 @@ paths:
       responses:
         '200':
           description: Activity updated
-          schema:
-              $ref: '#/components/schemas/activity'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activity'
         '400':
           description: 'invalid input, object invalid'
     delete:
@@ -2427,15 +2443,18 @@ components:
         - email
         - role
       properties:
+        user_id:
+          type: integer
+          example: 123
         username:
           type: string
           example: "username_unique"
         email:
           type: string
-          example: "email"
+          example: "email@example.com"
         isToken:
-          type: string
-          example: "True"
+          type: boolean
+          example: false
         token:
           type: string
           example: "user"
@@ -2464,6 +2483,12 @@ components:
               id:
                 type: string
                 example: whateveruuidusedthere_12321
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     userBody:
       type: object
       properties:
@@ -2500,137 +2525,181 @@ components:
     group:
       type: object
       required:
+        - group_id
         - name
-        - owners
-        - participants
-        - created
+        - use_new_generation
       properties:
-        id:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
+        group_id:
+          type: integer
+          example: 123
         name:
           type: string
           example: "Test group for School"
-        owners:
-          type: array
-          items:
-            type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
+        use_new_generation:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2017-07-21T17:32:28Z"
         participants:
           type: array
           items:
+            type: integer
+          example: [101, 102, 103]
+        direct_permissions:
+          type: array
+          items:
             type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
-        link:
-          type: object
-        created:
-          type: string
-          format: date-time
-          example: "2017-07-21T17:32:28Z"
-        version:
-          type: integer
-          minimum: 0
+          example: ["READ", "WRITE"]
     study:
       type: object
       required:
+        - simlet_id
         - name
-        - tests
-        - allocator
-        - owners
-        - created
+        - user_id
       properties:
-        id:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
+        simlet_id:
+          type: integer
+          example: 123
         name:
           type: string
           example: "Survey for SG validation"
-        tests:
+        description:
+          type: string
+          example: "A comprehensive study for serious game validation"
+        user_id:
+          type: integer
+          example: 456
+        username:
+          type: string
+          example: "researcher1"
+        permission:
+          type: string
+          example: "READ_WRITE"
+        allocator_id:
+          type: integer
+          example: 789
+        sessions:
           type: array
           items:
-            type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
-        allocator:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
+            type: integer
+          example: [201, 202, 203]
         groups:
           type: array
           items:
-            type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
-        owners:
+            type: integer
+          example: [101, 102]
+        tags:
           type: array
           items:
             type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
-        created:
-          type: string
-          format: date-time
-          example: "2017-07-21T17:32:28Z"
-        active:
-          type: boolean
-          example: true
-        version:
-          type: integer
-          minimum: 0
-        shlink:
-          type: object
+          example: ["validation", "serious-games"]
+        direct_permissions:
+          type: array
+          items:
+            type: string
+          example: ["READ", "WRITE"]
     test:
       type: object
       required:
-        - name
+        - session_id
+        - simlet_id
+        - user_id
       properties:
-        id:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
+        session_id:
+          type: integer
+          example: 201
+        simlet_id:
+          type: integer
+          example: 123
+        user_id:
+          type: integer
+          example: 456
         name:
           type: string
           example: "Test A for my study"
-        study:
+        description:
           type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
+          example: "Pre-test session for baseline measurement"
+        username:
+          type: string
+          example: "researcher1"
+        permission:
+          type: string
+          example: "READ_WRITE"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        experimental_method:
+          type: string
+          example: "control"
+        session_open_date:
+          type: string
+          format: date-time
+        session_close_date:
+          type: string
+          format: date-time
         activities:
           type: array
           items:
-            type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
-        version:
-          type: integer
-          minimum: 0
-    activity:
-      type: object
-      required:
-        - name
-        - type
-      properties:
-        id:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
-        name:
-          type: string
-          example: "Survey for validation"
-        type:
-          type: string
-          example: "survey, gameplay, etc..."
-        test:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
-        owners:
+            type: integer
+          example: [301, 302, 303]
+        tags:
           type: array
           items:
             type: string
-            example: ObjectId("5d07a0767c1405004bc702af")
-        extra_data:
-          type: object
-        active:
+          example: ["pre-test", "baseline"]
+        direct_permissions:
+          type: array
+          items:
+            type: string
+          example: ["READ", "WRITE"]
+    activity:
+      type: object
+      required:
+        - activity_id
+        - session_id
+        - activity_type
+        - name
+      properties:
+        activity_id:
+          type: integer
+          example: 301
+        session_id:
+          type: integer
+          example: 201
+        name:
+          type: string
+          example: "Pre-survey activity"
+        activity_type:
+          type: string
+          enum: ["default", "manual", "limesurvey", "gameplay", "lti_tool"]
+          example: "limesurvey"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        presignedURL:
+          type: string
+          example: "https://minio.example.com/bucket/file?presigned=true"
+        generated_at:
+          type: string
+          format: date-time
+        expires_on_seconds:
+          type: integer
+          example: 3600
+        trace_storage:
           type: boolean
           example: true
-        study:
+        description:
           type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
-        version:
-          type: integer
-          minimum: 0
+          example: "Survey for validation"
     activityBody:
       type: object
       properties:
@@ -2682,16 +2751,25 @@ components:
     allocator:
       type: object
       required:
-        - type
+        - allocator_id
+        - simlet_id
+        - allocator_type
       properties:
-        type:
-          type: string
-          example: "manual, random, ponderated..."
-        extra_data:
-          type: object
-        version:
+        allocator_id:
           type: integer
-          minimum: 0
+          example: 401
+        simlet_id:
+          type: integer
+          example: 123
+        allocator_type:
+          type: string
+          example: "random"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     lti_tool:
       type: object
       required:
@@ -2910,6 +2988,188 @@ components:
           example: moodle_12321
       x-swagger-mongoose:
         exclude-schema: true
+    # Activity Type Schemas based on mappers
+    gameplay_activity:
+      allOf:
+        - $ref: '#/components/schemas/activity'
+        - type: object
+          properties:
+            backup:
+              type: boolean
+              example: false
+            scorm_xapi_by_game:
+              type: boolean
+              example: false
+            category_id:
+              type: integer
+              example: 5
+            subject_area_id:
+              type: integer
+              example: 3
+            game_type:
+              type: string
+              example: "adventure"
+            game_url:
+              type: string
+              example: "https://game.example.com/play"
+    limesurvey_activity:
+      allOf:
+        - $ref: '#/components/schemas/activity'
+        - type: object
+          properties:
+            survey_id:
+              type: integer
+              example: 123456
+            language:
+              type: string
+              example: "en"
+            lrsset:
+              type: integer
+              example: 1
+    manual_activity:
+      allOf:
+        - $ref: '#/components/schemas/activity'
+        - type: object
+          properties:
+            user_managed:
+              type: boolean
+              example: false
+            ressource_type:
+              type: string
+              example: "document"
+            ressource_url:
+              type: string
+              example: "https://example.com/resource.pdf"
+    # Group and User related schemas
+    group_participant:
+      type: object
+      required:
+        - group_id
+        - participant_id
+        - username
+      properties:
+        group_id:
+          type: integer
+          example: 123
+        participant_id:
+          type: integer
+          example: 456
+        username:
+          type: string
+          example: "student1"
+        token:
+          type: string
+          example: "abc123token"
+        isToken:
+          type: boolean
+          example: false
+        role:
+          type: string
+          example: "student"
+        email:
+          type: string
+          example: "student1@example.com"
+    user_permission:
+      type: object
+      required:
+        - username
+        - permission
+      properties:
+        username:
+          type: string
+          example: "teacher1"
+        permission:
+          type: string
+          example: "READ_WRITE"
+    # Allocator type schemas
+    random_allocator:
+      allOf:
+        - $ref: '#/components/schemas/allocator'
+        - type: object
+          properties:
+            name:
+              type: string
+              example: "Random Allocator"
+            description:
+              type: string
+              example: "An allocator that randomly assigns users to sessions."
+    group_allocator:
+      allOf:
+        - $ref: '#/components/schemas/allocator'
+        - type: object
+          properties:
+            name:
+              type: string
+              example: "Group Allocator"
+            description:
+              type: string
+              example: "This allocator allows you to select to which test branch is each group assigned."
+    session_allocator:
+      allOf:
+        - $ref: '#/components/schemas/allocator'
+        - type: object
+          properties:
+            name:
+              type: string
+              example: "Session Allocator"
+            description:
+              type: string
+              example: "Allocates participants to specific sessions based on session parameters."
+    # Study and session participants
+    simlet_participant:
+      type: object
+      required:
+        - simlet_id
+        - user_id
+      properties:
+        simlet_id:
+          type: integer
+          example: 123
+        user_id:
+          type: integer
+          example: 456
+        username:
+          type: string
+          example: "student1"
+        email:
+          type: string
+          example: "student1@example.com"
+        role:
+          type: string
+          example: "student"
+        allocated_group:
+          type: string
+          example: "control"
+        allocation_date:
+          type: string
+          format: date-time
+    simlet_group:
+      type: object
+      required:
+        - simlet_id
+        - group_id
+      properties:
+        simlet_id:
+          type: integer
+          example: 123
+        group_id:
+          type: integer
+          example: 456
+        group_name:
+          type: string
+          example: "Control Group A"
+        use_new_generation:
+          type: boolean
+          example: true
+        participant_count:
+          type: integer
+          example: 25
+        assigned_date:
+          type: string
+          format: date-time
+        permission:
+          type: string
+          example: "READ"
 #    lti_claims:
 #      type: object
 #      example: |
