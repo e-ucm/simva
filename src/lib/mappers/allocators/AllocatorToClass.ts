@@ -25,17 +25,11 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * const allocator = AllocatorToClass({ allocator_type: 'random', allocator_id: 456 });
  * // Returns a RandomAllocator instance
  */
-export async function AllocatorToClass(simlet_id: number) : Promise<Allocator> {
-    const allocators = await db.Functions.runViewQuery(
-        db.Views.Simlet.AllocatorBySimletId,
-        { simlet_id }
-    );
-    if(!allocators || allocators.length === 0){
-        throw new NotFoundError(`Allocator with ID ${simlet_id} not found.`);
-    } else if(allocators.length > 1){
-        logger.warn(`Multiple allocators found with ID ${simlet_id}. Using the first one.`);
+export async function AllocatorToClass(allocator_id: number) : Promise<Allocator> {
+    const allocator = await db.Tables.Allocators.findOne({ where: { allocator_id } });
+    if(!allocator){
+        throw new NotFoundError(`Allocator with ID ${allocator_id} not found.`);
     }
-    const allocator = allocators[0];
     logger.debug({allocator}, allocator.allocator_type);
     switch (allocator.allocator_type) {
         case SessionAllocator.getType():

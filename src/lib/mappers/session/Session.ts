@@ -132,7 +132,7 @@ export class Session {
 
     static async getFromDbData(simlet_id: number, session_id: number, user_id: number) : Promise<Session> {
         const session = await db.Functions.runViewQuery(
-            db.Views.Simlet.SessionBySimletIdSessionIdAndUserId,
+            db.Views.Session.bySimletIdSessionIdAndUserId,
             { session_id, user_id, simlet_id }
        );
         if(session.length === 0){

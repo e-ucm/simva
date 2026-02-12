@@ -69,6 +69,7 @@ export class Simlet {
      * Static array defining which properties should be parsed as numeric arrays
      */
     static numericKeys = ['sessions', 'groups'];
+    allocator_id: number;
     
 
     /**
@@ -85,6 +86,7 @@ export class Simlet {
         this.user_id = data.user_id; // Ensure user_id is included in the data
         this.username = data.username || "";
         this.permission = data.permission;
+        this.allocator_id = data.allocator_id;
         logger.debug({data} , "Simlet data before parsing string and numerics arrays");
         let result = db.Functions.parseStringArraysToTypedArrays(data, Simlet.numericKeys, 'number');
         this.sessions = result.sessions;
@@ -205,12 +207,12 @@ export class Simlet {
     }
 
     getAllocator(): Promise<Allocator> {
-      return AllocatorToClass(this.simlet_id)
+      return AllocatorToClass(this.allocator_id);
     }
 
     async getAllocatedParticipants(): Promise<SimletParticipant[]> {
       const allocated = await db.Functions.runViewQuery(
-        db.Views.Simlet.AllocatedParticipantsBySimletId,
+        db.Views.AllocatedParticipants.bySimletId,
         { simlet_id: this.simlet_id }
       );
       logger.debug({allocated} , "Participants data from view");
@@ -219,7 +221,7 @@ export class Simlet {
 
     async getGroups(): Promise<SimletGroup[]> {
         const groups = await db.Functions.runViewQuery(
-            db.Views.Simlet.GroupsBySimletId,
+            db.Views.Group.bySimletId,
             { simlet_id: this.simlet_id }
         );
         logger.debug({groups} , "Groups data from view");
@@ -228,7 +230,7 @@ export class Simlet {
 
     async getSessions(): Promise<Session[]> {
         const sessions = await db.Functions.runViewQuery(
-            db.Views.Simlet.SessionsBySimletIdAndUserId,
+            db.Views.Session.bySimletIdAndUserId,
             { simlet_id: this.simlet_id, user_id: this.user_id }
         );
         logger.debug({sessions} , "Sessions data from view");

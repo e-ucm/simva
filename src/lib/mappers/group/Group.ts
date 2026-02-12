@@ -13,7 +13,7 @@ import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
  */
 export class Group {
     async getParticipants(): Promise<GroupParticipant[]> {
-        let participantsData = await db.Functions.runViewQuery(db.Views.Group.participantsById, {group_id: this.group_id});
+        let participantsData = await db.Functions.runViewQuery(db.Views.GroupParticipant.byId, {group_id: this.group_id});
         logger.debug({ participantsData }, `Group data retrieved for group ID ${this.group_id}`);
         return participantsData.map((participant: any) => new GroupParticipant(participant));
     }

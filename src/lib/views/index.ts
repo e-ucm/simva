@@ -20,16 +20,29 @@
 import Simlet from "@/lib/views/simlets.queries";
 import Activity from "@/lib/views/activities.queries";
 import Group from "@/lib/views/groups.queries";
+import GroupParticipant from "@/lib/views/groupParticipants.queries";
+import AllocatedParticipants from "@/lib/views/allocatedParticipants.queries";
+import Session from "@/lib/views/sessions.queries";
 
 /**
  * Main views object containing all database view query definitions.
  * Organized by functional domain for easy access and maintenance.
  * 
  * @type {Object}
- * @property {Object} User - User-related view queries
  * @property {Object} Simlet - SIMLET-related view queries  
  * @property {Object} Activity - Activity-related view queries
  * @property {Object} Group - Group-related view queries
+ * @property {Object} GroupParticipant - Group Participant-related view queries
+ * @property {Object} Allocator - Allocator-related view queries
+ * @property {Object} Session - Session-related view queries
+ * @example
+ * ```typescript
+ * import views from '@/lib/views';
+ *  // Access simlet views
+ * const simletQuery = views.Simlet.byId;
+ * // Access user views
+ * const userQuery = views.User.byRole;
+ * ```
  * 
  * @example
  * ```typescript
@@ -45,7 +58,10 @@ import Group from "@/lib/views/groups.queries";
 const views = {
   Simlet,
   Activity,
-  Group
+  Group, 
+  GroupParticipant,
+  AllocatedParticipants,
+  Session,
 };
 
 export default views;

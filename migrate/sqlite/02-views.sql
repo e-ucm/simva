@@ -120,6 +120,7 @@ SELECT
     sim.description,
     sim.objective,
     shlink.short_url,
+    sim.allocator_id,
     JSON_GROUP_ARRAY(DISTINCT g.group_id) as groups,
     JSON_GROUP_ARRAY(DISTINCT ses.session_id) as sessions,
     JSON_GROUP_ARRAY(tag_list.simlet_tag_name) as tags
@@ -256,17 +257,6 @@ FROM Experimental_Participants a
 JOIN SIMLETs s ON a.allocator_id = s.allocator_id
 JOIN Users u ON u.user_id = a.participant_id
 WHERE a.participant_id is not NULL;
-
-DROP VIEW IF EXISTS v_complete_allocators;
-CREATE VIEW v_complete_allocators AS
-SELECT 
-    s.simlet_id,
-    a.allocator_id,
-    a.allocator_type,
-    a.createdAt,
-    a.updatedAt
-FROM Allocators a
-JOIN SIMLETs s ON a.allocator_id = s.allocator_id;
 
 DROP VIEW IF EXISTS v_complete_groups_simlets;
 CREATE VIEW v_complete_groups_simlets AS

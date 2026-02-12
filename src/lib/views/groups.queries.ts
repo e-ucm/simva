@@ -47,36 +47,19 @@ const queries: Record<string, QueryTemplate> = {
         },
     },
 
-    participantsById: {
-        description: "Get all Group Participants for a certain Group ID",
+    bySimletId : {
+        description: "Get Simlet Group By Simlet Identifier",
         sql: `
         SELECT *
-        FROM v_complete_group_participants 
-        WHERE group_id = :group_id
+        FROM v_complete_groups_simlets
+        WHERE simlet_id = :simlet_id
         `,
         params: {
-            group_id: {
+            simlet_id: {
                 type: "number",
                 required: true,
-                description: "Group Identifier",
-                example: 1
-            },
-        },
-    },
-
-    participantsByAllocatorId: {
-        description: "Get all participants for a certain Allocator ID",
-        sql: `
-        SELECT *
-        FROM v_complete_group_participants 
-        WHERE allocator_id = :allocator_id
-        `,
-        params: {
-            allocator_id: {
-                type: "number",
-                required: true,
-                description: "Allocator Identifier",
-                example: 1
+                description: "Simlet Identifier",
+                example: 1,
             },
         },
     },
