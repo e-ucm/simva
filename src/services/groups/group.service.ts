@@ -42,19 +42,19 @@ import { logger } from "@/lib/logger";
 export async function getGroups(user_id: number, version?: boolean, searchString?: string, limit?: number, offset?: number): Promise<Group[]> {
     let groups;
     if(searchString != undefined && limit != undefined && offset != undefined && version != undefined) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersionWithPagination, { user_id, version, searchString, limit, offset});
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { user_id, version, searchString, limit, offset});
     } else if(limit != undefined && offset != undefined && searchString != undefined) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersionWithPagination, { user_id, searchString, limit, offset});
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { user_id, searchString, limit, offset});
     } else if(limit != undefined && offset != undefined && version != undefined) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersionWithPagination, { user_id, version, limit, offset});
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { user_id, version, limit, offset});
     } else if(searchString != undefined && version != undefined) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id, searchString, version });
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id, searchString, version });
     } else if(searchString != undefined) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id, searchString });
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id, searchString });
     } else if(version) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id, version });
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id, version });
     } else {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id });
+        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id });
     }
     return groups.map((groupData: any) => new Group(groupData));
 }
