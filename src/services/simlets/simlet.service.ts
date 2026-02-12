@@ -248,12 +248,11 @@ export async function getSimletGroups(simletId: number, user_id: number): Promis
  * ```typescript
  * const sessions = await getSimletSessions(123, 456);
  * sessions.forEach(s => console.log(s.name, s.open_date, s.close_date));
- * ```
- */
-export async function getSimletSessions(simletId: number, user_id: number): Promise<Session[]> {
-  let simlet = await Simlet.getFromDbData(simletId, user_id);
-  return await simlet.getSessions();
-}
+* ``` */ 
+export async function getSimletSessions(simletId: number, user_id: number, searchString?: string, limit?: number, offset?: number): Promise<Session[]> { 
+  let simlet = await Simlet.getFromDbData(simletId, user_id); 
+  return await simlet.getSessions(searchString, limit, offset); 
+} 
 
 /**
  * Retrieves a specific session within a simlet.

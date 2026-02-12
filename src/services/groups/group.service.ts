@@ -39,12 +39,22 @@ import { logger } from "@/lib/logger";
  * const newGenGroups = await getGroups(123, true);
  * ```
  */
-export async function getGroups(user_id: number, version: boolean | null = null): Promise<Group[]> {
+export async function getGroups(user_id: number, version?: boolean, searchString?: string, limit?: number, offset?: number): Promise<Group[]> {
     let groups;
-    if(version == null) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id});
+    if(searchString != undefined && limit != undefined && offset != undefined && version != undefined) {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersionWithPagination, { user_id, version, searchString, limit, offset});
+    } else if(limit != undefined && offset != undefined && searchString != undefined) {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersionWithPagination, { user_id, searchString, limit, offset});
+    } else if(limit != undefined && offset != undefined && version != undefined) {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersionWithPagination, { user_id, version, limit, offset});
+    } else if(searchString != undefined && version != undefined) {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id, searchString, version });
+    } else if(searchString != undefined) {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id, searchString });
+    } else if(version) {
+        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id, version });
     } else {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, {version, user_id});
+        groups = await db.Functions.runViewQuery(db.Views.Group.byUserIdAndVersion, { user_id });
     }
     return groups.map((groupData: any) => new Group(groupData));
 }

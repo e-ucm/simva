@@ -295,10 +295,13 @@ export async function getSimletSessions(
   next: NextFunction
 ): Promise<void> {
   try {
+    const searchString = String(req.query.search || '');
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting sessions for simlet ID and user ID");
-    const sessions = await simletService.getSimletSessions(simletId, currentUser!.user_id as number);
+    const sessions = await simletService.getSimletSessions(simletId, currentUser!.user_id as number, searchString, limit, offset);
     logger.debug({sessions} , "Sessions retrieved for simlet ID and user ID");
     res.json(sessions);
   } catch (err) {

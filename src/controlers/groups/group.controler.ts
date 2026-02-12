@@ -29,11 +29,11 @@ export async function getGroups(
   next: NextFunction
 ) {
   try {
-    let version= null;
-    if(req.query.use_new_generation) {
-      version = (req.query.use_new_generation === 'true');
-    }
-    const groups = await groupService.getGroups(req.user!.sql.user_id as number, version);
+    let version = req.query.use_new_generation? (req.query.use_new_generation === 'true') : undefined;
+    const searchString = req.query.searchString as string | undefined;
+    const limit = parseInt(req.query.limit as string) || undefined;
+    const offset = parseInt(req.query.offset as string) || undefined;
+    const groups = await groupService.getGroups(req.user!.sql.user_id as number, version, searchString, limit, offset);
     res.json(groups);
   } catch (err) {
     next(err);
