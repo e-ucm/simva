@@ -1,6 +1,79 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
+    byVersionAndUserId: {
+        description: "Get all Groups for a certain Version and User ID",
+        sql: `
+        SELECT *
+        FROM v_complete_groups_users_permissions
+        WHERE user_id = :user_id AND (:version IS NULL OR use_new_generation = :version)
+        AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
+        `,
+        params: {
+            user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            version: {
+                type: "boolean",
+                required: false,
+                description: "Version flag indicating whether to use new generation",
+                example: true
+            },
+            search: {
+                type: "string",
+                required: false,
+                description: "Search string to filter groups by name or description",
+                example: "group",
+            },
+        },
+    },
+
+    byVersionAndUserIdWithPagination: {
+        description: "Get all Groups for a certain Version and User ID",
+        sql: `
+        SELECT *
+        FROM v_complete_groups_users_permissions
+        WHERE user_id = :user_id AND (:version IS NULL OR use_new_generation = :version)
+        AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
+        LIMIT :limit OFFSET :offset
+        `,
+        params: {
+            user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            version: {
+                type: "boolean",
+                required: false,
+                description: "Version flag indicating whether to use new generation",
+                example: true
+            },
+            search: {
+                type: "string",
+                required: false,
+                description: "Search string to filter groups by name or description",
+                example: "group",
+            },
+            limit: {
+                type: "number",
+                required: true,
+                description: "Maximum number of groups to return",
+                example: 10,
+            },
+            offset: {
+                type: "number",
+                required: true,
+                description: "Number of groups to skip for pagination",
+                example: 20,
+            },
+        },
+    },
+
     byGroupIdAndUserId: {
         description: "Get current Group for a certain Group ID and User ID",
         sql: `
@@ -20,29 +93,6 @@ const queries: Record<string, QueryTemplate> = {
                 required: true,
                 description: "Group Identifier",
                 example: 1
-            },
-        },
-    },
-
-    byVersionAndUserId: {
-        description: "Get all Groups for a certain Version and User ID",
-        sql: `
-        SELECT *
-        FROM v_complete_groups_users_permissions
-        WHERE user_id = :user_id AND (:version IS NULL OR use_new_generation = :version)
-        `,
-        params: {
-            user_id: {
-                type: "number",
-                required: true,
-                description: "User Identifier",
-                example: 123,
-            },
-            version: {
-                type: "boolean",
-                required: false,
-                description: "Version flag indicating whether to use new generation",
-                example: true
             },
         },
     },
