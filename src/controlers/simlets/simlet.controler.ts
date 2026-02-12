@@ -40,12 +40,15 @@ export async function getAllSimlets(
   next: NextFunction
 ): Promise<void> {
   try {
+    const searchString = String(req.query.search || '');
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
     const currentUser = req.user?.sql;
     let simlets;
     switch(currentUser?.role) {
       case "admin":
       case "teacher":
-        simlets = await simletService.getSimletsByUserId(currentUser!.user_id as number);
+        simlets = await simletService.getSimletsByUserId(currentUser!.user_id as number, searchString, limit, offset);
         res.json(simlets);
         break;
     }

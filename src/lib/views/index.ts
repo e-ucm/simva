@@ -17,9 +17,9 @@
  * @requires @/lib/views/v_complete_sessions.queries
  */
 
-import Simlet from "@/lib/views/v_complete_simlets.queries";
-import Activity from "@/lib/views/v_complete_activities.queries";
-import Group from "@/lib/views/v_groups.queries";
+import Simlet from "@/lib/views/simlets.queries";
+import Activity from "@/lib/views/activities.queries";
+import Group from "@/lib/views/groups.queries";
 
 /**
  * Main views object containing all database view query definitions.

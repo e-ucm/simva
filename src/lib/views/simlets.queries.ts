@@ -7,6 +7,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_simlets_users_permissions
       WHERE user_id = :user_id
+      AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
     `,
     params: {
       user_id: {
@@ -14,6 +15,50 @@ const queries: Record<string, QueryTemplate> = {
         required: true,
         description: "User Identifier",
         example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+    },
+  },
+
+  byUserIdWithPagination: {
+    description: "Get all SIMLETs for a certain User with pagination and search",
+    sql: `
+      SELECT *
+      FROM v_complete_simlets_users_permissions
+      WHERE user_id = :user_id
+      AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
+      ORDER BY simlet_id
+      LIMIT :limit OFFSET :offset
+    `,
+    params: {
+      user_id: {
+      type: "number",
+      required: true,
+      description: "User Identifier",
+      example: 123,
+      },
+      search: {
+      type: "string",
+      required: false,
+      description: "Search string to filter simlets by name or description",
+      example: "math",
+      },
+      limit: {
+      type: "number",
+      required: true,
+      description: "Maximum number of simlets to return",
+      example: 10,
+      },
+      offset: {
+      type: "number",
+      required: true,
+      description: "Number of simlets to skip for pagination",
+      example: 20,
       },
     },
   },
