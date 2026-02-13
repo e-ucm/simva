@@ -69,6 +69,16 @@ export class Group {
         this.participants = processedResults.participants || [];
     }
 
+    static async getAllFromDbData(user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Group[]> {
+        let groups;
+        if(limit != undefined && offset != undefined) {
+            groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { user_id, version, search : searchString, limit, offset});
+        } else {
+            groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id, search : searchString, version });
+        } 
+        return groups.map((groupData: any) => new Group(groupData));
+    }
+
     static async getFromDbData(group_id: number, user_id: number): Promise<Group> {
        let groups = await db.Functions.runViewQuery(
             db.Views.Group.byGroupIdAndUserId, 

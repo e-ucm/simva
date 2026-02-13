@@ -41,6 +41,7 @@ const router = Router();
 
 // Base group operations
 router.get("/", getGroups);
+router.get("/count", getGroupCount);
 router.post("/", createGroup);
 
 // Individual group operations

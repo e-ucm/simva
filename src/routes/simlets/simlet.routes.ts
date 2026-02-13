@@ -17,7 +17,6 @@ import {
   createSimlet,
   patchSimlet,
   deleteSimlet,
-  searchSimlets,
   getAllocatorFromSimlet,
   getSimletParticipants,
   getSimletGroups,
@@ -68,7 +67,6 @@ import {
 const router = Router();
 
 // Collection endpoints (should come before parameterized routes)
-router.get("/search", searchSimlets);
 router.get("/", getAllSimlets);
 router.post("/", createSimlet);
 

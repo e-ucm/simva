@@ -130,6 +130,10 @@ export class Session {
         this.direct_permissions = data.direct_permissions || [];
     }
 
+    static async getAllFromDbData(limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Session[]> {
+        throw new Error("Method not implemented.");
+    }
+
     static async getFromDbData(simlet_id: number, session_id: number, user_id: number) : Promise<Session> {
         const session = await db.Functions.runViewQuery(
             db.Views.Session.bySimletIdSessionIdAndUserId,

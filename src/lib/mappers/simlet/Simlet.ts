@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
@@ -95,6 +95,27 @@ export class Simlet {
         logger.debug({result} , "Simlet data after parsing string and numerics arrays");
     }
 
+    static async getAllFromDbData(user_id: number, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
+          let results;
+        if(limit !== undefined && offset !== undefined) {
+            results = await db.Functions.runViewQuery(
+            db.Views.Simlet.byUserIdWithPagination,
+            { user_id, limit, offset, search: searchString }
+            );
+        } else {
+            results = await db.Functions.runViewQuery(
+            db.Views.Simlet.byUserId,
+            { user_id, search: searchString }
+            );
+        }
+        logger.debug({results} , "getSimletsByUserId results");
+        const processedResults = results.map((simlet: any) => 
+            new Simlet(simlet)
+        );
+        logger.debug({processedResults} , "getSimletsByUserId results");
+        return processedResults;
+    }
+
     static async createSimlet(simletData: any): Promise<Simlet> {
         logger.debug({simletData} , "Creating simlet with data");
         if(await db.Tables.Simlets.count({where : {name : simletData.name}}) > 0){
@@ -143,7 +164,11 @@ export class Simlet {
         if(typeof data.description == "string") {
             toUpdate.description = data.description;
         }
-        await db.Tables.Simlets.updateSimlet(this.simlet_id, toUpdate);
+        let model = await db.Tables.Simlets.findOne({ where: { simlet_id: this.simlet_id } });
+        if(!model) {
+            throw new NotFoundError(`Simlet with ID ${this.simlet_id} not found.`);
+        }
+        await model.update(toUpdate);
         Object.assign(this, toUpdate);
         return this;
     }
@@ -157,13 +182,17 @@ export class Simlet {
 
     async remove() : Promise<void> {
         this.canEdit();
-        await db.Tables.Simlets.deleteSimlet(this.simlet_id);
+        let model = await db.Tables.Simlets.findOne({ where: { simlet_id: this.simlet_id } });
+        if(!model) {
+            throw new NotFoundError(`Simlet with ID ${this.simlet_id} not found.`);
+        }
+        await model.destroy();
     }
 
     async addGroup(group_id: number): Promise<Simlet> {
         this.canEdit();
         // Implementation for adding a group to this simlet
-        let group = await db.Tables.SimletGroups.createSimletGroup({ simlet_id: this.simlet_id, group_id });
+        let group = await SimletGroup.createSimletGroup(this.simlet_id, group_id);
         this.groups.push(group.group_id);
         return this;
     }
@@ -192,7 +221,8 @@ export class Simlet {
     async removeGroup(group_id: number): Promise<Simlet> {
         this.canEdit();
         // Implementation for remove a group to this simlet
-        await db.Tables.SimletGroups.deleteSimletGroup(this.simlet_id, group_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id);
+        await group.delete();
         this.groups = this.groups.filter(id => id !== group_id);
         return this;
     }

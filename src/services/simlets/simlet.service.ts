@@ -11,7 +11,6 @@
  * @requires sequelize
  */
 
-import { db } from "@/lib/db";
 import { Simlet } from "@/lib/mappers/simlet/Simlet";
 import { logger } from "@/lib/logger";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
@@ -19,7 +18,6 @@ import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
 import { Activity } from "@/lib/mappers/activities/Activity";
-import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 
 /**
  * Service for Simlet entity operations.
@@ -43,24 +41,7 @@ import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
  * ```
  */
 export async function getSimletsByUserId(user_id: number, searchString?: string, limit?: number, offset?: number): Promise<Simlet[]> {
-  let results;
-  if(limit !== undefined && offset !== undefined) {
-    results = await db.Functions.runViewQuery(
-      db.Views.Simlet.byUserIdWithPagination,
-      { user_id, limit, offset, search: searchString }
-    );
-  } else {
-    results = await db.Functions.runViewQuery(
-      db.Views.Simlet.byUserId,
-      { user_id, search: searchString }
-    );
-  }
-  logger.debug({results} , "getSimletsByUserId results");
-  const processedResults = results.map((simlet: any) => 
-    new Simlet(simlet)
-  );
-  logger.debug({processedResults} , "getSimletsByUserId results");
-  return processedResults;
+  return await Simlet.getAllFromDbData(user_id, searchString, limit, offset);
 }
 
 /**
@@ -290,3 +271,11 @@ export async function getSessionActivities(simlet_id: number, sessionId: number,
   let session = await Session.getFromDbData(simlet_id, sessionId, user_id);
   return await session.getActivities();
 }
+
+export function getSimletCountByUserId(arg0: number, searchString: string): any {
+  throw new Error("Function not implemented.");
+}
+export function getSimletSessionCountByUserId(simlet_id: number, arg1: number, searchString: string): any {
+  throw new Error("Function not implemented.");
+}
+

@@ -55,8 +55,28 @@ export class SimletGroup {
         let result = db.Functions.parseStringArraysToTypedArrays(data, SimletGroup.numericKeys, 'number');
         this.participants = result.participants;
     }
+    static async createSimletGroup(simlet_id: number, group_id: number) : Promise<SimletGroup> {
+        let simletGroupData = await db.Tables.SimletGroups.create({ simlet_id, group_id });
+        return new SimletGroup(simletGroupData);
+    }
 
-    printInfo() {
+    static async getFromDbData(simlet_id: number, group_id: number) : Promise<SimletGroup> {
+        let simletGroupData = await db.Tables.SimletGroups.findOne({ where: { simlet_id, group_id } });
+        if (!simletGroupData) {
+            throw new ValidationError(`SimletGroup with simlet_id ${simlet_id} and group_id ${group_id} not found`);
+        }
+        return new SimletGroup(simletGroupData);
+    }
+    
+    async delete(): Promise<void> {
+        let simletGroup = await db.Tables.SimletGroups.findOne({ where: { simlet_id: this.simlet_id, group_id: this.group_id } });
+        if (!simletGroup) {
+            throw new ValidationError(`SimletGroup with simlet_id ${this.simlet_id} and group_id ${this.group_id} not found`);
+        }
+        await simletGroup.destroy();
+    }
+
+    printInfo(): void {
         logger.debug({ SimletGroup : this }, `SimletGroup information - Simlet ID: ${this.simlet_id}, Group ID: ${this.group_id}, Group Name: ${this.group_name}`);
     }
 }

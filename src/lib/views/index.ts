@@ -21,7 +21,7 @@ import Simlet from "@/lib/views/simlets.queries";
 import Activity from "@/lib/views/activities.queries";
 import Group from "@/lib/views/groups.queries";
 import GroupParticipant from "@/lib/views/groupParticipants.queries";
-import AllocatedParticipants from "@/lib/views/allocatedParticipants.queries";
+import AllocatedParticipants from "@/lib/views/allocator.queries";
 import Session from "@/lib/views/sessions.queries";
 
 /**

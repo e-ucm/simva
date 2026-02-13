@@ -12,9 +12,7 @@
  * @requires @/lib/errors/appErrors
  */
 
-import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 import { Group } from "@/lib/mappers/group/Group";
-import { db } from "@/lib/db";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 import { logger } from "@/lib/logger";
 
@@ -40,13 +38,7 @@ import { logger } from "@/lib/logger";
  * ```
  */
 export async function getGroups(user_id: number, version?: boolean, searchString?: string, limit?: number, offset?: number): Promise<Group[]> {
-    let groups;
-    if(limit != undefined && offset != undefined) {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { user_id, version, search : searchString, limit, offset});
-    } else {
-        groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id, search : searchString, version });
-    } 
-    return groups.map((groupData: any) => new Group(groupData));
+    return await Group.getAllFromDbData(user_id, version, limit, offset, searchString);
 }
 
 /**
@@ -102,3 +94,19 @@ export async function getGroupParticipants(group_id: number, user_id: number): P
     let group = await Group.getFromDbData(group_id, user_id);
     return await group.getParticipants();
 }
+
+export function createGroup(body: any) {
+  throw new Error("Function not implemented.");
+}
+export function updateGroup(groupId: number, body: any) {
+  throw new Error("Function not implemented.");
+}
+
+export function deleteGroup(groupId: number) {
+  throw new Error("Function not implemented.");
+}
+
+export function getGroupCount(user_id: number, searchString: string) {
+  throw new Error("Function not implemented.");
+}
+

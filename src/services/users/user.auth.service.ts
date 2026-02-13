@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { User } from "@/lib/mappers/Users/User";
 import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
 import { config } from "@/lib/config";
@@ -15,7 +15,7 @@ import { KeycloakKeyManager } from "@/lib/keycloakKeyManager";
  * Interface for decoded Keycloak JWT payload
  */
 export interface KeycloakJWTPayload {
-  sql: Partial<InstanceType<typeof db.Tables.User>>;
+  sql: Partial<User>;
   jwt: string;
   sso: {
     iss: string;
@@ -151,7 +151,7 @@ async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<
 
   try {
     // Look for existing user by email using model method
-    const users = await db.Tables.User.findAll({ where: decoded.sql });
+    const users = await User.getFromPartialDBData(decoded.sql);
     
     if (users.length !== 0) {
       const user = users[0];
@@ -160,7 +160,7 @@ async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<
       
       if (user.role !== newRole) {
         // Update user role using model method
-        await user.update({ role: newRole });
+        await user.updateRole({ role: newRole });
         return decoded;
       } else {
         return decoded;
@@ -183,9 +183,9 @@ async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<
  * @async
  * @function createUserFromKeycloakJWT
  * @param {Partial<KeycloakJWTPayload>} decoded - Decoded Keycloak JWT payload
- * @returns {Promise<InstanceType<typeof db.Tables.User>>} Created user instance
+ * @returns {Promise<User>} Created user instance
  */
-async function createUserFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): Promise<InstanceType<typeof db.Tables.User>> {
+async function createUserFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): Promise<User> {
   logger.debug("createUserFromJWT: " + JSON.stringify(decoded));
   
   const userData = {
@@ -197,7 +197,7 @@ async function createUserFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): 
   
   logger.debug("createUserFromJWT - UserData: " + JSON.stringify(userData));
   // Use model method instead of service method
-  return await db.Tables.User.createUser(userData);
+  return await User.createDB(userData);
 }
 
 /**

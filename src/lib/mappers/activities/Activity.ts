@@ -167,7 +167,11 @@ export class Activity {
 	 * @description Patches the activity in the database with provided data.
 	 */
 	async patch(data : any) {
-		await db.Tables.Activities.updateActivity(this.activity_id, data);
+		let activity = await db.Tables.Activities.findOne({ where: { activity_id: this.activity_id } });
+		if (!activity) {
+			throw new NotFoundError(`Activity with ID ${this.activity_id} not found`);
+		}
+		await activity.update(data);
 	}
 
 	/**
@@ -178,7 +182,11 @@ export class Activity {
 	 * @description Permanently deletes this activity from the database.
 	 */
 	async remove() {
-		await db.Tables.Activities.deleteActivity(this.activity_id);
+		let activity = await db.Tables.Activities.findOne({ where: { activity_id: this.activity_id } });
+		if (!activity) {
+			throw new NotFoundError(`Activity with ID ${this.activity_id} not found`);
+		}
+		await activity.destroy();
 	}
 
 	/**

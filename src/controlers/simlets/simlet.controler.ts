@@ -16,7 +16,6 @@ import { Request, Response, NextFunction } from "express";
 import * as simletService from "@/services/simlets/simlet.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
-import { db } from "@/lib/db";
 
 /**
  * Retrieves simlets from the database.
@@ -55,6 +54,50 @@ export async function getAllSimlets(
       case "teacher":
         simlets = await simletService.getSimletsByUserId(currentUser!.user_id as number, searchString, limit, offset);
         res.json(simlets);
+        break;
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSimletCount(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const currentUser = req.user?.sql;
+    const searchString = String(req.query.search || '');
+    let count;
+    switch(currentUser?.role) {
+      case "admin":
+      case "teacher":
+        count = await simletService.getSimletCountByUserId(currentUser!.user_id as number, searchString);
+        res.json({ count });
+        break;
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function getSimletSessionCount(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const currentUser = req.user?.sql;
+    const searchString = String(req.query.search || '');
+    const simlet_id = parseInt(req.params.simlet_id as string);
+    let count;
+    switch(currentUser?.role) {
+      case "admin":
+      case "teacher":
+        count = await simletService.getSimletSessionCountByUserId(simlet_id, currentUser!.user_id as number, searchString);
+        res.json({ count });
         break;
     }
   } catch (err) {
@@ -188,57 +231,9 @@ export async function deleteSimlet(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    await db.Tables.Simlets.deleteSimlet(simletId);
+    let currentUser = req.user?.sql;
+    await simletService.deleteSimlet(simletId, currentUser!.user_id as number);
     res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * Searches simlets by name or description pattern.
- * 
- * @async
- * @function searchSimlets
- * @param {AuthenticatedRequest} req - Express request object with query parameter 'q' for search term
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next middleware function for error handling
- * @returns {Promise<void>}
- * @throws {Error} Passes errors to next middleware
- * 
- * @example
- * // GET /simlets/search?q=mathematics
- * // Returns simlets matching 'mathematics' in name or description
- */
-export async function searchSimlets(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const searchTerm = String(req.query.q || '');
-    
-    if (!searchTerm) {
-      res.json([]);
-      return;
-    }
-
-    const [nameResults, descriptionResults] = await Promise.all([
-      db.Tables.Simlets.searchSimletsByName(searchTerm),
-      db.Tables.Simlets.searchSimletsByDescription(searchTerm)
-    ]);
-
-    // Combine and deduplicate results
-    const combinedResults = [...nameResults];
-    const existingIds = new Set(nameResults.map(s => s.simlet_id));
-    
-    for (const result of descriptionResults) {
-      if (!existingIds.has(result.simlet_id)) {
-        combinedResults.push(result);
-      }
-    }
-
-    res.json(combinedResults);
   } catch (err) {
     next(err);
   }
