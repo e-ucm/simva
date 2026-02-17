@@ -96,7 +96,7 @@ export class Group {
         return new Group(groups[0]);
     }
     
-    static async createInDb(body: Partial<Group>, current_user_id: number): Promise<Group> {
+    static async createInDb(body: Partial<Group>, useNewGeneration : boolean, current_user_id: number): Promise<Group> {
         let newName = body.name && body.name.trim() !== "";
         if(!newName) {
             throw new ValidationError("Group name is required");
@@ -106,6 +106,7 @@ export class Group {
             throw new ValidationError("Group name must be unique");
         }
         body.group_owner_id = current_user_id;
+        body.use_new_generation = useNewGeneration;
         let createdGroup = await db.Tables.Group.create(body);
         return Group.getFromDbData(createdGroup.group_id, current_user_id);
     }

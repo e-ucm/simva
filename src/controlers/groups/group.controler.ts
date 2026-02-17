@@ -100,7 +100,8 @@ export async function createGroup(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const group = await groupService.createGroup(req.body, currentUser?.user_id!);
+    const useNewGeneration = Boolean(req.query.use_new_generation) || true;
+    const group = await groupService.createGroup(req.body, useNewGeneration, currentUser?.user_id!);
     res.status(201).json(group);
   } catch (err) {
     next(err);
