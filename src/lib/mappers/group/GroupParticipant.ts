@@ -21,7 +21,7 @@ export class GroupParticipant {
     /**
      * Unique identifier for this participant
      */
-    participant_id: number;
+    user_id: number;
     
     /**
      * Username of the participant (may be token-generated)
@@ -61,7 +61,7 @@ export class GroupParticipant {
      */
     constructor(data: any) {
         this.group_id = data.group_id;
-        this.participant_id = data.participant_id;
+        this.user_id = data.user_id;
         this.username = data.username;
         this.token = data.token;
         this.isToken = data.isToken;
@@ -77,10 +77,10 @@ export class GroupParticipant {
     /**
       * Username of the participant (may be token-generated)
       */
-    static async getFromDbData(group_id : number, participant_id: number) : Promise<GroupParticipant> {
-        let participant = await db.Functions.runViewQuery(db.Views.GroupParticipant.byGroupIdAndUserId, {group_id: group_id, user_id : participant_id});
+    static async getFromDbData(group_id : number, user_id: number) : Promise<GroupParticipant> {
+        let participant = await db.Functions.runViewQuery(db.Views.GroupParticipant.byGroupIdAndUserId, {group_id: group_id, user_id : user_id});
         if (!participant || participant.length === 0) {
-            throw new ValidationError(`Participant with ID ${participant_id} not found in group ${group_id}`);
+            throw new ValidationError(`Participant with ID ${user_id} not found in group ${group_id}`);
         }
         return new GroupParticipant(participant[0]);
     }

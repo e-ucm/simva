@@ -135,9 +135,9 @@ export class Group {
         return this;
     }
 
-    async deleteParticipant(participant_id: number, keycloakDelete : boolean) {
+    async deleteParticipant(user_id: number, keycloakDelete : boolean) {
         this.canEdit();
-        let participant = await GroupParticipant.getFromDbData(this.group_id, participant_id);
+        let participant = await GroupParticipant.getFromDbData(this.group_id, user_id);
         participant.delete(keycloakDelete);
     }
 
