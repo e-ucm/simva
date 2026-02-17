@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 
@@ -12,12 +12,10 @@ import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
  * Supports both manual participant management and automatic code generation.
  */
 export class Group {
-    async getParticipants(): Promise<GroupParticipant[]> {
-        let participantsData = await db.Functions.runViewQuery(db.Views.GroupParticipant.byId, {group_id: this.group_id});
-        logger.debug({ participantsData }, `Group data retrieved for group ID ${this.group_id}`);
-        return participantsData.map((participant: any) => new GroupParticipant(participant));
-    }
-    
+    current_user_id: number;
+    current_user_username: string;
+    current_user_permission: string;
+
     /**
      * Unique identifier for the group
      */
@@ -43,6 +41,7 @@ export class Group {
      */
     participants: number[];
     
+    group_owner_id : number;
     /**
      * Array of direct permissions granted for this group
      */
@@ -67,30 +66,52 @@ export class Group {
         this.name = processedResults.name || ""; // Ensure name is included in the data
         this.created_at = processedResults.created_at ? new Date(processedResults.created_at) : new Date();
         this.participants = processedResults.participants || [];
+        this.group_owner_id = processedResults.group_owner_id || "";
+        this.current_user_id = processedResults.current_user_id || "";
+        this.current_user_username = processedResults.current_user_username || "";
+        this.current_user_permission = processedResults.current_user_permission || "";
     }
 
-    static async getAllFromDbData(user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Group[]> {
+    static async getAllFromDbData(current_user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Group[]> {
         let groups;
         if(limit != undefined && offset != undefined) {
-            groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { user_id, version, search : searchString, limit, offset});
+            groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { current_user_id, version, search : searchString, limit, offset});
         } else {
-            groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { user_id, search : searchString, version });
+            groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { current_user_id, search : searchString, version });
         } 
         return groups.map((groupData: any) => new Group(groupData));
     }
 
-    static async getFromDbData(group_id: number, user_id: number): Promise<Group> {
+    static async getFromDbData(group_id: number, current_user_id: number): Promise<Group> {
        let groups = await db.Functions.runViewQuery(
             db.Views.Group.byGroupIdAndUserId, 
-            {group_id, user_id}
+            {group_id, current_user_id}
         );
         if(groups.length === 0) {
-            throw new NotFoundError(`Group with ID ${group_id} not found for user ${user_id}`);
+            throw new NotFoundError(`Group with ID ${group_id} not found for user ${current_user_id}`);
         } else if (groups.length > 1) {
-            throw new Error(`Multiple groups found with ID ${group_id} for user ${user_id}`);
+            throw new Error(`Multiple groups found with ID ${group_id} for user ${current_user_id}`);
         }
-        logger.debug({ groupData: groups[0] }, `Group data retrieved for group ID ${group_id} and user ID ${user_id}`);
+        logger.debug({ groupData: groups[0] }, `Group data retrieved for group ID ${group_id} and user ID ${current_user_id}`);
         return new Group(groups[0]);
+    }
+    
+    static async createInDb(body: Partial<Group>, current_user_id: number): Promise<Group> {
+        let newName = body.name && body.name.trim() !== "";
+        if(!newName) {
+            throw new ValidationError("Group name is required");
+        }
+        let count = await db.Tables.Group.count({where: {name: newName }});
+        if(count > 0) {
+            throw new ValidationError("Group name must be unique");
+        }
+        body.group_owner_id = current_user_id;
+        let createdGroup = await db.Tables.Group.create(body);
+        return Group.getFromDbData(createdGroup.group_id, current_user_id);
+    }
+
+    async getParticipants(): Promise<GroupParticipant[]> {
+        return await GroupParticipant.getAllFromDbData(this.group_id);
     }
 
     /**
@@ -101,5 +122,43 @@ export class Group {
      */
     printInfo() {
         logger.debug({ Group : this }, "Group information");
+    }
+
+    async update(body: any): Promise<Group> {
+        this.canEdit();
+        let group = await db.Tables.Group.findOne({where:{group_id: this.group_id}});
+        if(!group) {
+            throw new NotFoundError(`Group with ID ${this.group_id} not found for update`);
+        }
+        await group.update(body);
+        Object.assign(this, body);
+        return this;
+    }
+
+    async deleteParticipant(participant_id: number, keycloakDelete : boolean) {
+        this.canEdit();
+        let participant = await GroupParticipant.getFromDbData(this.group_id, participant_id);
+        participant.delete(keycloakDelete);
+    }
+
+    async createParticipant(body: Partial<GroupParticipant>) {
+        this.canEdit();
+        let participant = await GroupParticipant.createInDb(this.group_id, this.use_new_generation, body);
+        return participant;
+    }
+
+    async removeUsersToKeycloak() {
+        this.canEdit();
+        let participants = await GroupParticipant.getAllFromDbData(this.group_id);
+        for(var i = 0; i < participants.length; i++) {
+            participants[i].removeUserToKeycloak();
+        }
+    }
+
+    canEdit() : boolean {
+         if(this.current_user_permission.toLowerCase() === "owner" || this.current_user_permission.toLowerCase() === "write") {
+             return true;
+         }
+         throw new AuthentificationError("User does not have permission to edit this simlet");
     }
 }

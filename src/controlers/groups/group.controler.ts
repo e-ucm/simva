@@ -99,7 +99,8 @@ export async function createGroup(
   next: NextFunction
 ) {
   try {
-    const group = await groupService.createGroup(req.body);
+    const currentUser = req.user?.sql;
+    const group = await groupService.createGroup(req.body, currentUser?.user_id!);
     res.status(201).json(group);
   } catch (err) {
     next(err);
@@ -128,12 +129,12 @@ export async function updateGroup(
   next: NextFunction
 ) {
   try {
+    const currentUser = req.user?.sql;
     const groupId = parseInt(req.params.id as string);
     if (isNaN(groupId) || groupId <= 0) {
       throw new ValidationError("Invalid group ID");
     }
-
-    const group = await groupService.updateGroup(groupId, req.body);
+    const group = await groupService.updateGroup(groupId, currentUser!.user_id as number, req.body);
     res.json(group);
   } catch (err) {
     next(err);
@@ -201,6 +202,45 @@ export async function getGroupCount(
     const searchString = String(req.query.search || '');
     const count = await groupService.getGroupCount(currentUser!.user_id as number, searchString);
     res.json({ count });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createGroupParticipant(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const groupId = parseInt(req.params.id as string);
+    if (isNaN(groupId) || groupId <= 0) {
+      throw new ValidationError("Invalid group ID");
+    }
+    let currentUser = req.user?.sql;
+    let currentUserId = currentUser!.user_id as unknown as string;
+    logger.info(req.body, "Creating group participant with request body for group ID " + groupId + " and current user ID " + currentUserId);
+    const participant = await groupService.createGroupParticipant(groupId, parseInt(currentUserId), req.body);
+    res.status(201).json(participant);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteGroupParticipant(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const groupId = parseInt(req.params.id as string);
+    if (isNaN(groupId) || groupId <= 0) {
+      throw new ValidationError("Invalid group ID");
+    }
+    let currentUser = req.user?.sql;
+    const keycloakDelete = req.query.keycloakDelete || false;
+    const participant = await groupService.deleteGroupParticipant(groupId, req.body, currentUser!.user_id as number, keycloakDelete as boolean);
+    res.status(201).json(participant);
   } catch (err) {
     next(err);
   }

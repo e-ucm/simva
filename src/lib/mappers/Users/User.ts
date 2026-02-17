@@ -1,6 +1,9 @@
 import { db } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors/appErrors";
 import { Op } from "sequelize";
+import { config } from "@/lib/config";
+import { logger } from "@/lib/logger";
+import { KeycloakClient } from "@/lib/mappers/Users/keycloakclient";
 
 export class User {
   declare user_id: number;
@@ -81,7 +84,43 @@ export class User {
     if (!user) {
       throw new NotFoundError(`User with ID ${this.user_id} not found`);
     }
+    await this.giveRoleToUserInKeycloak();
     await user.update({ role: partial.role });
     return new User(user);
+  }
+
+  async giveRoleToUserInKeycloak() : Promise<Boolean> {
+      if(!config.sso.enabled){
+          return true;
+      }
+
+      logger.info('KeyCloak -> Auth');
+
+      const keycloakClient = new KeycloakClient();
+      await keycloakClient.initialize();
+      await keycloakClient.AuthClient();
+
+      var userid = await keycloakClient.findUserIdByUsername(this.username);
+
+      logger.info('KeyCloak -> getting Role Mappings');
+      let roleMappings = await keycloakClient.getClient().users.listAvailableRealmRoleMappings({id: userid});
+
+      let selectedRole;
+      for (var i = roleMappings.length - 1; i >= 0; i--) {
+          if(roleMappings[i].name === this.role){
+              selectedRole = roleMappings[i];
+              break;
+          }
+      }
+
+      if (!selectedRole || !selectedRole.name || !selectedRole.id) {
+          throw new Error(`Role ${this.role} not found in Keycloak`);
+      }
+
+      logger.info('KeyCloak -> Adding Role to User');
+      await keycloakClient.getClient().users.addRealmRoleMappings({id: userid, roles: [{id: selectedRole.id as string, name: selectedRole.name as string}]});
+
+      logger.info('KeyCloak -> Role Added to User in Keycloak!');
+      return true;
   }
 }
