@@ -37,8 +37,8 @@ import { logger } from "@/lib/logger";
  * const newGenGroups = await getGroups(123, true);
  * ```
  */
-export async function getGroups(user_id: number, version?: boolean, searchString?: string, limit?: number, offset?: number): Promise<Group[]> {
-    return await Group.getAllFromDbData(user_id, version, limit, offset, searchString);
+export async function getGroups(current_user_id: number, version?: boolean, searchString?: string, limit?: number, offset?: number): Promise<Group[]> {
+    return await Group.getAllFromDbData(current_user_id, version, limit, offset, searchString);
 }
 
 /**
@@ -64,8 +64,8 @@ export async function getGroups(user_id: number, version?: boolean, searchString
  * }
  * ```
  */
-export async function getGroup(group_id: number, user_id: number): Promise<Group> {
-    return await Group.getFromDbData(group_id, user_id);
+export async function getGroup(group_id: number, current_user_id: number): Promise<Group> {
+    return await Group.getFromDbData(group_id, current_user_id);
 }
 
 /**
@@ -90,23 +90,36 @@ export async function getGroup(group_id: number, user_id: number): Promise<Group
  * });
  * ```
  */
-export async function getGroupParticipants(group_id: number, user_id: number): Promise<GroupParticipant[]> {
-    let group = await Group.getFromDbData(group_id, user_id);
+export async function getGroupParticipants(group_id: number, current_user_id: number): Promise<GroupParticipant[]> {
+    let group = await Group.getFromDbData(group_id, current_user_id);
     return await group.getParticipants();
 }
 
-export function createGroup(body: any) {
-  throw new Error("Function not implemented.");
-}
-export function updateGroup(groupId: number, body: any) {
-  throw new Error("Function not implemented.");
+export async function updateGroup(groupId: number, current_user_id: number, body: any) {
+    let group = await Group.getFromDbData(groupId, current_user_id);
+    return await group.update(body);
 }
 
 export function deleteGroup(groupId: number) {
   throw new Error("Function not implemented.");
 }
 
-export function getGroupCount(user_id: number, searchString: string) {
+export function getGroupCount(current_user_id: number, searchString: string) {
   throw new Error("Function not implemented.");
+}
+
+export async function createGroupParticipant(groupId: number, current_user_id: number, body: any) {
+  let group = await Group.getFromDbData(groupId, current_user_id);
+  return group.createParticipant(body);
+}
+
+
+export async function deleteGroupParticipant(groupId: number, participant_id: any, current_user_id: number, keycloakDelete : boolean) {
+    let group = await Group.getFromDbData(groupId, current_user_id);
+    return group.deleteParticipant(participant_id, keycloakDelete);
+}
+
+export async function createGroup(body: any, current_user_id: number) : Promise<Group> {
+  return await Group.createInDb(body, current_user_id);
 }
 

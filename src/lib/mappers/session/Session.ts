@@ -23,17 +23,17 @@ export class Session {
      */
     session_id: number;
     
-    user_id: number;
+    current_user_id: number;
 
     /**
      * Username of the session owner/creator
      */
-    username: string;
+    current_user_username: string;
     
     /**
      * Permission level for the current user
      */
-    permission: string;
+    current_user_permission: string;
     
     /**
      * Human-readable name for the session
@@ -110,9 +110,9 @@ export class Session {
     constructor(data: any) {
         this.session_id = data.session_id;
         this.simlet_id = data.simlet_id;
-        this.user_id = data.user_id;
-        this.username = data.username || "";
-        this.permission = data.permission || "";
+        this.current_user_id = data.current_user_id;
+        this.current_user_username = data.current_user_username || "";
+        this.current_user_permission = data.current_user_permission || "";
         this.name = data.name || "";
         this.description = data.description || "";
         this.createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
@@ -134,15 +134,15 @@ export class Session {
         throw new Error("Method not implemented.");
     }
 
-    static async getFromDbData(simlet_id: number, session_id: number, user_id: number) : Promise<Session> {
+    static async getFromDbData(simlet_id: number, session_id: number, current_user_id: number) : Promise<Session> {
         const session = await db.Functions.runViewQuery(
             db.Views.Session.bySimletIdSessionIdAndUserId,
-            { session_id, user_id, simlet_id }
+            { session_id, current_user_id, simlet_id }
        );
         if(session.length === 0){
-            throw new ValidationError(`Session with ID ${session_id} not found for user ID ${user_id}.`);
+            throw new ValidationError(`Session with ID ${session_id} not found for user ID ${current_user_id}.`);
         } else if(session.length > 1) {
-            logger.warn(`Multiple sessions found with ID ${session_id} for user ID ${user_id}. Using the first one.`);
+            logger.warn(`Multiple sessions found with ID ${session_id} for user ID ${current_user_id}. Using the first one.`);
         }
         return new Session(session[0]);
     }
@@ -177,14 +177,14 @@ export class Session {
     async getActivities(): Promise<Activity[]> {
         const activities = await db.Functions.runViewQuery(
             db.Views.Activity.bySessionIdUserId,
-            { session_id: this.session_id, user_id: this.user_id }
+            { session_id: this.session_id, current_user_id : this.current_user_id }
         );
         logger.debug({activities} , "Activities data from view");
         return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity)));
     }
 
     canEdit() : boolean {
-        if(this.permission === "owner" || this.permission === "write") {
+        if(this.current_user_permission === "owner" || this.current_user_permission === "write") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to edit this simlet");

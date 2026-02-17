@@ -88,15 +88,15 @@ export class Activity {
 		this.description = data.description || ""; // Default to empty string if not provided
 	}
 
-	static async getFromDbData(activity_id:number, user_id: number) : Promise<Activity> {
+	static async getFromDbData(activity_id:number, current_user_id: number) : Promise<Activity> {
 		const results = await db.Functions.runViewQuery(
 			db.Views.Activity.byActivityIdAndUserId,
-			{ activity_id: activity_id, user_id }
+			{ activity_id, current_user_id }
 		);
 		if (results.length === 0) {
-			throw new NotFoundError(`Activity with ID ${activity_id} not found for user ID ${user_id}.`);
+			throw new NotFoundError(`Activity with ID ${activity_id} not found for user ID ${current_user_id}.`);
 		} else if (results.length > 1) {
-			logger.warn(`Multiple activities found with ID ${activity_id} for user ID ${user_id}. Using the first one.`);
+			logger.warn(`Multiple activities found with ID ${activity_id} for user ID ${current_user_id}. Using the first one.`);
 		}
 		return await ActivityToClass(results[0]);
 	}

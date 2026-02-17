@@ -6,7 +6,7 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT *
         FROM v_complete_sessions_users_permissions 
-        WHERE simlet_id = :simlet_id AND user_id = :user_id
+        WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
         `,
         params: {
@@ -16,7 +16,7 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Simlet Identifier",
                 example: 1,
             },
-            user_id: {
+            current_user_id: {
                 type: "number",
                 required: true,
                 description: "User Identifier",
@@ -36,7 +36,7 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT *
         FROM v_complete_sessions_users_permissions 
-        WHERE simlet_id = :simlet_id AND user_id = :user_id
+        WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
         LIMIT :limit OFFSET :offset
         `,
@@ -47,7 +47,7 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Simlet Identifier",
                 example: 1,
             },
-            user_id: {
+            current_user_id: {
                 type: "number",
                 required: true,
                 description: "User Identifier",
@@ -79,7 +79,7 @@ const queries: Record<string, QueryTemplate> = {
     sql: `
       SELECT *
       FROM v_complete_sessions_users_permissions 
-      WHERE simlet_id = :simlet_id AND session_id = :session_id AND user_id = :user_id
+      WHERE simlet_id = :simlet_id AND session_id = :session_id AND current_user_id = :current_user_id
     `,
     params: {
       simlet_id: {
@@ -88,7 +88,7 @@ const queries: Record<string, QueryTemplate> = {
         description: "Simlet Identifier",
         example: 1,
       },
-      user_id: {
+      current_user_id: {
         type: "number",
         required: true,
         description: "User Identifier",

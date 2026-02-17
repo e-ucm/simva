@@ -6,11 +6,11 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT *
         FROM v_complete_groups_users_permissions
-        WHERE user_id = :user_id AND (:version IS NULL OR use_new_generation = :version)
+        WHERE current_user_id = :current_user_id AND (:version IS NULL OR use_new_generation = :version)
         AND (:search IS NULL OR name LIKE '%' || :search || '%')
         `,
         params: {
-            user_id: {
+            current_user_id: {
                 type: "number",
                 required: true,
                 description: "User Identifier",
@@ -36,12 +36,12 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT *
         FROM v_complete_groups_users_permissions
-        WHERE user_id = :user_id AND (:version IS NULL OR use_new_generation = :version)
+        WHERE current_user_id = :current_user_id AND (:version IS NULL OR use_new_generation = :version)
         AND (:search IS NULL OR name LIKE '%' || :search || '%')
         LIMIT :limit OFFSET :offset
         `,
         params: {
-            user_id: {
+            current_user_id: {
                 type: "number",
                 required: true,
                 description: "User Identifier",
@@ -79,10 +79,10 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT *
         FROM v_complete_groups_users_permissions
-        WHERE user_id = :user_id AND group_id = :group_id
+        WHERE current_user_id = :current_user_id AND group_id = :group_id
         `,
         params: {
-            user_id: {
+            current_user_id: {
                 type: "number",
                 required: true,
                 description: "User Identifier",

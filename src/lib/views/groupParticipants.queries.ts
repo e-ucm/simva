@@ -1,7 +1,7 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
-    byId: {
+    byGroupId: {
         description: "Get all Group Participants for a certain Group ID",
         sql: `
         SELECT *
@@ -14,6 +14,29 @@ const queries: Record<string, QueryTemplate> = {
                 required: true,
                 description: "Group Identifier",
                 example: 1
+            },
+        },
+    },
+
+    byGroupIdAndUserId: {
+        description: "Get a Group Participant for a certain Group ID and its User ID",
+        sql: `
+        SELECT *
+        FROM v_complete_group_participants 
+        WHERE group_id = :group_id AND user_id = :user_id
+        `,
+        params: {
+            group_id: {
+                type: "number",
+                required: true,
+                description: "Group Identifier",
+                example: 1
+            },
+            user_id: {
+                type: "number",
+                required: true,
+                description: "Participant Identifier",
+                example: 3
             },
         },
     },

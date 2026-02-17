@@ -6,10 +6,10 @@ const queries: Record<string, QueryTemplate> = {
     sql: `
       SELECT *
       FROM v_complete_activities_users_permissions
-      WHERE user_id = :user_id AND (:session_id IS NULL OR session_id = :session_id)
+      WHERE current_user_id = :current_user_id AND (:session_id IS NULL OR session_id = :session_id)
     `,
     params: {
-      user_id: {
+      current_user_id: {
         type: "number",
         required: true,
         description: "User Identifier",
@@ -29,7 +29,7 @@ const queries: Record<string, QueryTemplate> = {
     sql: `
       SELECT *
       FROM v_complete_activities_users_permissions 
-      WHERE activity_id = :activity_id AND user_id = :user_id
+      WHERE activity_id = :activity_id AND current_user_id = :current_user_id
     `,
     params: {
       activity_id: {
@@ -38,7 +38,7 @@ const queries: Record<string, QueryTemplate> = {
         description: "Activity Identifier",
         example: 1,
       },
-      user_id: {
+      current_user_id: {
         type: "number",
         required: true,
         description: "User Identifier",

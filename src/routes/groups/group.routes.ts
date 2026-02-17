@@ -6,7 +6,9 @@ import {
   updateGroup,
   deleteGroup,
   getGroupCount,
-  getGroupParticipants
+  getGroupParticipants,
+  createGroupParticipant,
+  deleteGroupParticipant
 } from "@/controlers/groups/group.controler";
 
 /**
@@ -47,6 +49,8 @@ router.post("/", createGroup);
 // Individual group operations
 router.get("/:id", getGroupById);
 router.get("/:id/participants", getGroupParticipants);
+router.post("/:id/participants", createGroupParticipant);
+router.delete("/:id/participants", deleteGroupParticipant);
 router.put("/:id", updateGroup);
 router.delete("/:id", deleteGroup);
 

@@ -33,17 +33,17 @@ export class Simlet {
      */
     description: string;
     
-    user_id: number;
+    current_user_id: number;
 
     /**
      * Username of the study owner/researcher
      */
-    username: string;
+    current_user_username: string;
     
     /**
      * Permission level for the current user
      */
-    permission: string;
+    current_user_permission: string;
     
     /**
      * Array of session IDs that belong to this study
@@ -83,9 +83,9 @@ export class Simlet {
         this.simlet_id = data.simlet_id; // Ensure simlet_id is included in the data
         this.name = data.name || ""; // Ensure name is included in the data
         this.description = data.description || ""; // Ensure description is included in the data
-        this.user_id = data.user_id; // Ensure user_id is included in the data
-        this.username = data.username || "";
-        this.permission = data.permission;
+        this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
+        this.current_user_username = data.current_user_username || "";
+        this.current_user_permission = data.current_user_permission;
         this.allocator_id = data.allocator_id;
         logger.debug({data} , "Simlet data before parsing string and numerics arrays");
         let result = db.Functions.parseStringArraysToTypedArrays(data, Simlet.numericKeys, 'number');
@@ -95,17 +95,17 @@ export class Simlet {
         logger.debug({result} , "Simlet data after parsing string and numerics arrays");
     }
 
-    static async getAllFromDbData(user_id: number, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
+    static async getAllFromDbData(current_user_id: number, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
           let results;
         if(limit !== undefined && offset !== undefined) {
             results = await db.Functions.runViewQuery(
             db.Views.Simlet.byUserIdWithPagination,
-            { user_id, limit, offset, search: searchString }
+            { current_user_id, limit, offset, search: searchString }
             );
         } else {
             results = await db.Functions.runViewQuery(
             db.Views.Simlet.byUserId,
-            { user_id, search: searchString }
+            { current_user_id, search: searchString }
             );
         }
         logger.debug({results} , "getSimletsByUserId results");
@@ -131,16 +131,16 @@ export class Simlet {
         return new Simlet(createdSimlet);
     }
 
-    static async getFromDbData(simlet_id: number, user_id: number) : Promise<Simlet> {
+    static async getFromDbData(simlet_id: number, current_user_id: number) : Promise<Simlet> {
         const result = await db.Functions.runViewQuery(
             db.Views.Simlet.byUserIdAndSimletId,
-            { user_id, simlet_id }
+            { current_user_id, simlet_id }
         );
         logger.debug({result} , "getSimletBySimletIdAndUserId results");
         if(result.length === 0){
-            throw new ValidationError(`Simlet with ID ${simlet_id} not found for user ID ${user_id}.`);
+            throw new ValidationError(`Simlet with ID ${simlet_id} not found for user ID ${current_user_id}.`);
         } else if(result.length > 1){
-            logger.warn(`Multiple simlets found with ID ${simlet_id} for user ID ${user_id}. Using the first one.`);
+            logger.warn(`Multiple simlets found with ID ${simlet_id} for user ID ${current_user_id}. Using the first one.`);
         }
         return new Simlet(result[0]);
     }
@@ -174,7 +174,7 @@ export class Simlet {
     }
 
     canEdit() : boolean {
-        if(this.permission === "owner" || this.permission === "write") {
+        if(this.current_user_permission === "owner" || this.current_user_permission === "write") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to edit this simlet");
@@ -230,7 +230,7 @@ export class Simlet {
     async addSession(session_data : any) : Promise<Simlet> {
         this.canEdit();
         session_data.simlet_id = this.simlet_id;
-        session_data.session_supervisor_id = this.user_id;
+        session_data.session_supervisor_id = this.current_user_id;
         let session = await Session.createFromDbData(session_data);
         this.sessions.push(session.session_id);
         return this;
@@ -263,12 +263,12 @@ export class Simlet {
         if(limit !== undefined && offset !== undefined) {
             sessions = await db.Functions.runViewQuery( 
                 db.Views.Session.bySimletIdAndUserIdWithPagination, 
-                { simlet_id: this.simlet_id, user_id: this.user_id, search: searchString, limit, offset } 
+                { simlet_id: this.simlet_id, current_user_id: this.current_user_id, search: searchString, limit, offset } 
             ); 
         } else {
             sessions = await db.Functions.runViewQuery(
                 db.Views.Session.bySimletIdAndUserId,
-                { simlet_id: this.simlet_id, user_id: this.user_id, search: searchString }
+                { simlet_id: this.simlet_id, current_user_id: this.current_user_id, search: searchString }
             );
         }
         logger.debug({sessions} , "Sessions data from view");
@@ -276,6 +276,6 @@ export class Simlet {
     }
 
     async getSession(sessionId: number): Promise<Session> {
-      return await Session.getFromDbData(this.simlet_id, sessionId, this.user_id);
+      return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id);
     }
 }

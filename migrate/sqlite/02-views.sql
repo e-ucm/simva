@@ -110,9 +110,10 @@ ORDER BY permission_type, permission, object_type;
 DROP VIEW IF EXISTS v_complete_simlets_users_permissions;
 CREATE VIEW v_complete_simlets_users_permissions AS
 SELECT 
-    up.user_id,
-    up.username,
-    up.permission,
+    up.user_id as current_user_id,
+    up.username as current_user_username,
+    up.permission as current_user_permission,
+    up.permission_type as current_user_permission_type,
     sim.simlet_id,
     sim.name,
     sim.createdAt,
@@ -136,10 +137,10 @@ GROUP BY up.user_id, up.username, up.permission, sim.simlet_id;
 DROP VIEW IF EXISTS v_complete_sessions_users_permissions;
 CREATE VIEW v_complete_sessions_users_permissions AS
 SELECT 
-    up.user_id,
-    up.username,
-    up.permission,
-    up.permission_type,
+    up.user_id as current_user_id,
+    up.username as current_user_username,
+    up.permission as current_user_permission,
+    up.permission_type as current_user_permission_type,
     ses.simlet_id,
     ses.session_id,
     ses.name,
@@ -162,10 +163,10 @@ GROUP BY ses.simlet_id, ses.session_id;
 DROP VIEW IF EXISTS v_complete_activities_users_permissions;
 CREATE VIEW v_complete_activities_users_permissions AS
 SELECT 
-    up.user_id,
-    up.username,
-    up.permission,
-    up.permission_type,
+    up.user_id as current_user_id,
+    up.username as current_user_username,
+    up.permission as current_user_permission,
+    up.permission_type as current_user_permission_type,
     act.session_id,
     act.activity_id,
     act.mongo_id,
@@ -203,9 +204,9 @@ ORDER BY group_id, permission, user_id;
 DROP VIEW IF EXISTS v_complete_groups_users_permissions;
 CREATE VIEW v_complete_groups_users_permissions AS
 SELECT 
-    up.user_id,
-    up.username,
-    up.permission,
+    up.user_id as current_user_id,
+    up.username as current_user_username,
+    up.permission as current_user_permission,
     g.group_id,
     g.name,
     g.createdAt,
