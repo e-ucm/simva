@@ -119,7 +119,7 @@ export async function deleteGroupParticipant(groupId: number, participant_id: nu
     return group.deleteParticipant(participant_id, keycloakDelete);
 }
 
-export async function createGroup(body: any, current_user_id: number) : Promise<Group> {
-  return await Group.createInDb(body, current_user_id);
+export async function createGroup(body: any, useNewGeneration: boolean, current_user_id: number) : Promise<Group> {
+  return await Group.createInDb(body, useNewGeneration, current_user_id);
 }
 

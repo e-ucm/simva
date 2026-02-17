@@ -21,7 +21,7 @@ import { Sequelize, Model } from "sequelize";
 export class GroupPermissions extends Model {
   declare group_id: number;
   declare user_id: number;
-  declare permission: string;
+  declare permission: "WRITE" | "READ";
 }
 
 /**
@@ -60,6 +60,9 @@ export function GroupPermissionsFactory(
     permission: {
       type: DataTypes.STRING,
       primaryKey: true,
+      validate: {
+        isIn: [["READ", "WRITE"]],
+      },
     },
   },
   {

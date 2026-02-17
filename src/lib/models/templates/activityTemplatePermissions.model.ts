@@ -21,7 +21,7 @@ import { Sequelize, Model } from "sequelize";
 export class ActivityTemplatePermissions extends Model {
   declare activity_template_id: number;
   declare user_id: number;
-  declare permission: "read" | "WRITE";
+  declare permission: "READ" | "WRITE";
 }
 
 /**

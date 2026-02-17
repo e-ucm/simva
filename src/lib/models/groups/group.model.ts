@@ -58,6 +58,7 @@ export function GroupFactory(
     group_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING,
@@ -69,7 +70,7 @@ export function GroupFactory(
     },
     group_owner_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
     createdAt:{
       type: DataTypes.DATE,

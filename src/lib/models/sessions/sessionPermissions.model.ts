@@ -3,7 +3,7 @@ import { Sequelize, Model } from "sequelize";
 export class SessionPermissions extends Model {
   declare session_id: number;
   declare user_id: number;
-  declare permission: "read" | "WRITE";
+  declare permission: "READ" | "WRITE";
 }
 
 export function SessionPermissionsFactory(
@@ -25,7 +25,7 @@ export function SessionPermissionsFactory(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isIn: [["read", "WRITE"]],
+        isIn: [["READ", "WRITE"]],
       },
     },
   }, {

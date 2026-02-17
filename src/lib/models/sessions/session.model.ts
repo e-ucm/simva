@@ -91,13 +91,11 @@ export function SessionFactory(
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+      allowNull: false
     },
     updatedAt: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+      allowNull: false
     },
     experimental_method: {
       type: DataTypes.STRING,

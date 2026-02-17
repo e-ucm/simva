@@ -87,13 +87,11 @@ export function ActivityTemplateFactory(
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+      allowNull: false
     },
     updatedAt: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+      allowNull: false
     },
     owner_id: {
       type: DataTypes.INTEGER,

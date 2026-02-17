@@ -79,13 +79,11 @@ export function SimletFactory(
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+      allowNull: false
     },
     updatedAt: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+      allowNull: false
     },
     sandbox_session_id: {
       type: DataTypes.INTEGER,
