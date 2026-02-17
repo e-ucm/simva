@@ -238,9 +238,13 @@ export async function deleteGroupParticipant(
       throw new ValidationError("Invalid group ID");
     }
     let currentUser = req.user?.sql;
+    let participantId = parseInt(req.params.participant_id as string);
+    if (isNaN(participantId) || participantId <= 0) {
+      throw new ValidationError("Invalid participant ID");
+    }
     const keycloakDelete = req.query.keycloakDelete || false;
-    const participant = await groupService.deleteGroupParticipant(groupId, req.body, currentUser!.user_id as number, keycloakDelete as boolean);
-    res.status(201).json(participant);
+    await groupService.deleteGroupParticipant(groupId, participantId, currentUser!.user_id as number, keycloakDelete as boolean);
+    res.status(201).json({ message: "Participant deleted successfully" });
   } catch (err) {
     next(err);
   }

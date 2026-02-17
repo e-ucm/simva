@@ -120,9 +120,9 @@ export class GroupParticipant {
         if(keycloakDelete) {
             this.removeUserToKeycloak();
         }
-        await db.Tables.GroupParticipants.destroy({ where : { participant_id: this.participant_id}});
+        await db.Tables.GroupParticipants.destroy({ where : { participant_id: this.user_id}});
         if(this.isToken) {
-            await db.Tables.User.destroy({ where : { user_id: this.participant_id}});
+            await db.Tables.User.destroy({ where : { user_id: this.user_id }});
         }
     }
 
@@ -133,7 +133,7 @@ export class GroupParticipant {
      * @description Logs participant information to debug output for troubleshooting.
      */
     printInfo() {
-        logger.debug({ GroupParticipant : this }, `GroupParticipant information - Group ID: ${this.group_id}, Participant ID: ${this.participant_id}, Username: ${this.username}, Role: ${this.role}`);
+        logger.debug({ GroupParticipant : this }, `GroupParticipant information - Group ID: ${this.group_id}, Participant ID: ${this.user_id}, Username: ${this.username}, Role: ${this.role}`);
     }
 
     async removeUserToKeycloak() {

@@ -50,7 +50,7 @@ router.post("/", createGroup);
 router.get("/:id", getGroupById);
 router.get("/:id/participants", getGroupParticipants);
 router.post("/:id/participants", createGroupParticipant);
-router.delete("/:id/participants", deleteGroupParticipant);
+router.delete("/:id/participants/:participant_id", deleteGroupParticipant);
 router.put("/:id", updateGroup);
 router.delete("/:id", deleteGroup);
 

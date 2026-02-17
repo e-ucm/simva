@@ -100,7 +100,7 @@ export async function updateGroup(groupId: number, current_user_id: number, body
     return await group.update(body);
 }
 
-export function deleteGroup(groupId: number) {
+export async function deleteGroup(groupId: number) {
   throw new Error("Function not implemented.");
 }
 
@@ -114,7 +114,7 @@ export async function createGroupParticipant(groupId: number, current_user_id: n
 }
 
 
-export async function deleteGroupParticipant(groupId: number, participant_id: any, current_user_id: number, keycloakDelete : boolean) {
+export async function deleteGroupParticipant(groupId: number, participant_id: number, current_user_id: number, keycloakDelete : boolean) {
     let group = await Group.getFromDbData(groupId, current_user_id);
     return group.deleteParticipant(participant_id, keycloakDelete);
 }

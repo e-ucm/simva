@@ -359,6 +359,7 @@ paths:
             schema:
               $ref: '#/components/schemas/user'
         required: true
+  /groups/{id}/participants/{participant_id}:
     delete:
       tags:
         - teachers
