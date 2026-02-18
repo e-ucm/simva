@@ -169,16 +169,18 @@ SELECT
     up.permission_type as current_user_permission_type,
     act.session_id,
     act.activity_id,
+    act.activity_order,
     act.mongo_id,
     act.activity_name,
     act.createdAt,
     act.updatedAt,
     act.activity_type,
-    act.presignedUrl,
-    act.generated_at,
-    act.expire_on_seconds,
-    act.trace_storage,
-    act.activity_description
+    act.activity_presignedUrl,
+    act.activity_generated_at,
+    act.activity_expire_on_seconds,
+    act.activity_trace_storage,
+    act.activity_description,
+    act.activity_can_be_restarted
 FROM Activities act
 LEFT JOIN vv_user_permissions up ON act.activity_id = up.object_id AND up.object_type = "ACTIVITY";
 
@@ -210,7 +212,7 @@ SELECT
     g.group_id,
     g.group_name,
     g.createdAt,
-    g.use_new_generation,
+    g.group_use_new_generation,
     u.username as coordinator_owner,
     JSON_GROUP_ARRAY(DISTINCT p.participant_id) as participants
 FROM ParticipantGroups g
@@ -246,18 +248,45 @@ JOIN v_complete_group_participants pg ON pg.group_id = g.group_id;
 DROP VIEW IF EXISTS v_complete_allocation_participants;
 CREATE VIEW v_complete_allocation_participants AS
 SELECT
-    s.simlet_id,
-    a.allocator_id,
-    a.session_id,
-    a.group_id,
     u.user_id,
     u.username,
     u.isToken,
-    u.token
+    u.token,
+    a.group_id,
+    a.session_id,
+    s.simlet_id,
+    a.allocator_id
 FROM Experimental_Participants a
 JOIN SIMLETs s ON a.allocator_id = s.allocator_id
 JOIN Users u ON u.user_id = a.participant_id
 WHERE a.participant_id is not NULL;
+
+DROP VIEW IF EXISTS v_complete_activity_allocation_participants;
+CREATE VIEW v_complete_activity_allocation_participants AS
+SELECT
+    ap.user_id as allocated_user_id,
+    ap.username as allocated_username,
+    ap.isToken as allocated_isToken,
+    ap.token as allocated_token,
+    ap.simlet_id,
+    ap.session_id,
+    s.session_active,
+    s.session_start_date,
+    s.session_end_date,
+    act.activity_id,
+    act.activity_order,
+    act.activity_name,
+    act.activity_type,
+    act.activity_trace_storage,
+    ac.activity_initialized,
+    ac.activity_progress,
+    ac.activity_completed,
+    act.activity_can_be_restarted
+FROM v_complete_allocation_participants ap
+LEFT JOIN Sessions s ON ap.session_id = s.session_id
+LEFT JOIN Activities act ON ap.session_id = act.session_id
+LEFT JOIN Activities_completion ac ON ac.activity_id = act.activity_id AND ac.participant_id = ap.user_id
+WHERE act.activity_id IS NOT NULL;
 
 DROP VIEW IF EXISTS v_complete_groups_simlets;
 CREATE VIEW v_complete_groups_simlets AS

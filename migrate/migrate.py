@@ -139,7 +139,7 @@ with open(MONGO_BACKUP_FOLDER + "/groups.json", "r") as f:
 
 # Adding Group into Groups table
 groups_sql = """
-INSERT INTO ParticipantGroups (mongo_id, group_name, createdAt, use_new_generation, group_owner_id)
+INSERT INTO ParticipantGroups (mongo_id, group_name, createdAt, group_use_new_generation, group_owner_id)
 VALUES (?, ?, ?, ?, ?)
 """
 
@@ -456,8 +456,8 @@ for session in sessions:
 
 # Adding Activities into Activities table
 activities_sql = """
-INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, presignedUrl, generated_at, expire_on_seconds, trace_storage, activity_description)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, activity_presignedUrl, activity_generated_at, activity_expire_on_seconds, activity_trace_storage, activity_description, activity_can_be_restarted)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 filtered_activities = [
@@ -477,7 +477,8 @@ activities_values = [
         convert_iso_to_mysql_datetime_format(a.get("extra_data", {}).get("minio_trace", {}).get("generated_at")),
         a.get("extra_data", {}).get("minio_trace", {}).get("expire_on_sec"), 
         a.get("extra_data", {}).get("config", {}).get("trace_storage","false") == "true", 
-        ""
+        "",
+        a.get("can_be_restarted", "false") == "true"
     )
     for a in filtered_activities
 ]
@@ -498,7 +499,7 @@ print(mongo_activity_to_mysql_id)
 #adding Manual Activities
 print("Adding Manual Activities")
 manual_activities_sql = """
-INSERT INTO Manual_Activities (activity_id, user_managed, ressource_type, ressource_url)
+INSERT INTO Manual_Activities (activity_id, manual_user_managed, manual_ressource_type, manual_ressource_url)
 VALUES (?, ?, ?, ?)
 """
 
@@ -524,7 +525,7 @@ print("  ManualActivities:", len(manual_activities_values))
 #adding Limesurvey Activities
 print("Adding Limesurvey Activities")
 limesurvey_activities_sql = """
-INSERT INTO Limesurvey_Activities (activity_id, survey_id, language, lrsset)
+INSERT INTO Limesurvey_Activities (activity_id, survey_id, suvey_language, survey_lrsset)
 VALUES (?, ?, ?, ?)
 """
 
@@ -549,7 +550,7 @@ print("  LimesurveyActivities:", len(limesurvey_activities_values))
 #adding Gameplay Activities
 print("Adding Gameplay Activities")
 gameplay_activities_sql = """
-INSERT INTO GamePlay_Activities (activity_id, backup, scorm_xapi_by_game, game_type, game_url)
+INSERT INTO GamePlay_Activities (activity_id, game_backup, game_scorm_xapi, game_type, game_url)
 VALUES (?, ?, ?, ?, ?)
 """
 
@@ -575,7 +576,7 @@ print("  GameplayActivities:", len(gameplay_activities_values))
 #adding Activities completion
 print("Adding Activities completion")
 activities_completion_sql = """
-INSERT INTO Activities_completion (activity_id, participant_id, initialized, progress, completed)
+INSERT INTO Activities_completion (activity_id, participant_id, activity_initialized, activity_progress, activity_completed)
 VALUES (?, ?, ?, ?, ?)
 """
 

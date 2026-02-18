@@ -2,13 +2,13 @@ CREATE TABLE IF NOT EXISTS "SIMLETs" (
 	"simlet_id" INTEGER NOT NULL UNIQUE,
 	"mongo_id" VARCHAR,
 	"simlet_name" VARCHAR NOT NULL,
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"simlet_sandbox_session_id" INTEGER,
 	"simlet_description" VARCHAR NOT NULL,
 	"simlet_objective" VARCHAR,
-	"allocator_id" INTEGER NOT NULL,
 	"simlet_coordinator_id" INTEGER NOT NULL,
+	"allocator_id" INTEGER NOT NULL,
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("simlet_id"),
 	FOREIGN KEY ("allocator_id") REFERENCES "Allocators"("allocator_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
@@ -38,10 +38,10 @@ CREATE TABLE IF NOT EXISTS "SIMLETs_shlinks" (
 	"short_code" VARCHAR NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"valid_date" DATETIME,
-	"expiration_date" DATETIME,
-	"title" VARCHAR NOT NULL,
-	"domain" VARCHAR NOT NULL,
+	"short_valid_date" DATETIME,
+	"short_expiration_date" DATETIME,
+	"short_title" VARCHAR NOT NULL,
+	"short_domain" VARCHAR NOT NULL,
 	PRIMARY KEY("simlet_id"),
 	FOREIGN KEY ("simlet_id") REFERENCES "SIMLETs"("simlet_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
@@ -55,13 +55,13 @@ CREATE TABLE IF NOT EXISTS "Sessions" (
 	"mongo_id" VARCHAR,
 	"session_name" VARCHAR NOT NULL,
 	"session_description" VARCHAR NOT NULL,
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"session_experimental_method" VARCHAR,
 	"session_active" BOOLEAN,
 	"session_start_date" DATETIME,
 	"session_end_date" DATETIME,
 	"session_supervisor_id" INTEGER NOT NULL,
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("session_id"),
 	FOREIGN KEY ("simlet_id") REFERENCES "SIMLETs"("simlet_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
@@ -74,15 +74,16 @@ ON "Sessions" ("session_id");
 CREATE TABLE IF NOT EXISTS "Activities" (
 	"session_id" INTEGER NOT NULL,
 	"activity_id" INTEGER NOT NULL UNIQUE,
-	"activity_order" INTEGER NOT NULL,
 	"mongo_id" VARCHAR,
+	"activity_order" INTEGER NOT NULL,
 	"activity_name" VARCHAR NOT NULL,
 	"activity_type" VARCHAR NOT NULL CHECK(activity_type IN ("default", "manual", "limesurvey", "gameplay", "lti_tool")),
-	"presignedUrl" VARCHAR,
-	"generated_at" DATETIME,
-	"expire_on_seconds" INTEGER,
-	"trace_storage" BOOLEAN NOT NULL,
+	"activity_presignedUrl" VARCHAR,
+	"activity_generated_at" DATETIME,
+	"activity_expire_on_seconds" INTEGER,
+	"activity_trace_storage" BOOLEAN NOT NULL,
 	"activity_description" VARCHAR NOT NULL,
+	"activity_can_be_restarted" BOOLEAN NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("activity_id"),
@@ -95,8 +96,8 @@ ON "Activities" ("activity_id");
 CREATE TABLE IF NOT EXISTS "Limesurvey_Activities" (
 	"activity_id" INTEGER NOT NULL UNIQUE,
 	"survey_id" INTEGER NOT NULL,
-	"language" VARCHAR NOT NULL,
-	"lrsset" INTEGER,
+	"suvey_language" VARCHAR NOT NULL,
+	"survey_lrsset" INTEGER,
 	PRIMARY KEY("activity_id"),
 	FOREIGN KEY ("activity_id") REFERENCES "Activities"("activity_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
@@ -106,12 +107,12 @@ CREATE INDEX IF NOT EXISTS "Limesurvey_Activities_index_0"
 ON "Limesurvey_Activities" ("activity_id");
 CREATE TABLE IF NOT EXISTS "GamePlay_Activities" (
 	"activity_id" INTEGER NOT NULL UNIQUE,
-	"backup" BOOLEAN NOT NULL,
-	"scorm_xapi_by_game" BOOLEAN NOT NULL,
-	"category_id" INTEGER,
-	"subject_area_id" INTEGER,
+	"game_backup" BOOLEAN NOT NULL,
+	"game_scorm_xapi" BOOLEAN NOT NULL,
 	"game_type" VARCHAR NOT NULL CHECK(game_type IN ("WEB", "DESKTOP")),
 	"game_url" VARCHAR NOT NULL,
+	"category_id" INTEGER,
+	"subject_area_id" INTEGER,
 	PRIMARY KEY("activity_id"),
 	FOREIGN KEY ("activity_id") REFERENCES "Activities"("activity_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
@@ -125,9 +126,9 @@ CREATE INDEX IF NOT EXISTS "GamePlay_Activities_index_0"
 ON "GamePlay_Activities" ("activity_id");
 CREATE TABLE IF NOT EXISTS "Manual_Activities" (
 	"activity_id" INTEGER NOT NULL UNIQUE,
-	"user_managed" BOOLEAN NOT NULL,
-	"ressource_type" VARCHAR NOT NULL CHECK(ressource_type IN ("WEB", "EXTERNAL")),
-	"ressource_url" VARCHAR NOT NULL,
+	"manual_user_managed" BOOLEAN NOT NULL,
+	"manual_ressource_type" VARCHAR NOT NULL CHECK(manual_ressource_type IN ("WEB", "EXTERNAL")),
+	"manual_ressource_url" VARCHAR NOT NULL,
 	PRIMARY KEY("activity_id"),
 	FOREIGN KEY ("activity_id") REFERENCES "Activities"("activity_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
@@ -138,9 +139,9 @@ ON "Manual_Activities" ("activity_id");
 CREATE TABLE IF NOT EXISTS "Activities_completion" (
 	"activity_id" INTEGER NOT NULL,
 	"participant_id" INTEGER NOT NULL,
-	"initialized" BOOLEAN NOT NULL,
-	"completed" BOOLEAN NOT NULL,
-	"progress" NUMERIC,
+	"activity_initialized" BOOLEAN NOT NULL,
+	"activity_progress" NUMERIC,
+	"activity_completed" BOOLEAN NOT NULL,
 	PRIMARY KEY("activity_id", "participant_id"),
 	FOREIGN KEY ("activity_id") REFERENCES "Activities"("activity_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
@@ -172,10 +173,10 @@ CREATE TABLE IF NOT EXISTS "ParticipantGroups" (
 	"group_id" INTEGER NOT NULL UNIQUE,
 	"mongo_id" VARCHAR,
 	"group_name" VARCHAR NOT NULL,
+	"group_use_new_generation" BOOLEAN NOT NULL,
+	"group_owner_id" INTEGER NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"use_new_generation" BOOLEAN NOT NULL,
-	"group_owner_id" INTEGER NOT NULL,
 	PRIMARY KEY("group_id"),
 	FOREIGN KEY ("group_owner_id") REFERENCES "Users"("user_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
@@ -228,7 +229,7 @@ ON "Experimental_Participants" ("allocator_id", "group_id", "participant_id", "s
 CREATE TABLE IF NOT EXISTS "Random_Allocators" (
 	"allocator_id" INTEGER NOT NULL,
 	"session_id" INTEGER NOT NULL,
-	"percentage" NUMERIC NOT NULL,
+	"allocator_percentage" NUMERIC NOT NULL,
 	PRIMARY KEY("allocator_id", "session_id"),
 	FOREIGN KEY ("session_id") REFERENCES "Sessions"("session_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
@@ -305,10 +306,10 @@ CREATE TABLE IF NOT EXISTS "Activities_template" (
 	"activity_template_name" VARCHAR NOT NULL,
 	"activity_template_type" VARCHAR NOT NULL CHECK(activity_template_type IN ("default", "manual", "limesurvey", "gameplay", "lti_tool")),
 	"activity_template_description" VARCHAR NOT NULL,
-	"public" BOOLEAN NOT NULL,
+	"activity_template_public" BOOLEAN NOT NULL,
+	"activity_template_owner_id" INTEGER NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"activity_template_owner_id" INTEGER NOT NULL,
 	PRIMARY KEY("activity_template_id"),
 	FOREIGN KEY ("activity_template_owner_id") REFERENCES "Users"("user_id")
 	ON UPDATE CASCADE ON DELETE RESTRICT
@@ -318,8 +319,8 @@ CREATE INDEX IF NOT EXISTS "Activities_template_index_0"
 ON "Activities_template" ("activity_template_id");
 CREATE TABLE IF NOT EXISTS "Manual_Template_Activities" (
 	"activity_template_id" INTEGER NOT NULL UNIQUE,
-	"ressource_type" VARCHAR NOT NULL CHECK(ressource_type IN ("EXTERNAL","WEB")),
-	"ressource_url" VARCHAR NOT NULL,
+	"manual_ressource_type" VARCHAR NOT NULL CHECK(manual_ressource_type IN ("EXTERNAL","WEB")),
+	"manual_ressource_url" VARCHAR NOT NULL,
 	PRIMARY KEY("activity_template_id"),
 	FOREIGN KEY ("activity_template_id") REFERENCES "Activities_template"("activity_template_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
@@ -329,10 +330,10 @@ CREATE INDEX IF NOT EXISTS "Manual_Template_Activities_index_0"
 ON "Manual_Template_Activities" ("activity_template_id");
 CREATE TABLE IF NOT EXISTS "GamePlay_Activities_Template" (
 	"activity_template_id" INTEGER NOT NULL UNIQUE,
-	"category_id" INTEGER,
-	"subject_area_id" INTEGER,
 	"game_type" VARCHAR NOT NULL CHECK(game_type IN ("WEB", "DESKTOP")),
 	"game_url" VARCHAR NOT NULL,
+	"category_id" INTEGER,
+	"subject_area_id" INTEGER,
 	PRIMARY KEY("activity_template_id"),
 	FOREIGN KEY ("activity_template_id") REFERENCES "Activities_template"("activity_template_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
