@@ -20,7 +20,8 @@ jest.mock('@/middlewares/auth.middleware', () => ({
       }
     };
     next();
-  }
+  },
+  roleAllowed: (_req: any, _res: any, next: any) => next()
 }));
 
 // Mock user service
@@ -70,14 +71,16 @@ describe('User Controller Routes', () => {
       expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('alice');
     });
 
-    it('returns 404 when user not found by username', async () => {
-      mockedUserService.getUserByUsername.mockResolvedValue(null as any);
-      
-      const res = await request(app).get('/users?username=nonexistent');
-      
-      expect(res.status).toBe(404);
-      expect(res.body).toHaveProperty('message');
-      expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('nonexistent');
+    it('forwards query params for paginated search', async () => {
+      const mockUsers = [{ user_id: 1, username: 'alice', email: 'alice@example.com', role: 'admin' }];
+
+      mockedUserService.getAllUsers.mockResolvedValue(mockUsers as any);
+
+      const res = await request(app).get('/users?searchstring=ali&limit=10&offset=5');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(mockUsers);
+      expect(mockedUserService.getAllUsers).toHaveBeenCalledWith(10, 5, 'ali');
     });
 
     it('handles service errors properly', async () => {
@@ -90,121 +93,19 @@ describe('User Controller Routes', () => {
     });
   });
 
-  describe('POST /users', () => {
-    it('creates a new user successfully', async () => {
-      const newUserData = {
-        username: 'newuser',
-        email: 'newuser@example.com',
-        role: 'student'
-      };
-      
-      const createdUser = {
-        user_id: 3,
-        ...newUserData,
-        createdAt: `"${new Date()}"`,
-        updatedAt: `"${new Date()}"`
-      };
-      
-      mockedUserService.createUser.mockResolvedValue(createdUser as any);
-      
-      const res = await request(app)
-        .post('/users')
-        .send(newUserData);
-      
-      expect(res.status).toBe(201);
-      expect(res.body).toEqual(createdUser);
-      expect(mockedUserService.createUser).toHaveBeenCalledWith(newUserData);
-    });
-
-    it('handles validation errors during user creation', async () => {
-      const invalidUserData = {
-        username: '',
-        email: 'invalid-email'
-      };
-      
-      mockedUserService.createUser.mockRejectedValue(new Error('Validation failed'));
-      
-      const res = await request(app)
-        .post('/users')
-        .send(invalidUserData);
-      
-      expect(res.status).toBe(500);
-      expect(mockedUserService.createUser).toHaveBeenCalledWith(invalidUserData);
-    });
-
-    it('handles database errors during user creation', async () => {
-      const newUserData = {
-        username: 'newuser',
-        email: 'newuser@example.com',
-        role: 'student'
-      };
-      
-      mockedUserService.createUser.mockRejectedValue(new Error('Database error'));
-      
-      const res = await request(app)
-        .post('/users')
-        .send(newUserData);
-      
-      expect(res.status).toBe(500);
-    });
-  });
-
-  describe('DELETE /users/:id', () => {
-    it('deletes user successfully', async () => {
-      mockedUserService.deleteUserById.mockResolvedValue(undefined);
-      
-      const res = await request(app).delete('/users/1');
-      
-      expect(res.status).toBe(204);
-      expect(res.body).toEqual({});
-      expect(mockedUserService.deleteUserById).toHaveBeenCalledWith(1);
-    });
-
-    it('handles deletion of non-existent user', async () => {
-      mockedUserService.deleteUserById.mockRejectedValue(new NotFoundError('User not found'));
-      
-      const res = await request(app).delete('/users/999');
-      
-      expect(res.status).toBe(404);
-      expect(mockedUserService.deleteUserById).toHaveBeenCalledWith(999);
-    });
-
-    it('handles invalid user ID parameter', async () => {
-      const res = await request(app).delete('/users/invalid-id');
-      
-      expect(res.status).toBe(404);
-      // NaN is passed when invalid number
-      expect(mockedUserService.deleteUserById).toHaveBeenCalledWith(NaN);
-    });
-
-    it('handles database errors during deletion', async () => {
-      mockedUserService.deleteUserById.mockRejectedValue(new Error('Database error'));
-      
-      const res = await request(app).delete('/users/1');
-      
-      expect(res.status).toBe(500);
-    });
-  });
-
   describe('PATCH /users/:username', () => {
-    it('updates user successfully', async () => {
-      const mockUser = { 
-        user_id: 1, 
-        username: 'alice', 
-        email: 'alice@example.com', 
-        role: 'student' 
-      };
-      
+    it('updates current authenticated user successfully', async () => {
       const updateData = { role: 'teacher' };
       
       const updatedUser = { 
-        ...mockUser, 
+        user_id: 1,
+        username: 'testuser',
+        email: 'testuser@example.com',
         role: 'teacher',
         updatedAt: new Date().toISOString()
       };
       
-      mockedUserService.getUserByUsername.mockResolvedValue(mockUser as any);
-      mockedUserService.updateUserById.mockResolvedValue(updatedUser as any);
+      mockedUserService.updateUser.mockResolvedValue(updatedUser as any);
       
       const res = await request(app)
         .patch('/users/alice')
@@ -212,59 +113,41 @@ describe('User Controller Routes', () => {
       
       expect(res.status).toBe(200);
       expect(res.body).toEqual(updatedUser);
-      expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('alice');
-      expect(mockedUserService.updateUserById).toHaveBeenCalledWith(1, updateData);
+      expect(mockedUserService.updateUser).toHaveBeenCalledWith(1, updateData);
     });
 
-    it('returns 404 when updating non-existent user', async () => {
+    it('ignores username path parameter and updates authenticated user', async () => {
       const updateData = { role: 'teacher' };
-      
-      mockedUserService.getUserByUsername.mockResolvedValue(null as any);
+      const updatedUser = { user_id: 1, username: 'testuser', role: 'teacher' };
+
+      mockedUserService.updateUser.mockResolvedValue(updatedUser as any);
       
       const res = await request(app)
         .patch('/users/nonexistent')
         .send(updateData);
       
-      expect(res.status).toBe(404);
-      expect(res.body).toHaveProperty('message');
-      expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('nonexistent');
-      expect(mockedUserService.updateUserById).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(updatedUser);
+      expect(mockedUserService.updateUser).toHaveBeenCalledWith(1, updateData);
     });
 
     it('handles database errors during update', async () => {
-      const mockUser = { 
-        user_id: 1, 
-        username: 'alice', 
-        email: 'alice@example.com', 
-        role: 'student' 
-      };
-      
       const updateData = { role: 'teacher' };
-      
-      mockedUserService.getUserByUsername.mockResolvedValue(mockUser as any);
-      mockedUserService.updateUserById.mockRejectedValue(new Error('Database error'));
+
+      mockedUserService.updateUser.mockRejectedValue(new Error('Database error'));
       
       const res = await request(app)
         .patch('/users/alice')
         .send(updateData);
       
       expect(res.status).toBe(500);
-      expect(mockedUserService.getUserByUsername).toHaveBeenCalledWith('alice');
-      expect(mockedUserService.updateUserById).toHaveBeenCalledWith(1, updateData);
+      expect(mockedUserService.updateUser).toHaveBeenCalledWith(1, updateData);
     });
 
     it('handles validation errors during update', async () => {
-      const mockUser = { 
-        user_id: 1, 
-        username: 'alice', 
-        email: 'alice@example.com', 
-        role: 'student' 
-      };
-      
       const invalidUpdateData = { email: 'invalid-email' };
-      
-      mockedUserService.getUserByUsername.mockResolvedValue(mockUser as any);
-      mockedUserService.updateUserById.mockRejectedValue(new Error('Validation failed'));
+
+      mockedUserService.updateUser.mockRejectedValue(new Error('Validation failed'));
       
       const res = await request(app)
         .patch('/users/alice')

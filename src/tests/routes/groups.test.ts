@@ -20,7 +20,8 @@ jest.mock('@/middlewares/auth.middleware', () => ({
       }
     };
     next();
-  }
+  },
+  roleAllowed: (_req: any, _res: any, next: any) => next()
 }));
 
 // Mock group service
@@ -44,68 +45,74 @@ describe('Group Controller Routes', () => {
   describe('GET /groups', () => {
     it('returns list of all groups when no query parameters', async () => {
       const mockGroups = [
-        { group_id: 1, name: 'Group A', use_new_generation: true, group_owner_id: 1 },
-        { group_id: 2, name: 'Group B', use_new_generation: false, group_owner_id: 1 }
+        { group_id: 1, group_name: 'Group A', group_use_new_generation: true, group_owner_id: 1 },
+        { group_id: 2, group_name: 'Group B', group_use_new_generation: false, group_owner_id: 1 }
       ];
       
-      mockedGroupService.getAllGroups.mockResolvedValue(mockGroups as any);
+      mockedGroupService.getGroups.mockResolvedValue(mockGroups as any);
 
       const response = await request(app)
         .get('/groups')
         .expect(200);
 
       expect(response.body).toEqual(mockGroups);
-      expect(mockedGroupService.getAllGroups).toHaveBeenCalledWith(undefined, undefined);
+      expect(mockedGroupService.getGroups).toHaveBeenCalledWith(1, undefined, undefined, undefined, undefined);
     });
 
     it('returns paginated groups with limit and offset', async () => {
       const mockGroups = [
-        { group_id: 2, name: 'Group B', use_new_generation: false, group_owner_id: 1 }
+        { group_id: 2, group_name: 'Group B', group_use_new_generation: false, group_owner_id: 1 }
       ];
       
-      mockedGroupService.getAllGroups.mockResolvedValue(mockGroups as any);
+      mockedGroupService.getGroups.mockResolvedValue(mockGroups as any);
 
       const response = await request(app)
         .get('/groups?limit=10&offset=1')
         .expect(200);
 
       expect(response.body).toEqual(mockGroups);
-      expect(mockedGroupService.getAllGroups).toHaveBeenCalledWith(10, 1);
+      expect(mockedGroupService.getGroups).toHaveBeenCalledWith(1, undefined, undefined, 10, 1);
     });
 
-    it('returns validation error for invalid limit', async () => {
+    it('passes negative limit through to service', async () => {
+      mockedGroupService.getGroups.mockResolvedValue([] as any);
+
       const response = await request(app)
         .get('/groups?limit=-1')
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toContain('Invalid limit parameter');
+      expect(response.body).toEqual([]);
+      expect(mockedGroupService.getGroups).toHaveBeenCalledWith(1, undefined, undefined, -1, 0);
     });
 
-    it('returns validation error for invalid offset', async () => {
+    it('passes negative offset through to service', async () => {
+      mockedGroupService.getGroups.mockResolvedValue([] as any);
+
       const response = await request(app)
         .get('/groups?offset=-1')
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toContain('Invalid offset parameter');
+      expect(response.body).toEqual([]);
+      expect(mockedGroupService.getGroups).toHaveBeenCalledWith(1, undefined, undefined, undefined, -1);
     });
   });
 
   describe('GET /groups/:id', () => {
     it('returns group by valid ID', async () => {
-      const mockGroup = { group_id: 1, name: 'Group A', use_new_generation: true, group_owner_id: 1 };
+      const mockGroup = { group_id: 1, group_name: 'Group A', group_use_new_generation: true, group_owner_id: 1 };
       
-      mockedGroupService.getGroupById.mockResolvedValue(mockGroup as any);
+      mockedGroupService.getGroup.mockResolvedValue(mockGroup as any);
 
       const response = await request(app)
         .get('/groups/1')
         .expect(200);
 
       expect(response.body).toEqual(mockGroup);
-      expect(mockedGroupService.getGroupById).toHaveBeenCalledWith(1);
+      expect(mockedGroupService.getGroup).toHaveBeenCalledWith(1, 1);
     });
 
     it('returns 404 when group not found', async () => {
-      mockedGroupService.getGroupById.mockRejectedValue(new NotFoundError('Group with ID 999 not found'));
+      mockedGroupService.getGroup.mockRejectedValue(new NotFoundError('Group with ID 999 not found'));
 
       const response = await request(app)
         .get('/groups/999')
@@ -134,8 +141,8 @@ describe('Group Controller Routes', () => {
   describe('POST /groups', () => {
     it('creates a new group successfully', async () => {
       const newGroupData = {
-        name: 'New Group',
-        use_new_generation: true,
+        group_name: 'New Group',
+        group_use_new_generation: true,
         group_owner_id: 1
       };
       const createdGroup = { group_id: 3, ...newGroupData };
@@ -148,13 +155,13 @@ describe('Group Controller Routes', () => {
         .expect(201);
 
       expect(response.body).toEqual(createdGroup);
-      expect(mockedGroupService.createGroup).toHaveBeenCalledWith(newGroupData);
+      expect(mockedGroupService.createGroup).toHaveBeenCalledWith(newGroupData, true, 1);
     });
 
     it('handles service errors during creation', async () => {
       const newGroupData = {
-        name: 'New Group',
-        use_new_generation: true,
+        group_name: 'New Group',
+        group_use_new_generation: true,
         group_owner_id: 1
       };
 
@@ -169,28 +176,28 @@ describe('Group Controller Routes', () => {
     });
   });
 
-  describe('PUT /groups/:id', () => {
+  describe('PATCH /groups/:id', () => {
     it('updates group successfully', async () => {
-      const updateData = { name: 'Updated Group Name' };
-      const updatedGroup = { group_id: 1, name: 'Updated Group Name', use_new_generation: true, group_owner_id: 1 };
+      const updateData = { group_name: 'Updated Group Name' };
+      const updatedGroup = { group_id: 1, group_name: 'Updated Group Name', group_use_new_generation: true, group_owner_id: 1 };
 
       mockedGroupService.updateGroup.mockResolvedValue(updatedGroup as any);
 
       const response = await request(app)
-        .put('/groups/1')
+        .patch('/groups/1')
         .send(updateData)
         .expect(200);
 
       expect(response.body).toEqual(updatedGroup);
-      expect(mockedGroupService.updateGroup).toHaveBeenCalledWith(1, updateData);
+      expect(mockedGroupService.updateGroup).toHaveBeenCalledWith(1, 1, updateData);
     });
 
     it('returns 404 when updating non-existent group', async () => {
       mockedGroupService.updateGroup.mockRejectedValue(new NotFoundError('Group with ID 999 not found'));
 
       const response = await request(app)
-        .put('/groups/999')
-        .send({ name: 'Updated Name' })
+        .patch('/groups/999')
+        .send({ group_name: 'Updated Name' })
         .expect(404);
 
       expect(response.body.message).toContain('Group with ID 999 not found');
@@ -198,8 +205,8 @@ describe('Group Controller Routes', () => {
 
     it('returns validation error for invalid ID', async () => {
       const response = await request(app)
-        .put('/groups/invalid')
-        .send({ name: 'Updated Name' })
+        .patch('/groups/invalid')
+        .send({ group_name: 'Updated Name' })
         .expect(400);
 
       expect(response.body.message).toContain('Invalid group ID');

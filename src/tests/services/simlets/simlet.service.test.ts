@@ -1,485 +1,126 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
-  getAllSimlets,
-  getSimletById,
-  getSimletsByCoordinator,
-  getSimletsByAllocator,
-  searchSimletsByName,
-  searchSimletsByDescription,
-  getSimletsCreatedAfter,
+  getSimletsByUserId,
+  getSimletBySimletIdAndUserId,
   createSimlet,
-  updateSimlet,
+  patch,
   deleteSimlet,
-  countSimlets,
-  countSimletsByCoordinator,
-  countSimletsByAllocator,
-  simletExists,
-  isSimletNameAvailable,
-  getSimletsWithSandbox,
-  getSimletsWithoutSandbox,
-  getSimletsWithObjectives
-} from "@/services/simlets/simlet.service";
-import { createUser } from "@/services/users/user.service";
-import { NotFoundError } from "@/lib/errors/appErrors";
-import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+  getAllocatorFromSimlet,
+  getSimletParticipants,
+  getSimletGroups,
+  getSimletSessions,
+  getSimletSession,
+  getSessionActivities
+} from '@/services/simlets/simlet.service';
+import { Simlet } from '@/lib/mappers/simlet/Simlet';
+import { Session } from '@/lib/mappers/session/Session';
 
-let testCoordinator: any;
-let testAllocator: any;
-let testSimlet: any;
-let secondSimlet: any;
+jest.mock('@/lib/mappers/simlet/Simlet', () => ({
+  Simlet: {
+    getAllFromDbData: jest.fn(),
+    getFromDbData: jest.fn(),
+    createSimlet: jest.fn()
+  }
+}));
 
-/**
- * Integration tests for Simlet service CRUD operations and queries.
- * Tests all business logic functions with proper database setup and cleanup.
- */
-describe("Simlet Service", () => {
-  beforeAll(async () => {
-    try {
-      await db.sequelize.sync({ force: true });
-      
-      // Create test user to be simlet coordinator
-      testCoordinator = await createUser({
-        user_id: 1,
-        username: "simlet_coordinator",
-        email: "coordinator@example.com",
-        isToken: false,
-        token: null,
-        role: "teacher"
-      });
+jest.mock('@/lib/mappers/session/Session', () => ({
+  Session: {
+    getFromDbData: jest.fn()
+  }
+}));
 
-      // Create test allocator (assuming it exists in the Tables)
-      testAllocator = await db.Tables.Allocators.create({
-        allocator_type: "random"
-      });
-    } catch (err) {
-      logger.error({ err }, "Test setup failed");
-    }
+const mockedSimlet = Simlet as jest.Mocked<typeof Simlet>;
+const mockedSession = Session as jest.Mocked<typeof Session>;
+
+describe('Simlet Service', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await db.sequelize.close();
+  it('getSimletsByUserId delegates to Simlet.getAllFromDbData', async () => {
+    const list = [{ simlet_id: 1 }];
+    mockedSimlet.getAllFromDbData.mockResolvedValue(list as any);
+
+    const result = await getSimletsByUserId(10, 'abc', 5, 2);
+
+    expect(mockedSimlet.getAllFromDbData).toHaveBeenCalledWith(10, 'abc', 5, 2);
+    expect(result).toEqual(list);
   });
 
-  beforeEach(async () => {
-    // Clean up simlets table before each test
-    await db.Tables.Simlets.destroy({ where: {}, force: true });
+  it('getSimletBySimletIdAndUserId delegates to Simlet.getFromDbData', async () => {
+    const item = { simlet_id: 2, printInfo: jest.fn() };
+    mockedSimlet.getFromDbData.mockResolvedValue(item as any);
+
+    const result = await getSimletBySimletIdAndUserId(2, 10);
+
+    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(2, 10);
+    expect(item.printInfo).toHaveBeenCalled();
+    expect(result).toEqual(item);
   });
 
-  describe("createSimlet", () => {
-    it("creates a simlet successfully", async () => {
-      const simletData = {
-        name: "Test Simlet",
-        description: "A test simulation learning environment",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      };
+  it('createSimlet delegates to Simlet.createSimlet', async () => {
+    const payload = { simlet_name: 'S1' };
+    const created = { simlet_id: 3 };
+    mockedSimlet.createSimlet.mockResolvedValue(created as any);
 
-      testSimlet = await createSimlet(simletData);
+    const result = await createSimlet(payload);
 
-      expect(testSimlet.simlet_id).toBeDefined();
-      expect(testSimlet.name).toBe("Test Simlet");
-      expect(testSimlet.description).toBe("A test simulation learning environment");
-      expect(testSimlet.allocator_id).toBe(testAllocator.allocator_id);
-      expect(testSimlet.simlet_coordinator_id).toBe(testCoordinator.user_id);
-      expect(testSimlet.createdAt).toBeDefined();
-      expect(testSimlet.updatedAt).toBeDefined();
-    });
-
-    it("creates a simlet with optional fields", async () => {
-      const simletData = {
-        name: "Advanced Simlet",
-        description: "Advanced learning environment",
-        objective: "Learn advanced mathematics",
-        sandbox_session_id: 123,
-        mongo_id: "507f1f77bcf86cd799439011",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      };
-
-      testSimlet = await createSimlet(simletData);
-
-      expect(testSimlet.objective).toBe("Learn advanced mathematics");
-      expect(testSimlet.sandbox_session_id).toBe(123);
-      expect(testSimlet.mongo_id).toBe("507f1f77bcf86cd799439011");
-    });
+    expect(mockedSimlet.createSimlet).toHaveBeenCalledWith(payload);
+    expect(result).toEqual(created);
   });
 
-  describe("getAllSimlets", () => {
-    beforeEach(async () => {
-      testSimlet = await createSimlet({
-        name: "First Simlet",
-        description: "First test simlet",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
+  it('patch resolves through simlet instance patch', async () => {
+    const updated = { simlet_id: 4 };
+    const simletInstance = { patch: jest.fn().mockResolvedValue(updated) };
+    mockedSimlet.getFromDbData.mockResolvedValue(simletInstance as any);
 
-      secondSimlet = await createSimlet({
-        name: "Second Simlet",
-        description: "Second test simlet",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
+    const result = await patch(4, 10, { simlet_name: 'Updated' });
 
-    it("retrieves all simlets", async () => {
-      const simlets = await getAllSimlets();
-
-      expect(simlets).toHaveLength(2);
-      expect(simlets[0].name).toBe("First Simlet");
-      expect(simlets[1].name).toBe("Second Simlet");
-    });
-
-    it("retrieves simlets with limit", async () => {
-      const simlets = await getAllSimlets(1);
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("First Simlet");
-    });
-
-    it("retrieves simlets with limit and offset", async () => {
-      const simlets = await getAllSimlets(1, 1);
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("Second Simlet");
-    });
+    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(4, 10);
+    expect(simletInstance.patch).toHaveBeenCalledWith({ simlet_name: 'Updated' });
+    expect(result).toEqual(updated);
   });
 
-  describe("getSimletById", () => {
-    beforeEach(async () => {
-      testSimlet = await createSimlet({
-        name: "Test Simlet",
-        description: "Test description",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
+  it('deleteSimlet resolves through simlet instance remove', async () => {
+    const simletInstance = { remove: jest.fn().mockResolvedValue(undefined) };
+    mockedSimlet.getFromDbData.mockResolvedValue(simletInstance as any);
 
-    it("retrieves a simlet by ID", async () => {
-      const simlet = await getSimletById(testSimlet.simlet_id);
+    await deleteSimlet(5, 10);
 
-      expect(simlet.simlet_id).toBe(testSimlet.simlet_id);
-      expect(simlet.name).toBe("Test Simlet");
-    });
-
-    it("throws NotFoundError for non-existent simlet", async () => {
-      await expect(getSimletById(999999)).rejects.toThrow(NotFoundError);
-    });
+    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(5, 10);
+    expect(simletInstance.remove).toHaveBeenCalled();
   });
 
-  describe("updateSimlet", () => {
-    beforeEach(async () => {
-      testSimlet = await createSimlet({
-        name: "Original Simlet",
-        description: "Original description",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
+  it('delegates related-resource getters through simlet/session instances', async () => {
+    const allocator = { allocator_id: 1 };
+    const participants = [{ user_id: 1 }];
+    const groups = [{ group_id: 1 }];
+    const sessions = [{ session_id: 1 }];
+    const session = { session_id: 2 };
+    const activities = [{ activity_id: 1 }];
 
-    it("updates a simlet successfully", async () => {
-      const updatedSimlet = await updateSimlet(testSimlet.simlet_id, {
-        name: "Updated Simlet",
-        description: "Updated description"
-      });
+    const simletInstance = {
+      getAllocator: jest.fn().mockResolvedValue(allocator),
+      getAllocatedParticipants: jest.fn().mockResolvedValue(participants),
+      getGroups: jest.fn().mockResolvedValue(groups),
+      getSessions: jest.fn().mockResolvedValue(sessions),
+      getSession: jest.fn().mockResolvedValue(session)
+    };
 
-      expect(updatedSimlet.name).toBe("Updated Simlet");
-      expect(updatedSimlet.description).toBe("Updated description");
-      expect(updatedSimlet.simlet_id).toBe(testSimlet.simlet_id);
-    });
+    const sessionInstance = { getActivities: jest.fn().mockResolvedValue(activities) };
 
-    it("updates only specified fields", async () => {
-      const originalName = testSimlet.name;
-      const updatedSimlet = await updateSimlet(testSimlet.simlet_id, {
-        description: "Only description updated"
-      });
+    mockedSimlet.getFromDbData.mockResolvedValue(simletInstance as any);
+    mockedSession.getFromDbData.mockResolvedValue(sessionInstance as any);
 
-      expect(updatedSimlet.name).toBe(originalName);
-      expect(updatedSimlet.description).toBe("Only description updated");
-    });
+    await expect(getAllocatorFromSimlet(1, 10)).resolves.toEqual(allocator);
+    await expect(getSimletParticipants(1, 10)).resolves.toEqual(participants);
+    await expect(getSimletGroups(1, 10)).resolves.toEqual(groups);
+    await expect(getSimletSessions(1, 10, 'x', 2, 0)).resolves.toEqual(sessions);
+    await expect(getSimletSession(1, 2, 10)).resolves.toEqual(session);
+    await expect(getSessionActivities(1, 2, 10)).resolves.toEqual(activities);
 
-    it("throws NotFoundError when updating non-existent simlet", async () => {
-      await expect(updateSimlet(999999, { name: "Updated" })).rejects.toThrow(NotFoundError);
-    });
-  });
-
-  describe("deleteSimlet", () => {
-    beforeEach(async () => {
-      testSimlet = await createSimlet({
-        name: "To Delete",
-        description: "This simlet will be deleted",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
-
-    it("deletes a simlet successfully", async () => {
-      await deleteSimlet(testSimlet.simlet_id);
-
-      await expect(getSimletById(testSimlet.simlet_id)).rejects.toThrow(NotFoundError);
-    });
-
-    it("throws NotFoundError when deleting non-existent simlet", async () => {
-      await expect(deleteSimlet(999999)).rejects.toThrow(NotFoundError);
-    });
-  });
-
-  describe("getSimletsByCoordinator", () => {
-    it("retrieves simlets by coordinator ID", async () => {
-      testSimlet = await createSimlet({
-        name: "Coordinator Simlet",
-        description: "Managed by coordinator",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      const simlets = await getSimletsByCoordinator(testCoordinator.user_id);
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("Coordinator Simlet");
-      expect(simlets[0].simlet_coordinator_id).toBe(testCoordinator.user_id);
-    });
-
-    it("returns empty array when coordinator has no simlets", async () => {
-      const simlets = await getSimletsByCoordinator(999);
-
-      expect(simlets).toHaveLength(0);
-    });
-  });
-
-  describe("getSimletsByAllocator", () => {
-    it("retrieves simlets by allocator ID", async () => {
-      testSimlet = await createSimlet({
-        name: "Allocator Simlet",
-        description: "Uses specific allocator",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      const simlets = await getSimletsByAllocator(testAllocator.allocator_id);
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("Allocator Simlet");
-      expect(simlets[0].allocator_id).toBe(testAllocator.allocator_id);
-    });
-  });
-
-  describe("searchSimletsByName", () => {
-    beforeEach(async () => {
-      await createSimlet({
-        name: "Mathematics Learning",
-        description: "Math focused simlet",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      await createSimlet({
-        name: "Science Exploration",
-        description: "Science focused simlet",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
-
-    it("finds simlets matching name pattern", async () => {
-      const simlets = await searchSimletsByName("Math");
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("Mathematics Learning");
-    });
-
-    it("returns empty array when no matches found", async () => {
-      const simlets = await searchSimletsByName("NonExistent");
-
-      expect(simlets).toHaveLength(0);
-    });
-  });
-
-  describe("searchSimletsByDescription", () => {
-    beforeEach(async () => {
-      await createSimlet({
-        name: "Interactive Simlet",
-        description: "Interactive learning environment",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
-
-    it("finds simlets matching description pattern", async () => {
-      const simlets = await searchSimletsByDescription("interactive");
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("Interactive Simlet");
-    });
-  });
-
-  describe("getSimletsCreatedAfter", () => {
-    it("retrieves simlets created after specific date", async () => {
-      const pastDate = new Date('2020-01-01');
-      
-      testSimlet = await createSimlet({
-        name: "Recent Simlet",
-        description: "Created recently",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      const simlets = await getSimletsCreatedAfter(pastDate);
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("Recent Simlet");
-    });
-  });
-
-  describe("countSimlets", () => {
-    it("counts total simlets correctly", async () => {
-      await createSimlet({
-        name: "Count Test 1",
-        description: "For counting",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      await createSimlet({
-        name: "Count Test 2",
-        description: "For counting",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      const count = await countSimlets();
-
-      expect(count).toBe(2);
-    });
-  });
-
-  describe("countSimletsByCoordinator", () => {
-    it("counts simlets by coordinator correctly", async () => {
-      await createSimlet({
-        name: "Coordinator Count 1",
-        description: "Test",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      const count = await countSimletsByCoordinator(testCoordinator.user_id);
-
-      expect(count).toBe(1);
-    });
-  });
-
-  describe("countSimletsByAllocator", () => {
-    it("counts simlets by allocator correctly", async () => {
-      await createSimlet({
-        name: "Allocator Count 1",
-        description: "Test",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      const count = await countSimletsByAllocator(testAllocator.allocator_id);
-
-      expect(count).toBe(1);
-    });
-  });
-
-  describe("simletExists", () => {
-    beforeEach(async () => {
-      testSimlet = await createSimlet({
-        name: "Existence Test",
-        description: "Test existence",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
-
-    it("returns true for existing simlet", async () => {
-      const exists = await simletExists(testSimlet.simlet_id);
-
-      expect(exists).toBe(true);
-    });
-
-    it("returns false for non-existent simlet", async () => {
-      const exists = await simletExists(999999);
-
-      expect(exists).toBe(false);
-    });
-  });
-
-  describe("isSimletNameAvailable", () => {
-    beforeEach(async () => {
-      await createSimlet({
-        name: "Taken Name",
-        description: "Name is taken",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
-
-    it("returns false for taken name", async () => {
-      const available = await isSimletNameAvailable("Taken Name");
-
-      expect(available).toBe(false);
-    });
-
-    it("returns true for available name", async () => {
-      const available = await isSimletNameAvailable("Available Name");
-
-      expect(available).toBe(true);
-    });
-  });
-
-  describe("getSimletsWithSandbox", () => {
-    beforeEach(async () => {
-      await createSimlet({
-        name: "With Sandbox",
-        description: "Has sandbox session",
-        sandbox_session_id: 123,
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      await createSimlet({
-        name: "Without Sandbox",
-        description: "No sandbox session",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
-
-    it("retrieves only simlets with sandbox sessions", async () => {
-      const simlets = await getSimletsWithSandbox();
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("With Sandbox");
-      expect(simlets[0].sandbox_session_id).toBe(123);
-    });
-  });
-
-  describe("getSimletsWithObjectives", () => {
-    beforeEach(async () => {
-      await createSimlet({
-        name: "With Objective",
-        description: "Has learning objective",
-        objective: "Learn something important",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-
-      await createSimlet({
-        name: "Without Objective",
-        description: "No learning objective",
-        allocator_id: testAllocator.allocator_id,
-        simlet_coordinator_id: testCoordinator.user_id
-      });
-    });
-
-    it("retrieves only simlets with objectives", async () => {
-      const simlets = await getSimletsWithObjectives();
-
-      expect(simlets).toHaveLength(1);
-      expect(simlets[0].name).toBe("With Objective");
-      expect(simlets[0].objective).toBe("Learn something important");
-    });
+    expect(simletInstance.getSessions).toHaveBeenCalledWith('x', 2, 0);
+    expect(mockedSession.getFromDbData).toHaveBeenCalledWith(1, 2, 10);
+    expect(sessionInstance.getActivities).toHaveBeenCalled();
   });
 });
