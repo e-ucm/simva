@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
+import { SingleUserPermission } from "../UserPermisions/SingleUserPermission";
+import { UserPermission } from "../UserPermisions/UserPermission";
 
 /**
  * Group mapper class representing a collection of participants in studies.
@@ -12,6 +14,9 @@ import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
  * Supports both manual participant management and automatic code generation.
  */
 export class Group {
+  delete() {
+    throw new Error("Method not implemented.");
+  }
     current_user_id: number;
     current_user_username: string;
     current_user_permission: string;
@@ -170,5 +175,31 @@ export class Group {
              return true;
          }
          throw new AuthentificationError("User does not have permission to edit this simlet");
+    }
+
+     async getPermissions() {
+      return await UserPermission.getFromDbData('group', this.group_id);
+    }
+    
+    async createPermissions(body: any) {
+        this.canEdit();
+        let permissions = await UserPermission.getFromDbData('group', this.group_id);
+        return await permissions.createPermissions(body);
+    }
+    
+    async getPermissionsForUser(userId: number) {
+        return await SingleUserPermission.getFromDbData('group', this.group_id, userId);
+    }
+    
+    async patchPermissionsForUser(userId: number, body: any) {
+        this.canEdit();
+        let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
+        return await permission.update(body.permission);
+    }
+
+    async deletePermissionsForUser(userId: number) {
+        this.canEdit();
+        let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
+        return await permission.delete();
     }
 }

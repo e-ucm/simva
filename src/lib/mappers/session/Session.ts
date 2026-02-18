@@ -3,6 +3,8 @@ import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
+import { UserPermission } from "../UserPermisions/UserPermission";
+import { SingleUserPermission } from "../UserPermisions/SingleUserPermission";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -229,4 +231,29 @@ export class Session {
         await session.destroy();
     }
 
+     async getPermissions() {
+      return await UserPermission.getFromDbData('session', this.session_id);
+    }
+    
+    async createPermissions(body: any) {
+        this.canEdit();
+        let permissions = await UserPermission.getFromDbData('session', this.session_id);
+        return await permissions.createPermissions(body);
+    }
+    
+    async getPermissionsForUser(userId: number) {
+        return await SingleUserPermission.getFromDbData('session', this.session_id, userId);
+    }
+    
+    async patchPermissionsForUser(userId: number, body: any) {
+        this.canEdit();
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId);
+        return await permission.update(body.permission);
+    }
+
+    async deletePermissionsForUser(userId: number) {
+        this.canEdit();
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId);
+        return await permission.delete();
+    }
 }

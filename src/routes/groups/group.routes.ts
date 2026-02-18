@@ -8,7 +8,11 @@ import {
   getGroupCount,
   getGroupParticipants,
   createGroupParticipant,
-  deleteGroupParticipant
+  deleteGroupParticipant,
+  getGroupPermissions,
+  getGroupPermissionsForUser,
+  patchGroupPermissionsForUser,
+  deleteGroupPermissionsForUser
 } from "@/controlers/groups/group.controler";
 
 /**
@@ -22,6 +26,10 @@ import {
  * - DELETE /:id - Delete a group by ID
  * - GET /count - Get total count of groups
  * - GET /:id/participants - Get participants of a group
+ * - GET /:group_id/permissions - Get permissions for a group
+ * - GET /:group_id/permissions/:user_id - Get permissions for a user in a group
+ * - PATCH /:group_id/permissions/:user_id - Update permissions for a user in a group
+ * - DELETE /:group_id/permissions/:user_id - Delete permissions for a user in a group
  * 
  * @type {Router}
  * 
@@ -50,6 +58,12 @@ router.post("/", createGroup);
 router.get("/:id", getGroupById);
 router.patch("/:id", updateGroup);
 router.delete("/:id", deleteGroup);
+
+// Group permissions operations
+router.get("/:group_id/permissions", getGroupPermissions);
+router.get("/:group_id/permissions/:user_id", getGroupPermissionsForUser);
+router.patch("/:group_id/permissions/:user_id", patchGroupPermissionsForUser);
+router.delete("/:group_id/permissions/:user_id", deleteGroupPermissionsForUser);
 
 // Group participant operations
 router.get("/:id/participants", getGroupParticipants);

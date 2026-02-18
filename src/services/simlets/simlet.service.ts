@@ -335,3 +335,27 @@ export async function deleteSimletPermissionsForUser(simletId: number, userId: n
   return await simlet.deletePermissionsForUser(userId);
 }
 
+export async function deleteSessionPermissionsForUser(simletId: number, sessionId: number, userId: number, current_user_id: number) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.deletePermissionsForUser(userId);
+}
+
+export async function patchSessionPermissionsForUser(simletId: number, sessionId: number, userId: number, current_user_id: number, body: any) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.patchPermissionsForUser(userId, body);
+}
+
+export async function getSessionPermissionsForUser(simletId: number, sessionId: number, userId: number, current_user_id: number) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.getPermissionsForUser(userId);
+}
+
+export async function createSessionPermissions(simletId: number, sessionId: number, current_user_id: number, body: any) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.createPermissions(body);
+}
+
+export async function getSessionPermissions(simletId: number, sessionId: number, current_user_id: number) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.getPermissions();
+}

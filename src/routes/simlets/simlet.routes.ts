@@ -33,7 +33,12 @@ import {
   createSimletPermissions,
   getSimletPermissionsForUser,
   patchSimletPermissionsForUser,
-  deleteSimletPermissionsForUser
+  deleteSimletPermissionsForUser,
+  getSessionPermissions,
+  createSessionPermissions,
+  getSessionPermissionsForUser,
+  patchSessionPermissionsForUser,
+  deleteSessionPermissionsForUser
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -53,6 +58,22 @@ import {
  * - GET /:simlet_id/sessions - Get sessions of a simlet
  * - GET /:simlet_id/sessions/:session_id - Get details of a specific session in a simlet
  * - GET /:simlet_id/sessions/:session_id/activities - Get activities in a specific session of a simlet
+ * - POST /:simlet_id/sessions/:session_id/activities - Create a new activity in a specific session of a simlet
+ * - POST /:simlet_id/sessions - Create a new session in a simlet
+ * - PATCH /:simlet_id/sessions/:session_id - Update a specific session in a simlet
+ * - DELETE /:simlet_id/sessions/:session_id - Delete a specific session in a simlet
+ * - GET /:simlet_id/schedule - Get the schedule of a simlet
+ * - GET /:simlet_id/permissions - Get permissions for a simlet
+ * - POST /:simlet_id/permissions - Create permissions for a simlet
+ * - GET /:simlet_id/permissions/:user_id - Get permissions for a user in a simlet
+ * - PATCH /:simlet_id/permissions/:user_id - Update permissions for a user in a simlet
+ * - DELETE /:simlet_id/permissions/:user_id - Delete permissions for a user in a simlet
+ * - GET /:simlet_id/sessions/:session_id/permissions - Get permissions for a session in a simlet
+ * - POST /:simlet_id/sessions/:session_id/permissions - Create permissions for a session in a simlet
+ * - GET /:simlet_id/sessions/:session_id/permissions/:user_id - Get permissions for a user in a session of a simlet
+ * - PATCH /:simlet_id/sessions/:session_id/permissions/:user_id - Update permissions for a user in a session of a simlet
+ * - DELETE /:simlet_id/sessions/:session_id/permissions/:user_id - Delete permissions for a user in a session of a simlet
+ * 
  * @type {Router}
  * 
  * @example
@@ -86,6 +107,13 @@ router.get("/:simlet_id", getSimletById);
 router.patch("/:simlet_id", patchSimlet);
 router.delete("/:simlet_id", deleteSimlet);
 
+//simlet permissions endpoints
+router.get("/:simlet_id/permissions", getSimletPermissions);
+router.post("/:simlet_id/permissions", createSimletPermissions);
+router.get("/:simlet_id/permissions/:user_id", getSimletPermissionsForUser);
+router.patch("/:simlet_id/permissions/:user_id", patchSimletPermissionsForUser);
+router.delete("/:simlet_id/permissions/:user_id", deleteSimletPermissionsForUser);
+
 // Session endpoints
 router.get("/:simlet_id/sessions", getSimletSessions);
 router.post("/:simlet_id/sessions", createSimletSession);
@@ -93,17 +121,16 @@ router.get("/:simlet_id/sessions/:session_id", getSimletSession);
 router.patch("/:simlet_id/sessions/:session_id", patchSimletSession);
 router.delete("/:simlet_id/sessions/:session_id", deleteSimletSession);
 
+//session permissions endpoints
+router.get("/:simlet_id/sessions/:session_id/permissions", getSessionPermissions);
+router.post("/:simlet_id/sessions/:session_id/permissions", createSessionPermissions);
+router.get("/:simlet_id/sessions/:session_id/permissions/:user_id", getSessionPermissionsForUser);
+router.patch("/:simlet_id/sessions/:session_id/permissions/:user_id", patchSessionPermissionsForUser);
+router.delete("/:simlet_id/sessions/:session_id/permissions/:user_id", deleteSessionPermissionsForUser);
+
 // Activity list endpoints
 router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
 router.post("/:simlet_id/sessions/:session_id/activities", createSessionActivity);
-
-//permissions endpoints
-router.get("/:simlet_id/permissions", getSimletPermissions);
-router.post("/:simlet_id/permissions", createSimletPermissions);
-router.get("/:simlet_id/permissions/:user_id", getSimletPermissionsForUser);
-router.patch("/:simlet_id/permissions/:user_id", patchSimletPermissionsForUser);
-router.delete("/:simlet_id/permissions/:user_id", deleteSimletPermissionsForUser);
-
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/groups", getSimletGroups);

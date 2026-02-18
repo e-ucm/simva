@@ -167,8 +167,8 @@ export async function deleteGroup(
     if (isNaN(groupId) || groupId <= 0) {
       throw new ValidationError("Invalid group ID");
     }
-
-    await groupService.deleteGroup(groupId);
+    const currentUser = req.user?.sql;
+    await groupService.deleteGroup(groupId, currentUser!.user_id as number);
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -246,6 +246,98 @@ export async function deleteGroupParticipant(
     const keycloakDelete = req.query.keycloakDelete || false;
     await groupService.deleteGroupParticipant(groupId, participantId, currentUser!.user_id as number, keycloakDelete as boolean);
     res.status(201).json({ message: "Participant deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function getGroupPermissions (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const groupId = parseInt(req.params.group_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({groupId, userId: currentUser?.user_id} , "Getting permissions for group ID and user ID");
+    const permissions = await groupService.getGroupPermissions(groupId, currentUser!.user_id as number);
+    logger.debug({permissions} , "Permissions retrieved for group ID and user ID");
+    res.json(permissions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createGroupPermissions (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const groupId = parseInt(req.params.group_id as string);
+    let body = req.body
+    let currentUser = req.user?.sql;
+    logger.debug({groupId, userId: currentUser?.user_id, body} , "Creating permissions for group ID and user ID");
+    const permissions = await groupService.createGroupPermissions(groupId, currentUser!.user_id as number, body);
+    logger.debug({permissions} , "Permissions created for group ID and user ID");
+    res.json(permissions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getGroupPermissionsForUser (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const groupId = parseInt(req.params.group_id as string);
+    const userId = parseInt(req.params.user_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({groupId, userId: currentUser?.user_id} , "Getting permissions for group ID and user ID");
+    const permissions = await groupService.getGroupPermissionsForUser(groupId, userId, currentUser!.user_id as number);
+    logger.debug({permissions} , "Permissions retrieved for group ID and user ID");
+    res.json(permissions);
+  }
+    catch (err) {
+    next(err);
+  }
+}
+
+export async function patchGroupPermissionsForUser (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const groupId = parseInt(req.params.group_id as string);
+    const userId = parseInt(req.params.user_id as string);
+    let body = req.body
+    let currentUser = req.user?.sql;
+    logger.debug({groupId, userId: currentUser?.user_id, body} , "Patching permissions for group ID and user ID");
+    const permissions = await groupService.patchGroupPermissionsForUser(groupId, userId, currentUser!.user_id as number, body);
+    logger.debug({permissions} , "Permissions patched for group ID and user ID");
+    res.json(permissions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteGroupPermissionsForUser (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const groupId = parseInt(req.params.group_id as string);
+    const userId = parseInt(req.params.user_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({groupId, userId: currentUser?.user_id} , "Deleting permissions for group ID and user ID");
+    await groupService.deleteGroupPermissionsForUser(groupId, userId, currentUser!.user_id as number);
+    logger.debug({groupId, userId: currentUser?.user_id} , "Permissions deleted for group ID and user ID");
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

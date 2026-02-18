@@ -100,8 +100,9 @@ export async function updateGroup(groupId: number, current_user_id: number, body
     return await group.update(body);
 }
 
-export async function deleteGroup(groupId: number) {
-  throw new Error("Function not implemented.");
+export async function deleteGroup(groupId: number, current_user_id: number) {
+  let group = await Group.getFromDbData(groupId, current_user_id);
+  group.delete();
 }
 
 export function getGroupCount(current_user_id: number, searchString: string) {
@@ -123,3 +124,27 @@ export async function createGroup(body: any, useNewGeneration: boolean, current_
   return await Group.createInDb(body, useNewGeneration, current_user_id);
 }
 
+export async function deleteGroupPermissionsForUser(groupId: number, userId: number, current_user_id: number) {
+  let group = await Group.getFromDbData(groupId, current_user_id);
+  return await group.deletePermissionsForUser(userId);
+}
+
+export async function patchGroupPermissionsForUser(groupId: number, userId: number, current_user_id: number, body: any) {
+  let group = await Group.getFromDbData(groupId, current_user_id);
+  return await group.patchPermissionsForUser(userId, body);
+}
+
+export async function getGroupPermissionsForUser(groupId: number, userId: number, current_user_id: number) {
+  let group = await Group.getFromDbData(groupId, current_user_id);
+  return await group.getPermissionsForUser(userId);
+}
+
+export async function createGroupPermissions(groupId: number, current_user_id: number, body: any) {
+  let group = await Group.getFromDbData(groupId, current_user_id);
+  return await group.createPermissions(body);
+}
+
+export async function getGroupPermissions(groupId: number, current_user_id: number) {
+  let group = await Group.getFromDbData(groupId, current_user_id);
+  return await group.getPermissions();
+}
