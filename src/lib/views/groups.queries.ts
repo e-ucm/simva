@@ -7,7 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_groups_users_permissions
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR use_new_generation = :version)
-        AND (:search IS NULL OR name LIKE '%' || :search || '%')
+        AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         `,
         params: {
             current_user_id: {
@@ -37,7 +37,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_groups_users_permissions
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR use_new_generation = :version)
-        AND (:search IS NULL OR name LIKE '%' || :search || '%')
+        AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         LIMIT :limit OFFSET :offset
         `,
         params: {

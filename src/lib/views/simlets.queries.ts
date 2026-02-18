@@ -7,7 +7,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id
-      AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
     `,
     params: {
       current_user_id: {
@@ -31,7 +31,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id
-      AND (:search IS NULL OR name LIKE '%' || :search || '%' OR description LIKE '%' || :search || '%')
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       ORDER BY simlet_id
       LIMIT :limit OFFSET :offset
     `,
