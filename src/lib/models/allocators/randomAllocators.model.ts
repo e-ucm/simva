@@ -16,12 +16,12 @@ import { Sequelize, Model } from "sequelize";
  * 
  * @property {number} allocator_id - Foreign key to the allocator (composite primary key)
  * @property {number} session_id - Foreign key to the session (composite primary key)
- * @property {number} percentage - Allocation percentage for this session (0-100)
+ * @property {number} allocator_percentage - Allocation percentage for this session (0-100)
  */
 export class RandomAllocators extends Model {
   declare allocator_id: number;
   declare session_id: number;
-  declare percentage: number;
+  declare allocator_percentage: number;
 }
 
 /**
@@ -39,7 +39,7 @@ export class RandomAllocators extends Model {
  * await RandomAllocators.create({
  *   allocator_id: 1,
  *   session_id: 2,
- *   percentage: 50.0
+ *   allocator_percentage: 50.0
  * });
  * ```
  */
@@ -59,7 +59,7 @@ export function RandomAllocatorsFactory(
       primaryKey: true,
       allowNull: false,
     },
-    percentage: {
+    allocator_percentage: {
       type: DataTypes.DECIMAL,
       allowNull: false,
     },

@@ -17,7 +17,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * 
  * @property {number} group_id - Primary key identifier for the group
  * @property {string} name - Display name of the group
- * @property {boolean} use_new_generation - Whether to use new generation features
+ * @property {boolean} group_use_new_generation - Whether to use new generation features
  * @property {number|null} group_owner_id - Foreign key to the group owner (teacher/admin)
  * @property {Date} createdAt - Timestamp when the group was created
  * @property {Date} updatedAt - Timestamp when the group was last updated
@@ -25,7 +25,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class Group extends Model {
   declare group_id: number;
   declare group_name: string;
-  declare use_new_generation: boolean;
+  declare group_use_new_generation: boolean;
   declare group_owner_id: number | null;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -45,7 +45,7 @@ export class Group extends Model {
  * const Group = GroupFactory(sequelize, DataTypes);
  * const group = await Group.create({
  *   name: 'Study Group A',
- *   use_new_generation: true,
+ *   group_use_new_generation: true,
  *   group_owner_id: 1
  * });
  * ```
@@ -64,7 +64,7 @@ export function GroupFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    use_new_generation: {
+    group_use_new_generation: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },

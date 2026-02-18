@@ -19,7 +19,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {string} activity_template_name - Display name of the activity template
  * @property {string} activity_template_type - Type of activity (default, manual, limesurvey, gameplay, lti_tool)
  * @property {string} activity_template_description - Detailed description of the template
- * @property {boolean} public - Whether this template is publicly available
+ * @property {boolean} activity_template_public - Whether this template is publicly available
  * @property {Date} createdAt - Timestamp when the template was created
  * @property {Date} updatedAt - Timestamp when the template was last updated
  * @property {number} activity_template_owner_id - Foreign key to the template owner (teacher/admin)
@@ -29,7 +29,7 @@ export class ActivityTemplate extends Model {
   declare activity_template_name: string;
   declare activity_template_type: "default" | "manual" | "limesurvey" | "gameplay" | "lti_tool";
   declare activity_template_description: string;
-  declare public: boolean;
+  declare activity_template_public: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare activity_template_owner_id: number;
@@ -51,7 +51,7 @@ export class ActivityTemplate extends Model {
  *   activity_template_name: 'Quiz Template',
  *   activity_template_type: 'manual',
  *   activity_template_description: 'Standard quiz format',
- *   public: true,
+ *   activity_template_public: true,
  *   activity_template_owner_id: 1
  * });
  * ```
@@ -81,7 +81,7 @@ export function ActivityTemplateFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    public: {
+    activity_template_public: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },

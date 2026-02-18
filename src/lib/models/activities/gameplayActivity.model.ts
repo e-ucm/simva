@@ -2,8 +2,8 @@ import { Sequelize, Model } from "sequelize";
 
 export class GameplayActivity extends Model {
   declare activity_id: number;
-  declare backup: boolean;
-  declare scorm_xapi_by_game: boolean;
+  declare game_backup: boolean;
+  declare game_scorm_xapi: boolean;
   declare category_id: number | null;
   declare subject_area_id: number | null;
   declare game_type: string;
@@ -19,11 +19,11 @@ export function GameplayActivityFactory(
       type: DataTypes.INTEGER,
       primaryKey: true,
     },
-    backup: {
+    game_backup: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
-    scorm_xapi_by_game: {
+    game_scorm_xapi: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },

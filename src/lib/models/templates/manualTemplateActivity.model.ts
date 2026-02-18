@@ -18,13 +18,13 @@ import { Sequelize, Model } from "sequelize";
  * @class ManualTemplateActivity
  * @extends Model
  * @property {number} activity_template_id - Primary key referencing ActivityTemplate
- * @property {"EXTERNAL" | "WEB"} ressource_type - Type of resource (external link or web content)
- * @property {string} ressource_url - URL or path to the resource
+ * @property {"EXTERNAL" | "WEB"} manual_ressource_type - Type of resource (external link or web content)
+ * @property {string} manual_ressource_url - URL or path to the resource
  */
 export class ManualTemplateActivity extends Model {
   declare activity_template_id: number;
-  declare ressource_type: "EXTERNAL" | "WEB";
-  declare ressource_url: string;
+  declare manual_ressource_type: "EXTERNAL" | "WEB";
+  declare manual_ressource_url: string;
 }
 
 /**
@@ -43,8 +43,8 @@ export class ManualTemplateActivity extends Model {
  * // Create a new manual template activity
  * const manualTemplate = await ManualTemplateActivity.create({
  *   activity_template_id: 123,
- *   ressource_type: "WEB",
- *   ressource_url: "https://example.com/activity"
+ *   manual_ressource_type: "WEB",
+ *   manual_ressource_url: "https://example.com/activity"
  * });
  * ```
  */
@@ -58,14 +58,14 @@ export function ManualTemplateActivityFactory(
       primaryKey: true,
       allowNull: false,
     },
-    ressource_type: {
+    manual_ressource_type: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
         isIn: [["EXTERNAL", "WEB"]],
       },
     },
-    ressource_url: {
+    manual_ressource_url: {
       type: DataTypes.STRING,
       allowNull: false,
     },

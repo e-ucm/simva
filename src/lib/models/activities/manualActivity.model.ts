@@ -2,9 +2,9 @@ import { Sequelize, Model } from "sequelize";
 
 export class ManualActivity extends Model {
   declare activity_id: number;
-  declare user_managed: boolean;
-  declare ressource_type: string;
-  declare ressource_url: string;
+  declare manual_user_managed: boolean;
+  declare manual_ressource_type: string;
+  declare manual_ressource_url: string;
 }
 
 export function ManualActivityFactory(
@@ -16,15 +16,15 @@ export function ManualActivityFactory(
       type: DataTypes.INTEGER,
       primaryKey: true,
     },
-    user_managed: {
+    manual_user_managed: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
-    ressource_type: {
+    manual_ressource_type: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    ressource_url: {
+    manual_ressource_url: {
       type: DataTypes.STRING,
       allowNull: false,
     }

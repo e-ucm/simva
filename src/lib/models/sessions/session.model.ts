@@ -22,7 +22,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {string} session_description - Detailed description of the session
  * @property {Date} createdAt - Timestamp when the session was created
  * @property {Date} updatedAt - Timestamp when the session was last updated
- * @property {string|null} experimental_method - Research methodology for the session
+ * @property {string|null} session_experimental_method - Research methodology for the session
  * @property {boolean|null} session_active - Whether the session is currently active
  * @property {Date|null} session_start_date - When the session should start
  * @property {Date|null} session_end_date - When the session should end
@@ -36,7 +36,7 @@ export class Session extends Model {
   declare session_description: string;
   declare createdAt: Date;
   declare updatedAt: Date;
-  declare experimental_method: string | null;
+  declare session_experimental_method: string | null;
   declare session_active: boolean | null;
   declare session_start_date: Date | null;
   declare session_end_date: Date | null;
@@ -97,7 +97,7 @@ export function SessionFactory(
       type: DataTypes.DATE,
       allowNull: false
     },
-    experimental_method: {
+    session_experimental_method: {
       type: DataTypes.STRING,
       allowNull: true,
     },

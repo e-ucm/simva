@@ -20,11 +20,12 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
  * @property {string} name - Display name of the activity
  * @property {string} activity_type - Type of activity (default, manual, limesurvey, gameplay, lti_tool)
- * @property {string|null} presignedUrl - Pre-signed URL for activity resources
- * @property {Date|null} generated_at - Timestamp when the activity was generated
- * @property {number|null} expire_on_seconds - Expiration time in seconds
- * @property {boolean} trace_storage - Whether to store user interaction traces
+ * @property {string|null} activity_presignedUrl - Pre-signed URL for activity resources
+ * @property {Date|null} activity_generated_at - Timestamp when the activity was generated
+ * @property {number|null} activity_expire_on_seconds - Expiration time in seconds
+ * @property {boolean} activity_trace_storage - Whether to store user interaction traces
  * @property {string} description - Detailed description of the activity
+ * @property {boolean} activity_can_be_restarted - Whether the activity can be restarted
  * @property {Date} createdAt - Timestamp when the activity was created
  * @property {Date} updatedAt - Timestamp when the activity was last updated
  */
@@ -32,13 +33,15 @@ export class Activity extends Model {
   declare session_id: number;
   declare activity_id: number;
   declare mongo_id: string | null;
+  declare activity_order: number;
   declare activity_name: string;
   declare activity_type: "default" | "manual" | "limesurvey" | "gameplay" | "lti_tool";
-  declare presignedUrl: string | null;
-  declare generated_at: Date | null;
-  declare expire_on_seconds: number | null;
-  declare trace_storage: boolean;
+  declare activity_presignedUrl: string | null;
+  declare activity_generated_at: Date | null;
+  declare activity_expire_on_seconds: number | null;
+  declare activity_trace_storage: boolean;
   declare activity_description: string;
+  declare activity_can_be_restarted: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -81,6 +84,10 @@ export function ActivityFactory(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    activity_order: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     activity_name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -92,24 +99,28 @@ export function ActivityFactory(
         isIn: [["default", "manual", "limesurvey", "gameplay", "lti_tool"]],
       },
     },
-    presignedUrl: {
+    activity_presignedUrl: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    generated_at: {
+    activity_generated_at: {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    expire_on_seconds: {
+    activity_expire_on_seconds: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    trace_storage: {
+    activity_trace_storage: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
     activity_description: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+    activity_can_be_restarted: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
     },
     createdAt:{

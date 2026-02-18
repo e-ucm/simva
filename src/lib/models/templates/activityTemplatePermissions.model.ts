@@ -16,7 +16,7 @@ import { Sequelize, Model } from "sequelize";
  * 
  * @property {number} activity_template_id - Foreign key to the activity template (composite primary key)
  * @property {number} user_id - Foreign key to the user (composite primary key)
- * @property {"read"|"WRITE"} permission - Permission level (read for view access, WRITE for edit access)
+ * @property {"READ"|"WRITE"} permission - Permission level (READ for view access, WRITE for edit access)
  */
 export class ActivityTemplatePermissions extends Model {
   declare activity_template_id: number;
@@ -39,7 +39,7 @@ export class ActivityTemplatePermissions extends Model {
  * await ActivityTemplatePermissions.create({
  *   activity_template_id: 1,
  *   user_id: 123,
- *   permission: 'read'
+ *   permission: 'READ'
  * });
  * ```
  */
@@ -63,7 +63,7 @@ export function ActivityTemplatePermissionsFactory(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isIn: [["read", "WRITE"]],
+        isIn: [["READ", "WRITE"]],
       },
     },
   }, {

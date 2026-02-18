@@ -19,7 +19,7 @@ import { Sequelize, Model, Op } from "sequelize";
  * @property {string} simlet_name - Display name of the SIMLET
  * @property {Date} createdAt - Timestamp when the SIMLET was created
  * @property {Date} updatedAt - Timestamp when the SIMLET was last updated
- * @property {number|null} sandbox_session_id - Optional reference to sandbox session for testing
+ * @property {number|null} simlet_sandbox_session_id - Optional reference to sandbox session for testing
  * @property {string} simlet_description - Detailed description of the SIMLET
  * @property {string|null} simlet_objective - Learning objective of the SIMLET
  * @property {number} allocator_id - Foreign key to the allocator for user assignment
@@ -32,7 +32,7 @@ export class Simlet extends Model {
   declare simlet_name: string;
   declare createdAt: Date;
   declare updatedAt: Date;
-  declare sandbox_session_id: number | null;
+  declare simlet_sandbox_session_id: number | null;
   declare simlet_description: string;
   declare simlet_objective: string | null;
   declare allocator_id: number;
@@ -85,7 +85,7 @@ export function SimletFactory(
       type: DataTypes.DATE,
       allowNull: false
     },
-    sandbox_session_id: {
+    simlet_sandbox_session_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },

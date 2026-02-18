@@ -3,8 +3,8 @@ import { Sequelize, Model } from "sequelize";
 export class LimesurveyActivity extends Model {
   declare activity_id: number;
   declare survey_id: number;
-  declare language: string;
-  declare lrsset: number;
+  declare suvey_language: string;
+  declare survey_lrsset: number | null;
 }
 
 export function LimesurveyActivityFactory(
@@ -20,13 +20,13 @@ export function LimesurveyActivityFactory(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    language: {
+    suvey_language: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    lrsset: {
+    survey_lrsset: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     }
   },
   {

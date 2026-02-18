@@ -3,9 +3,9 @@ import { Sequelize, Model } from "sequelize";
 export class ActivityCompletion extends Model {
   declare activity_id: number;
   declare participant_id: number;
-  declare initialized: boolean;
-  declare completed: boolean;
-  declare progress: number | null;
+  declare activity_initialized: boolean;
+  declare activity_completed: boolean;
+  declare activity_progress: number | null;
 }
 
 export function ActivityCompletionFactory(
@@ -23,15 +23,15 @@ export function ActivityCompletionFactory(
       primaryKey: true,
       allowNull: false,
     },
-    initialized: {
+    activity_initialized: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
-    completed: {
+    activity_completed: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
-    progress: {
+    activity_progress: {
       type: DataTypes.DECIMAL,
       allowNull: true,
     },
