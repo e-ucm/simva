@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { ActivityToClass } from "@/lib/mappers/activities/ActivityToClass";
 import { NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
@@ -26,6 +25,7 @@ export class Activity {
 			);
 		}
 		logger.debug({activities} , "Activities data from view");
+		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
 		return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity.activity_id, user_id, allocated, activity)));
     }
 	allocated: boolean;
@@ -165,6 +165,7 @@ export class Activity {
 			logger.warn(`Multiple activities found with ID ${activity_id} for user ID ${user_id}. Using the first one.`);
 		}
 		activityData = results[0];
+		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
 		return await ActivityToClass(activity_id, user_id, allocated, activityData);
 	}
 	
