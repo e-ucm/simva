@@ -25,7 +25,7 @@ export class Activity {
 	/**
 	 * Human-readable name for the activity
 	 */
-	name: string;
+	activity_name: string;
 	
 	/**
 	 * Type of activity (e.g., 'limesurvey', 'gameplay', 'manual')
@@ -45,7 +45,7 @@ export class Activity {
 	/**
 	 * Pre-signed URL for accessing activity resources (optional)
 	 */
-	presignedURL?: string;
+	presignedUrl?: string;
 	
 	/**
 	 * Timestamp when presigned URL was generated (optional)
@@ -55,7 +55,7 @@ export class Activity {
 	/**
 	 * Expiration time for presigned URL in seconds (optional)
 	 */
-	expires_on_seconds?: number;
+	expire_on_seconds?: number;
 	
 	/**
 	 * Whether trace data storage is enabled for this activity
@@ -65,7 +65,7 @@ export class Activity {
 	/**
 	 * Optional description of the activity
 	 */
-	description?: string;
+	activity_description?: string;
 
 	/**
 	 * Creates a new Activity instance
@@ -77,15 +77,15 @@ export class Activity {
 	constructor(data: any) {
 		this.session_id = data.session_id;
 		this.activity_id = data.activity_id;
-		this.name = data.name;
+		this.activity_name = data.activity_name;
 		this.activity_type = data.activity_type;
 		this.createdAt = data.createdAt;
 		this.updatedAt = data.updatedAt;
-		this.presignedURL = data.presignedURL|| "";
+		this.presignedUrl = data.presignedUrl ||"";
 		this.generated_at = data.generated_at|| "";
-		this.expires_on_seconds = data.expires_on_seconds|| -1;
+		this.expire_on_seconds = data.expire_on_seconds  || -1;
 		this.trace_storage = data.trace_storage || false; // Default to false if not provided
-		this.description = data.description || ""; // Default to empty string if not provided
+		this.activity_description = data.activity_description || ""; // Default to empty string if not provided
 	}
 
 	static async getFromDbData(activity_id:number, current_user_id: number) : Promise<Activity> {

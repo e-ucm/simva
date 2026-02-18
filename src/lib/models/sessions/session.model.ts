@@ -18,12 +18,12 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {number} simlet_id - Foreign key to the parent SIMLET
  * @property {number} session_id - Primary key identifier for the session
  * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
- * @property {string} name - Display name of the session
- * @property {string} description - Detailed description of the session
+ * @property {string} session_name - Display name of the session
+ * @property {string} session_description - Detailed description of the session
  * @property {Date} createdAt - Timestamp when the session was created
  * @property {Date} updatedAt - Timestamp when the session was last updated
  * @property {string|null} experimental_method - Research methodology for the session
- * @property {boolean|null} active - Whether the session is currently active
+ * @property {boolean|null} session_active - Whether the session is currently active
  * @property {Date|null} session_start_date - When the session should start
  * @property {Date|null} session_end_date - When the session should end
  * @property {number} session_supervisor_id - Foreign key to the session supervisor (teacher)
@@ -32,12 +32,12 @@ export class Session extends Model {
   declare simlet_id: number;
   declare session_id: number;
   declare mongo_id: string | null;
-  declare name: string;
-  declare description: string;
+  declare session_name: string;
+  declare session_description: string;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare experimental_method: string | null;
-  declare active: boolean | null;
+  declare session_active: boolean | null;
   declare session_start_date: Date | null;
   declare session_end_date: Date | null;
   declare session_supervisor_id: number;
@@ -57,8 +57,8 @@ export class Session extends Model {
  * const Session = SessionFactory(sequelize, DataTypes);
  * const session = await Session.create({
  *   simlet_id: 1,
- *   name: 'Week 1 Activities',
- *   description: 'Introduction to concepts',
+ *   session_name: 'Week 1 Activities',
+ *   session_description: 'Introduction to concepts',
  *   session_supervisor_id: 1
  * });
  * ```
@@ -81,11 +81,11 @@ export function SessionFactory(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    name: {
+    session_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    description: {
+    session_description: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -101,7 +101,7 @@ export function SessionFactory(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    active: {
+    session_active: {
       type: DataTypes.BOOLEAN,
       allowNull: true,
     },

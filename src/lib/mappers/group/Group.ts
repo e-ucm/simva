@@ -29,7 +29,7 @@ export class Group {
     /**
      * Human-readable name for the group
      */
-    name: string;
+    group_name: string;
     
     /**
      * Timestamp when the group was created
@@ -63,7 +63,7 @@ export class Group {
         const processedResults = db.Functions.parseStringArraysToTypedArrays(data, Group.numericKeys, 'number');
         this.group_id = processedResults.group_id; // Ensure group_id is included in the data
         this.use_new_generation = Boolean(processedResults.use_new_generation); // Ensure use_new_generation is included in the data
-        this.name = processedResults.name || ""; // Ensure name is included in the data
+        this.group_name = processedResults.group_name || processedResults.name || "";
         this.created_at = processedResults.created_at ? new Date(processedResults.created_at) : new Date();
         this.participants = processedResults.participants || [];
         this.group_owner_id = processedResults.group_owner_id || "";
@@ -97,11 +97,11 @@ export class Group {
     }
     
     static async createInDb(body: Partial<Group>, useNewGeneration : boolean, current_user_id: number): Promise<Group> {
-        let newName = body.name && body.name.trim() !== "";
-        if(!newName) {
+        const newGroupName = typeof body.group_name === "string" ? body.group_name.trim() : null;
+        if(!newGroupName) {
             throw new ValidationError("Group name is required");
         }
-        let count = await db.Tables.Group.count({where: {name: newName }});
+        let count = await db.Tables.Group.count({where: {group_name: newGroupName }});
         if(count > 0) {
             throw new ValidationError("Group name must be unique");
         }
@@ -157,7 +157,7 @@ export class Group {
     }
 
     canEdit() : boolean {
-         if(this.current_user_permission.toLowerCase() === "owner" || this.current_user_permission.toLowerCase() === "write") {
+         if(this.current_user_permission.toLowerCase() === "full" || this.current_user_permission.toLowerCase() === "write") {
              return true;
          }
          throw new AuthentificationError("User does not have permission to edit this simlet");

@@ -32,13 +32,13 @@ export class Activity extends Model {
   declare session_id: number;
   declare activity_id: number;
   declare mongo_id: string | null;
-  declare name: string;
+  declare activity_name: string;
   declare activity_type: "default" | "manual" | "limesurvey" | "gameplay" | "lti_tool";
   declare presignedUrl: string | null;
   declare generated_at: Date | null;
   declare expire_on_seconds: number | null;
   declare trace_storage: boolean;
-  declare description: string;
+  declare activity_description: string;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -57,9 +57,9 @@ export class Activity extends Model {
  * const Activity = ActivityFactory(sequelize, DataTypes);
  * const activity = await Activity.create({
  *   session_id: 1,
- *   name: 'Quiz 1',
+ *   activity_name: 'Quiz 1',
  *   activity_type: 'manual',
- *   description: 'Introduction quiz'
+ *   activity_description: 'Introduction quiz'
  * });
  * ```
  */
@@ -81,7 +81,7 @@ export function ActivityFactory(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    name: {
+    activity_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -108,7 +108,7 @@ export function ActivityFactory(
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
-    description: {
+    activity_description: {
       type: DataTypes.STRING,
       allowNull: false,
     },

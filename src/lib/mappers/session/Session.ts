@@ -23,27 +23,30 @@ export class Session {
      */
     session_id: number;
     
+    /**
+     * ID of the current session user
+     */
     current_user_id: number;
 
     /**
-     * Username of the session owner/creator
+     * Username of the current session user
      */
     current_user_username: string;
     
     /**
-     * Permission level for the current user
+     * Permission level for the current session user
      */
     current_user_permission: string;
     
     /**
      * Human-readable name for the session
      */
-    name: string;
+    session_name: string;
     
     /**
      * Description of the session purpose and content
      */
-    description: string;
+    session_description: string;
     
     /**
      * Timestamp when the session was created
@@ -58,12 +61,12 @@ export class Session {
     /**
      * Experimental method or condition for this session
      */
-    experimental_method: string;
+    session_experimental_method: string;
     
     /**
      * Whether the session is currently active
      */
-    active: boolean;
+    session_active: boolean;
     
     /**
      * Start date for session availability
@@ -113,12 +116,12 @@ export class Session {
         this.current_user_id = data.current_user_id;
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission || "";
-        this.name = data.name || "";
-        this.description = data.description || "";
+        this.session_name = data.session_name || "";
+        this.session_description = data.session_description || "";
         this.createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : new Date();
-        this.experimental_method = data.experimental_method || "";
-        this.active = data.active || false;
+        this.session_experimental_method = data.session_experimental_method || "";
+        this.session_active = data.session_active || false;
         this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : new Date();
         this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : new Date();
         
@@ -159,16 +162,16 @@ export class Session {
      * ```typescript
      * const newSession = await Session.createSession({
      *   simlet_id: 1,
-     *   name: 'Test Session',
-     *   description: 'A test learning session',
+     *   session_name: 'Test Session',
+     *   session_description: 'A test learning session',
      *   session_supervisor_id: 123
      * });
      * ```
      */
     static async createFromDbData(sessionData: Partial<InstanceType<typeof db.Tables.Sessions>>): Promise<Session> {
-        let sessioncount = await db.Tables.Sessions.count({where: {name: sessionData.name}});
+        let sessioncount = await db.Tables.Sessions.count({where: {session_name: sessionData.session_name}});
         if(sessioncount > 0){
-            throw new ValidationError(`Session name ${sessionData.name} is already taken. Please choose a different name.`);
+            throw new ValidationError(`Session name ${sessionData.session_name} is already taken. Please choose a different name.`);
         }
         let session = await db.Tables.Sessions.create(sessionData);
         return Session.getFromDbData(session.simlet_id, session.session_id, session.session_supervisor_id);
@@ -184,10 +187,10 @@ export class Session {
     }
 
     canEdit() : boolean {
-        if(this.current_user_permission === "owner" || this.current_user_permission === "write") {
+        if(this.current_user_permission === "full" || this.current_user_permission === "write") {
             return true;
         }
-        throw new AuthentificationError("User does not have permission to edit this simlet");
+        throw new AuthentificationError("User does not have permission to edit this session");
     }
 
 }

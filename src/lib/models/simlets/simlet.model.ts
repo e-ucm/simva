@@ -16,12 +16,12 @@ import { Sequelize, Model, Op } from "sequelize";
  * 
  * @property {number} simlet_id - Primary key identifier for the SIMLET
  * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
- * @property {string} name - Display name of the SIMLET
+ * @property {string} simlet_name - Display name of the SIMLET
  * @property {Date} createdAt - Timestamp when the SIMLET was created
  * @property {Date} updatedAt - Timestamp when the SIMLET was last updated
  * @property {number|null} sandbox_session_id - Optional reference to sandbox session for testing
- * @property {string} description - Detailed description of the SIMLET
- * @property {string|null} objective - Learning objective of the SIMLET
+ * @property {string} simlet_description - Detailed description of the SIMLET
+ * @property {string|null} simlet_objective - Learning objective of the SIMLET
  * @property {number} allocator_id - Foreign key to the allocator for user assignment
  * @property {number} simlet_coordinator_id - Foreign key to the coordinator (teacher) of this SIMLET
  */
@@ -29,12 +29,12 @@ export class Simlet extends Model {
   
   declare simlet_id: number;
   declare mongo_id: string | null;
-  declare name: string;
+  declare simlet_name: string;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare sandbox_session_id: number | null;
-  declare description: string;
-  declare objective: string | null;
+  declare simlet_description: string;
+  declare simlet_objective: string | null;
   declare allocator_id: number;
   declare simlet_coordinator_id: number;
 }
@@ -73,7 +73,7 @@ export function SimletFactory(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    name: {
+    simlet_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -89,11 +89,11 @@ export function SimletFactory(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    description: {
+    simlet_description: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    objective: {
+    simlet_objective: {
       type: DataTypes.STRING,
       allowNull: true,
     },

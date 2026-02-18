@@ -26,12 +26,12 @@ export class Simlet {
     /**
      * Human-readable name of the study
      */
-    name: string;
+simlet_name: string;
     
     /**
      * Description of the study purpose and methodology
      */
-    description: string;
+simlet_description: string;
     
     current_user_id: number;
 
@@ -81,8 +81,8 @@ export class Simlet {
      */
     constructor(data: any) {
         this.simlet_id = data.simlet_id; // Ensure simlet_id is included in the data
-        this.name = data.name || ""; // Ensure name is included in the data
-        this.description = data.description || ""; // Ensure description is included in the data
+        this.simlet_name = data.simlet_name || ""; // Ensure simlet_name is included in the data
+        this.simlet_description = data.simlet_description || ""; // Ensure simlet_description is included in the data
         this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission;
@@ -118,14 +118,14 @@ export class Simlet {
 
     static async createSimlet(simletData: any): Promise<Simlet> {
         logger.debug({simletData} , "Creating simlet with data");
-        if(await db.Tables.Simlets.count({where : {name : simletData.name}}) > 0){
-            throw new ValidationError(`Simlet name ${simletData.name} is already taken. Please choose a different name.`);
+        if(await db.Tables.Simlets.count({where : {simlet_name : simletData.simlet_name}}) > 0){
+            throw new ValidationError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
         }
         const allocator = await db.Tables.Allocators.create({ allocator_type: simletData.allocator_type || "default" });
         logger.debug({allocator} , "Allocator created");
         simletData.allocator_id = allocator.allocator_id;
-        if(simletData.description === undefined){
-            simletData.description = "";
+        if(simletData.simlet_description === undefined){
+            simletData.simlet_description = "";
         }
         const createdSimlet = await db.Tables.Simlets.create(simletData);
         return new Simlet(createdSimlet);
@@ -158,11 +158,11 @@ export class Simlet {
     async patch(data: any) : Promise<Simlet> {
         this.canEdit();
         let toUpdate: any = {};
-        if(typeof data.name == "string") {
-            toUpdate.name = data.name;
+        if(typeof data.simlet_name == "string") {
+            toUpdate.simlet_name = data.simlet_name;
         }
-        if(typeof data.description == "string") {
-            toUpdate.description = data.description;
+        if(typeof data.simlet_description == "string") {
+            toUpdate.simlet_description = data.simlet_description;
         }
         let model = await db.Tables.Simlets.findOne({ where: { simlet_id: this.simlet_id } });
         if(!model) {
@@ -174,7 +174,7 @@ export class Simlet {
     }
 
     canEdit() : boolean {
-        if(this.current_user_permission === "owner" || this.current_user_permission === "write") {
+        if(this.current_user_permission === "full" || this.current_user_permission === "write") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to edit this simlet");

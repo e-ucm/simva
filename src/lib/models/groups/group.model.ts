@@ -24,7 +24,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  */
 export class Group extends Model {
   declare group_id: number;
-  declare name: string;
+  declare group_name: string;
   declare use_new_generation: boolean;
   declare group_owner_id: number | null;
   declare createdAt: Date;
@@ -60,7 +60,7 @@ export function GroupFactory(
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
+    group_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
