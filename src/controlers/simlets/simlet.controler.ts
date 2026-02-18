@@ -457,3 +457,94 @@ export async function getSimletSchedule(
     next(err);
   }
 }
+
+export async function getSimletPermissions (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id} , "Getting permissions for simlet ID and user ID");
+    const permissions = await simletService.getSimletPermissions(simletId, currentUser!.user_id as number);
+    logger.debug({permissions} , "Permissions retrieved for simlet ID and user ID");
+    res.json(permissions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createSimletPermissions (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    let body = req.body
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id, body} , "Creating permissions for simlet ID and user ID");
+    const permissions = await simletService.createSimletPermissions(simletId, currentUser!.user_id as number, body);
+    logger.debug({permissions} , "Permissions created for simlet ID and user ID");
+    res.json(permissions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSimletPermissionsForUser (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const userId = parseInt(req.params.user_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id} , "Getting permissions for simlet ID and user ID");
+    const permissions = await simletService.getSimletPermissionsForUser(simletId, userId, currentUser!.user_id as number);
+    logger.debug({permissions} , "Permissions retrieved for simlet ID and user ID");
+    res.json(permissions);
+  }
+    catch (err) {
+    next(err);
+  }
+}
+
+export async function patchSimletPermissionsForUser (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const userId = parseInt(req.params.user_id as string);
+    let body = req.body
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id, body} , "Patching permissions for simlet ID and user ID");
+    const permissions = await simletService.patchSimletPermissionsForUser(simletId, userId, currentUser!.user_id as number, body);
+    logger.debug({permissions} , "Permissions patched for simlet ID and user ID");
+    res.json(permissions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteSimletPermissionsForUser (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const userId = parseInt(req.params.user_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id} , "Deleting permissions for simlet ID and user ID");
+    await simletService.deleteSimletPermissionsForUser(simletId, userId, currentUser!.user_id as number);
+    logger.debug({simletId, userId: currentUser?.user_id} , "Permissions deleted for simlet ID and user ID");
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

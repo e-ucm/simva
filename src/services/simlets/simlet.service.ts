@@ -310,3 +310,28 @@ export async function deleteSimletSession(simletId: number, sessionId: number, c
   return await session.delete();
 }
 
+export async function getSimletPermissions(simletId: number, current_user_id: number) {
+  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.getPermissions();
+}
+
+export async function createSimletPermissions(simletId: number, current_user_id: number, body: any) {
+  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.createPermissions(body);
+}
+
+export async function getSimletPermissionsForUser(simletId: number, userId: number, current_user_id: number) {
+  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.getPermissionsForUser(userId);
+}
+
+export async function patchSimletPermissionsForUser(simletId: number, userId: number, current_user_id: number, body: any) {
+  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.patchPermissionsForUser(userId, body);
+}
+
+export async function deleteSimletPermissionsForUser(simletId: number, userId: number, current_user_id: number) {
+  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.deletePermissionsForUser(userId);
+}
+

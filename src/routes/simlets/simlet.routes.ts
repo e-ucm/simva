@@ -28,7 +28,12 @@ import {
   createSimletSession,
   patchSimletSession,
   deleteSimletSession,
-  getSimletSchedule
+  getSimletSchedule,
+  getSimletPermissions,
+  createSimletPermissions,
+  getSimletPermissionsForUser,
+  patchSimletPermissionsForUser,
+  deleteSimletPermissionsForUser
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -91,6 +96,14 @@ router.delete("/:simlet_id/sessions/:session_id", deleteSimletSession);
 // Activity list endpoints
 router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
 router.post("/:simlet_id/sessions/:session_id/activities", createSessionActivity);
+
+//permissions endpoints
+router.get("/:simlet_id/permissions", getSimletPermissions);
+router.post("/:simlet_id/permissions", createSimletPermissions);
+router.get("/:simlet_id/permissions/:user_id", getSimletPermissionsForUser);
+router.patch("/:simlet_id/permissions/:user_id", patchSimletPermissionsForUser);
+router.delete("/:simlet_id/permissions/:user_id", deleteSimletPermissionsForUser);
+
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/groups", getSimletGroups);

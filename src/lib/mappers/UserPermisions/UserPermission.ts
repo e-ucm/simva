@@ -9,7 +9,7 @@ import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPer
  * @description Simple mapper for associating usernames with permission strings.
  * Used for authorization and access control throughout the application.
  */
-export class UserPermission { 
+export class UserPermission {
     /**
      * Object type identifier
      */
@@ -23,7 +23,7 @@ export class UserPermission {
     /**
      * Array of SingleUserPermission instances representing user permissions
      */
-    permissions: SingleUserPermission[]; 
+    permissions: SingleUserPermission[];
     
     /**
      * Creates a new UserPermission instance
@@ -36,7 +36,7 @@ export class UserPermission {
     constructor(object_type: string, object_id: number, data: any) { 
         this.object_type = object_type;
         this.object_id = object_id;
-        this.permissions = data.map((item: any) => new SingleUserPermission(item)); 
+        this.permissions = data.map((item: any) => new SingleUserPermission(object_type, object_id, item)); 
     }
 
     /**
@@ -151,7 +151,7 @@ export class UserPermission {
             default:
                 throw new Error(`Unsupported object type: ${this.object_type}`);
         }
-        this.permissions.push(new SingleUserPermission({ user_id, permission }));
+        this.permissions.push(new SingleUserPermission(this.object_type, this.object_id, { user_id, permission }));
         return this.permissions;
     }
 
@@ -192,4 +192,20 @@ export class UserPermission {
         this.permissions = this.permissions.filter(p => !(p.user_id === user_id && p.permission === permission));
         return this.permissions;
     }
+
+    async createPermissions(body: any) {
+        switch (this.object_type) {
+            case 'simlet':
+                await db.Tables.SimletPermissions.create({ simlet_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                break;
+            case 'session':
+                await db.Tables.SessionPermissions.create({ session_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                break;
+            case 'group':
+                await db.Tables.GroupPermissions.create({ group_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                break;
+            default:
+                throw new Error(`Unsupported object type: ${this.object_type}`);
+        }
+    } 
 }

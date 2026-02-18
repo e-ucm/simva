@@ -286,4 +286,30 @@ export class Simlet {
     async getSchedule() {
       throw new Error("Method not implemented.");
     }
+
+    async getPermissions() {
+      return await UserPermission.getFromDbData('simlet', this.simlet_id);
+    }
+    
+    async createPermissions(body: any) {
+        this.canEdit();
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id);
+        return await permissions.createPermissions(body);
+    }
+    
+    async getPermissionsForUser(userId: number) {
+        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId);
+    }
+    
+    async patchPermissionsForUser(userId: number, body: any) {
+        this.canEdit();
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId);
+        return await permission.update(body.permission);
+    }
+
+    async deletePermissionsForUser(userId: number) {
+        this.canEdit();
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId);
+        return await permission.delete();
+    }
 }
