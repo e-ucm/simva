@@ -14,9 +14,6 @@ import { UserPermission } from "../UserPermisions/UserPermission";
  * Supports both manual participant management and automatic code generation.
  */
 export class Group {
-  delete() {
-    throw new Error("Method not implemented.");
-  }
     current_user_id: number;
     current_user_username: string;
     current_user_permission: string;
@@ -175,6 +172,11 @@ export class Group {
              return true;
          }
          throw new AuthentificationError("User does not have permission to edit this simlet");
+    }
+
+    async delete() {
+        this.canEdit();
+        await db.Tables.Group.destroy({where: {group_id: this.group_id}});
     }
 
      async getPermissions() {
