@@ -26,12 +26,12 @@ export class Simlet {
     /**
      * Human-readable name of the study
      */
-simlet_name: string;
+    simlet_name: string;
     
     /**
      * Description of the study purpose and methodology
      */
-simlet_description: string;
+    simlet_description: string;
     
     current_user_id: number;
 
@@ -250,29 +250,11 @@ simlet_description: string;
     }
 
     async getGroups(): Promise<SimletGroup[]> {
-        const groups = await db.Functions.runViewQuery(
-            db.Views.Group.bySimletId,
-            { simlet_id: this.simlet_id }
-        );
-        logger.debug({groups} , "Groups data from view");
-        return groups.map((group: any) => new SimletGroup(group));
+        return await SimletGroup.getAllFromDbData(this.simlet_id);
     }
 
     async getSessions(searchString?: string, limit?: number, offset?: number): Promise<Session[]> {
-        let sessions;
-        if(limit !== undefined && offset !== undefined) {
-            sessions = await db.Functions.runViewQuery( 
-                db.Views.Session.bySimletIdAndUserIdWithPagination, 
-                { simlet_id: this.simlet_id, current_user_id: this.current_user_id, search: searchString, limit, offset } 
-            ); 
-        } else {
-            sessions = await db.Functions.runViewQuery(
-                db.Views.Session.bySimletIdAndUserId,
-                { simlet_id: this.simlet_id, current_user_id: this.current_user_id, search: searchString }
-            );
-        }
-        logger.debug({sessions} , "Sessions data from view");
-        return sessions.map((session: any) => new Session(session));
+        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString);
     }
 
     async getSession(sessionId: number): Promise<Session> {

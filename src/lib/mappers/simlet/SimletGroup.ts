@@ -60,6 +60,15 @@ export class SimletGroup {
         return new SimletGroup(simletGroupData);
     }
 
+    static async getAllFromDbData(simlet_id: number): Promise<SimletGroup[]> {
+        const groups = await db.Functions.runViewQuery(
+            db.Views.Group.bySimletId,
+            { simlet_id }
+        );
+        logger.debug({groups} , "Groups data from view");
+        return groups.map((group: any) => new SimletGroup(group));
+    }
+
     static async getFromDbData(simlet_id: number, group_id: number) : Promise<SimletGroup> {
         let simletGroupData = await db.Tables.SimletGroups.findOne({ where: { simlet_id, group_id } });
         if (!simletGroupData) {

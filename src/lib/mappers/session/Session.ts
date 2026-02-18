@@ -133,8 +133,21 @@ export class Session {
         this.direct_permissions = data.direct_permissions || [];
     }
 
-    static async getAllFromDbData(limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Session[]> {
-        throw new Error("Method not implemented.");
+    static async getAllFromDbData(simlet_id: number, current_user_id: number, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Session[]> {
+        let sessions;
+        if(limit !== undefined && offset !== undefined) {
+            sessions = await db.Functions.runViewQuery( 
+                db.Views.Session.bySimletIdAndUserIdWithPagination, 
+                { simlet_id, current_user_id, search: searchString, limit, offset } 
+            ); 
+        } else {
+            sessions = await db.Functions.runViewQuery(
+                db.Views.Session.bySimletIdAndUserId,
+                { simlet_id, current_user_id, search: searchString }
+            );
+        }
+        logger.debug({sessions} , "Sessions data from view");
+        return sessions.map((session: any) => new Session(session));
     }
 
     static async getFromDbData(simlet_id: number, session_id: number, current_user_id: number) : Promise<Session> {
