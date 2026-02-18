@@ -316,7 +316,7 @@ INSERT INTO SIMLETs_groups (simlet_id, group_id)
 VALUES (?, ?)
 """
 simlet_shlinks_sql = """
-INSERT INTO SIMLETs_shlinks (simlet_id, short_url, short_code, createdAt, title, valid_date, expiration_date, domain )
+INSERT INTO SIMLETs_shlinks (simlet_id, short_url, short_code, createdAt, short_title, short_valid_date, short_expiration_date, short_domain )
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """
 
