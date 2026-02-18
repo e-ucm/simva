@@ -9,6 +9,19 @@ def convert_iso_to_mysql_datetime_format(date):
         return
     return datetime.fromisoformat(date.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
+def get_mongo_oid(value):
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        if "$oid" in value:
+            return value["$oid"]
+        nested_id = value.get("_id")
+        if isinstance(nested_id, str):
+            return nested_id
+        if isinstance(nested_id, dict):
+            return nested_id.get("$oid")
+    return None
+
 # ---- Environment variables from docker-compose ----
 SQL_SCRIPT_FOLDER = os.getenv("SQL_SCRIPT_FOLDER")
 SQL_DB_FOLDER = os.getenv("SQL_DB_FOLDER")
@@ -31,6 +44,32 @@ with open(f"{SQL_SCRIPT_FOLDER}/02-views.sql", "r") as f:
     cursor.executescript(views_sql)
     sqlite_con.commit()
 
+if not MONGO_BACKUP_FOLDER or not MONGO_BACKUP_FOLDER.strip():
+    print("MONGO_BACKUP_FOLDER is empty. Skipping migration.")
+    raise SystemExit(0)
+
+required_backup_files = [
+    "users.json",
+    "groups.json",
+    "allocators.json",
+    "studies.json",
+    "tests.json",
+    "activities.json"
+]
+
+missing_backup_files = [
+    file_name
+    for file_name in required_backup_files
+    if not os.path.isfile(os.path.join(MONGO_BACKUP_FOLDER, file_name))
+]
+
+if missing_backup_files:
+    print(
+        "Missing required Mongo backup files in "
+        f"{MONGO_BACKUP_FOLDER}: {', '.join(missing_backup_files)}. "
+        "Skipping migration."
+    )
+    raise SystemExit(0)
 
 print("Starting migration...")
 print("------------")
@@ -49,7 +88,6 @@ with open(MONGO_BACKUP_FOLDER + "/users.json", "r") as f:
         if line.strip():  # skip empty lines
             obj = json.loads(line)
             users.append(obj)
-
 
 # Adding User into Users table
 user_sql = """
@@ -101,7 +139,7 @@ with open(MONGO_BACKUP_FOLDER + "/groups.json", "r") as f:
 
 # Adding Group into Groups table
 groups_sql = """
-INSERT INTO ParticipantGroups (mongo_id, name, createdAt, use_new_generation, group_owner_id)
+INSERT INTO ParticipantGroups (mongo_id, group_name, createdAt, use_new_generation, group_owner_id)
 VALUES (?, ?, ?, ?, ?)
 """
 
@@ -237,7 +275,7 @@ with open(MONGO_BACKUP_FOLDER + "/studies.json", "r") as f:
 
 #adding simlets into simlets table
 simlets_sql = """
-INSERT INTO SIMLETs (mongo_id, name, createdAt, description, allocator_id, simlet_coordinator_id)
+INSERT INTO SIMLETs (mongo_id, simlet_name, createdAt, simlet_description, allocator_id, simlet_coordinator_id)
 VALUES (?, ?, ?, ?, ?, ?)
 """
 
@@ -358,7 +396,7 @@ with open(MONGO_BACKUP_FOLDER + "/tests.json", "r") as f:
 
 # Adding Sessions into sesions table
 sessions_sql = """
-INSERT INTO Sessions (simlet_id, mongo_id, name, description, active, session_supervisor_id)
+INSERT INTO Sessions (simlet_id, mongo_id, session_name, session_description, session_active, session_supervisor_id)
 VALUES (?, ?, ?, ?, ?, ?)
 """
 
@@ -409,10 +447,17 @@ with open(MONGO_BACKUP_FOLDER + "/activities.json", "r") as f:
             obj = json.loads(line)
             activities.append(obj)
 
+activity_order_by_mongo_id = {}
+for session in sessions:
+    for index, activity_ref in enumerate(session.get("activities", [])):
+        activity_mongo_id = get_mongo_oid(activity_ref)
+        if activity_mongo_id is not None:
+            activity_order_by_mongo_id[activity_mongo_id] = index+1
+
 # Adding Activities into Activities table
 activities_sql = """
-INSERT INTO Activities (session_id, mongo_id, name, activity_type, presignedUrl, generated_at, expire_on_seconds, trace_storage, description)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, presignedUrl, generated_at, expire_on_seconds, trace_storage, activity_description)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 filtered_activities = [
@@ -424,7 +469,8 @@ filtered_activities = [
 activities_values = [
     (
         mongo_session_to_mysql_id[a["test"]],
-        a["_id"]["$oid"], 
+        activity_order_by_mongo_id.get(a["_id"]["$oid"], 0),
+        a["_id"]["$oid"],
         a["name"],
         a["type"],
         a.get("extra_data", {}).get("minio_trace", {}).get("presignedUrl"), 
@@ -583,9 +629,9 @@ for a in filtered_allocators:
     # Convert mongo group ids to mysql ids
     # Create placeholders for SQL IN clause
     query = f"""
-            SELECT group_id, user_id
-            FROM v_complete_groups_from_allocator_and_simlets
-            WHERE allocator_id = ?
+        SELECT group_id, user_id
+        FROM vv_complete_groups_from_allocator_and_simlets
+        WHERE allocator_id = ?
     """
     print(query)
     print(allocator_id)

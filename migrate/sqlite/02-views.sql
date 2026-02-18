@@ -3,7 +3,7 @@ CREATE VIEW vv_simlet_direct_permissions AS
 SELECT
     s.simlet_coordinator_id as user_id,
     s.simlet_id,
-	'OWNER' AS permission
+	'FULL' AS permission
 FROM SIMLETs s
 UNION ALL
 SELECT
@@ -17,7 +17,7 @@ CREATE VIEW vv_session_direct_permissions AS
 SELECT
     s.session_supervisor_id as user_id,
     s.session_id,
-	'OWNER' AS permission
+	'FULL' AS permission
 FROM Sessions s
 UNION ALL
 SELECT
@@ -115,11 +115,11 @@ SELECT
     up.permission as current_user_permission,
     up.permission_type as current_user_permission_type,
     sim.simlet_id,
-    sim.name,
+    sim.simlet_name,
     sim.createdAt,
     sim.updatedAt,
-    sim.description,
-    sim.objective,
+    sim.simlet_description,
+    sim.simlet_objective,
     shlink.short_url,
     sim.allocator_id,
     JSON_GROUP_ARRAY(DISTINCT g.group_id) as groups,
@@ -143,12 +143,12 @@ SELECT
     up.permission_type as current_user_permission_type,
     ses.simlet_id,
     ses.session_id,
-    ses.name,
-    ses.description,
+    ses.session_name,
+    ses.session_description,
     ses.createdAt,
     ses.updatedAt,
-    ses.experimental_method,
-    ses.active,
+    ses.session_experimental_method,
+    ses.session_active,
     ses.session_start_date,
     ses.session_end_date,
     JSON_GROUP_ARRAY(DISTINCT act.activity_id) as activities,
@@ -170,7 +170,7 @@ SELECT
     act.session_id,
     act.activity_id,
     act.mongo_id,
-    act.name,
+    act.activity_name,
     act.createdAt,
     act.updatedAt,
     act.activity_type,
@@ -178,7 +178,7 @@ SELECT
     act.generated_at,
     act.expire_on_seconds,
     act.trace_storage,
-    act.description
+    act.activity_description
 FROM Activities act
 LEFT JOIN vv_user_permissions up ON act.activity_id = up.object_id AND up.object_type = "ACTIVITY";
 
@@ -187,7 +187,7 @@ CREATE VIEW vv_group_total_permissions AS
 SELECT
     g.group_id,
     u.user_id,
-    "OWNER" AS permission,
+    "FULL" AS permission,
     u.username
 FROM ParticipantGroups g
 JOIN Users u ON u.user_id = g.group_owner_id
@@ -208,7 +208,7 @@ SELECT
     up.username as current_user_username,
     up.permission as current_user_permission,
     g.group_id,
-    g.name,
+    g.group_name,
     g.createdAt,
     g.use_new_generation,
     u.username as coordinator_owner,
@@ -241,7 +241,7 @@ SELECT
 FROM Allocators a
 JOIN SIMLETs s ON a.allocator_id = s.allocator_id
 JOIN SIMLETs_groups g ON s.simlet_id = g.simlet_id
-JOIN vv_complete_group_participants pg ON pg.group_id = g.group_id;
+JOIN v_complete_group_participants pg ON pg.group_id = g.group_id;
 
 DROP VIEW IF EXISTS v_complete_allocation_participants;
 CREATE VIEW v_complete_allocation_participants AS

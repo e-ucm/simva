@@ -1,18 +1,18 @@
 CREATE TABLE IF NOT EXISTS "SIMLETs" (
-	"simlet_id" INTEGER NOT NULL UNIQUE AUTOINCREMENT,
+	"simlet_id" INTEGER NOT NULL UNIQUE,
 	"mongo_id" VARCHAR,
-	"name" VARCHAR NOT NULL,
+	"simlet_name" VARCHAR NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"sandbox_session_id" INTEGER,
-	"description" VARCHAR NOT NULL,
-	"objective" VARCHAR,
+	"simlet_sandbox_session_id" INTEGER,
+	"simlet_description" VARCHAR NOT NULL,
+	"simlet_objective" VARCHAR,
 	"allocator_id" INTEGER NOT NULL,
 	"simlet_coordinator_id" INTEGER NOT NULL,
 	PRIMARY KEY("simlet_id"),
 	FOREIGN KEY ("allocator_id") REFERENCES "Allocators"("allocator_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY ("sandbox_session_id") REFERENCES "Sessions"("session_id")
+	FOREIGN KEY ("simlet_sandbox_session_id") REFERENCES "Sessions"("session_id")
 	ON UPDATE CASCADE ON DELETE SET NULL,
 	FOREIGN KEY ("simlet_coordinator_id") REFERENCES "Users"("user_id")
 	ON UPDATE CASCADE ON DELETE SET NULL
@@ -53,12 +53,12 @@ CREATE TABLE IF NOT EXISTS "Sessions" (
 	"simlet_id" INTEGER NOT NULL,
 	"session_id" INTEGER NOT NULL UNIQUE,
 	"mongo_id" VARCHAR,
-	"name" VARCHAR NOT NULL,
-	"description" VARCHAR NOT NULL,
+	"session_name" VARCHAR NOT NULL,
+	"session_description" VARCHAR NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"experimental_method" VARCHAR,
-	"active" BOOLEAN,
+	"session_experimental_method" VARCHAR,
+	"session_active" BOOLEAN,
 	"session_start_date" DATETIME,
 	"session_end_date" DATETIME,
 	"session_supervisor_id" INTEGER NOT NULL,
@@ -74,14 +74,15 @@ ON "Sessions" ("session_id");
 CREATE TABLE IF NOT EXISTS "Activities" (
 	"session_id" INTEGER NOT NULL,
 	"activity_id" INTEGER NOT NULL UNIQUE,
+	"activity_order" INTEGER NOT NULL,
 	"mongo_id" VARCHAR,
-	"name" VARCHAR NOT NULL,
+	"activity_name" VARCHAR NOT NULL,
 	"activity_type" VARCHAR NOT NULL CHECK(activity_type IN ("default", "manual", "limesurvey", "gameplay", "lti_tool")),
 	"presignedUrl" VARCHAR,
 	"generated_at" DATETIME,
 	"expire_on_seconds" INTEGER,
 	"trace_storage" BOOLEAN NOT NULL,
-	"description" VARCHAR NOT NULL,
+	"activity_description" VARCHAR NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("activity_id"),
@@ -170,7 +171,7 @@ ON "Users" ("username");
 CREATE TABLE IF NOT EXISTS "ParticipantGroups" (
 	"group_id" INTEGER NOT NULL UNIQUE,
 	"mongo_id" VARCHAR,
-	"name" VARCHAR NOT NULL,
+	"group_name" VARCHAR NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"use_new_generation" BOOLEAN NOT NULL,
@@ -301,15 +302,15 @@ CREATE INDEX IF NOT EXISTS "SIMLETs_permission_index_0"
 ON "SIMLETs_permissions" ("simlet_id", "user_id");
 CREATE TABLE IF NOT EXISTS "Activities_template" (
 	"activity_template_id" INTEGER NOT NULL UNIQUE,
-	"name" VARCHAR NOT NULL,
-	"activity_type" VARCHAR NOT NULL CHECK(activity_type IN ("default", "manual", "limesurvey", "gameplay", "lti_tool")),
-	"description" VARCHAR NOT NULL,
+	"activity_template_name" VARCHAR NOT NULL,
+	"activity_template_type" VARCHAR NOT NULL CHECK(activity_template_type IN ("default", "manual", "limesurvey", "gameplay", "lti_tool")),
+	"activity_template_description" VARCHAR NOT NULL,
 	"public" BOOLEAN NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"owner_id" INTEGER NOT NULL,
+	"activity_template_owner_id" INTEGER NOT NULL,
 	PRIMARY KEY("activity_template_id"),
-	FOREIGN KEY ("owner_id") REFERENCES "Users"("user_id")
+	FOREIGN KEY ("activity_template_owner_id") REFERENCES "Users"("user_id")
 	ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
