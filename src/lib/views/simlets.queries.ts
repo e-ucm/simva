@@ -1,6 +1,38 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
+    tagsBySimletId: {
+    description: "Get all tags of a SIMLET by its ID",
+    sql: `
+      SELECT simlet_tag_name
+      FROM v_simlet_tags
+      WHERE simlet_id = :simlet_id
+    `,
+    params: {
+      simlet_id: {
+        type: "number",
+        required: true,
+        description: "Simlet Identifier",
+        example: 1,
+      },
+    },
+  },
+  groupIdsBySimletId: {
+    description: "Get all groups of a SIMLET by its ID",
+    sql: `
+      SELECT group_id
+      FROM SIMLETs_groups
+      WHERE simlet_id = :simlet_id
+    `,
+    params: {
+      simlet_id: {
+        type: "number",
+        required: true,
+        description: "Simlet Identifier",
+        example: 1,
+      },
+    },
+  },
   byUserId: {
     description: "Get all SIMLETs for a certain User",
     sql: `
@@ -24,7 +56,6 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
-
   byUserIdWithPagination: {
     description: "Get all SIMLETs for a certain User with pagination and search",
     sql: `

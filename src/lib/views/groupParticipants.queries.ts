@@ -1,6 +1,22 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
+    IdsByGroupId: {
+        description: "Get all Group Participant IDs of a Group by its ID",
+        sql: `
+        SELECT participant_id
+        FROM ParticipantGroups_participants
+        WHERE group_id = :group_id
+        `,
+        params: {
+            group_id: {
+                type: "number",
+                required: true,
+                description: "Group Identifier",
+                example: 1,
+            },
+        },
+    },
     byGroupId: {
         description: "Get all Group Participants for a certain Group ID",
         sql: `

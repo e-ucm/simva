@@ -121,18 +121,29 @@ SELECT
     sim.simlet_description,
     sim.simlet_objective,
     shlink.short_url,
-    sim.allocator_id,
-    JSON_GROUP_ARRAY(DISTINCT g.group_id) as groups,
-    JSON_GROUP_ARRAY(DISTINCT ses.session_id) as sessions,
-    JSON_GROUP_ARRAY(tag_list.simlet_tag_name) as tags
+    sim.allocator_id
 FROM SIMLETs sim
 LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
-LEFT JOIN SIMLETs_groups g ON sim.simlet_id = g.simlet_id
-LEFT JOIN Sessions ses ON sim.simlet_id = ses.simlet_id
-LEFT JOIN SIMLETs_tags tag ON sim.simlet_id = tag.simlet_id
-LEFT JOIN SIMLETs_tags_list tag_list ON tag_list.simlet_tag_id = tag.tag_id
 LEFT JOIN vv_user_permissions up ON sim.simlet_id = up.object_id AND up.object_type = "SIMLET"
 GROUP BY up.user_id, up.username, up.permission, sim.simlet_id;
+
+DROP VIEW IF EXISTS v_simlet_tags;
+CREATE VIEW v_simlet_tags AS
+SELECT
+    tag.simlet_id,
+    tag.tag_id,
+    tag_list.simlet_tag_name
+FROM SIMLETs_tags tag
+LEFT JOIN SIMLETs_tags_list tag_list ON tag_list.simlet_tag_id = tag.tag_id;
+
+DROP VIEW IF EXISTS v_session_tags;
+CREATE VIEW v_session_tags AS
+SELECT
+    tag.session_id,
+    tag.tag_id,
+    tag_list.session_tag_name
+FROM Sessions_tags tag
+LEFT JOIN Sessions_tags_list tag_list ON tag_list.session_tag_id = tag.tag_id;
 
 DROP VIEW IF EXISTS v_complete_sessions_users_permissions;
 CREATE VIEW v_complete_sessions_users_permissions AS
@@ -150,13 +161,8 @@ SELECT
     ses.session_experimental_method,
     ses.session_active,
     ses.session_start_date,
-    ses.session_end_date,
-    JSON_GROUP_ARRAY(DISTINCT act.activity_id) as activities,
-    JSON_GROUP_ARRAY(tag_list.session_tag_name) as tags
+    ses.session_end_date
 FROM Sessions ses
-LEFT JOIN Activities act ON ses.session_id = act.session_id
-LEFT JOIN Sessions_tags tag ON ses.session_id = tag.session_id
-LEFT JOIN Sessions_tags_list tag_list ON tag_list.session_tag_id = tag.tag_id
 LEFT JOIN vv_user_permissions up ON ses.session_id = up.object_id AND up.object_type = "SESSION"
 GROUP BY ses.simlet_id, ses.session_id;
 
@@ -214,11 +220,10 @@ SELECT
     g.group_name,
     g.createdAt,
     g.group_use_new_generation,
-    u.username as coordinator_owner,
-    JSON_GROUP_ARRAY(DISTINCT p.participant_id) as participants
+    u.user_id as group_owner_user_id,
+    u.username as group_owner_username
 FROM ParticipantGroups g
 LEFT JOIN Users u ON u.user_id = g.group_owner_id
-LEFT JOIN ParticipantGroups_participants p ON g.group_id = p.group_id AND p.participant_id is not NULL
 LEFT JOIN vv_group_total_permissions up ON g.group_id = up.group_id
 GROUP BY up.user_id, up.username, up.permission, g.group_id;
 

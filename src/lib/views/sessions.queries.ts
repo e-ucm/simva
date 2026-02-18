@@ -1,6 +1,38 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
+    IdsBySimletId: {
+        description: "Get all Session IDs of a SIMLET by its ID",
+        sql: `
+        SELECT session_id
+        FROM Sessions
+        WHERE simlet_id = :simlet_id
+        `,
+        params: {
+            simlet_id: {
+                type: "number",
+                required: true,
+                description: "Simlet Identifier",
+                example: 1,
+            },
+        },
+    },
+  tagsBySessionId: {
+    description: "Get all tags of a Session by its ID",
+    sql: `
+      SELECT session_tag_name
+      FROM v_session_tags
+      WHERE session_id = :session_id
+    `,
+    params: {
+      session_id: {
+        type: "number",
+        required: true,
+        description: "Session Identifier",
+        example: 1,
+      },
+    },
+  },
     bySimletIdAndUserId: {
         description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions",
         sql: `

@@ -1,6 +1,22 @@
 import { QueryTemplate } from "@/lib/functions";
 
 const queries: Record<string, QueryTemplate> = {
+      IdsBySessionId: {
+        description: "Get all Activity IDs of a Session by its ID",
+        sql: `
+        SELECT activity_id
+        FROM Activities
+        WHERE session_id = :session_id
+        `,
+        params: {
+            session_id: {
+                type: "number",
+                required: true,
+                description: "Session Identifier",
+                example: 1,
+            },
+        },
+    },
   bySessionIdUserId: {
     description: "Get all Activities for a certain User and optionally filter by Session",
     sql: `

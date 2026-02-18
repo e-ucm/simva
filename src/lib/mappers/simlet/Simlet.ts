@@ -65,10 +65,6 @@ export class Simlet {
      */
     direct_permissions: string[] = [];
      
-    /**
-     * Static array defining which properties should be parsed as numeric arrays
-     */
-    static numericKeys = ['sessions', 'groups'];
     allocator_id: number;
     
 
@@ -87,12 +83,19 @@ export class Simlet {
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission;
         this.allocator_id = data.allocator_id;
-        logger.debug({data} , "Simlet data before parsing string and numerics arrays");
-        let result = db.Functions.parseStringArraysToTypedArrays(data, Simlet.numericKeys, 'number');
-        this.sessions = result.sessions;
-        this.tags = result.tags;
-        this.groups = result.groups;
-        logger.debug({result} , "Simlet data after parsing string and numerics arrays");
+        this.sessions = [];
+        this.tags = [];
+        this.groups = [];
+    }
+
+    async init() {
+        //Additional initialization logic can be added here if needed in the future
+        const tagIds = await db.Functions.runViewQuery(db.Views.Simlet.tagsBySimletId, { simlet_id: this.simlet_id })
+        this.tags = tagIds.map((row: any) => row.tag_name) || [];
+        const groupIds = await db.Functions.runViewQuery(db.Views.Simlet.groupIdsBySimletId, { simlet_id: this.simlet_id })
+        this.groups = groupIds.map((row: any) => row.group_id) || [];
+        const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id })
+        this.sessions = sessionIds.map((row: any) => row.session_id) || [];
     }
 
     static async getAllFromDbData(current_user_id: number, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
@@ -109,9 +112,11 @@ export class Simlet {
             );
         }
         logger.debug({results} , "getSimletsByUserId results");
-        const processedResults = results.map((simlet: any) => 
-            new Simlet(simlet)
-        );
+        const processedResults =  await Promise.all(results.map(async (simlet: any) => {
+            const simletInstance = new Simlet(simlet);
+            await simletInstance.init();
+            return simletInstance;
+        }));
         logger.debug({processedResults} , "getSimletsByUserId results");
         return processedResults;
     }
@@ -142,7 +147,9 @@ export class Simlet {
         } else if(result.length > 1){
             logger.warn(`Multiple simlets found with ID ${simlet_id} for user ID ${current_user_id}. Using the first one.`);
         }
-        return new Simlet(result[0]);
+        const simlet = new Simlet(result[0]);
+        await simlet.init();
+        return simlet;
     }
 
     /**

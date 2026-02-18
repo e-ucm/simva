@@ -41,16 +41,13 @@ export class Group {
      */
     participants: number[];
     
-    group_owner_id : number;
+    group_owner_user_id : number;
+    group_owner_username: string;
+
     /**
      * Array of direct permissions granted for this group
      */
     direct_permissions: string[] = [];
-    
-    /**
-     * Static array defining which properties should be parsed as numeric arrays
-     */
-    static numericKeys = ['participants'];
 
     /**
      * Creates a new Group instance
@@ -60,16 +57,22 @@ export class Group {
       * Processes participant arrays and ensures proper boolean conversion for group_use_new_generation.
      */
     constructor(data: any) {
-        const processedResults = db.Functions.parseStringArraysToTypedArrays(data, Group.numericKeys, 'number');
-        this.group_id = processedResults.group_id; // Ensure group_id is included in the data
-        this.group_use_new_generation = Boolean(processedResults.group_use_new_generation); // Ensure group_use_new_generation is included in the data
-        this.group_name = processedResults.group_name || processedResults.name || "";
-        this.created_at = processedResults.created_at ? new Date(processedResults.created_at) : new Date();
-        this.participants = processedResults.participants || [];
-        this.group_owner_id = processedResults.group_owner_id || "";
-        this.current_user_id = processedResults.current_user_id || "";
-        this.current_user_username = processedResults.current_user_username || "";
-        this.current_user_permission = processedResults.current_user_permission || "";
+        this.group_id = data.group_id; // Ensure group_id is included in the data
+        this.group_use_new_generation = Boolean(data.group_use_new_generation); // Ensure group_use_new_generation is included in the data
+        this.group_name = data.group_name || data.name || "";
+        this.created_at = data.created_at ? new Date(data.created_at) : new Date();
+        this.participants = data.participants || [];
+        this.group_owner_user_id = data.group_owner_user_id || "";
+        this.group_owner_username = data.group_owner_username || "";
+        this.current_user_id = data.current_user_id || "";
+        this.current_user_username = data.current_user_username || "";
+        this.current_user_permission = data.current_user_permission || "";
+    }
+
+    async init() {
+        //Additional initialization logic can be added here if needed in the future
+        const participantIds = await db.Functions.runViewQuery(db.Views.GroupParticipant.IdsByGroupId, { group_id: this.group_id })
+        this.participants = participantIds.map((row: any) => row.participant_id) || [];
     }
 
     static async getAllFromDbData(current_user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Group[]> {
@@ -79,7 +82,11 @@ export class Group {
         } else {
             groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { current_user_id, search : searchString, version });
         } 
-        return groups.map((groupData: any) => new Group(groupData));
+        return Promise.all(groups.map(async (groupData: any) => { 
+            const group = new Group(groupData);
+            await group.init();
+            return group;
+        }));
     }
 
     static async getFromDbData(group_id: number, current_user_id: number): Promise<Group> {
@@ -93,7 +100,9 @@ export class Group {
             throw new Error(`Multiple groups found with ID ${group_id} for user ${current_user_id}`);
         }
         logger.debug({ groupData: groups[0] }, `Group data retrieved for group ID ${group_id} and user ID ${current_user_id}`);
-        return new Group(groups[0]);
+        const group = new Group(groups[0]);
+        await group.init();
+        return group;
     }
     
     static async createInDb(body: Partial<Group>, useNewGeneration : boolean, current_user_id: number): Promise<Group> {
@@ -105,7 +114,7 @@ export class Group {
         if(count > 0) {
             throw new ValidationError("Group name must be unique");
         }
-        body.group_owner_id = current_user_id;
+        body.group_owner_user_id = current_user_id;
         body.group_use_new_generation = useNewGeneration;
         let createdGroup = await db.Tables.Group.create(body);
         return Group.getFromDbData(createdGroup.group_id, current_user_id);

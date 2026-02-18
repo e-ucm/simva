@@ -34,10 +34,10 @@ const router = Router();
 
 // Base user operations
 router.get("/", getUsers);
-// User-specific operations
-router.patch("/:username", patchUser);
-
 // profile
 router.get("/me", getMe);
+
+// User-specific operations
+router.patch("/:username", patchUser);
 
 export default router;

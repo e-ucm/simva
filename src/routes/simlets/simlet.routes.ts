@@ -41,7 +41,7 @@ import {
  * - GET /:simlet_id/groups - Get groups associated with a simlet
  * - GET /:simlet_id/sessions - Get sessions of a simlet
  * - GET /:simlet_id/sessions/:session_id - Get details of a specific session in a simlet
- * 
+ * - GET /:simlet_id/sessions/:session_id/activities - Get activities in a specific session of a simlet
  * @type {Router}
  * 
  * @example
@@ -71,14 +71,20 @@ router.get("/", getAllSimlets);
 router.post("/", createSimlet);
 
 // Individual resource endpoints
-router.get("/:simlet_id/allocator", getAllocatorFromSimlet);
-router.get("/:simlet_id/participants", getSimletParticipants);
-router.get("/:simlet_id/groups", getSimletGroups);
-router.get("/:simlet_id/sessions", getSimletSessions);
-router.get("/:simlet_id/sessions/:session_id", getSimletSession);
-router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
 router.get("/:simlet_id", getSimletById);
 router.patch("/:simlet_id", patchSimlet);
 router.delete("/:simlet_id", deleteSimlet);
+
+// Session endpoints
+router.get("/:simlet_id/sessions", getSimletSessions);
+router.get("/:simlet_id/sessions/:session_id", getSimletSession);
+
+// Activity list endpoints
+router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
+
+// Additional simlet-related endpoints
+router.get("/:simlet_id/allocator", getAllocatorFromSimlet);
+router.get("/:simlet_id/participants", getSimletParticipants);
+router.get("/:simlet_id/groups", getSimletGroups);
 
 export default router;

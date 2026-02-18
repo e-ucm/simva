@@ -92,16 +92,6 @@ export class Session {
      * Array of direct permissions granted for this session
      */
     direct_permissions: string[] = [];
-    
-    /**
-     * Static array defining which properties should be parsed as numeric arrays
-     */
-    static numericKeys = ['activities'];
-    
-    /**
-     * Static array defining which properties should be parsed as string arrays
-     */
-    static stringKeys = ['tags'];
 
     /**
      * Creates a new Session instance
@@ -124,13 +114,17 @@ export class Session {
         this.session_active = data.session_active || false;
         this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : new Date();
         this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : new Date();
-        
-        let result = db.Functions.parseStringArraysToTypedArrays(data, Session.numericKeys, 'number');
-        result = db.Functions.parseStringArraysToTypedArrays(result, Session.stringKeys, 'string');
-        
-        this.activities = result.activities || [];
-        this.tags = result.tags || [];
-        this.direct_permissions = data.direct_permissions || [];
+        this.activities = [];
+        this.tags = [];
+        this.direct_permissions = [];
+    }
+
+    async init() {
+        //Additional initialization logic can be added here if needed in the future
+        const tagIds = await db.Functions.runViewQuery(db.Views.Session.tagsBySessionId, { session_id: this.session_id })
+        this.tags = tagIds.map((row: any) => row.tag_name) || [];
+        const sessionIds = await db.Functions.runViewQuery(db.Views.Activity.IdsBySessionId, { session_id: this.session_id })
+        this.activities = sessionIds.map((row: any) => row.activity_id) || [];
     }
 
     static async getAllFromDbData(simlet_id: number, current_user_id: number, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Session[]> {
@@ -147,7 +141,11 @@ export class Session {
             );
         }
         logger.debug({sessions} , "Sessions data from view");
-        return sessions.map((session: any) => new Session(session));
+        return Promise.all(sessions.map(async (session: any) => {
+            const sessionInstance = new Session(session);
+            await sessionInstance.init();
+            return sessionInstance;
+        }));
     }
 
     static async getFromDbData(simlet_id: number, session_id: number, current_user_id: number) : Promise<Session> {
@@ -160,7 +158,9 @@ export class Session {
         } else if(session.length > 1) {
             logger.warn(`Multiple sessions found with ID ${session_id} for user ID ${current_user_id}. Using the first one.`);
         }
-        return new Session(session[0]);
+        const sessionInstance = new Session(session[0]);
+        await sessionInstance.init();
+        return sessionInstance;
     }
 
       /**

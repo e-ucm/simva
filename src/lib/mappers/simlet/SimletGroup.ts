@@ -35,11 +35,6 @@ export class SimletGroup {
      * Array of direct permissions granted for this group within the study
      */
     direct_permissions: string[] = [];
-    
-    /**
-     * Static array defining which properties should be parsed as numeric arrays
-     */
-    static numericKeys = ['participants'];
 
     /**
      * Creates a new SimletGroup instance
@@ -52,12 +47,18 @@ export class SimletGroup {
         this.simlet_id = data.simlet_id;
         this.group_id = data.group_id;
         this.group_name = data.group_name;
-        let result = db.Functions.parseStringArraysToTypedArrays(data, SimletGroup.numericKeys, 'number');
-        this.participants = result.participants;
+        this.participants = [];
     }
+
+    async init() {
+        //Additional initialization logic can be added here if needed in the future
+        const participantIds = await db.Functions.runViewQuery(db.Views.GroupParticipant.IdsByGroupId, { group_id: this.group_id })
+        this.participants = participantIds.map((row: any) => row.participant_id) || [];
+    }
+
     static async createSimletGroup(simlet_id: number, group_id: number) : Promise<SimletGroup> {
-        let simletGroupData = await db.Tables.SimletGroups.create({ simlet_id, group_id });
-        return new SimletGroup(simletGroupData);
+        await db.Tables.SimletGroups.create({ simlet_id, group_id });
+        return await SimletGroup.getFromDbData(simlet_id, group_id);
     }
 
     static async getAllFromDbData(simlet_id: number): Promise<SimletGroup[]> {
@@ -66,7 +67,11 @@ export class SimletGroup {
             { simlet_id }
         );
         logger.debug({groups} , "Groups data from view");
-        return groups.map((group: any) => new SimletGroup(group));
+        return Promise.all(groups.map(async (group: any) => {
+            const simletGroup = new SimletGroup(group);
+            await simletGroup.init();
+            return simletGroup;
+        }));
     }
 
     static async getFromDbData(simlet_id: number, group_id: number) : Promise<SimletGroup> {
@@ -74,7 +79,9 @@ export class SimletGroup {
         if (!simletGroupData) {
             throw new ValidationError(`SimletGroup with simlet_id ${simlet_id} and group_id ${group_id} not found`);
         }
-        return new SimletGroup(simletGroupData);
+        const simletGroup = new SimletGroup(simletGroupData);
+        await simletGroup.init();
+        return simletGroup;
     }
     
     async delete(): Promise<void> {

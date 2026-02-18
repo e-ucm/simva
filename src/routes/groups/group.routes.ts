@@ -48,10 +48,14 @@ router.post("/", createGroup);
 
 // Individual group operations
 router.get("/:id", getGroupById);
-router.get("/:id/participants", getGroupParticipants);
-router.post("/:id/participants", createGroupParticipant);
-router.delete("/:id/participants/:participant_id", deleteGroupParticipant);
 router.patch("/:id", updateGroup);
 router.delete("/:id", deleteGroup);
+
+// Group participant operations
+router.get("/:id/participants", getGroupParticipants);
+router.post("/:id/participants", createGroupParticipant);
+
+// Individual participant operations
+router.delete("/:id/participants/:participant_id", deleteGroupParticipant);
 
 export default router;
