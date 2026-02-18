@@ -366,3 +366,94 @@ export async function getSessionActivities(
     next(err);
   }
 }
+
+export async function createSimletSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    let body = req.body;
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id, body} , "Creating session for simlet ID and user ID");
+    const session = await simletService.createSimletSession(simletId, currentUser!.user_id as number, body);
+    logger.debug({session} , "Session created for simlet ID and user ID");
+    res.json(session);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createSessionActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let body = req.body;
+    let currentUser = req.user?.sql;
+    logger.debug({sessionId, userId: currentUser?.user_id, body} , "Adding activities for session ID and user ID");
+    const activities = await simletService.addSessionActivities(simletId, sessionId, currentUser!.user_id as number, body);
+    logger.debug({activities} , "Activity added for session ID and user ID");
+    res.json(activities);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function patchSimletSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let body = req.body;
+    let currentUser = req.user?.sql;
+    logger.debug({sessionId, userId: currentUser?.user_id, body} , "Patching session for simlet ID and user ID");
+    const session = await simletService.patchSimletSession(simletId, sessionId, currentUser!.user_id as number, body);
+    logger.debug({session} , "Session patched for simlet ID and user ID");
+    res.json(session);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteSimletSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({sessionId, userId: currentUser?.user_id} , "Deleting session for simlet ID and user ID");
+    await simletService.deleteSimletSession(simletId, sessionId, currentUser!.user_id as number);
+    logger.debug({sessionId, userId: currentUser?.user_id} , "Session deleted for simlet ID and user ID");
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSimletSchedule(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id} , "Getting schedule for simlet ID and user ID");
+    const schedule = await simletService.getSimletSchedule(simletId, currentUser!.user_id as number);
+    logger.debug({schedule} , "Schedule retrieved for simlet ID and user ID");
+    res.json(schedule);
+  } catch (err) {
+    next(err);
+  }
+}

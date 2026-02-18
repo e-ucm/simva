@@ -135,11 +135,19 @@ export class Simlet {
         return new Simlet(createdSimlet);
     }
 
-    static async getFromDbData(simlet_id: number, current_user_id: number) : Promise<Simlet> {
-        const result = await db.Functions.runViewQuery(
-            db.Views.Simlet.byUserIdAndSimletId,
-            { current_user_id, simlet_id }
-        );
+    static async getFromDbData(simlet_id: number, current_user_id: number, allocated_user : boolean = false) : Promise<Simlet> {
+        let result;
+        if(allocated_user) {
+            result = await db.Functions.runViewQuery(
+                db.Views.Simlet.byUserIdAndSimletIdWithAllocatedUser,
+                { current_user_id, simlet_id }
+            );
+        } else {
+            result = await db.Functions.runViewQuery(
+                db.Views.Simlet.byUserIdAndSimletId,
+                { current_user_id, simlet_id }
+            );
+        }
         logger.debug({result} , "getSimletBySimletIdAndUserId results");
         if(result.length === 0){
             throw new ValidationError(`Simlet with ID ${simlet_id} not found for user ID ${current_user_id}.`);
@@ -273,5 +281,9 @@ export class Simlet {
 
     async getSession(sessionId: number): Promise<Session> {
       return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id);
+    }
+
+    async getSchedule() {
+      throw new Error("Method not implemented.");
     }
 }

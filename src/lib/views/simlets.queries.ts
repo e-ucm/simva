@@ -93,7 +93,28 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
-
+  byUserIdAndSimletIdWithAllocatedUser: {
+    description: "Get a SIMLET for a certain User and Simlet ID, including allocated user information",
+    sql: `
+      SELECT *
+      FROM v_complete_allocation_participants 
+      WHERE user_id = :current_user_id AND simlet_id = :simlet_id
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      simlet_id: {
+        type: "number",
+        required: true,
+        description: "Simlet Identifier",
+        example: 1,
+      },
+    },
+  },
   byUserIdAndSimletId: {
     description: "Get current SIMLET for a certain User",
     sql: `

@@ -280,7 +280,33 @@ export function getSimletSessionCountByUserId(simlet_id: number, current_user_id
 }
 
 
-export async function updateSimletAllocator(simletId: number, current_user_id: number, data : any) {
+export async function updateSimletAllocator(simletId: number, current_user_id: number, body : any) {
     let simlet = await Simlet.getFromDbData(simletId, current_user_id);
-    return await simlet.updateAllocator(data);
+    return await simlet.updateAllocator(body);
 }
+
+export async function addSessionActivities(simletId: number, sessionId: number, current_user_id: number, body: any) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.addActivity(body);
+}
+
+export async function createSimletSession(simletId: number, current_user_id: number, body: any) {
+  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.addSession(body);
+}
+
+export async function getSimletSchedule(simletId: number, current_user_id: number) {
+  let simlet = await Simlet.getFromDbData(simletId, current_user_id, true);
+  return await simlet.getSchedule();
+}
+
+export async function patchSimletSession(simletId: number, sessionId: number, current_user_id: number, body: any) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.update(body);
+}
+
+export async function deleteSimletSession(simletId: number, sessionId: number, current_user_id: number) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.delete();
+}
+

@@ -194,11 +194,39 @@ export class Session {
         return await Activity.getAllFromDbData(this.session_id, this.current_user_id, false);
     }
 
+    async addActivity(activityData: Partial<InstanceType<typeof db.Tables.Activities>>): Promise<Activity> {
+        this.canEdit();
+        activityData.session_id = this.session_id;
+        activityData.activity_order = this.activities.length + 1; // Add to the end of the activity list
+        let activity = await db.Tables.Activities.create(activityData);
+        return Activity.getFromDbData(activity.activity_id, this.current_user_id, false);
+     }
+
     canEdit() : boolean {
         if(this.current_user_permission === "full" || this.current_user_permission === "write") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to edit this session");
+    }
+
+    async update(body: any): Promise<Session> {
+        this.canEdit();
+        let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
+        if(!session) {
+            throw new ValidationError(`Session with ID ${this.session_id} not found for update`);
+        }
+        await session.update(body);
+        Object.assign(this, body);
+        return this;
+    }
+    
+    async delete() {
+        this.canEdit();
+        let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
+        if(!session) {
+            throw new ValidationError(`Session with ID ${this.session_id} not found for deletion`);
+        }
+        await session.destroy();
     }
 
 }

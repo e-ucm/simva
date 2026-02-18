@@ -23,7 +23,12 @@ import {
   getSimletGroups,
   getSimletSessions,
   getSimletSession,
-  getSessionActivities
+  getSessionActivities,
+  createSessionActivity,
+  createSimletSession,
+  patchSimletSession,
+  deleteSimletSession,
+  getSimletSchedule
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -78,15 +83,21 @@ router.delete("/:simlet_id", deleteSimlet);
 
 // Session endpoints
 router.get("/:simlet_id/sessions", getSimletSessions);
+router.post("/:simlet_id/sessions", createSimletSession);
 router.get("/:simlet_id/sessions/:session_id", getSimletSession);
+router.patch("/:simlet_id/sessions/:session_id", patchSimletSession);
+router.delete("/:simlet_id/sessions/:session_id", deleteSimletSession);
 
 // Activity list endpoints
 router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
+router.post("/:simlet_id/sessions/:session_id/activities", createSessionActivity);
 
 // Additional simlet-related endpoints
+router.get("/:simlet_id/groups", getSimletGroups);
+router.get("/:simlet_id/participants", getSimletParticipants);
 router.get("/:simlet_id/allocator", getAllocatorFromSimlet);
 router.patch("/:simlet_id/allocator", updateSimletAllocator);
-router.get("/:simlet_id/participants", getSimletParticipants);
-router.get("/:simlet_id/groups", getSimletGroups);
+
+router.get("/:simlet_id/schedule", getSimletSchedule);
 
 export default router;
