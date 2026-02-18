@@ -668,7 +668,7 @@ print("---------------------")
 print("Adding SIMLET_Sandbox")
 print("---------------------")
 simlets_sandbox_sql = """
-UPDATE SIMLETs SET sandbox_session_id = ? WHERE simlet_id = ?
+UPDATE SIMLETs SET simlet_sandbox_session_id = ? WHERE simlet_id = ?
 """
 simlets_sandbox_values = [
     (
