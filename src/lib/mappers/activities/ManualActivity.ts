@@ -37,8 +37,8 @@ export class ManualActivity extends Activity {
 	 * @description Initializes base activity properties and manual activity-specific fields.
 	 * Uses nullish coalescing for safe default value assignment.
 	 */
-	constructor(data: any) {
-		super(data);
+	constructor(allocated: boolean, data: any) {
+		super(allocated, data);
 		// Assign manual activity-specific properties if provided in data
 		this.manual_user_managed = data.manual_user_managed ?? false;
 		this.manual_ressource_type = data.manual_ressource_type ?? '';
@@ -55,12 +55,12 @@ export class ManualActivity extends Activity {
 	 * @description Factory method that creates instance and loads additional data from database.
 	 * Handles database errors gracefully and ensures proper initialization.
 	 */
-	static async getFromDbData(activityData: any): Promise<ManualActivity> {
-		const instance = new ManualActivity(activityData);
+	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<ManualActivity> {
+		const instance = new ManualActivity(allocated, activityData);
 		
 		try {
 			const manualData = await db.Tables.ManualActivities.findOne({ 
-				where: { activity_id: instance.activity_id } 
+				where: { activity_id: activity_id } 
 			});
 			
 			if (manualData) {

@@ -191,12 +191,7 @@ export class Session {
     }
 
     async getActivities(): Promise<Activity[]> {
-        const activities = await db.Functions.runViewQuery(
-            db.Views.Activity.bySessionIdUserId,
-            { session_id: this.session_id, current_user_id : this.current_user_id }
-        );
-        logger.debug({activities} , "Activities data from view");
-        return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity)));
+        return await Activity.getAllFromDbData(this.session_id, this.current_user_id, false);
     }
 
     canEdit() : boolean {

@@ -46,6 +46,52 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
+
+  byActivityIdAndParticipantId: {
+    description: "Get actual allocated Activity of the actual user with access to this activity",
+    sql: `
+      SELECT *
+      FROM v_complete_activity_allocation_participants  
+      WHERE activity_id = :activity_id AND allocated_user_id = :allocated_user_id
+    `,
+    params: {
+      activity_id: {
+        type: "number",
+        required: true,
+        description: "Activity Identifier",
+        example: 1,
+      },
+      allocated_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+    },
+  },
+
+  byPreviousActivityIdAndParticipantId: {
+    description: "Get previous allocated Activities of the actual user with access to this activity",
+    sql: `
+      SELECT *
+      FROM v_complete_activity_allocation_participants  
+      WHERE activity_id < :activity_id AND allocated_user_id = :allocated_user_id
+    `,
+    params: {
+      activity_id: {
+        type: "number",
+        required: true,
+        description: "Activity Identifier",
+        example: 1,
+      },
+      allocated_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+    },
+  }
 };
 
 export default queries;

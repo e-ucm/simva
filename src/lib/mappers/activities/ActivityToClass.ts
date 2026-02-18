@@ -10,7 +10,7 @@ import { logger } from "@/lib/logger";
  * 
  * @async
  * @function ActivityToClass
- * @param {any} data - Raw activity data object containing activity_type and other properties
+ * @param {any} activityData - Raw activity data object containing activity_type and other properties
  * @returns {Promise<Activity>} Promise that resolves to the appropriate Activity subclass instance
  * 
  * @description Factory function that:
@@ -24,19 +24,19 @@ import { logger } from "@/lib/logger";
  * const activity = await ActivityToClass({ activity_type: 'limesurvey', activity_id: 123 });
  * // Returns a LimesurveyActivity instance with database data loaded
  */
-export async function ActivityToClass(data: any) : Promise<Activity> {
-    logger.debug({data}, data.activity_type);
-    switch (data.activity_type) {
+export async function ActivityToClass(activity_id: number, user_id: number, allocated : boolean, activityData: any) : Promise<Activity> {
+    logger.debug({activityData}, activityData.activity_type);
+    switch (activityData.activity_type) {
         case GamePlayActivity.getType():
-            return await GamePlayActivity.getFromDbData(data);
+            return await GamePlayActivity.getFromDbData(activity_id, user_id, allocated, activityData);
         case LimesurveyActivity.getType():
-            return await LimesurveyActivity.getFromDbData(data);
+            return await LimesurveyActivity.getFromDbData(activity_id, user_id, allocated, activityData);
         case ManualActivity.getType():
-            return await ManualActivity.getFromDbData(data);
+            return await ManualActivity.getFromDbData(activity_id, user_id, allocated, activityData);
         case Activity.getType():
-            return new Activity(data);
+            return new Activity(allocated, activityData);
         default:
-            logger.warn(`Unknown activity type: ${data.activity_type}, returning default Activity instance.`);
-            return new Activity(data);
+            logger.warn(`Unknown activity type: ${activityData.activity_type}, returning default Activity instance.`);
+            return new Activity(allocated, activityData);
     }
 }

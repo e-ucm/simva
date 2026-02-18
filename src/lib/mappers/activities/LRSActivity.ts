@@ -21,8 +21,8 @@ export class LRSActivity extends Activity {
 	 * @param {any} params - Raw data object containing activity and LRS-specific properties
 	 * @description Initializes base activity properties for LRS integration.
 	 */
-	constructor(params:any){
-		super(params);
+	constructor(allocated : boolean, params:any){
+		super(allocated, params);
 	}
 
 	/**

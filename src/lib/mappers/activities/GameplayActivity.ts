@@ -51,8 +51,8 @@ export class GamePlayActivity extends Activity {
 	 * @description Initializes base activity properties and gameplay-specific fields.
 	 * Uses nullish coalescing for safe assignment of boolean properties.
 	 */
-	constructor(data: any) {
-		super(data);
+	constructor(allocated:boolean, data: any) {
+		super(allocated, data);
 		// Assign gameplay activity-specific properties if provided in data
 		this.game_backup = data.game_backup ?? false;
 		this.game_scorm_xapi = data.game_scorm_xapi ?? false;
@@ -72,12 +72,12 @@ export class GamePlayActivity extends Activity {
 	 * @description Factory method that creates instance and loads additional data from database.
 	 * Handles database errors gracefully and ensures proper initialization.
 	 */
-	static async getFromDbData(activityData: any): Promise<GamePlayActivity> {
-		const instance = new GamePlayActivity(activityData);
+	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<GamePlayActivity> {
+		const instance = new GamePlayActivity(allocated, activityData);
 		
 		try {
 			const gameplayData = await db.Tables.GamePlayActivities.findOne({ 
-				where: { activity_id: instance.activity_id } 
+				where: { activity_id: activity_id } 
 			});
 			
 			if (gameplayData) {

@@ -12,11 +12,44 @@ import { logger } from "@/lib/logger";
  * Can be extended by specific activity types like LimesurveyActivity, GameplayActivity, etc.
  */
 export class Activity {
+    static async getAllFromDbData(session_id: number, user_id: number, allocated: boolean = false): Promise<Activity[]> {
+        let activities;
+		if(allocated) {
+			activities = await db.Functions.runViewQuery(
+				db.Views.Activity.bySessionIdParticipantId,
+				{ session_id: session_id, participant_id : user_id }
+			);
+		} else {
+			activities = await db.Functions.runViewQuery(
+				db.Views.Activity.bySessionIdUserId,
+				{ session_id: session_id, current_user_id : user_id }
+			);
+		}
+		logger.debug({activities} , "Activities data from view");
+		return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity.activity_id, user_id, allocated, activity)));
+    }
+	allocated: boolean;
+	allocated_user_id?:number;
+	allocated_username?:string;
+	allocated_isToken?:string;
+	allocated_token?:string;
+
+	current_user_id?:number;
+	current_user_username?:string;
+	current_user_permission?:string;
+
  	/**
  	 * The ID of the session this activity belongs to
  	 */
  	session_id: number;
+	session_active?:boolean;
+	session_start_date?:Date;
+	session_end_date?:Date;
 	
+	activity_initialized?: boolean;
+	activity_progress?: number;
+	activity_completed?: boolean;
+
 	/**
 	 * Unique identifier for this activity
 	 */
@@ -31,16 +64,33 @@ export class Activity {
 	 * Type of activity (e.g., 'limesurvey', 'gameplay', 'manual')
 	 */
 	activity_type: string;
+
+	activity_order:number;
+	
+	/**
+	 * Whether trace data storage is enabled for this activity
+	 */
+	activity_trace_storage: boolean;
+
+	/**
+	 * Whether this activity can be restarted by participants
+	 */
+	activity_can_be_restarted: boolean;
+
+	/**
+	 * Optional description of the activity
+	 */
+	activity_description?: string;
 	
 	/**
 	 * Timestamp when the activity was created
 	 */
-	createdAt: Date;
+	createdAt?: Date;
 	
 	/**
 	 * Timestamp when the activity was last updated
 	 */
-	updatedAt: Date;
+	updatedAt?: Date;
 	
 	/**
 	 * Pre-signed URL for accessing activity resources (optional)
@@ -56,27 +106,12 @@ export class Activity {
 	 * Expiration time for presigned URL in seconds (optional)
 	 */
 	activity_expire_on_seconds?: number;
-	
-	/**
-	 * Whether trace data storage is enabled for this activity
-	 */
-	activity_trace_storage: boolean;
-	
-	/**
-	 * Optional description of the activity
-	 */
-	activity_description?: string;
 
 	/**
 	 * Whether this activity complies with GDPR requirements
 	 */
-	activity_comply_with_GDPR: boolean;
-
-	/**
-	 * Whether this activity can be restarted by participants
-	 */
-	activity_can_be_restarted: boolean;
-
+	activity_comply_with_GDPR?: boolean;
+	
 	/**
 	 * Creates a new Activity instance
 	 * 
@@ -84,33 +119,53 @@ export class Activity {
 	 * @description Initializes activity properties from provided data object.
 	 * Sets default values for optional properties.
 	 */
-	constructor(data: any) {
+	constructor(allocated: boolean, data: any) {
+		this.allocated = allocated;
 		this.session_id = data.session_id;
 		this.activity_id = data.activity_id;
 		this.activity_name = data.activity_name;
+		this.activity_order = data.activity_order;
 		this.activity_type = data.activity_type;
-		this.createdAt = data.createdAt;
-		this.updatedAt = data.updatedAt;
-		this.activity_presignedUrl = data.activity_presignedUrl || "";
-		this.activity_generated_at = data.activity_generated_at || "";
-		this.activity_expire_on_seconds = data.activity_expire_on_seconds || -1;
 		this.activity_trace_storage = data.activity_trace_storage || false; // Default to false if not provided
-		this.activity_description = data.activity_description || ""; // Default to empty string if not provided
-		this.activity_comply_with_GDPR = data.activity_comply_with_GDPR || false;
 		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
+		if(this.allocated) {
+			this.session_active = data.session_active;
+			this.session_start_date = data.session_start_date;
+			this.session_end_date = data.session_end_date;
+			this.activity_initialized = data.activity_initialized;
+			this.activity_progress = data.activity_progress;
+			this.activity_completed = data.activity_completed;
+		} else {
+			this.activity_description = data.activity_description || ""; // Default to empty string if not provided
+			this.activity_comply_with_GDPR = data.activity_comply_with_GDPR || false;
+			this.createdAt = data.createdAt;
+			this.updatedAt = data.updatedAt;
+			this.activity_presignedUrl = data.activity_presignedUrl || "";
+			this.activity_generated_at = data.activity_generated_at || "";
+			this.activity_expire_on_seconds = data.activity_expire_on_seconds || -1;
+		}
 	}
 
-	static async getFromDbData(activity_id:number, current_user_id: number) : Promise<Activity> {
-		const results = await db.Functions.runViewQuery(
-			db.Views.Activity.byActivityIdAndUserId,
-			{ activity_id, current_user_id }
-		);
-		if (results.length === 0) {
-			throw new NotFoundError(`Activity with ID ${activity_id} not found for user ID ${current_user_id}.`);
-		} else if (results.length > 1) {
-			logger.warn(`Multiple activities found with ID ${activity_id} for user ID ${current_user_id}. Using the first one.`);
+	static async getFromDbData(activity_id:number, user_id: number, allocated : boolean = false, activityData : any = {}) : Promise<Activity> {
+		let results;
+		if(allocated) {
+			results = await db.Functions.runViewQuery(
+				db.Views.Activity.byActivityIdAndParticipantId,
+				{ activity_id, allocated_user_id : user_id }
+			);
+		} else {
+			results = await db.Functions.runViewQuery(
+				db.Views.Activity.byActivityIdAndUserId,
+				{ activity_id, current_user_id : user_id }
+			);
 		}
-		return await ActivityToClass(results[0]);
+		if (results.length === 0) {
+			throw new NotFoundError(`Activity with ID ${activity_id} not found for user ID ${user_id}.`);
+		} else if (results.length > 1) {
+			logger.warn(`Multiple activities found with ID ${activity_id} for user ID ${user_id}. Using the first one.`);
+		}
+		activityData = results[0];
+		return await ActivityToClass(activity_id, user_id, allocated, activityData);
 	}
 	
 	/**

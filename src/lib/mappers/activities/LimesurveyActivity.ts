@@ -38,8 +38,8 @@ export class LimesurveyActivity extends Activity {
 	 * @description Initializes base activity properties and LimeSurvey-specific fields.
 	 * Uses nullish coalescing for safe default value assignment.
 	 */
-	constructor(data: any) {
-		super(data);
+	constructor(allocated:boolean, data: any) {
+		super(allocated, data);
 		// Assign limesurvey-specific properties if provided in data
 		this.survey_id = data.survey_id ?? -1;
 		this.suvey_language = data.suvey_language ?? '';
@@ -56,12 +56,12 @@ export class LimesurveyActivity extends Activity {
 	 * @description Factory method that creates instance and loads additional data from database.
 	 * Handles database errors gracefully and ensures proper initialization.
 	 */
-	static async getFromDbData(activityData: any): Promise<LimesurveyActivity> {
-		const instance = new LimesurveyActivity(activityData);
+	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<LimesurveyActivity> {
+		const instance = new LimesurveyActivity(allocated, activityData);
 		
 		try {
 			const limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 
-				where: { activity_id: instance.activity_id } 
+				where: { activity_id: activity_id } 
 			});
 			
 			if (limesurveyData) {
