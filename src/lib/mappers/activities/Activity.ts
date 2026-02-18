@@ -45,27 +45,32 @@ export class Activity {
 	/**
 	 * Pre-signed URL for accessing activity resources (optional)
 	 */
-	presignedUrl?: string;
+	activity_presignedUrl?: string;
 	
 	/**
 	 * Timestamp when presigned URL was generated (optional)
 	 */
-	generated_at?: Date;
+	activity_generated_at?: Date;
 	
 	/**
 	 * Expiration time for presigned URL in seconds (optional)
 	 */
-	expire_on_seconds?: number;
+	activity_expire_on_seconds?: number;
 	
 	/**
 	 * Whether trace data storage is enabled for this activity
 	 */
-	trace_storage: boolean;
+	activity_trace_storage: boolean;
 	
 	/**
 	 * Optional description of the activity
 	 */
 	activity_description?: string;
+
+	/**
+	 * Whether this activity can be restarted by participants
+	 */
+	activity_can_be_restarted: boolean;
 
 	/**
 	 * Creates a new Activity instance
@@ -81,11 +86,12 @@ export class Activity {
 		this.activity_type = data.activity_type;
 		this.createdAt = data.createdAt;
 		this.updatedAt = data.updatedAt;
-		this.presignedUrl = data.presignedUrl ||"";
-		this.generated_at = data.generated_at|| "";
-		this.expire_on_seconds = data.expire_on_seconds  || -1;
-		this.trace_storage = data.trace_storage || false; // Default to false if not provided
+		this.activity_presignedUrl = data.activity_presignedUrl || "";
+		this.activity_generated_at = data.activity_generated_at || "";
+		this.activity_expire_on_seconds = data.activity_expire_on_seconds || -1;
+		this.activity_trace_storage = data.activity_trace_storage || false; // Default to false if not provided
 		this.activity_description = data.activity_description || ""; // Default to empty string if not provided
+		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
 	}
 
 	static async getFromDbData(activity_id:number, current_user_id: number) : Promise<Activity> {

@@ -16,13 +16,13 @@ export class GamePlayActivity extends Activity {
 	 * Whether backup of game data is enabled
 	 * @default false
 	 */
-	backup: boolean= false;
+	game_backup: boolean= false;
 	
 	/**
 	 * Whether SCORM/xAPI data is handled by the game itself
 	 * @default false
 	 */
-	scorm_xapi_by_game: boolean = false;
+	game_scorm_xapi: boolean = false;
 	
 	/**
 	 * Category ID for game classification
@@ -54,8 +54,8 @@ export class GamePlayActivity extends Activity {
 	constructor(data: any) {
 		super(data);
 		// Assign gameplay activity-specific properties if provided in data
-		this.backup = data.backup ?? false;
-		this.scorm_xapi_by_game = data.scorm_xapi_by_game ?? false;
+		this.game_backup = data.game_backup ?? false;
+		this.game_scorm_xapi = data.game_scorm_xapi ?? false;
 		this.category_id = data.category_id;
 		this.subject_area_id = data.subject_area_id;
 		this.game_type = data.game_type;
@@ -81,8 +81,8 @@ export class GamePlayActivity extends Activity {
 			});
 			
 			if (gameplayData) {
-				instance.backup = gameplayData.backup ?? false;
-				instance.scorm_xapi_by_game = gameplayData.scorm_xapi_by_game ?? false;
+				instance.game_backup = gameplayData.game_backup ?? false;
+				instance.game_scorm_xapi = gameplayData.game_scorm_xapi ?? false;
 				instance.category_id = gameplayData.category_id as number;
 				instance.subject_area_id = gameplayData.subject_area_id as number;
 				instance.game_type = gameplayData.game_type;

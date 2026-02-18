@@ -23,13 +23,13 @@ export class LimesurveyActivity extends Activity {
 	 * Language code for the survey (e.g., 'en', 'es')
 	 * @default ''
 	 */
-	language: string='';
+	suvey_language: string='';
 	
 	/**
 	 * Learning Record Store (LRS) set identifier for xAPI data
 	 * @default -1
 	 */
-	lrsset: number=-1;
+	survey_lrsset: number=-1;
 	
 	/**
 	 * Creates a new LimesurveyActivity instance
@@ -42,8 +42,8 @@ export class LimesurveyActivity extends Activity {
 		super(data);
 		// Assign limesurvey-specific properties if provided in data
 		this.survey_id = data.survey_id ?? -1;
-		this.language = data.language ?? '';
-		this.lrsset = data.lrsset ?? -1;
+		this.suvey_language = data.suvey_language ?? '';
+		this.survey_lrsset = data.survey_lrsset ?? -1;
 	}
 	
 	/**
@@ -66,8 +66,8 @@ export class LimesurveyActivity extends Activity {
 			
 			if (limesurveyData) {
 				instance.survey_id = limesurveyData.survey_id ?? -1;
-				instance.language = limesurveyData.language ?? '';
-				instance.lrsset = limesurveyData.lrsset ?? -1;
+				instance.suvey_language = limesurveyData.suvey_language ?? '';
+				instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
 			}
 		} catch (error) {
 			console.error('Error loading LimesurveyActivity data:', error);

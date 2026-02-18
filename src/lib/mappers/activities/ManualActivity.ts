@@ -16,19 +16,19 @@ export class ManualActivity extends Activity {
 	 * Whether this activity is managed by users/instructors
 	 * @default false
 	 */
-	user_managed:boolean=false;
+	manual_user_managed:boolean=false;
 	
 	/**
 	 * Type of resource associated with the activity (e.g., 'document', 'video')
 	 * @default ''
 	 */
-	ressource_type: string='';
+	manual_ressource_type: string='';
 	
 	/**
 	 * URL to the resource for this manual activity
 	 * @default ''
 	 */
-	ressource_url: string='';
+	manual_ressource_url: string='';
 
 	/**
 	 * Creates a new ManualActivity instance
@@ -40,9 +40,9 @@ export class ManualActivity extends Activity {
 	constructor(data: any) {
 		super(data);
 		// Assign manual activity-specific properties if provided in data
-		this.user_managed = data.user_managed ?? false;
-		this.ressource_type = data.ressource_type ?? '';
-		this.ressource_url = data.ressource_url ?? '';
+		this.manual_user_managed = data.manual_user_managed ?? false;
+		this.manual_ressource_type = data.manual_ressource_type ?? '';
+		this.manual_ressource_url = data.manual_ressource_url ?? '';
 	}
 	
 	/**
@@ -64,9 +64,9 @@ export class ManualActivity extends Activity {
 			});
 			
 			if (manualData) {
-				instance.user_managed = manualData.user_managed ?? false;
-				instance.ressource_type = manualData.ressource_type ?? '';
-				instance.ressource_url = manualData.ressource_url ?? '';
+				instance.manual_user_managed = manualData.manual_user_managed ?? false;
+				instance.manual_ressource_type = manualData.manual_ressource_type ?? '';
+				instance.manual_ressource_url = manualData.manual_ressource_url ?? '';
 			}
 		} catch (error) {
 			console.error('Error loading ManualActivity data:', error);

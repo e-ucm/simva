@@ -24,7 +24,7 @@ export class Group {
     /**
      * Whether to use new generation algorithms for participant codes
      */
-    use_new_generation: boolean;
+    group_use_new_generation: boolean;
     
     /**
      * Human-readable name for the group
@@ -57,12 +57,12 @@ export class Group {
      * 
      * @param {any} data - Raw data object containing group properties
      * @description Initializes group properties and parses array fields from string format.
-     * Processes participant arrays and ensures proper boolean conversion for use_new_generation.
+      * Processes participant arrays and ensures proper boolean conversion for group_use_new_generation.
      */
     constructor(data: any) {
         const processedResults = db.Functions.parseStringArraysToTypedArrays(data, Group.numericKeys, 'number');
         this.group_id = processedResults.group_id; // Ensure group_id is included in the data
-        this.use_new_generation = Boolean(processedResults.use_new_generation); // Ensure use_new_generation is included in the data
+        this.group_use_new_generation = Boolean(processedResults.group_use_new_generation); // Ensure group_use_new_generation is included in the data
         this.group_name = processedResults.group_name || processedResults.name || "";
         this.created_at = processedResults.created_at ? new Date(processedResults.created_at) : new Date();
         this.participants = processedResults.participants || [];
@@ -106,7 +106,7 @@ export class Group {
             throw new ValidationError("Group name must be unique");
         }
         body.group_owner_id = current_user_id;
-        body.use_new_generation = useNewGeneration;
+        body.group_use_new_generation = useNewGeneration;
         let createdGroup = await db.Tables.Group.create(body);
         return Group.getFromDbData(createdGroup.group_id, current_user_id);
     }
@@ -144,7 +144,7 @@ export class Group {
 
     async createParticipant(body: Partial<GroupParticipant>) {
         this.canEdit();
-        let participant = await GroupParticipant.createInDb(this.group_id, this.use_new_generation, body);
+        let participant = await GroupParticipant.createInDb(this.group_id, this.group_use_new_generation, body);
         return participant;
     }
 
