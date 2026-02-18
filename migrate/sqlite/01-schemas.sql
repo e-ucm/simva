@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS "Activities" (
 	"activity_expire_on_seconds" INTEGER,
 	"activity_trace_storage" BOOLEAN NOT NULL,
 	"activity_description" VARCHAR NOT NULL,
+	"activity_comply_with_GDPR" BOOLEAN NOT NULL,
 	"activity_can_be_restarted" BOOLEAN NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),

@@ -180,6 +180,7 @@ SELECT
     act.activity_expire_on_seconds,
     act.activity_trace_storage,
     act.activity_description,
+    act.activity_comply_with_GDPR,
     act.activity_can_be_restarted
 FROM Activities act
 LEFT JOIN vv_user_permissions up ON act.activity_id = up.object_id AND up.object_type = "ACTIVITY";
@@ -278,6 +279,7 @@ SELECT
     act.activity_name,
     act.activity_type,
     act.activity_trace_storage,
+    act.activity_comply_with_GDPR,
     ac.activity_initialized,
     ac.activity_progress,
     ac.activity_completed,

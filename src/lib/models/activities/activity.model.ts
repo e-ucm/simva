@@ -25,6 +25,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {number|null} activity_expire_on_seconds - Expiration time in seconds
  * @property {boolean} activity_trace_storage - Whether to store user interaction traces
  * @property {string} description - Detailed description of the activity
+ * @property {boolean} activity_comply_with_GDPR - Whether the activity complies with GDPR requirements
  * @property {boolean} activity_can_be_restarted - Whether the activity can be restarted
  * @property {Date} createdAt - Timestamp when the activity was created
  * @property {Date} updatedAt - Timestamp when the activity was last updated
@@ -41,6 +42,7 @@ export class Activity extends Model {
   declare activity_expire_on_seconds: number | null;
   declare activity_trace_storage: boolean;
   declare activity_description: string;
+  declare activity_comply_with_GDPR: boolean;
   declare activity_can_be_restarted: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -117,6 +119,10 @@ export function ActivityFactory(
     },
     activity_description: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+    activity_comply_with_GDPR: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
     },
     activity_can_be_restarted: {

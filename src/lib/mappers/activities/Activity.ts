@@ -68,6 +68,11 @@ export class Activity {
 	activity_description?: string;
 
 	/**
+	 * Whether this activity complies with GDPR requirements
+	 */
+	activity_comply_with_GDPR: boolean;
+
+	/**
 	 * Whether this activity can be restarted by participants
 	 */
 	activity_can_be_restarted: boolean;
@@ -91,6 +96,7 @@ export class Activity {
 		this.activity_expire_on_seconds = data.activity_expire_on_seconds || -1;
 		this.activity_trace_storage = data.activity_trace_storage || false; // Default to false if not provided
 		this.activity_description = data.activity_description || ""; // Default to empty string if not provided
+		this.activity_comply_with_GDPR = data.activity_comply_with_GDPR || false;
 		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
 	}
 

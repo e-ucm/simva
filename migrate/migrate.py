@@ -456,8 +456,8 @@ for session in sessions:
 
 # Adding Activities into Activities table
 activities_sql = """
-INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, activity_presignedUrl, activity_generated_at, activity_expire_on_seconds, activity_trace_storage, activity_description, activity_can_be_restarted)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, activity_presignedUrl, activity_generated_at, activity_expire_on_seconds, activity_trace_storage, activity_description, activity_comply_with_GDPR, activity_can_be_restarted)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 filtered_activities = [
@@ -478,6 +478,7 @@ activities_values = [
         a.get("extra_data", {}).get("minio_trace", {}).get("expire_on_sec"), 
         a.get("extra_data", {}).get("config", {}).get("trace_storage","false") == "true", 
         "",
+        a.get("comply_with_GDPR", "false") == "true",
         a.get("can_be_restarted", "false") == "true"
     )
     for a in filtered_activities
