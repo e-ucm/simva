@@ -17,6 +17,7 @@ import {
   createSimlet,
   patchSimlet,
   deleteSimlet,
+  updateSimletAllocator,
   getAllocatorFromSimlet,
   getSimletParticipants,
   getSimletGroups,
@@ -84,6 +85,7 @@ router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/allocator", getAllocatorFromSimlet);
+router.patch("/:simlet_id/allocator", updateSimletAllocator);
 router.get("/:simlet_id/participants", getSimletParticipants);
 router.get("/:simlet_id/groups", getSimletGroups);
 

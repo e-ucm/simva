@@ -28,7 +28,7 @@ export class Activity {
 		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
 		return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity.activity_id, user_id, allocated, activity)));
     }
-	allocated: boolean;
+	allocated_user: boolean;
 	allocated_user_id?:number;
 	allocated_username?:string;
 	allocated_isToken?:string;
@@ -120,7 +120,7 @@ export class Activity {
 	 * Sets default values for optional properties.
 	 */
 	constructor(allocated: boolean, data: any) {
-		this.allocated = allocated;
+		this.allocated_user = allocated;
 		this.session_id = data.session_id;
 		this.activity_id = data.activity_id;
 		this.activity_name = data.activity_name;
@@ -128,7 +128,7 @@ export class Activity {
 		this.activity_type = data.activity_type;
 		this.activity_trace_storage = data.activity_trace_storage || false; // Default to false if not provided
 		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
-		if(this.allocated) {
+		if(this.allocated_user) {
 			this.session_active = data.session_active;
 			this.session_start_date = data.session_start_date;
 			this.session_end_date = data.session_end_date;
@@ -146,7 +146,7 @@ export class Activity {
 		}
 	}
 
-	static async getFromDbData(activity_id:number, user_id: number, allocated : boolean = false, activityData : any = {}) : Promise<Activity> {
+	static async getFromDbData(activity_id:number, user_id: number, allocated : boolean = false, activityData : any = null) : Promise<Activity> {
 		let results;
 		if(allocated) {
 			results = await db.Functions.runViewQuery(

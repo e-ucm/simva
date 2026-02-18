@@ -25,11 +25,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * const allocator = AllocatorToClass({ allocator_type: 'random', allocator_id: 456 });
  * // Returns a RandomAllocator instance
  */
-export async function AllocatorToClass(allocator_id: number) : Promise<Allocator> {
-    const allocator = await db.Tables.Allocators.findOne({ where: { allocator_id } });
-    if(!allocator){
-        throw new NotFoundError(`Allocator with ID ${allocator_id} not found.`);
-    }
+export async function AllocatorToClass(allocator: any) : Promise<Allocator> {
     logger.debug({allocator}, allocator.allocator_type);
     switch (allocator.allocator_type) {
         case SessionAllocator.getType():

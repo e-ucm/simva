@@ -255,6 +255,23 @@ export async function getAllocatorFromSimlet(
   }
 }
 
+export async function updateSimletAllocator(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    logger.debug({simletId} , "Getting allocator for simlet ID");
+    let currentUser = req.user?.sql;
+    let body = req.body;
+    const allocator = await simletService.updateSimletAllocator(simletId, currentUser!.user_id as number, body);
+    res.json(allocator);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getSimletParticipants(
   req: AuthenticatedRequest,
   res: Response,

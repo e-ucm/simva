@@ -4,7 +4,6 @@ import { logger } from "@/lib/logger";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
-import { AllocatorToClass } from "@/lib/mappers/allocators/AllocatorToClass";
 import { SimletParticipant } from "./SimletParticipant";
 import { SimletGroup } from "./SimletGroup";
 import { Session } from "../session/Session";
@@ -243,8 +242,16 @@ export class Simlet {
         return this;
     }
 
-    getAllocator(): Promise<Allocator> {
-      return AllocatorToClass(this.allocator_id);
+    async getAllocator(): Promise<Allocator> {
+      return await Allocator.getFromDbData(this.allocator_id);
+    }
+
+
+    async updateAllocator(data: Partial<Allocator>) : Promise<Allocator> {
+      this.canEdit();
+      let allocator = await Allocator.getFromDbData(this.allocator_id);
+      allocator.update(data);
+      return allocator;
     }
 
     async getAllocatedParticipants(): Promise<SimletParticipant[]> {

@@ -36,6 +36,15 @@ export class Allocator {
      */
     updatedAt: Date;
 
+    static async getFromDbData(allocator_id: number) : Promise<Allocator> {
+        let allocator = await db.Tables.Allocators.findOne({ where: { allocator_id } });
+        if(!allocator){
+           throw new NotFoundError(`Allocator with ID ${allocator_id} not found.`);
+        }
+        let { AllocatorToClass } = await import("@/lib/mappers/allocators/AllocatorToClass");
+        return AllocatorToClass(allocator);
+    }
+
     /**
      * Gets the allocator type identifier
      * 
@@ -106,7 +115,16 @@ export class Allocator {
         this.createdAt = data.createdAt;
         this.updatedAt = data.updatedAt;
     }
-
+    
+    async update(data: Partial<Allocator>) {
+        let allocator = await db.Tables.Allocators.findOne({where : {allocator_id : this.allocator_id}});
+        if(allocator) {
+            await allocator.update(data);
+            return Allocator.getFromDbData(this.allocator_id);
+        } else {
+            throw new NotFoundError("allocator not found");
+        }
+    }
     printInfo() {
         console.log({allocator : this}, `Allocator ID: ${this.allocator_id}, Type: ${this.allocator_type}`);
     }
