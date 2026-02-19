@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
-
 /**
  * User Permission mapper class representing user access permissions.
  * Maps users to their permission levels within the system.
@@ -193,7 +192,7 @@ export class UserPermission {
         return this.permissions;
     }
 
-    async createPermissions(body: any) {
+    async createPermissions(body: any) : Promise<UserPermission> {
         switch (this.object_type) {
             case 'simlet':
                 await db.Tables.SimletPermissions.create({ simlet_id: this.object_id, user_id: body.user_id, permission: body.permission });
@@ -207,5 +206,28 @@ export class UserPermission {
             default:
                 throw new Error(`Unsupported object type: ${this.object_type}`);
         }
-    } 
+        return this;
+    }
+
+    async deleteAllPermissions() {
+        switch (this.object_type) {
+            case 'simlet':
+                await db.Tables.SimletPermissions.destroy({ where: { simlet_id: this.object_id } });
+                break;
+            case 'session':
+                await db.Tables.SessionPermissions.destroy({ where: { session_id: this.object_id } });
+                break;
+            case 'group':
+                await db.Tables.GroupPermissions.destroy({ where: { group_id: this.object_id } });
+                break;
+            default:
+                throw new Error(`Unsupported object type: ${this.object_type}`);
+        }
+    }
+
+    toJSON() {
+        return {
+            permissions: this.permissions.map(p => p.toJSON())
+        };
+    }
 }

@@ -90,4 +90,12 @@ export class SingleUserPermission {
         }
         return true;
     }
+
+    toJSON() {
+        return {
+            user_id: this.user_id,
+            username: this.username,
+            permission: this.permission
+        };
+    }
 }

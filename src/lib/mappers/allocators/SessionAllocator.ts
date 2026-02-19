@@ -62,6 +62,12 @@ export class SessionAllocator extends Allocator {
 
     constructor(data: any) {
         super(data);
-        // Additional initialization for GroupAllocator if needed
+        // Additional initialization for SessionAllocator if needed
     }
+
+    async init() : Promise<void> {
+        super.init();
+        // Additional initialization logic for SessionAllocator can be added here if needed in the future
+    }
+
 }

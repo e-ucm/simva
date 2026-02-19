@@ -39,7 +39,7 @@ export async function getGroups(
     }
     logger.debug({version, searchString, limit, offset}, "Getting groups with query parameters");
     const groups = await groupService.getGroups(req.user!.sql.user_id as number, version, searchString, limit, offset);
-    res.json(groups);
+    res.json(groups.map(g => g.toJSON()));
   } catch (err) {
     next(err);
   }
@@ -72,7 +72,7 @@ export async function getGroupById(
     }
 
     const group = await groupService.getGroup(groupId, req.user!.sql.user_id as number);
-    res.json(group);
+    res.json(group.toJSON());
   } catch (err) {
     next(err);
   }
@@ -102,7 +102,7 @@ export async function createGroup(
     const currentUser = req.user?.sql;
     const useNewGeneration = Boolean(req.query.use_new_generation) || true;
     const group = await groupService.createGroup(req.body, useNewGeneration, currentUser?.user_id!);
-    res.status(201).json(group);
+    res.status(201).json(group.toJSON());
   } catch (err) {
     next(err);
   }
@@ -136,7 +136,7 @@ export async function updateGroup(
       throw new ValidationError("Invalid group ID");
     }
     const group = await groupService.updateGroup(groupId, currentUser!.user_id as number, req.body);
-    res.json(group);
+    res.json(group.toJSON());
   } catch (err) {
     next(err);
   }
@@ -187,7 +187,7 @@ export async function getGroupParticipants(
     }
     let currentUser = req.user?.sql;
     const participants = await groupService.getGroupParticipants(groupId, currentUser!.user_id as number);
-    res.json(participants);
+    res.json(participants.map(p => p.toJSON()));
   } catch (err) {
     next(err);
   } 
@@ -222,7 +222,7 @@ export async function createGroupParticipant(
     let currentUserId = currentUser!.user_id as unknown as string;
     logger.info(req.body, "Creating group participant with request body for group ID " + groupId + " and current user ID " + currentUserId);
     const participant = await groupService.createGroupParticipant(groupId, parseInt(currentUserId), req.body);
-    res.status(201).json(participant);
+    res.status(201).json(participant.toJSON());
   } catch (err) {
     next(err);
   }
@@ -263,7 +263,7 @@ export async function getGroupPermissions (
     logger.debug({groupId, userId: currentUser?.user_id} , "Getting permissions for group ID and user ID");
     const permissions = await groupService.getGroupPermissions(groupId, currentUser!.user_id as number);
     logger.debug({permissions} , "Permissions retrieved for group ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
@@ -281,7 +281,7 @@ export async function createGroupPermissions (
     logger.debug({groupId, userId: currentUser?.user_id, body} , "Creating permissions for group ID and user ID");
     const permissions = await groupService.createGroupPermissions(groupId, currentUser!.user_id as number, body);
     logger.debug({permissions} , "Permissions created for group ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
@@ -299,7 +299,7 @@ export async function getGroupPermissionsForUser (
     logger.debug({groupId, userId: currentUser?.user_id} , "Getting permissions for group ID and user ID");
     const permissions = await groupService.getGroupPermissionsForUser(groupId, userId, currentUser!.user_id as number);
     logger.debug({permissions} , "Permissions retrieved for group ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   }
     catch (err) {
     next(err);
@@ -319,7 +319,7 @@ export async function patchGroupPermissionsForUser (
     logger.debug({groupId, userId: currentUser?.user_id, body} , "Patching permissions for group ID and user ID");
     const permissions = await groupService.patchGroupPermissionsForUser(groupId, userId, currentUser!.user_id as number, body);
     logger.debug({permissions} , "Permissions patched for group ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }

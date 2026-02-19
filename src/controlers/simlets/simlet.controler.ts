@@ -53,7 +53,7 @@ export async function getAllSimlets(
       case "admin":
       case "teacher":
         simlets = await simletService.getSimletsByUserId(currentUser!.user_id as number, searchString, limit, offset);
-        res.json(simlets);
+        res.json(simlets.map(s => s.toJSON()));
         break;
     }
   } catch (err) {
@@ -135,7 +135,7 @@ export async function getSimletById(
         // For teachers, we could add additional permission checking here if needed
         simlet = await simletService.getSimletBySimletIdAndUserId(simlet_id, currentUser!.user_id as number);
         logger.debug({simlet} , "getSimletById results");
-        res.json(simlet);
+        res.json(simlet.toJSON());
         break;
     }
   } catch (err) {
@@ -172,7 +172,7 @@ export async function createSimlet(
   try {
     req.body.simlet_coordinator_id = req.user?.sql.user_id;
     const simlet = await simletService.createSimlet(req.body);
-    res.status(201).json(simlet);
+    res.status(201).json(simlet.toJSON());
   } catch (err) {
     next(err);
   }
@@ -203,7 +203,7 @@ export async function patchSimlet(
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
     const simlet = await simletService.patch(simletId, currentUser!.user_id as number, req.body);
-    res.json(simlet);
+    res.json(simlet.toJSON());
   } catch (err) {
     next(err);
   }
@@ -249,7 +249,7 @@ export async function getAllocatorFromSimlet(
     logger.debug({simletId} , "Getting allocator for simlet ID");
     let currentUser = req.user?.sql;
     const allocator = await simletService.getAllocatorFromSimlet(simletId, currentUser!.user_id as number);
-    res.json(allocator);
+    res.json(allocator.toJSON());
   } catch (err) {
     next(err);
   }
@@ -266,7 +266,7 @@ export async function updateSimletAllocator(
     let currentUser = req.user?.sql;
     let body = req.body;
     const allocator = await simletService.updateSimletAllocator(simletId, currentUser!.user_id as number, body);
-    res.json(allocator);
+    res.json(allocator.toJSON());
   } catch (err) {
     next(err);
   }
@@ -283,7 +283,7 @@ export async function getSimletParticipants(
     logger.debug({simletId} , "Getting participants for simlet ID");
     const participants = await simletService.getSimletParticipants(simletId, currentUser!.user_id as number);
     logger.debug({participants} , "Participants retrieved for simlet ID");
-    res.json(participants);
+    res.json(participants.map(p => p.toJSON()));
   } catch (err) {
     next(err);
   }
@@ -300,7 +300,7 @@ export async function getSimletGroups(
     logger.debug({simletId} , "Getting groups for simlet ID");
     const groups = await simletService.getSimletGroups(simletId, currentUser!.user_id as number);
     logger.debug({groups} , "Groups retrieved for simlet ID");
-    res.json(groups);
+    res.json(groups.map(g => g.toJSON()));
   } catch (err) {
     next(err);
   }
@@ -325,7 +325,7 @@ export async function getSimletSessions(
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting sessions for simlet ID and user ID");
     const sessions = await simletService.getSimletSessions(simletId, currentUser!.user_id as number, searchString, limit, offset);
     logger.debug({sessions} , "Sessions retrieved for simlet ID and user ID");
-    res.json(sessions);
+    res.json(sessions.map(s => s.toJSON()));
   } catch (err) {
     next(err);
   }
@@ -343,7 +343,7 @@ export async function getSimletSession(
     logger.debug({simletId, sessionId, userId} , "Getting session for simlet ID, session ID and user ID");
     const session = await simletService.getSimletSession(simletId, sessionId, userId!);
     logger.debug({session} , "Session retrieved for simlet ID, session ID and user ID");
-    res.json(session);
+    res.json(session.toJSON());
   } catch (err) {
     next(err);
   }
@@ -361,7 +361,7 @@ export async function getSessionActivities(
     logger.debug({sessionId, userId: currentUser?.user_id} , "Getting activities for session ID and user ID");
     const activities = await simletService.getSessionActivities(simletId, sessionId, currentUser!.user_id as number);
     logger.debug({activities} , "Activities retrieved for session ID and user ID");
-    res.json(activities);
+    res.json(activities.map(a => a.toJSON()));
   } catch (err) {
     next(err);
   }
@@ -379,7 +379,7 @@ export async function createSimletSession(
     logger.debug({simletId, userId: currentUser?.user_id, body} , "Creating session for simlet ID and user ID");
     const session = await simletService.createSimletSession(simletId, currentUser!.user_id as number, body);
     logger.debug({session} , "Session created for simlet ID and user ID");
-    res.json(session);
+    res.json(session.toJSON());
   } catch (err) {
     next(err);
   }
@@ -396,9 +396,9 @@ export async function createSessionActivity(
     let body = req.body;
     let currentUser = req.user?.sql;
     logger.debug({sessionId, userId: currentUser?.user_id, body} , "Adding activities for session ID and user ID");
-    const activities = await simletService.addSessionActivities(simletId, sessionId, currentUser!.user_id as number, body);
-    logger.debug({activities} , "Activity added for session ID and user ID");
-    res.json(activities);
+    const activity = await simletService.addSessionActivities(simletId, sessionId, currentUser!.user_id as number, body);
+    logger.debug({activity} , "Activity added for session ID and user ID");
+    res.json(activity.toJSON());
   } catch (err) {
     next(err);
   }
@@ -417,7 +417,7 @@ export async function patchSimletSession(
     logger.debug({sessionId, userId: currentUser?.user_id, body} , "Patching session for simlet ID and user ID");
     const session = await simletService.patchSimletSession(simletId, sessionId, currentUser!.user_id as number, body);
     logger.debug({session} , "Session patched for simlet ID and user ID");
-    res.json(session);
+    res.json(session.toJSON());
   } catch (err) {
     next(err);
   }
@@ -452,7 +452,7 @@ export async function getSimletSchedule(
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting schedule for simlet ID and user ID");
     const schedule = await simletService.getSimletSchedule(simletId, currentUser!.user_id as number);
     logger.debug({schedule} , "Schedule retrieved for simlet ID and user ID");
-    res.json(schedule);
+    res.json(schedule.toJSON());
   } catch (err) {
     next(err);
   }
@@ -469,7 +469,7 @@ export async function getSimletPermissions (
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting permissions for simlet ID and user ID");
     const permissions = await simletService.getSimletPermissions(simletId, currentUser!.user_id as number);
     logger.debug({permissions} , "Permissions retrieved for simlet ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
@@ -487,7 +487,7 @@ export async function createSimletPermissions (
     logger.debug({simletId, userId: currentUser?.user_id, body} , "Creating permissions for simlet ID and user ID");
     const permissions = await simletService.createSimletPermissions(simletId, currentUser!.user_id as number, body);
     logger.debug({permissions} , "Permissions created for simlet ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
@@ -505,7 +505,7 @@ export async function getSimletPermissionsForUser (
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting permissions for simlet ID and user ID");
     const permissions = await simletService.getSimletPermissionsForUser(simletId, userId, currentUser!.user_id as number);
     logger.debug({permissions} , "Permissions retrieved for simlet ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   }
     catch (err) {
     next(err);
@@ -525,7 +525,7 @@ export async function patchSimletPermissionsForUser (
     logger.debug({simletId, userId: currentUser?.user_id, body} , "Patching permissions for simlet ID and user ID");
     const permissions = await simletService.patchSimletPermissionsForUser(simletId, userId, currentUser!.user_id as number, body);
     logger.debug({permissions} , "Permissions patched for simlet ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
@@ -561,7 +561,7 @@ export async function getSessionPermissions (
     logger.debug({simletId, sessionId, userId: currentUser?.user_id} , "Getting permissions for session ID and user ID");
     const permissions = await simletService.getSessionPermissions(simletId, sessionId, currentUser!.user_id as number);
     logger.debug({permissions} , "Permissions retrieved for session ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
@@ -580,7 +580,7 @@ export async function createSessionPermissions (
     logger.debug({simletId, sessionId, userId: currentUser?.user_id, body} , "Creating permissions for session ID and user ID");
     const permissions = await simletService.createSessionPermissions(simletId, sessionId, currentUser!.user_id as number, body);
     logger.debug({permissions} , "Permissions created for session ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
@@ -599,7 +599,7 @@ export async function getSessionPermissionsForUser (
     logger.debug({simletId, sessionId, userId: currentUser?.user_id} , "Getting permissions for session ID and user ID");
     const permissions = await simletService.getSessionPermissionsForUser(simletId, sessionId, userId, currentUser!.user_id as number);
     logger.debug({permissions} , "Permissions retrieved for session ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   }
     catch (err) {
     next(err);
@@ -620,7 +620,7 @@ export async function patchSessionPermissionsForUser (
     logger.debug({simletId, sessionId, userId: currentUser?.user_id, body} , "Patching permissions for session ID and user ID");
     const permissions = await simletService.patchSessionPermissionsForUser(simletId, sessionId, userId, currentUser!.user_id as number, body);
     logger.debug({permissions} , "Permissions patched for session ID and user ID");
-    res.json(permissions);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }

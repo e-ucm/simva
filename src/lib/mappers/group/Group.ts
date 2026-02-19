@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 import { SingleUserPermission } from "../UserPermisions/SingleUserPermission";
 import { UserPermission } from "../UserPermisions/UserPermission";
+import { GroupPermissions } from "@/lib/models/groups/groupPermissions.model";
 
 /**
  * Group mapper class representing a collection of participants in studies.
@@ -36,8 +37,9 @@ export class Group {
     /**
      * Timestamp when the group was created
      */
-    created_at: Date;
-    
+    createdAt?: Date;
+    updatedAt?: Date;
+
     /**
      * Array of participant IDs belonging to this group
      */
@@ -45,11 +47,6 @@ export class Group {
     
     group_owner_user_id : number;
     group_owner_username: string;
-
-    /**
-     * Array of direct permissions granted for this group
-     */
-    direct_permissions: string[] = [];
 
     /**
      * Creates a new Group instance
@@ -62,7 +59,8 @@ export class Group {
         this.group_id = data.group_id; // Ensure group_id is included in the data
         this.group_use_new_generation = Boolean(data.group_use_new_generation); // Ensure group_use_new_generation is included in the data
         this.group_name = data.group_name || data.name || "";
-        this.created_at = data.created_at ? new Date(data.created_at) : new Date();
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         this.participants = data.participants || [];
         this.group_owner_user_id = data.group_owner_user_id || "";
         this.group_owner_username = data.group_owner_username || "";
@@ -105,6 +103,11 @@ export class Group {
         const group = new Group(groups[0]);
         await group.init();
         return group;
+    }
+
+    static async getGroupCountForUser(current_user_id: number, searchString: string): Promise<number> {
+        const results = await db.Functions.runViewQuery(db.Views.Group.countByUserId, { current_user_id, search: searchString });
+        return results[0].count || 0;
     }
     
     static async createInDb(body: Partial<Group>, useNewGeneration : boolean, current_user_id: number): Promise<Group> {
@@ -171,11 +174,18 @@ export class Group {
          if(this.current_user_permission.toLowerCase() === "full" || this.current_user_permission.toLowerCase() === "write") {
              return true;
          }
-         throw new AuthentificationError("User does not have permission to edit this simlet");
+         throw new AuthentificationError("User does not have permission to edit this group");
+    }
+
+    canDelete() : boolean {
+        if(this.current_user_permission.toLowerCase() === "full") {
+            return true;
+        }
+        throw new AuthentificationError("User does not have permission to delete this group");
     }
 
     async delete() {
-        this.canEdit();
+        this.canDelete();
         await db.Tables.Group.destroy({where: {group_id: this.group_id}});
     }
 
@@ -183,7 +193,7 @@ export class Group {
       return await UserPermission.getFromDbData('group', this.group_id);
     }
     
-    async createPermissions(body: any) {
+    async createPermissions(body: any) : Promise<UserPermission> {
         this.canEdit();
         let permissions = await UserPermission.getFromDbData('group', this.group_id);
         return await permissions.createPermissions(body);
@@ -203,5 +213,18 @@ export class Group {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
         return await permission.delete();
+    }
+
+    toJSON() {
+        return {
+            group_id: this.group_id,
+            group_use_new_generation: this.group_use_new_generation,
+            group_name: this.group_name,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
+            participants: this.participants,
+            group_owner_user_id: this.group_owner_user_id,
+            group_owner_username: this.group_owner_username
+        };
     }
 }

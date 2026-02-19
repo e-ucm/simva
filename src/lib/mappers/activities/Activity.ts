@@ -423,4 +423,22 @@ export class Activity {
 		//	throw err;
 		//}
 	}
+
+	toJSON() {
+		return {
+			activity_id: this.activity_id,
+			activity_name: this.activity_name,
+			activity_type: this.activity_type,
+			activity_order: this.activity_order,
+			activity_trace_storage: this.activity_trace_storage,
+			activity_can_be_restarted: this.activity_can_be_restarted,
+			activity_description: this.activity_description,
+			createdAt: this.createdAt,
+			updatedAt: this.updatedAt,
+			activity_presignedUrl: this.activity_presignedUrl,
+			activity_generated_at: this.activity_generated_at,
+			activity_expire_on_seconds: this.activity_expire_on_seconds,
+			activity_comply_with_GDPR: this.activity_comply_with_GDPR
+		};
+	}
 }

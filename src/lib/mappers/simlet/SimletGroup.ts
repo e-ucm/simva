@@ -25,16 +25,11 @@ export class SimletGroup {
      * Name of the group for display purposes
      */
     group_name: string;
-    
+
     /**
      * Array of participant identifiers in this group
      */
     participants: string[];
-    
-    /**
-     * Array of direct permissions granted for this group within the study
-     */
-    direct_permissions: string[] = [];
 
     /**
      * Creates a new SimletGroup instance
@@ -94,5 +89,14 @@ export class SimletGroup {
 
     printInfo(): void {
         logger.debug({ SimletGroup : this }, `SimletGroup information - Simlet ID: ${this.simlet_id}, Group ID: ${this.group_id}, Group Name: ${this.group_name}`);
+    }
+
+    toJSON() {
+        return {
+            simlet_id: this.simlet_id,
+            group_id: this.group_id,
+            group_name: this.group_name,
+            participants: this.participants
+        };
     }
 }

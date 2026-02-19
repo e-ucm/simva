@@ -29,15 +29,25 @@ export async function AllocatorToClass(allocator: any) : Promise<Allocator> {
     logger.debug({allocator}, allocator.allocator_type);
     switch (allocator.allocator_type) {
         case SessionAllocator.getType():
-            return new SessionAllocator(allocator);
+            let sessionAllocator = new SessionAllocator(allocator);
+            await sessionAllocator.init();
+            return sessionAllocator;
         case RandomAllocator.getType():
-            return new RandomAllocator(allocator);
+            let randomAllocator = new RandomAllocator(allocator);
+            await randomAllocator.init();
+            return randomAllocator;
         case GroupAllocator.getType():
-            return new GroupAllocator(allocator);
+            let groupAllocator = new GroupAllocator(allocator);
+            await groupAllocator.init();
+            return groupAllocator;
         case Allocator.getType():
-            return new Allocator(allocator);
+            let baseAllocator = new Allocator(allocator);
+            await baseAllocator.init();
+            return baseAllocator;
         default:
             logger.warn(`Unknown allocator type: ${allocator.allocator_type}, returning default Allocator instance.`);
-            return new Allocator(allocator);
+            let defaultAllocator = new Allocator(allocator);
+            await defaultAllocator.init();
+            return defaultAllocator;
     }
 }

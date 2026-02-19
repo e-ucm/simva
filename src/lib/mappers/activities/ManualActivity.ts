@@ -97,4 +97,14 @@ export class ManualActivity extends Activity {
 			grade: null // Fetch grade if available
 		};
 	}
+
+	toJSON() {
+		return {
+			...super.toJSON(),
+			activity_type : ManualActivity.getType(),
+			manual_user_managed: this.manual_user_managed,
+			manual_ressource_type: this.manual_ressource_type,
+			manual_ressource_url: this.manual_ressource_url
+		};
+	}
 }

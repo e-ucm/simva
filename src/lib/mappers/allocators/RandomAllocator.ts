@@ -1,5 +1,6 @@
+import { db } from "@/lib/db";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
-
+import { RandomPercentages } from "@/lib/mappers/allocators/RandomPercentages";
 /**
  * Random Allocator mapper class extending base Allocator.
  * Implements random assignment of participants to sessions/conditions.
@@ -10,6 +11,8 @@ import { Allocator } from "@/lib/mappers/allocators/Allocator";
  * across different experimental conditions or sessions in a study.
  */
 export class RandomAllocator extends Allocator {
+    percentages: RandomPercentages[] = [];
+
     /**
      * Gets the allocator type identifier
      * 
@@ -76,5 +79,19 @@ export class RandomAllocator extends Allocator {
     constructor(data: any) {
         super(data);
         // Additional initialization for RandomAllocator if needed
+    }
+
+    async init() : Promise<void> {
+        super.init();
+        this.percentages = await RandomPercentages.getAllFromDbData(this.allocator_id);
+        // Additional initialization logic for RandomAllocator can be added here if needed in the future
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            allocator_type: RandomAllocator.getType(),
+            percentages: this.percentages.map(p => p.toJSON())
+        }
     }
 }

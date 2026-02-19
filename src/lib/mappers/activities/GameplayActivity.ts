@@ -117,4 +117,17 @@ export class GamePlayActivity extends Activity {
 			scores: [] // Fetch scores related to this activity
 		};
 	}
+
+	toJSON() {
+		return {
+			...super.toJSON(),
+			activity_type : GamePlayActivity.getType(),
+			game_backup: this.game_backup,
+			game_scorm_xapi: this.game_scorm_xapi,
+			category_id: this.category_id,
+			subject_area_id: this.subject_area_id,
+			game_type: this.game_type,
+			game_url: this.game_url
+		};
+	}
 } 

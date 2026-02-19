@@ -115,6 +115,10 @@ export class Allocator {
         this.createdAt = data.createdAt;
         this.updatedAt = data.updatedAt;
     }
+
+    async init() : Promise<void> {
+        // Base initialization logic can be added here if needed in the future
+    }
     
     async update(data: Partial<Allocator>) {
         let allocator = await db.Tables.Allocators.findOne({where : {allocator_id : this.allocator_id}});
@@ -125,7 +129,16 @@ export class Allocator {
             throw new NotFoundError("allocator not found");
         }
     }
+
     printInfo() {
         console.log({allocator : this}, `Allocator ID: ${this.allocator_id}, Type: ${this.allocator_type}`);
+    }
+
+    toJSON() {
+        return {
+            allocator_type: this.allocator_type,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
+        }
     }
 }

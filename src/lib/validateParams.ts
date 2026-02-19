@@ -43,7 +43,8 @@ interface Params {
  * @function validateParams
  * @param {Schema} schema - Validation schema defining expected parameters
  * @param {Params} params - Parameters to validate (modified in place with defaults)
- * @throws {Error} If validation fails
+ * @returns {void} No return value; modifies params object and throws on validation errors
+ * @throws {Error} If validation fails for any parameter
  * 
  * @example
  * ```typescript

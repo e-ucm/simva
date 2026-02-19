@@ -91,7 +91,25 @@ class AllocatorType {
  * ]
  * ```
  */
-export async function getAllocatorTypes() {
+/**
+ * Retrieves all available allocator types in the SIMVA system.
+ * Returns metadata and utilities for each allocator type including their
+ * configuration options and capabilities.
+ *
+ * @async
+ * @function getAllocatorTypes
+ * @returns {Promise<AllocatorType[]>} Array of allocator type definitions
+ * @throws {Error} When allocator type initialization fails
+ * 
+ * @example
+ * ```typescript
+ * const types = await getAllocatorTypes();
+ * types.forEach(type => {
+ *   console.log(`${type.name}: ${type.description}`);
+ * });
+ * ```
+ */
+export async function getAllocatorTypes(): Promise<AllocatorType[]> {
 	let types = [ Allocator, GroupAllocator, SessionAllocator, RandomAllocator ];
 	let allocatortypes : AllocatorType[] = [];
 	for (let i = 0; i < types.length; i++) {

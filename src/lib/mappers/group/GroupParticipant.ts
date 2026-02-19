@@ -220,4 +220,15 @@ export class GroupParticipant {
         logger.info('KeyCloak -> User Added to Keycloak!');
         return true;
     }
+
+    toJSON() {
+        return {
+            user_id: this.user_id,
+            username: this.username,
+            token: this.token,
+            isToken: this.isToken,
+            role: this.role,
+            email: this.email
+        };
+    }
 }

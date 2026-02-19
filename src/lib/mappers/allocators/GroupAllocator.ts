@@ -64,4 +64,15 @@ export class GroupAllocator extends Allocator {
         super(data);
         // Additional initialization for GroupAllocator if needed
     }
+    async init() : Promise<void> {
+        super.init();
+        // Additional initialization logic for GroupAllocator can be added here if needed in the future
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            allocator_type: GroupAllocator.getType()
+        }
+    }
 }   

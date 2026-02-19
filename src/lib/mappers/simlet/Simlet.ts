@@ -58,14 +58,11 @@ export class Simlet {
      * Array of tags for categorizing the study
      */
     tags: string[];
-    
-    /**
-     * Array of direct permissions granted for this study
-     */
-    direct_permissions: string[] = [];
      
     allocator_id: number;
-    
+
+    createdAt?: Date;
+    updatedAt?: Date;
 
     /**
      * Creates a new Simlet instance
@@ -82,6 +79,8 @@ export class Simlet {
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission;
         this.allocator_id = data.allocator_id;
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         this.sessions = [];
         this.tags = [];
         this.groups = [];
@@ -158,7 +157,19 @@ export class Simlet {
         await simlet.init();
         return simlet;
     }
+    static async getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString: string): Promise<number> {
+        const results = await db.Functions.runViewQuery(
+            db.Views.Session.countBySimletIdAndUserId, 
+            { simlet_id, current_user_id, search: searchString }
+        );
+        return results[0].count || 0;
+    }
 
+    static async getSimletCountByUserId(current_user_id: number, searchString: string): Promise<number> {
+      const results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
+      return results[0].count || 0;
+    }
+    
     /**
      * Prints debugging information about this simlet instance
      * 
@@ -194,8 +205,15 @@ export class Simlet {
         throw new AuthentificationError("User does not have permission to edit this simlet");
     }
 
-    async remove() : Promise<void> {
-        this.canEdit();
+    canDelete() : boolean {
+        if(this.current_user_permission.toLowerCase() === "full") {
+            return true;
+        }
+        throw new AuthentificationError("User does not have permission to delete this simlet");
+    }
+
+    async delete() : Promise<void> {
+        this.canDelete();
         let model = await db.Tables.Simlets.findOne({ where: { simlet_id: this.simlet_id } });
         if(!model) {
             throw new NotFoundError(`Simlet with ID ${this.simlet_id} not found.`);
@@ -283,7 +301,7 @@ export class Simlet {
       return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id);
     }
 
-    async getSchedule() {
+    async getSchedule() : Promise<Simlet> {
       throw new Error("Method not implemented.");
     }
 
@@ -311,5 +329,20 @@ export class Simlet {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId);
         return await permission.delete();
+    }
+
+    toJSON() {
+        return {
+            simlet_id: this.simlet_id,
+            simlet_name: this.simlet_name,
+            simlet_description: this.simlet_description,
+            current_user_id: this.current_user_id,
+            current_user_username: this.current_user_username,
+            current_user_permission: this.current_user_permission,
+            sessions: this.sessions,
+            groups: this.groups,
+            tags: this.tags,
+            allocator_id: this.allocator_id
+        };
     }
 }

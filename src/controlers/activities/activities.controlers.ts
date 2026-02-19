@@ -41,7 +41,7 @@ export async function getActivity(
     let currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
     const activity = await activitiesService.getActivity(activityId, currentUser!.user_id as number);
-    return res.json(activity);
+    return res.json(activity.toJSON());
   } catch (err) {
     next(err);
   }

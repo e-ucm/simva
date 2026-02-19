@@ -93,7 +93,25 @@ if (!globalForDb.db) {
  */
 export const db = globalForDb.db!;
 
-export async function checkDatabaseConnection() {
+/**
+ * Checks if the database connection is working properly.
+ * Attempts to authenticate with the database and returns the connection status.
+ * 
+ * @async
+ * @function checkDatabaseConnection
+ * @returns {Promise<boolean>} True if connection is successful, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * const isConnected = await checkDatabaseConnection();
+ * if (isConnected) {
+ *   console.log('Database is ready');
+ * } else {
+ *   console.log('Database connection failed');
+ * }
+ * ```
+ */
+export async function checkDatabaseConnection(): Promise<boolean> {
   try {
     await db.sequelize.authenticate(); // Try to connect
     console.log('✅ Database connection has been established successfully.');

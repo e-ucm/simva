@@ -65,6 +65,8 @@ export class Session {
      */
     session_experimental_method: string;
     
+    session_can_be_manually_activated: boolean;
+
     /**
      * Whether the session is currently active
      */
@@ -89,11 +91,6 @@ export class Session {
      * Array of tags for categorizing the session
      */
     tags: string[];
-    
-    /**
-     * Array of direct permissions granted for this session
-     */
-    direct_permissions: string[] = [];
 
     /**
      * Creates a new Session instance
@@ -113,12 +110,12 @@ export class Session {
         this.createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : new Date();
         this.session_experimental_method = data.session_experimental_method || "";
+        this.session_can_be_manually_activated = data.session_can_be_manually_activated || false;
         this.session_active = data.session_active || false;
         this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : new Date();
         this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : new Date();
         this.activities = [];
         this.tags = [];
-        this.direct_permissions = [];
     }
 
     async init() {
@@ -211,6 +208,13 @@ export class Session {
         throw new AuthentificationError("User does not have permission to edit this session");
     }
 
+    canDelete() : boolean {
+        if(this.current_user_permission.toLowerCase() === "full") {
+            return true;
+        }
+        throw new AuthentificationError("User does not have permission to delete this session");
+    }
+    
     async update(body: any): Promise<Session> {
         this.canEdit();
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
@@ -223,7 +227,7 @@ export class Session {
     }
     
     async delete() {
-        this.canEdit();
+        this.canDelete();
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
             throw new ValidationError(`Session with ID ${this.session_id} not found for deletion`);
@@ -255,5 +259,64 @@ export class Session {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId);
         return await permission.delete();
+    }
+
+    async deleteAllPermissions() {
+        this.canDelete();
+        let permissions = await UserPermission.getFromDbData('session', this.session_id);
+        return await permissions.deleteAllPermissions();
+    }
+
+    async activate() {
+        this.canEdit();
+        if(!this.session_can_be_manually_activated) {
+            throw new ValidationError(`Session with ID ${this.session_id} cannot be activated. Please check the session's experimental method and conditions.`);
+        }
+        if(this.session_active) {
+            throw new ValidationError(`Session with ID ${this.session_id} is already active.`);
+        }
+        this.session_active = true;
+        let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
+        if(!session) {
+            throw new ValidationError(`Session with ID ${this.session_id} not found for activation`);
+        }
+        await session.update({ session_active: true });
+    }
+
+    async deactivate() {
+        this.canEdit();
+        if(!this.session_can_be_manually_activated) {
+            throw new ValidationError(`Session with ID ${this.session_id} cannot be deactivated. Please check the session's experimental method and conditions.`);
+        }
+        if(!this.session_active) {
+            throw new ValidationError(`Session with ID ${this.session_id} is already inactive.`);
+        }
+        this.session_active = false;
+        let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
+        if(!session) {
+            throw new ValidationError(`Session with ID ${this.session_id} not found for deactivation`);
+        }
+        await session.update({ session_active: false });
+    }
+
+    toJSON() {
+        return {
+            session_id: this.session_id,
+            simlet_id: this.simlet_id,
+            current_user_id: this.current_user_id,
+            current_user_username: this.current_user_username,
+            current_user_permission: this.current_user_permission,
+            session_name: this.session_name,
+            session_description: this.session_description,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
+            session_experimental_method: this.session_experimental_method,
+            session_can_be_manually_activated: this.session_can_be_manually_activated,
+            session_active: this.session_active,
+            session_start_date: this.session_start_date,
+            session_end_date: this.session_end_date,
+            activities: this.activities,
+            tags: this.tags
+        };
     }
 }

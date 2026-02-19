@@ -104,4 +104,14 @@ export class LimesurveyActivity extends Activity {
 	async getDetails(){
 		return {};
 	}
+
+	toJSON() {
+		return {
+			...super.toJSON(),
+			activity_type : LimesurveyActivity.getType(),
+			survey_id: this.survey_id,
+			suvey_language: this.suvey_language,
+			survey_lrsset: this.survey_lrsset
+		};
+	}
 }
