@@ -548,8 +548,7 @@ export class Activity {
 	}
 	
 	/**
-	 * Retrieve file content from Minio
-	 * @param {Object} minioClient - Minio Client object
+	 * Retrieve file content from Minio client.
 	 * @param {string} file - File path
 	 * @returns {Promise<string>}
 	 */
