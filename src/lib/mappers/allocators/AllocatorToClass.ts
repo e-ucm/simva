@@ -3,8 +3,6 @@ import { SessionAllocator } from "@/lib/mappers/allocators/SessionAllocator";
 import { RandomAllocator } from "@/lib/mappers/allocators/RandomAllocator";
 import { GroupAllocator } from "@/lib/mappers/allocators/GroupAllocator";
 import { logger } from "@/lib/logger";
-import { db } from "@/lib/db";
-import { NotFoundError } from "@/lib/errors/appErrors";
 
 /**
  * Factory function that creates appropriate Allocator subclass instances based on allocator type.

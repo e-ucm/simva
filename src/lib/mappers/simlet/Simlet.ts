@@ -7,7 +7,6 @@ import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
-import { Activity } from "@/lib/mappers/activities/Activity";
 
 /**
  * Simlet (Simple Study) mapper class representing a research study.

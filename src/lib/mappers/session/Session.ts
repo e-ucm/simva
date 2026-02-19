@@ -3,9 +3,8 @@ import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
-import { UserPermission } from "../UserPermisions/UserPermission";
-import { SingleUserPermission } from "../UserPermisions/SingleUserPermission";
-import { scheduler } from "node:timers/promises";
+import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
+import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -203,6 +202,9 @@ export class Session {
         session.allocated_activities = await Promise.all(activities.map(async (activity: any) => {
             return await ActivityToClass(activity.activity_id, current_user_id, true, activity);
         }));
+        if(!session.session_active) {
+            throw new ValidationError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
+        }
         return session;
     }
       /**

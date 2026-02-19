@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { config } from "@/lib/config";
-import { KeycloakClient, KeycloakUser } from "@/lib/mappers/Users/keycloakclient";
+import { KeycloakClient, KeycloakUser } from "@/lib/utils/keycloakclient";
 import { ValidationError } from "@/lib/errors/appErrors";
 
 /**

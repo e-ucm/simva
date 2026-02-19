@@ -1,6 +1,6 @@
-import { db } from "@/lib/db";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { RandomPercentages } from "@/lib/mappers/allocators/RandomPercentages";
+
 /**
  * Random Allocator mapper class extending base Allocator.
  * Implements random assignment of participants to sessions/conditions.

@@ -2,9 +2,8 @@ import { db } from "@/lib/db";
 import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
-import { SingleUserPermission } from "../UserPermisions/SingleUserPermission";
-import { UserPermission } from "../UserPermisions/UserPermission";
-import { GroupPermissions } from "@/lib/models/groups/groupPermissions.model";
+import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
+import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 
 /**
  * Group mapper class representing a collection of participants in studies.

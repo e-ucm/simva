@@ -3,7 +3,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 import { Op } from "sequelize";
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
-import { KeycloakClient } from "@/lib/mappers/Users/keycloakclient";
+import { KeycloakClient } from "@/lib/utils/keycloakclient";
 
 /**
  * User mapper class representing a system user.
