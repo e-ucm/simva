@@ -4,15 +4,14 @@ info:
     of a tool created to integrate and ease the task of validating serious games
     using pre-post surveys as a control point. This version allows to create more
     complex studies with more variety of activities and different allocations.
-  version: "1.0.0"
+  version: "2.0.0"
   title: Simva API
   contact:
-    email: ivanjper@ucm.es
+    email: jsantila@ucm.es
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
     
-
 tags:
   - name: admins
     description: Secured Admin-only calls
@@ -3483,20 +3482,6 @@ components:
         group:
           type: string
           example: 5d07a0767c1405004bc702af
-      x-swagger-mongoose:
-        exclude-schema: true
-    login_body:
-      required:
-      - username
-      - password
-      type: object
-      properties:
-        username:
-          type: string
-          example: pepito
-        password:
-          type: string
-          example: Pass12345
       x-swagger-mongoose:
         exclude-schema: true
     lti_status:
