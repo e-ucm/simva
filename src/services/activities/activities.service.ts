@@ -44,5 +44,7 @@ import { Activity } from "@/lib/mappers/activities/Activity";
  * ```
  */
 export async function getActivity(activityId: number, user_id: number): Promise<Activity> {
-    return Activity.getFromDbData(activityId, user_id);
+    let activity = await Activity.getFromDbData(activityId, user_id);
+    await activity.sendXAPITraceForActivity("test", "initialized", (new Date()).toUTCString(), -1, "");
+    return activity;
 }

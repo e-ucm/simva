@@ -126,6 +126,13 @@ export class GamePlayActivity extends Activity {
 		};
 	}
 
+	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
+		if(!this.game_scorm_xapi){
+			return super.sendXAPITraceForActivity(username, verb, timestamp, resultScore, reasonExtension);
+		}
+	}
+
+
 	/**
 	 * Converts the GamePlayActivity instance to a JSON representation.
 	 * Extends the base Activity JSON with gameplay-specific properties.

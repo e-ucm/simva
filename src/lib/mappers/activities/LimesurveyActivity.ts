@@ -114,6 +114,10 @@ export class LimesurveyActivity extends Activity {
 		return {};
 	}
 
+	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
+		return super.sendXAPITraceForActivity(username, verb, timestamp, resultScore, reasonExtension);
+	}
+	
 	/**
 	 * Converts the LimesurveyActivity instance to a JSON representation.
 	 * Extends the base Activity JSON with LimeSurvey-specific properties.

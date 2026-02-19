@@ -344,9 +344,10 @@ export class Activity {
 	 */
 	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
 		let jstracker = new JSScormTracker();
-		jstracker.trackerSettings.actor_homePage = config.external_url;
+		jstracker.trackerSettings.actor_homePage = config.externalUrl;
 		jstracker.trackerSettings.actor_name = username;
-		let scormActivityTracker = jstracker.scorm(this.activity_id.toString(), jstracker.SCORMTYPE.ACTVITY);
+		jstracker.start(); // Initialize the tracker before using it
+		let scormActivityTracker = jstracker.scorm(`${config.externalUrl}/activity/${this.activity_id}`, jstracker.SCORMTYPE.ACTVITY);
 		let statement;
 		switch(verb) {
 			case "initialized":
@@ -367,7 +368,6 @@ export class Activity {
 				logger.warn(`Unsupported verb ${verb} for xAPI trace`);
 		}
 		logger.info(statement? statement.toXAPI() : "No statement generated", "XAPI Statement:");
-		throw new Error("sendXAPITraceForActivity method not implemented for this activity type");
 	}
 
 	/**

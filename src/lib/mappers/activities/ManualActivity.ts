@@ -97,6 +97,10 @@ export class ManualActivity extends Activity {
 		};
 	}
 
+	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
+		return super.sendXAPITraceForActivity(username, verb, timestamp, resultScore, reasonExtension);
+	}
+
 	toJSON(): object {
 		return {
 			...super.toJSON(),
