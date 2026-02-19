@@ -69,7 +69,7 @@ export class GroupAllocator extends Allocator {
         // Additional initialization logic for GroupAllocator can be added here if needed in the future
     }
 
-    toJSON() {
+    toJSON(): object {
         return {
             ...super.toJSON(),
             allocator_type: GroupAllocator.getType()

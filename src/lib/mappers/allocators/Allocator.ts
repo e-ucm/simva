@@ -134,7 +134,7 @@ export class Allocator {
         console.log({allocator : this}, `Allocator ID: ${this.allocator_id}, Type: ${this.allocator_type}`);
     }
 
-    toJSON() {
+    toJSON(): object {
         return {
             allocator_type: this.allocator_type,
             createdAt: this.createdAt,

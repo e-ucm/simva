@@ -98,7 +98,7 @@ export class ManualActivity extends Activity {
 		};
 	}
 
-	toJSON() {
+	toJSON(): object {
 		return {
 			...super.toJSON(),
 			activity_type : ManualActivity.getType(),

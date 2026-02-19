@@ -113,6 +113,28 @@ const queries: Record<string, QueryTemplate> = {
             },
         },
     },
+    directPermissionsByGroupId: {
+        description: "Get all direct permissions of a Group by its ID",
+        sql: `
+        SELECT *
+        FROM vv_group_total_permissions
+        WHERE group_id = :group_id AND (:user_id IS NULL OR user_id = :user_id)
+        `,
+        params: {
+            group_id: {
+                type: "number",
+                required: true,
+                description: "Group Identifier",
+                example: 1,
+            },
+            user_id: {
+                type: "number",
+                required: false,
+                description: "User Identifier",
+                example: 123,
+            },
+        },
+    },
 };
 
 export default queries;

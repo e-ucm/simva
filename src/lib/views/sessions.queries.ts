@@ -33,34 +33,56 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
-    bySimletIdAndUserId: {
-        description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions",
-        sql: `
-        SELECT *
-        FROM v_complete_sessions_users_permissions 
-        WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
-        AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
-        `,
-        params: {
-            simlet_id: {
-                type: "number",
-                required: true,
-                description: "Simlet Identifier",
-                example: 1,
-            },
-            current_user_id: {
-                type: "number",
-                required: true,
-                description: "User Identifier",
-                example: 123,
-            },
-            search: {
-              type: "string",
-              required: false,
-              description: "Search string to filter sessions by name or description",
-              example: "session",
-            }
-        },
+  directPermissionsBySessionId: {
+    description: "Get all direct permissions of a Session by its ID",
+    sql: `
+      SELECT *
+      FROM v_session_direct_permissions_users
+      WHERE session_id = :session_id  AND (:user_id IS NULL OR user_id = :user_id)
+    `,
+    params: {
+      session_id: {
+        type: "number",
+        required: true,
+        description: "Session Identifier",
+        example: 1,
+      },
+      user_id: {
+        type: "number",
+        required: false,
+        description: "User Identifier",
+        example: 123,
+      },
+    },
+  },
+  bySimletIdAndUserId: {
+      description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions",
+      sql: `
+      SELECT *
+      FROM v_complete_sessions_users_permissions 
+      WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
+      AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+      `,
+      params: {
+          simlet_id: {
+              type: "number",
+              required: true,
+              description: "Simlet Identifier",
+              example: 1,
+          },
+          current_user_id: {
+              type: "number",
+              required: true,
+              description: "User Identifier",
+              example: 123,
+          },
+          search: {
+            type: "string",
+            required: false,
+            description: "Search string to filter sessions by name or description",
+            example: "session",
+          }
+      },
   },
 
   bySimletIdAndUserIdWithPagination: {

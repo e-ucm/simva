@@ -163,7 +163,7 @@ export class Activity {
 		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
 		return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity.activity_id, user_id, allocated, activity)));
     }
-	
+
     /**
      * Retrieves a single activity by ID with user access control.
      * Uses factory pattern to return appropriate activity subclass instance.
@@ -719,6 +719,7 @@ export class Activity {
 	 */
 	toJSON(): object {
 		return {
+			session_id: this.session_id,
 			activity_id: this.activity_id,
 			activity_name: this.activity_name,
 			activity_type: this.activity_type,

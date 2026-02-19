@@ -58,13 +58,13 @@ export class UserPermission {
     static async getFromDbData(object_type: string, object_id: number): Promise<UserPermission> {
         switch (object_type) {
             case 'simlet':
-                const simletPermissions = await db.Tables.SimletPermissions.findAll({ where: { simlet_id: object_id } });
+                let simletPermissions = await db.Functions.runViewQuery(db.Views.Simlet.directPermissionsBySimletId, { simlet_id: object_id });
                 return new UserPermission(object_type, object_id, simletPermissions);
         case 'session':
-            const sessionPermissions = await db.Tables.SessionPermissions.findAll({ where: { session_id: object_id } }); 
+            const sessionPermissions = await db.Functions.runViewQuery(db.Views.Session.directPermissionsBySessionId, { session_id: object_id }); 
             return new UserPermission(object_type, object_id, sessionPermissions);
         case 'group':
-            const groupPermissions = await db.Tables.GroupPermissions.findAll({ where: { group_id: object_id } });
+            const groupPermissions = await db.Functions.runViewQuery(db.Views.Group.directPermissionsByGroupId, { group_id: object_id });
             return new UserPermission(object_type, object_id, groupPermissions);
         default:
             throw new Error(`Unsupported object type: ${object_type}`);

@@ -59,14 +59,14 @@ export class Group {
         this.group_id = data.group_id; // Ensure group_id is included in the data
         this.group_use_new_generation = Boolean(data.group_use_new_generation); // Ensure group_use_new_generation is included in the data
         this.group_name = data.group_name || data.name || "";
-        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
-        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         this.participants = data.participants || [];
         this.group_owner_user_id = data.group_owner_user_id || "";
         this.group_owner_username = data.group_owner_username || "";
         this.current_user_id = data.current_user_id || "";
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission || "";
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
     }
 
     /**
@@ -441,25 +441,16 @@ export class Group {
      * console.log('Group name:', groupData.group_name);
      * ```
      */
-    toJSON(): {
-        group_id: number;
-        group_use_new_generation: boolean;
-        group_name: string;
-        createdAt: Date | undefined;
-        updatedAt: Date | undefined;
-        participants: number[];
-        group_owner_user_id: number;
-        group_owner_username: string;
-    } {
+    toJSON(): object {
         return {
             group_id: this.group_id,
             group_use_new_generation: this.group_use_new_generation,
             group_name: this.group_name,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt,
             participants: this.participants,
             group_owner_user_id: this.group_owner_user_id,
-            group_owner_username: this.group_owner_username
+            group_owner_username: this.group_owner_username,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
         };
     }
 }

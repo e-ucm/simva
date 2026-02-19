@@ -55,7 +55,7 @@ export class LRSActivity extends Activity {
 		return {};
 	}
 
-    toJSON() {
+    toJSON(): object {
 		return {
 			...super.toJSON(),
 			activity_type : LRSActivity.getType()

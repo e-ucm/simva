@@ -87,7 +87,7 @@ export class RandomAllocator extends Allocator {
         // Additional initialization logic for RandomAllocator can be added here if needed in the future
     }
 
-    toJSON() {
+    toJSON(): object {
         return {
             ...super.toJSON(),
             allocator_type: RandomAllocator.getType(),

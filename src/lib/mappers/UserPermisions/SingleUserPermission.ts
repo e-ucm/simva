@@ -40,19 +40,19 @@ export class SingleUserPermission {
         this.object_type = object_type;
     }
 
-    static async getFromDbData(object_type: string, object_id: number, current_user_id: number): Promise<SingleUserPermission> {
+    static async getFromDbData(object_type: string, object_id: number, user_id: number): Promise<SingleUserPermission> {
         switch (object_type) {
             case 'simlet':
-                let simletPermissions = await db.Tables.SimletPermissions.findOne({ where: { simlet_id: object_id , user_id: current_user_id } });
+                let simletPermissions = await db.Functions.runViewQuery(db.Views.Simlet.directPermissionsBySimletId, { simlet_id: object_id, user_id: user_id });
                 return new SingleUserPermission(object_type, object_id, simletPermissions);
-        case 'session':
-            const sessionPermissions = await db.Tables.SessionPermissions.findOne({ where: { session_id: object_id , user_id: current_user_id } }); 
-            return new SingleUserPermission(object_type, object_id, sessionPermissions);
-        case 'group':
-            const groupPermissions = await db.Tables.GroupPermissions.findOne({ where: { group_id: object_id , user_id: current_user_id } });
-            return new SingleUserPermission(object_type, object_id, groupPermissions);
-        default:
-            throw new Error(`Unsupported object type: ${object_type}`);
+            case 'session':
+                const sessionPermissions = await db.Functions.runViewQuery(db.Views.Session.directPermissionsBySessionId, { session_id: object_id, user_id: user_id }); 
+                return new SingleUserPermission(object_type, object_id, sessionPermissions);
+            case 'group':
+                const groupPermissions = await db.Functions.runViewQuery(db.Views.Group.directPermissionsByGroupId, { group_id: object_id, user_id: user_id });
+                return new SingleUserPermission(object_type, object_id, groupPermissions);
+            default:
+                throw new Error(`Unsupported object type: ${object_type}`);
         }
     }
 

@@ -91,7 +91,7 @@ export class SimletGroup {
         logger.debug({ SimletGroup : this }, `SimletGroup information - Simlet ID: ${this.simlet_id}, Group ID: ${this.group_id}, Group Name: ${this.group_name}`);
     }
 
-    toJSON() {
+    toJSON(): object {
         return {
             simlet_id: this.simlet_id,
             group_id: this.group_id,

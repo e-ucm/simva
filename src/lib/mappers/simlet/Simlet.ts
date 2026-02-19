@@ -331,7 +331,7 @@ export class Simlet {
         return await permission.delete();
     }
 
-    toJSON() {
+    toJSON(): object {
         return {
             simlet_id: this.simlet_id,
             simlet_name: this.simlet_name,
@@ -342,7 +342,9 @@ export class Simlet {
             sessions: this.sessions,
             groups: this.groups,
             tags: this.tags,
-            allocator_id: this.allocator_id
+            allocator_id: this.allocator_id,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
         };
     }
 }

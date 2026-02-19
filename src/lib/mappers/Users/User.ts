@@ -271,16 +271,7 @@ export class User {
    * console.log('Username:', userData.username);
    * ```
    */
-  toJSON(): {
-    user_id: number;
-    username: string;
-    email: string;
-    role: string;
-    isToken: boolean;
-    token: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  } {
+  toJSON(): object {
     return {
       user_id: this.user_id,
       username: this.username,

@@ -33,6 +33,28 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
+  directPermissionsBySimletId: {
+    description: "Get all direct permissions of a SIMLET by its ID",
+    sql: `
+      SELECT *
+      FROM v_simlet_direct_permissions_users
+      WHERE simlet_id = :simlet_id AND (:user_id IS NULL OR user_id = :user_id)
+    `,
+    params: {
+      simlet_id: {
+        type: "number",
+        required: true,
+        description: "Simlet Identifier",
+        example: 1,
+      },
+      user_id: {
+        type: "number",
+        required: false,
+        description: "User Identifier",
+        example: 123,
+      },
+    },
+  },
   byUserId: {
     description: "Get all SIMLETs for a certain User",
     sql: `

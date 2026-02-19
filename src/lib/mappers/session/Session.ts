@@ -450,15 +450,15 @@ export class Session {
             current_user_permission: this.current_user_permission,
             session_name: this.session_name,
             session_description: this.session_description,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt,
             session_experimental_method: this.session_experimental_method,
             session_can_be_manually_activated: this.session_can_be_manually_activated,
             session_active: this.session_active,
             session_start_date: this.session_start_date,
             session_end_date: this.session_end_date,
             activities: this.activities,
-            tags: this.tags
+            tags: this.tags,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt,
         };
     }
 }
