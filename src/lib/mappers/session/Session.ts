@@ -118,7 +118,15 @@ export class Session {
         this.tags = [];
     }
 
-    async init() {
+    /**
+     * Initializes the session instance with additional data from the database.
+     * Loads tags and activities associated with this session.
+     * 
+     * @async
+     * @method init
+     * @returns {Promise<void>} Promise that resolves when initialization is complete
+     */
+    async init(): Promise<void> {
         //Additional initialization logic can be added here if needed in the future
         const tagIds = await db.Functions.runViewQuery(db.Views.Session.tagsBySessionId, { session_id: this.session_id })
         this.tags = tagIds.map((row: any) => row.tag_name) || [];
@@ -189,10 +197,27 @@ export class Session {
         return Session.getFromDbData(session.simlet_id, session.session_id, session.session_supervisor_id);
     }
 
+    /**
+     * Retrieves all activities associated with this session.
+     * 
+     * @async
+     * @method getActivities
+     * @returns {Promise<Activity[]>} Array of Activity instances belonging to this session
+     */
     async getActivities(): Promise<Activity[]> {
         return await Activity.getAllFromDbData(this.session_id, this.current_user_id, false);
     }
 
+    /**
+     * Adds a new activity to this session.
+     * Requires edit permissions and automatically assigns activity order.
+     * 
+     * @async
+     * @method addActivity
+     * @param {Partial<InstanceType<typeof db.Tables.Activities>>} activityData - Activity data for creation
+     * @returns {Promise<Activity>} The created Activity instance
+     * @throws {AuthentificationError} When user lacks edit permissions
+     */
     async addActivity(activityData: Partial<InstanceType<typeof db.Tables.Activities>>): Promise<Activity> {
         this.canEdit();
         activityData.session_id = this.session_id;
@@ -201,6 +226,13 @@ export class Session {
         return Activity.getFromDbData(activity.activity_id, this.current_user_id, false);
      }
 
+    /**
+     * Checks if the current user can edit this session.
+     * 
+     * @method canEdit
+     * @returns {boolean} True if user has edit permissions
+     * @throws {AuthentificationError} When user lacks edit permissions
+     */
     canEdit() : boolean {
         if(this.current_user_permission === "full" || this.current_user_permission === "write") {
             return true;
@@ -208,6 +240,14 @@ export class Session {
         throw new AuthentificationError("User does not have permission to edit this session");
     }
 
+    /**
+     * Checks if the current user can delete this session.
+     * Only users with full permissions can delete sessions.
+     * 
+     * @method canDelete
+     * @returns {boolean} True if user has delete permissions
+     * @throws {AuthentificationError} When user lacks delete permissions
+     */
     canDelete() : boolean {
         if(this.current_user_permission.toLowerCase() === "full") {
             return true;
@@ -215,6 +255,17 @@ export class Session {
         throw new AuthentificationError("User does not have permission to delete this session");
     }
     
+    /**
+     * Updates this session with new data.
+     * Requires edit permissions and validates session existence.
+     * 
+     * @async
+     * @method update
+     * @param {any} body - Object containing fields to update
+     * @returns {Promise<Session>} The updated Session instance
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {ValidationError} When session is not found
+     */
     async update(body: any): Promise<Session> {
         this.canEdit();
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
@@ -226,7 +277,17 @@ export class Session {
         return this;
     }
     
-    async delete() {
+    /**
+     * Deletes this session from the database.
+     * Requires delete permissions and validates session existence.
+     * 
+     * @async
+     * @method delete
+     * @returns {Promise<void>} Promise that resolves when deletion is complete
+     * @throws {AuthentificationError} When user lacks delete permissions
+     * @throws {ValidationError} When session is not found
+     */
+    async delete(): Promise<void> {
         this.canDelete();
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
@@ -235,39 +296,104 @@ export class Session {
         await session.destroy();
     }
 
-     async getPermissions() {
+     /**
+     * Retrieves all user permissions for this session.
+     * 
+     * @async
+     * @method getPermissions
+     * @returns {Promise<UserPermission>} UserPermission instance for this session
+     */
+     async getPermissions(): Promise<UserPermission> {
       return await UserPermission.getFromDbData('session', this.session_id);
     }
     
-    async createPermissions(body: any) {
+    /**
+     * Creates new permissions for users on this session.
+     * Requires edit permissions.
+     * 
+     * @async
+     * @method createPermissions
+     * @param {any} body - Permission data containing user assignments
+     * @returns {Promise<any>} Created permission data
+     * @throws {AuthentificationError} When user lacks edit permissions
+     */
+    async createPermissions(body: any): Promise<any> {
         this.canEdit();
         let permissions = await UserPermission.getFromDbData('session', this.session_id);
         return await permissions.createPermissions(body);
     }
     
-    async getPermissionsForUser(userId: number) {
+    /**
+     * Retrieves permissions for a specific user on this session.
+     * 
+     * @async
+     * @method getPermissionsForUser
+     * @param {number} userId - ID of the user to get permissions for
+     * @returns {Promise<SingleUserPermission>} Permission instance for the user
+     */
+    async getPermissionsForUser(userId: number): Promise<SingleUserPermission> {
         return await SingleUserPermission.getFromDbData('session', this.session_id, userId);
     }
     
-    async patchPermissionsForUser(userId: number, body: any) {
+    /**
+     * Updates permissions for a specific user on this session.
+     * Requires edit permissions.
+     * 
+     * @async
+     * @method patchPermissionsForUser
+     * @param {number} userId - ID of the user to update permissions for
+     * @param {any} body - Object containing permission level to assign
+     * @returns {Promise<any>} Updated permission data
+     * @throws {AuthentificationError} When user lacks edit permissions
+     */
+    async patchPermissionsForUser(userId: number, body: any): Promise<any> {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId);
         return await permission.update(body.permission);
     }
 
-    async deletePermissionsForUser(userId: number) {
+    /**
+     * Deletes permissions for a specific user on this session.
+     * Requires edit permissions.
+     * 
+     * @async
+     * @method deletePermissionsForUser
+     * @param {number} userId - ID of the user to remove permissions for
+     * @returns {Promise<any>} Result of permission deletion
+     * @throws {AuthentificationError} When user lacks edit permissions
+     */
+    async deletePermissionsForUser(userId: number): Promise<any> {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId);
         return await permission.delete();
     }
 
-    async deleteAllPermissions() {
+    /**
+     * Deletes all permissions for this session.
+     * Requires delete permissions.
+     * 
+     * @async
+     * @method deleteAllPermissions
+     * @returns {Promise<any>} Result of permissions deletion
+     * @throws {AuthentificationError} When user lacks delete permissions
+     */
+    async deleteAllPermissions(): Promise<any> {
         this.canDelete();
         let permissions = await UserPermission.getFromDbData('session', this.session_id);
         return await permissions.deleteAllPermissions();
     }
 
-    async activate() {
+    /**
+     * Activates this session for participant access.
+     * Requires edit permissions and session must be configured for manual activation.
+     * 
+     * @async
+     * @method activate
+     * @returns {Promise<void>} Promise that resolves when session is activated
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {ValidationError} When session cannot be activated or is already active
+     */
+    async activate(): Promise<void> {
         this.canEdit();
         if(!this.session_can_be_manually_activated) {
             throw new ValidationError(`Session with ID ${this.session_id} cannot be activated. Please check the session's experimental method and conditions.`);
@@ -283,7 +409,17 @@ export class Session {
         await session.update({ session_active: true });
     }
 
-    async deactivate() {
+    /**
+     * Deactivates this session to prevent participant access.
+     * Requires edit permissions and session must be configured for manual activation.
+     * 
+     * @async
+     * @method deactivate
+     * @returns {Promise<void>} Promise that resolves when session is deactivated
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {ValidationError} When session cannot be deactivated or is already inactive
+     */
+    async deactivate(): Promise<void> {
         this.canEdit();
         if(!this.session_can_be_manually_activated) {
             throw new ValidationError(`Session with ID ${this.session_id} cannot be deactivated. Please check the session's experimental method and conditions.`);
@@ -299,7 +435,13 @@ export class Session {
         await session.update({ session_active: false });
     }
 
-    toJSON() {
+    /**
+     * Converts the session instance to a JSON representation.
+     * 
+     * @method toJSON
+     * @returns {object} JSON object representing the session with all its properties
+     */
+    toJSON(): object {
         return {
             session_id: this.session_id,
             simlet_id: this.simlet_id,

@@ -69,7 +69,23 @@ export class Group {
         this.current_user_permission = data.current_user_permission || "";
     }
 
-    async init() {
+    /**
+     * Initializes the group instance by loading participant data.
+     * Fetches participant IDs associated with this group from the database.
+     * 
+     * @async
+     * @method init
+     * @returns {Promise<void>} Promise that resolves when initialization is complete
+     * @throws {Error} When database query for participants fails
+     * 
+     * @example
+     * ```typescript
+     * const group = new Group(data);
+     * await group.init();
+     * console.log('Participants:', group.participants);
+     * ```
+     */
+    async init(): Promise<void> {
         //Additional initialization logic can be added here if needed in the future
         const participantIds = await db.Functions.runViewQuery(db.Views.GroupParticipant.IdsByGroupId, { group_id: this.group_id })
         this.participants = participantIds.map((row: any) => row.participant_id) || [];
@@ -125,6 +141,21 @@ export class Group {
         return Group.getFromDbData(createdGroup.group_id, current_user_id);
     }
 
+    /**
+     * Retrieves all participants (members) of this group.
+     * Returns full participant objects with usernames and metadata.
+     * 
+     * @async
+     * @method getParticipants
+     * @returns {Promise<GroupParticipant[]>} Promise resolving to array of group participants
+     * @throws {Error} When participant data cannot be retrieved
+     * 
+     * @example
+     * ```typescript
+     * const participants = await group.getParticipants();
+     * participants.forEach(p => console.log(p.username));
+     * ```
+     */
     async getParticipants(): Promise<GroupParticipant[]> {
         return await GroupParticipant.getAllFromDbData(this.group_id);
     }
@@ -139,6 +170,25 @@ export class Group {
         logger.debug({ Group : this }, "Group information");
     }
 
+    /**
+     * Updates group properties in the database.
+     * Validates user permissions before allowing modifications.
+     * 
+     * @async
+     * @method update
+     * @param {any} body - Object containing fields to update
+     * @returns {Promise<Group>} Promise resolving to the updated group instance
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {NotFoundError} When group is not found in database
+     * 
+     * @example
+     * ```typescript
+     * const updatedGroup = await group.update({
+     *   group_name: 'New Group Name',
+     *   group_use_new_generation: true
+     * });
+     * ```
+     */
     async update(body: any): Promise<Group> {
         this.canEdit();
         let group = await db.Tables.Group.findOne({where:{group_id: this.group_id}});
@@ -150,19 +200,70 @@ export class Group {
         return this;
     }
 
-    async deleteParticipant(user_id: number, keycloakDelete : boolean) {
+    /**
+     * Removes a participant from this group.
+     * Validates edit permissions and optionally removes from Keycloak.
+     * 
+     * @async
+     * @method deleteParticipant
+     * @param {number} user_id - ID of the user to remove from the group
+     * @param {boolean} keycloakDelete - Whether to also delete the user from Keycloak  
+     * @returns {Promise<void>} Promise that resolves when participant is removed
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {NotFoundError} When participant is not found in group
+     * 
+     * @example
+     * ```typescript
+     * await group.deleteParticipant(456, true);
+     * ```
+     */
+    async deleteParticipant(user_id: number, keycloakDelete : boolean): Promise<void> {
         this.canEdit();
         let participant = await GroupParticipant.getFromDbData(this.group_id, user_id);
         participant.delete(keycloakDelete);
     }
 
-    async createParticipant(body: Partial<GroupParticipant>) {
+    /**
+     * Adds a new participant to this group.
+     * Validates edit permissions and creates participant with proper generation settings.
+     * 
+     * @async
+     * @method createParticipant
+     * @param {Partial<GroupParticipant>} body - Participant data for creation
+     * @returns {Promise<GroupParticipant>} Promise resolving to the created participant
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {ValidationError} When participant data is invalid
+     * 
+     * @example
+     * ```typescript
+     * const participant = await group.createParticipant({
+     *   participant_username: 'newuser',
+     *   participant_password: 'password123'
+     * });
+     * ```
+     */
+    async createParticipant(body: Partial<GroupParticipant>): Promise<GroupParticipant> {
         this.canEdit();
         let participant = await GroupParticipant.createInDb(this.group_id, this.group_use_new_generation, body);
         return participant;
     }
 
-    async removeUsersToKeycloak() {
+    /**
+     * Removes all participants from Keycloak.
+     * Iterates through group participants and removes them from Keycloak authentication.
+     * 
+     * @async
+     * @method removeUsersToKeycloak
+     * @returns {Promise<void>} Promise that resolves when all users are removed from Keycloak
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {Error} When Keycloak operations fail
+     * 
+     * @example
+     * ```typescript
+     * await group.removeUsersToKeycloak();
+     * ```
+     */
+    async removeUsersToKeycloak(): Promise<void> {
         this.canEdit();
         let participants = await GroupParticipant.getAllFromDbData(this.group_id);
         for(var i = 0; i < participants.length; i++) {
@@ -170,6 +271,21 @@ export class Group {
         }
     }
 
+    /**
+     * Checks if the current user can edit this group.
+     * Validates user permissions against group access control.
+     * 
+     * @method canEdit
+     * @returns {boolean} True if user has edit permissions, otherwise throws error
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * 
+     * @example
+     * ```typescript
+     * if (group.canEdit()) {
+     *   // User can modify the group
+     * }
+     * ```
+     */
     canEdit() : boolean {
          if(this.current_user_permission.toLowerCase() === "full" || this.current_user_permission.toLowerCase() === "write") {
              return true;
@@ -177,6 +293,21 @@ export class Group {
          throw new AuthentificationError("User does not have permission to edit this group");
     }
 
+    /**
+     * Checks if the current user can delete this group.
+     * Validates user permissions for delete operations.
+     * 
+     * @method canDelete
+     * @returns {boolean} True if user has delete permissions, otherwise throws error
+     * @throws {AuthentificationError} When user lacks delete permissions
+     * 
+     * @example
+     * ```typescript
+     * if (group.canDelete()) {
+     *   await group.delete();
+     * }
+     * ```
+     */
     canDelete() : boolean {
         if(this.current_user_permission.toLowerCase() === "full") {
             return true;
@@ -184,12 +315,42 @@ export class Group {
         throw new AuthentificationError("User does not have permission to delete this group");
     }
 
-    async delete() {
+    /**
+     * Permanently deletes this group from the database.
+     * Validates delete permissions before removal.
+     * 
+     * @async
+     * @method delete
+     * @returns {Promise<void>} Promise that resolves when group is deleted
+     * @throws {AuthentificationError} When user lacks delete permissions
+     * @throws {Error} When database deletion fails
+     * 
+     * @example
+     * ```typescript
+     * await group.delete();
+     * ```
+     */
+    async delete(): Promise<void> {
         this.canDelete();
         await db.Tables.Group.destroy({where: {group_id: this.group_id}});
     }
 
-     async getPermissions() {
+     /**
+     * Retrieves all permissions associated with this group.
+     * Returns permissions for all users who have access to this group.
+     * 
+     * @async
+     * @method getPermissions
+     * @returns {Promise<UserPermission[]>} Promise resolving to array of user permissions
+     * @throws {Error} When permission data cannot be retrieved
+     * 
+     * @example
+     * ```typescript
+     * const permissions = await group.getPermissions();
+     * permissions.forEach(p => console.log(p.user_id, p.permission_level));
+     * ```
+     */
+     async getPermissions(): Promise<UserPermission[]> {
       return await UserPermission.getFromDbData('group', this.group_id);
     }
     
@@ -199,23 +360,97 @@ export class Group {
         return await permissions.createPermissions(body);
     }
     
-    async getPermissionsForUser(userId: number) {
+    /**
+     * Retrieves permissions for a specific user in this group.
+     * Returns the user's access level and role for this group.
+     * 
+     * @async
+     * @method getPermissionsForUser
+     * @param {number} userId - ID of the user whose permissions to retrieve
+     * @returns {Promise<SingleUserPermission>} Promise resolving to user's permission object
+     * @throws {NotFoundError} When user permissions are not found
+     * 
+     * @example
+     * ```typescript
+     * const userPerms = await group.getPermissionsForUser(456);
+     * console.log('Permission level:', userPerms.permission_level);
+     * ```
+     */
+    async getPermissionsForUser(userId: number): Promise<SingleUserPermission> {
         return await SingleUserPermission.getFromDbData('group', this.group_id, userId);
     }
     
-    async patchPermissionsForUser(userId: number, body: any) {
+    /**
+     * Updates permissions for a specific user in this group.
+     * Modifies the user's access level and permissions.
+     * 
+     * @async
+     * @method patchPermissionsForUser
+     * @param {number} userId - ID of the user whose permissions to update
+     * @param {any} body - Object containing new permission data
+     * @returns {Promise<SingleUserPermission>} Promise resolving to updated permission object
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {NotFoundError} When user permissions are not found
+     * @throws {ValidationError} When permission data is invalid
+     * 
+     * @example
+     * ```typescript
+     * const updatedPerms = await group.patchPermissionsForUser(456, {
+     *   permission: 'write'
+     * });
+     * ```
+     */
+    async patchPermissionsForUser(userId: number, body: any): Promise<SingleUserPermission> {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
         return await permission.update(body.permission);
     }
 
-    async deletePermissionsForUser(userId: number) {
+    /**
+     * Removes all permissions for a specific user from this group.
+     * Revokes the user's access to this group entirely.
+     * 
+     * @async
+     * @method deletePermissionsForUser
+     * @param {number} userId - ID of the user whose permissions to remove
+     * @returns {Promise<void>} Promise that resolves when permissions are deleted
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {NotFoundError} When user permissions are not found
+     * 
+     * @example
+     * ```typescript
+     * await group.deletePermissionsForUser(456);
+     * ```
+     */
+    async deletePermissionsForUser(userId: number): Promise<void> {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
         return await permission.delete();
     }
 
-    toJSON() {
+    /**
+     * Converts the group instance to a plain JSON object.
+     * Returns serializable representation for API responses.
+     * 
+     * @method toJSON
+     * @returns {Object} Plain object containing group properties
+     * 
+     * @example
+     * ```typescript
+     * const groupData = group.toJSON();
+     * console.log('Group name:', groupData.group_name);
+     * ```
+     */
+    toJSON(): {
+        group_id: number;
+        group_use_new_generation: boolean;
+        group_name: string;
+        createdAt: Date | undefined;
+        updatedAt: Date | undefined;
+        participants: number[];
+        group_owner_user_id: number;
+        group_owner_username: string;
+    } {
         return {
             group_id: this.group_id,
             group_use_new_generation: this.group_use_new_generation,

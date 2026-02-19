@@ -209,7 +209,16 @@ export class UserPermission {
         return this;
     }
 
-    async deleteAllPermissions() {
+    /**
+     * Deletes all permissions for this object.
+     * Removes all user permissions associated with this object from the database.
+     * 
+     * @async
+     * @method deleteAllPermissions
+     * @returns {Promise<void>} Promise that resolves when all permissions are deleted
+     * @throws {Error} When object_type is not supported
+     */
+    async deleteAllPermissions(): Promise<void> {
         switch (this.object_type) {
             case 'simlet':
                 await db.Tables.SimletPermissions.destroy({ where: { simlet_id: this.object_id } });
@@ -225,7 +234,13 @@ export class UserPermission {
         }
     }
 
-    toJSON() {
+    /**
+     * Converts the UserPermission instance to a JSON representation.
+     * 
+     * @method toJSON
+     * @returns {object} JSON object containing array of permission mappings
+     */
+    toJSON(): object {
         return {
             permissions: this.permissions.map(p => p.toJSON())
         };

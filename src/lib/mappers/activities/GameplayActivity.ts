@@ -111,14 +111,31 @@ export class GamePlayActivity extends Activity {
 		return LRSActivity.getUtils(username);
 	}
 
-	async getDetails(){
+	/**
+	 * Retrieves detailed information about this gameplay activity.
+	 * Currently returns placeholder data structure for game sessions and scores.
+	 * 
+	 * @async
+	 * @method getDetails
+	 * @returns {Promise<object>} Promise resolving to object with gameSessions and scores arrays
+	 * @override
+	 */
+	async getDetails(): Promise<object>{
 		return {
 			gameSessions: [], // Fetch game sessions related to this activity
 			scores: [] // Fetch scores related to this activity
 		};
 	}
 
-	toJSON() {
+	/**
+	 * Converts the GamePlayActivity instance to a JSON representation.
+	 * Extends the base Activity JSON with gameplay-specific properties.
+	 * 
+	 * @method toJSON
+	 * @returns {object} JSON object containing base activity properties plus game fields
+	 * @override
+	 */
+	toJSON(): object {
 		return {
 			...super.toJSON(),
 			activity_type : GamePlayActivity.getType(),

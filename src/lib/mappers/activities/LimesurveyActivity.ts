@@ -101,11 +101,28 @@ export class LimesurveyActivity extends Activity {
 		return utils;
 	}
 
-	async getDetails(){
+	/**
+	 * Retrieves detailed information about this LimeSurvey activity.
+	 * Currently returns empty object - placeholder for future implementation.
+	 * 
+	 * @async
+	 * @method getDetails
+	 * @returns {Promise<object>} Promise resolving to activity details object
+	 * @override
+	 */
+	async getDetails(): Promise<object>{
 		return {};
 	}
 
-	toJSON() {
+	/**
+	 * Converts the LimesurveyActivity instance to a JSON representation.
+	 * Extends the base Activity JSON with LimeSurvey-specific properties.
+	 * 
+	 * @method toJSON
+	 * @returns {object} JSON object containing base activity properties plus LimeSurvey fields
+	 * @override
+	 */
+	toJSON(): object {
 		return {
 			...super.toJSON(),
 			activity_type : LimesurveyActivity.getType(),

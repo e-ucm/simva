@@ -658,7 +658,7 @@ export async function patchSessionPermissionsForUser(simletId: number, sessionId
  * console.log('User session permission:', permissions.permission_level);
  * ```
  */
-export async function getSessionPermissionsForUser(simletId: number, sessionId: number, userId: number, current_user_id: number): Promise<UserPermission> {
+export async function getSessionPermissionsForUser(simletId: number, sessionId: number, userId: number, current_user_id: number): Promise<SingleUserPermission> {
   let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
   return await session.getPermissionsForUser(userId);
 }
@@ -673,7 +673,7 @@ export async function getSessionPermissionsForUser(simletId: number, sessionId: 
  * @param {number} sessionId - The ID of the session
  * @param {number} current_user_id - The ID of the user creating the permissions
  * @param {Object} body - Permission data containing user ID and permission level
- * @returns {Promise<UserPermission>} The newly created permission object
+ * @returns {Promise<SingleUserPermission>} The newly created permission object
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks admin permissions
  * @throws {ValidationError} When permission data is invalid
@@ -700,7 +700,7 @@ export async function createSessionPermissions(simletId: number, sessionId: numb
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session
  * @param {number} current_user_id - The ID of the user requesting permissions list
- * @returns {Promise<UserPermission[]>} Array of all session permissions
+ * @returns {Promise<UserPermission>} Array of all session permissions
  * @throws {NotFoundError} When simlet or session is not found or user lacks access
  * 
  * @example

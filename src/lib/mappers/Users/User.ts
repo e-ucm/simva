@@ -5,6 +5,14 @@ import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { KeycloakClient } from "@/lib/mappers/Users/keycloakclient";
 
+/**
+ * User mapper class representing a system user.
+ * Handles user data management and Keycloak integration.
+ * 
+ * @class User
+ * @description Manages user accounts, roles, authentication tokens, and Keycloak synchronization.
+ * Provides methods for user CRUD operations and role management.
+ */
 export class User {
   declare user_id: number;
   declare username: string;
@@ -15,6 +23,22 @@ export class User {
   declare createdAt: Date;
   declare updatedAt: Date;
 
+  /**
+   * Creates a new User instance from raw data.
+   * 
+   * @constructor
+   * @param {any} data - Raw user data object containing user properties
+   * 
+   * @example
+   * ```typescript
+   * const user = new User({
+   *   user_id: 123,
+   *   username: 'john_doe',
+   *   email: 'john@example.com',
+   *   role: 'student'
+   * });
+   * ```
+   */
   constructor(data: any) {
     this.user_id = data.user_id;
     this.username = data.username;
@@ -26,11 +50,45 @@ export class User {
     this.updatedAt = data.updatedAt;
   }
 
+  /**
+   * Retrieves users that match the provided partial criteria.
+   * Allows filtering users by any combination of user properties.
+   * 
+   * @static
+   * @async
+   * @method getFromPartialDBData
+   * @param {Partial<User>} sql - Partial user object for filtering criteria
+   * @returns {Promise<User[]>} Promise resolving to array of matching users
+   * @throws {Error} When database query fails
+   * 
+   * @example
+   * ```typescript
+   * const users = await User.getFromPartialDBData({ role: 'teacher' });
+   * ```
+   */
   static async getFromPartialDBData(sql: Partial<User>): Promise<User[]> {
     let users = await db.Tables.User.findAll({ where: sql });
     return users.map((user: any) => new User(user));
   }
 
+  /**
+   * Retrieves all users from the database with optional pagination and search.
+   * Supports filtering by username and pagination for large datasets.
+   * 
+   * @static
+   * @async
+   * @method getAllFromDbData
+   * @param {number | undefined} limit - Maximum number of users to return
+   * @param {number | undefined} offset - Number of users to skip for pagination
+   * @param {string | undefined} searchString - Optional search string to filter by username
+   * @returns {Promise<User[]>} Promise resolving to array of users
+   * @throws {Error} When database query fails
+   * 
+   * @example
+   * ```typescript
+   * const users = await User.getAllFromDbData(10, 0, 'john');
+   * ```
+   */
   static async getAllFromDbData(limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<User[]> {
     let users = await db.Tables.User.findAll({
       order: [['user_id', 'ASC']],
@@ -45,6 +103,24 @@ export class User {
     return users.map((user: any) => new User(user));
   }
 
+  /**
+   * Retrieves a single user by ID or username.
+   * Provides flexible user lookup supporting both primary key and unique username.
+   * 
+   * @static
+   * @async
+   * @method getFromDbData
+   * @param {number} [user_id] - Optional user ID for lookup
+   * @param {string} [username] - Optional username for lookup
+   * @returns {Promise<User>} Promise resolving to the user instance
+   * @throws {NotFoundError} When neither parameter is provided, both are provided, or user is not found
+   * 
+   * @example
+   * ```typescript
+   * const userById = await User.getFromDbData(123);
+   * const userByName = await User.getFromDbData(undefined, 'john_doe');
+   * ```
+   */
   static async getFromDbData(user_id?: number, username?: string): Promise<User> {
     let model: InstanceType<typeof db.Tables.User> | null;
     if (!user_id && !username) {
@@ -74,11 +150,53 @@ export class User {
     });
   }
 
+  /**
+   * Creates a new user in the database.
+   * Handles user creation with proper validation and default values.
+   * 
+   * @static
+   * @async
+   * @method createDB
+   * @param {Object} userData - User data for creation
+   * @param {any} userData.username - Username for the new user
+   * @param {string | undefined} userData.email - Email address for the new user
+   * @param {string} userData.role - Role assignment for the new user
+   * @param {boolean} userData.isToken - Whether this user uses token authentication
+   * @returns {Promise<User>} Promise resolving to the created user instance
+   * @throws {ValidationError} When user data is invalid
+   * @throws {Error} When database creation fails
+   * 
+   * @example
+   * ```typescript
+   * const newUser = await User.createDB({
+   *   username: 'jane_doe',
+   *   email: 'jane@example.com',
+   *   role: 'student',
+   *   isToken: false
+   * });
+   * ```
+   */
   static async createDB(userData: { username: any; email: string | undefined; role: string; isToken: boolean; }): Promise<User> {
     let user = await db.Tables.User.create(userData);
     return new User(user);
   }
 
+  /**
+   * Updates user properties in the database and Keycloak.
+   * Synchronizes role changes with Keycloak authentication system.
+   * 
+   * @async
+   * @method update
+   * @param {Partial<User>} partial - Partial user object containing fields to update
+   * @returns {Promise<User>} Promise resolving to the updated user instance
+   * @throws {NotFoundError} When user is not found in database
+   * @throws {Error} When Keycloak role assignment fails
+   * 
+   * @example
+   * ```typescript
+   * const updatedUser = await user.update({ role: 'teacher' });
+   * ```
+   */
   async update(partial: Partial<User>): Promise<User> {
     let user = await db.Tables.User.findOne({ where: { user_id: this.user_id } });
     if (!user) {
@@ -90,6 +208,21 @@ export class User {
     return this;
   }
 
+  /**
+   * Assigns a role to the user in Keycloak.
+   * Synchronizes role assignment with Keycloak authentication system.
+   * 
+   * @async
+   * @method giveRoleToUserInKeycloak
+   * @param {string} [role] - Role to assign to the user
+   * @returns {Promise<Boolean>} Promise resolving to true if role assignment succeeds
+   * @throws {Error} When Keycloak operations fail or role is not found
+   * 
+   * @example
+   * ```typescript
+   * await user.giveRoleToUserInKeycloak('teacher');
+   * ```
+   */
   async giveRoleToUserInKeycloak(role?: string) : Promise<Boolean> {
       if(!config.sso.enabled){
           return true;
@@ -125,7 +258,29 @@ export class User {
       return true;
   }
 
-  toJSON() {
+  /**
+   * Converts the user instance to a plain JSON object.
+   * Returns serializable representation for API responses.
+   * 
+   * @method toJSON
+   * @returns {Object} Plain object containing user properties
+   * 
+   * @example
+   * ```typescript
+   * const userData = user.toJSON();
+   * console.log('Username:', userData.username);
+   * ```
+   */
+  toJSON(): {
+    user_id: number;
+    username: string;
+    email: string;
+    role: string;
+    isToken: boolean;
+    token: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  } {
     return {
       user_id: this.user_id,
       username: this.username,
@@ -138,7 +293,21 @@ export class User {
     };
   }
 
-  hasValidToken() {
+  /**
+   * Validates if the user has a valid authentication token.
+   * Checks token existence and basic format validation.
+   * 
+   * @method hasValidToken
+   * @returns {boolean} True if user has a valid token, false otherwise
+   * 
+   * @example
+   * ```typescript
+   * if (user.hasValidToken()) {
+   *   // User can authenticate with token
+   * }
+   * ```
+   */
+  hasValidToken(): boolean {
         if (!this.isToken) {
             return false;
         }
@@ -150,7 +319,21 @@ export class User {
         return true;
     }
 
-    hasValidEmail() {
+    /**
+     * Validates if the user has a valid email address.
+     * Performs basic email format validation using regex pattern.
+     * 
+     * @method hasValidEmail
+     * @returns {boolean} True if user has a valid email format, false otherwise
+     * 
+     * @example
+     * ```typescript
+     * if (user.hasValidEmail()) {
+     *   // Email address is properly formatted
+     * }
+     * ```
+     */
+    hasValidEmail(): boolean {
         if (!this.email || this.email.trim() === "") {
             return false;
         }

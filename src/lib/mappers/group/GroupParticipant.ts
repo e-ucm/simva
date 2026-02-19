@@ -116,6 +116,15 @@ export class GroupParticipant {
         return participantCreated;
     }
 
+    /**
+     * Deletes this participant from the group and optionally from Keycloak.
+     * Also removes from database and cleans up token-based users.
+     * 
+     * @async
+     * @method delete
+     * @param {boolean} keycloakDelete - Whether to also remove from Keycloak authentication system
+     * @returns {Promise<void>} Promise that resolves when deletion is complete
+     */
     async delete(keycloakDelete : boolean): Promise<void> {
         if(keycloakDelete) {
             this.removeUserToKeycloak();
@@ -129,14 +138,24 @@ export class GroupParticipant {
     /**
      * Prints debugging information about this participant instance
      * 
-     * @returns {void}
+     * @method printInfo
+     * @returns {void} No return value
      * @description Logs participant information to debug output for troubleshooting.
      */
-    printInfo() {
+    printInfo(): void {
         logger.debug({ GroupParticipant : this }, `GroupParticipant information - Group ID: ${this.group_id}, Participant ID: ${this.user_id}, Username: ${this.username}, Role: ${this.role}`);
     }
 
-    async removeUserToKeycloak() {
+    /**
+     * Removes this participant's user account from Keycloak authentication system.
+     * Only removes non-student and non-token users from Keycloak groups and user store.
+     * 
+     * @async
+     * @method removeUserToKeycloak
+     * @returns {Promise<boolean>} Promise resolving to true when removal is successful
+     * @throws {object} When user removal from Keycloak fails
+     */
+    async removeUserToKeycloak(): Promise<boolean> {
         if(this.role != "student" && !this.isToken) {
             return true;
         } else {
@@ -221,7 +240,13 @@ export class GroupParticipant {
         return true;
     }
 
-    toJSON() {
+    /**
+     * Converts the GroupParticipant instance to a JSON representation.
+     * 
+     * @method toJSON
+     * @returns {object} JSON object containing participant properties without sensitive group data
+     */
+    toJSON(): object {
         return {
             user_id: this.user_id,
             username: this.username,

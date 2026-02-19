@@ -56,6 +56,15 @@ export class SingleUserPermission {
         }
     }
 
+    /**
+     * Updates the permission level for this user permission.
+     * 
+     * @async
+     * @method update
+     * @param {string} permission - New permission level to set
+     * @returns {Promise<SingleUserPermission>} Promise resolving to the updated instance
+     * @throws {Error} When object_type is not supported
+     */
     async update(permission: string) : Promise<SingleUserPermission> {
         switch (this.object_type) {
             case 'simlet':
@@ -74,6 +83,14 @@ export class SingleUserPermission {
         return this;
     }
 
+    /**
+     * Deletes this user permission from the database.
+     * 
+     * @async
+     * @method delete
+     * @returns {Promise<boolean>} Promise resolving to true when deletion is successful
+     * @throws {Error} When object_type is not supported
+     */
     async delete() : Promise<boolean> {
         switch (this.object_type) {
             case 'simlet':
@@ -91,7 +108,13 @@ export class SingleUserPermission {
         return true;
     }
 
-    toJSON() {
+    /**
+     * Converts the SingleUserPermission instance to a JSON representation.
+     * 
+     * @method toJSON
+     * @returns {object} JSON object containing user_id, username, and permission
+     */
+    toJSON(): object {
         return {
             user_id: this.user_id,
             username: this.username,
