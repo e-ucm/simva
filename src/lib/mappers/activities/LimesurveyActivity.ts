@@ -1,8 +1,7 @@
 import { Activity } from "@/lib/mappers/activities/Activity";
-import { LRSActivity } from "@/lib/mappers/activities/LRSActivity";
 import { db } from "@/lib/db";
 import { config } from "@/lib/config";
-
+import { limeSurveyClient } from "@/lib/utils/limesurveyclient";
 /**
  * LimeSurvey Activity mapper class extending base Activity.
  * Represents activities that integrate with LimeSurvey platform for surveys and questionnaires.
@@ -89,14 +88,15 @@ export class LimesurveyActivity extends Activity {
 	}
 
 	static async getUtils(username : string) : Promise<any> {
-		let utils = await LRSActivity.getUtils(username);
-		utils = { ...utils, url: config.limesurvey.external_url };
+		let utils = await super.getUtils(username) as any;
+		let isOnline = await limeSurveyClient.isOnline();
+		utils = { ...utils, url: config.limesurvey.url, isOnline };
 		if(config.limesurvey.useNewVersion) {
-			utils.editurl= config.limesurvey.external_url + "/surveyAdministration/view?surveyid=" ;
-			utils.newurl= config.limesurvey.external_url + "/surveyAdministration/newSurvey" ;
+			utils.editurl= config.limesurvey.url + "/surveyAdministration/view?surveyid=" ;
+			utils.newurl= config.limesurvey.url + "/surveyAdministration/newSurvey" ;
 		} else {
-			utils.editurl= config.limesurvey.external_url + "/admin/survey/sa/view/surveyid/" ;
-			utils.newurl= config.limesurvey.external_url + "/admin/survey/sa/newsurvey" ;
+			utils.editurl= config.limesurvey.url + "/admin/survey/sa/view/surveyid/" ;
+			utils.newurl= config.limesurvey.url + "/admin/survey/sa/newsurvey" ;
 		}
 		return utils;
 	}

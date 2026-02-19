@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { config } from "@/lib/config";
-import { KeycloakClient, KeycloakUser } from "@/lib/utils/keycloakclient";
+import { keycloakClient, KeycloakUser } from "@/lib/utils/keycloakclient";
 import { ValidationError } from "@/lib/errors/appErrors";
 
 /**
@@ -160,9 +160,7 @@ export class GroupParticipant {
             return true;
         } else {
             logger.info('KeyCloak -> Auth');
-            const keycloakClient = new KeycloakClient();
             await keycloakClient.initialize();
-            await keycloakClient.AuthClient();
             var userid = await keycloakClient.findUserIdByUsername(this.username);
             logger.info('KeyCloak -> Remove user from group');
             try {
@@ -190,14 +188,12 @@ export class GroupParticipant {
         }
 
         logger.info('KeyCloak -> Auth');
-        const keycloakClient = new KeycloakClient();
         await keycloakClient.initialize();
-        await keycloakClient.AuthClient();
 
         logger.info('KeyCloak -> Adding user');
         let user: KeycloakUser;
         try{
-            user = await keycloakClient.addUser(userData);
+            user = await keycloakClient.addUser({ username: userData.username!, email: userData.email!, enabled: true });
         }catch(e){
             logger.error(e);
             throw { message: 'Failed creating the user into keycloak' };

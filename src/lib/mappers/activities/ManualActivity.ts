@@ -1,5 +1,4 @@
 import { Activity } from "@/lib/mappers/activities/Activity";
-import { LRSActivity } from "@/lib/mappers/activities/LRSActivity";
 import { db } from "@/lib/db";
 
 /**
@@ -88,7 +87,7 @@ export class ManualActivity extends Activity {
 	}
 
 	static async getUtils(username : string){
-		return LRSActivity.getUtils(username);
+		return super.getUtils(username);
 	}
 
 	async getDetails(){

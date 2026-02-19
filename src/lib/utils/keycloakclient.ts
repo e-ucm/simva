@@ -1,8 +1,10 @@
-import { logger }from '@/lib/logger';
-import axios from 'axios';
+import { logger } from '@/lib/logger';
+import axios, { AxiosResponse } from 'axios';
 import { config } from '@/lib/config';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
+import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
+import GroupRepresentation from '@keycloak/keycloak-admin-client/lib/defs/groupRepresentation';
 import { GroupParticipant } from '@/lib/mappers/group/GroupParticipant';
 import { NotFoundError } from '@/lib/errors/appErrors';
 
@@ -20,33 +22,49 @@ export interface KeycloakUser {
     enabled?: boolean;
 }
 
-export class KeycloakClient {
-    client: KcAdminClient;
-    KeycloakUserCredentials : Credentials;
-    keycloakStatus: boolean;
-    options : KeycloakOption;
+interface GroupCache {
+    [groupName: string]: { id: string; timestamp: number };
+}
 
-    constructor() {
+interface CreateUserParams {
+    username: string;
+    email: string;
+    enabled?: boolean;
+}
+
+export class KeycloakClient {
+    private client: KcAdminClient;
+    private KeycloakUserCredentials: Credentials;
+    private keycloakStatus: boolean = false;
+    private options: KeycloakOption;
+    private lastAuthTime: number = 0;
+    private authCacheDuration: number = 280000; // 280 seconds (5 minutes - 20 seconds buffer)
+    private groupCache: GroupCache = {};
+    private groupCacheDuration: number = 300000; // 5 minutes
+    private ssoConfig: any;
+
+    constructor(ssoConfig: any) {
         let kcconfig = {
-            baseUrl: config.sso.url,
-            realmName: config.sso.realm
+            baseUrl: ssoConfig.url,
+            realmName: ssoConfig.realm
         };
         logger.info(kcconfig);
         // Instantiate the Keycloak client
         this.client = new KcAdminClient(kcconfig);
+        this.ssoConfig = ssoConfig;
+
+        // Set up admin credentials for authentication
 
         this.KeycloakUserCredentials = {
-            username: config.sso.adminUser,
-            password: config.sso.adminPassword,
+            username: ssoConfig.adminUser,
+            password: ssoConfig.adminPassword,
             grantType: 'password',
             clientId: 'admin-cli'
         };
 
-        this.keycloakStatus = false;
-
         // Initialize request options as a class property
         this.options = {
-            url: config.sso.webhookUrl,
+            url: ssoConfig.webhookUrl,
             method: "POST",
             headers: {
                 'user-agent': 'Apache-HttpClient/4.2.2 (java 1.5)',
@@ -64,7 +82,7 @@ export class KeycloakClient {
 
     async initialize() : Promise<void> {
         try {
-            if (config.sso.enabled) {
+            if (this.ssoConfig.enabled) {
                 try {
                     await this.client.auth(this.KeycloakUserCredentials);
                     logger.info(this.client.getAccessToken());
@@ -81,8 +99,93 @@ export class KeycloakClient {
         }
     }
 
-    async AuthClient() : Promise<void> {
-        await this.client.auth(this.KeycloakUserCredentials);
+    /**
+     * Authenticate client with caching to avoid unnecessary auth calls
+     */
+    private async ensureAuthenticated(): Promise<void> {
+        const now = Date.now();
+        if (now - this.lastAuthTime < this.authCacheDuration) {
+            return; // Still authenticated
+        }
+        
+        try {
+            await this.client.auth(this.KeycloakUserCredentials);
+            this.lastAuthTime = now;
+            this.keycloakStatus = true;
+        } catch (error) {
+            this.keycloakStatus = false;
+            logger.error(error, 'Failed to authenticate Keycloak client');
+            throw new Error('Keycloak authentication failed');
+        }
+    }
+
+    /**
+     * Find group by name with caching
+     */
+    private async findGroupByName(groupName: string): Promise<GroupRepresentation | null> {
+        // Check cache first
+        const cached = this.groupCache[groupName];
+        const now = Date.now();
+        
+        if (cached && (now - cached.timestamp < this.groupCacheDuration)) {
+            // Return cached group (we need to fetch it again, but we have the ID)
+            try {
+                const group = await this.client.groups.findOne({ id: cached.id });
+                return group || null;
+            } catch {
+                // Cache miss, remove from cache
+                delete this.groupCache[groupName];
+            }
+        }
+
+        // Fetch from Keycloak
+        const groups = await this.client.groups.find({ search: groupName });
+        const group = groups.find(g => g.name === groupName) || null;
+        
+        // Cache the result
+        if (group && group.id) {
+            this.groupCache[groupName] = { id: group.id, timestamp: now };
+        }
+        
+        return group;
+    }
+
+    /**
+     * Create group if it doesn't exist
+     */
+    private async createGroupIfNotExists(groupName: string): Promise<GroupRepresentation> {
+        let group = await this.findGroupByName(groupName);
+        
+        if (!group) {
+            logger.info(`Group '${groupName}' does not exist. Creating it...`);
+            
+            const newGroup = await this.client.groups.create({ name: groupName });
+            group = newGroup;
+            
+            // Update cache
+            if (group.id) {
+                this.groupCache[groupName] = { id: group.id, timestamp: Date.now() };
+            }
+            
+            logger.info(`Group '${groupName}' created with ID: ${group.id}`);
+        }
+        
+        return group;
+    }
+
+    /**
+     * Validate user input parameters
+     */
+    private validateUserParams(params: any, requiredFields: string[]): void {
+        if (!params) {
+            throw new Error('Parameters are required');
+        }
+        
+        for (const field of requiredFields) {
+            if (!params[field]) {
+                throw new Error(`Missing required parameter: '${field}'`);
+            }
+        }
     }
 
     /**
@@ -91,42 +194,29 @@ export class KeycloakClient {
      * @param {string} groupName - The name of the group.
      * @returns {Promise<void>}
      */
-    async addUserToGroup(userId : string, groupName : string) : Promise<void> {
+    async addUserToGroup(userId: string, groupName: string): Promise<void> {
+        this.validateUserParams({ userId, groupName }, ['userId', 'groupName']);
+        
         try {
-            // Ensure the client is authenticated
-            await this.AuthClient();
-
-            // Fetch all groups to find the group ID by name
-            logger.info(`Keycloak -> Searching for group: ${groupName}`);
-            const groups = await this.client.groups.find({ search: groupName });
-            logger.info(groups);
-            let group = groups.find(g => g.name === groupName);
-
-            // If the group does not exist, create it
-            if (!group) {
-                logger.info(`Group '${groupName}' does not exist. Creating it...`);
-
-                const newGroup = await this.client.groups.create({
-                    name: groupName
-                });
-
-                // Keycloak API returns the group details, including the ID
-                group = newGroup;
-                logger.info(`Group '${groupName}' created with ID: ${group.id}`);
+            await this.ensureAuthenticated();
+            
+            logger.info(`Keycloak -> Adding user ${userId} to group: ${groupName}`);
+            
+            const group = await this.createGroupIfNotExists(groupName);
+            
+            if (!group.id) {
+                throw new Error(`Failed to get group ID for '${groupName}'`);
             }
 
-            const groupId = group.id!;
-
-            // Add the user to the group
             await this.client.users.addToGroup({
-                id: userId,      // User ID
-                groupId: groupId // Group ID
+                id: userId,
+                groupId: group.id
             });
 
             logger.info(`User ${userId} added to group '${groupName}' successfully.`);
         } catch (error) {
             logger.error(error, `Error adding user ${userId} to group '${groupName}':`);
-            throw error;
+            throw new Error(`Failed to add user to group: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -136,32 +226,30 @@ export class KeycloakClient {
      * @param {string} groupName - The name of the group.
      * @returns {Promise<void>}
      */
-    async removeUserFromGroup(userId: string, groupName : string) : Promise<void> {
+    async removeUserFromGroup(userId: string, groupName: string): Promise<void> {
+        this.validateUserParams({ userId, groupName }, ['userId', 'groupName']);
+        
         try {
-            // Ensure the client is authenticated
-            await this.AuthClient();
-
-            // Fetch all groups to find the group ID by name
-            const groups = await this.client.groups.find();
-            const group = groups.find(g => g.name === groupName);
-
-            if (!group) {
+            await this.ensureAuthenticated();
+            
+            logger.info(`Keycloak -> Removing user ${userId} from group: ${groupName}`);
+            
+            const group = await this.findGroupByName(groupName);
+            
+            if (!group || !group.id) {
                 logger.warn(`Group '${groupName}' does not exist. Cannot remove user.`);
-                return; // Exit early if the group doesn't exist
+                return;
             }
 
-            const groupId = group.id!;
-
-            // Remove the user from the group
             await this.client.users.delFromGroup({
-                id: userId,      // User ID
-                groupId: groupId // Group ID
+                id: userId,
+                groupId: group.id
             });
 
             logger.info(`User ${userId} removed from group '${groupName}' successfully.`);
         } catch (error) {
             logger.error(error, `Error removing user ${userId} from group '${groupName}':`);
-            throw error;
+            throw new Error(`Failed to remove user from group: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -170,74 +258,77 @@ export class KeycloakClient {
      * @param {Object} params - Parameters for creating the user.
      * @param {string} params.username - The username for the new user.
      * @param {string} params.email - The email address for the user.
-     * @param {boolean} [params.isToken=false] - Whether the user is related to token generation.
-     * @param {boolean} [params.useNewGeneration=false] - Whether to use a new naming scheme.
-     * @param {string} [params.groupid] - The group ID to prepend if `useNewGeneration` is true.
-     * @returns {Promise<Object>} - The created Keycloak user object.
+     * @param {boolean} [params.enabled=true] - Whether the user account should be enabled.
+     * @returns {Promise<UserRepresentation>} - The created Keycloak user object.
      */
-    async addUser(params : Partial<GroupParticipant>) : Promise<KeycloakUser> {
-        if (!params || !params.username || !params.email) {
-            throw new Error("Missing required parameters: 'username' and 'email' are mandatory.");
-        }
-
+    async addUser(params: CreateUserParams): Promise<UserRepresentation> {
+        // Type guard and adapter for backward compatibility
+        const userData: CreateUserParams = {
+            username: params.username || '',
+            email: params.email || '',
+            enabled: true
+        };
+        
+        this.validateUserParams(userData, ['username', 'email']);
+        
         try {
-            // Authenticate the client
-            await this.AuthClient();
-
-            logger.info('Keycloak -> Adding user');
-
-            // Create the user in Keycloak
-            const user = await this.client.users.create({
-                username: params.username,
-                email: params.email,
-                enabled: true, // User account is active by default
-            });
-
-            logger.info(`Keycloak -> User '${params.username}' created successfully.`);
-            return user; // Return the user object for further use
-        } catch (error) {
-            logger.error(error, 'Error adding user to Keycloak:');
-            throw {
-                message: 'Failed creating the user in Keycloak',
-                originalError: error,
+            await this.ensureAuthenticated();
+            
+            logger.info(`Keycloak -> Adding user: ${userData.username}`);
+            
+            const userPayload = {
+                username: userData.username.trim(),
+                email: userData.email.trim().toLowerCase(),
+                enabled: userData.enabled ?? true,
+                emailVerified: true
             };
+            
+            const user = await this.client.users.create(userPayload);
+            
+            logger.info(`Keycloak -> User '${userData.username}' created successfully with ID: ${user.id}`);
+            return user;
+        } catch (error) {
+            logger.error(error, `Error adding user '${userData.username}' to Keycloak:`);
+            throw new Error(`Failed to create user in Keycloak: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
      * Finds a user's ID in Keycloak by their username.
      * @param {string} username - The username of the user.
-     * @returns {Promise<string>} - The user's ID if found, otherwise throws an error.
+     * @returns {Promise<string>} - The user's ID if found.
+     * @throws {NotFoundError} - When user is not found.
      */
-    async findUserIdByUsername(username : string) : Promise<string> {
-        if (!username) {
-            throw new Error("Username is required to find the user ID.");
-        }
-
+    async findUserIdByUsername(username: string): Promise<string> {
+        this.validateUserParams({ username }, ['username']);
+        
         try {
-            // Ensure the client is authenticated
-            await this.AuthClient();
-
+            await this.ensureAuthenticated();
+            
             logger.info(`Keycloak -> Searching for user ID by username: ${username}`);
-
-            // Fetch users matching the username
-            const users = await this.client.users.find({ username });
-
-            if (!users || users.length === 0) {
-                throw new Error(`User with username '${username}' not found.`);
+            
+            const users = await this.client.users.find({ 
+                username: username.trim(),
+                exact: true // Exact match for better performance
+            });
+            
+            if (!users?.length) {
+                throw new NotFoundError(`User with username '${username}' not found`);
             }
-
-            // Assuming usernames are unique in Keycloak, return the first match
+            
             const user = users[0];
-            logger.info(`Keycloak -> User found: ${user.id}`);
-            if(user && user.id) {
-                return user.id;
-            } else {
-                throw new NotFoundError(`Failed to find user ID for username '${username}'`);
+            if (!user.id) {
+                throw new NotFoundError(`User '${username}' found but has no ID`);
             }
+            
+            logger.info(`Keycloak -> User found: ${user.id}`);
+            return user.id;
         } catch (error) {
+            if (error instanceof NotFoundError) {
+                throw error;
+            }
             logger.error(error, `Error finding user ID for username '${username}':`);
-            throw new NotFoundError(`Failed to find user ID for username '${username}'`);
+            throw new NotFoundError(`Failed to find user ID for username '${username}': ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -247,20 +338,20 @@ export class KeycloakClient {
      * @param {string} userId - The ID of the user to delete.
      * @returns {Promise<void>}
      */
-    async removeUser(userId : string) : Promise<void> {
+    async removeUser(userId: string): Promise<void> {
+        this.validateUserParams({ userId }, ['userId']);
+        
         try {
-            // Ensure the client is authenticated
-            await this.AuthClient();
-
-            // Attempt to delete the user
-            await this.client.users.del({
-                id: userId // User ID
-            });
-
+            await this.ensureAuthenticated();
+            
+            logger.info(`Keycloak -> Deleting user with ID: ${userId}`);
+            
+            await this.client.users.del({ id: userId });
+            
             logger.info(`User with ID ${userId} successfully deleted from Keycloak.`);
         } catch (error) {
             logger.error(error, `Error deleting user with ID ${userId}:`);
-            throw error;
+            throw new Error(`Failed to delete user: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -272,36 +363,64 @@ export class KeycloakClient {
         return this.keycloakStatus;
     }
 
-    createWebhook(callback : Function) {
+    /**
+     * Create webhook configuration for Keycloak events
+     * @returns {Promise<void>}
+     */
+    async createWebhookAsync(): Promise<void> {
         if (!this.client) {
-            callback({ message: 'Client is not initialized' });
-            return;
+            throw new Error('Client is not initialized');
         }
-
-        let accessToken = this.client.getAccessToken();
-        logger.info('AccessToken: ' + accessToken);
         
-        this.options.headers.Authorization = 'Bearer ' + accessToken;
-        this.options.data = {
-            "enabled": "true",
-            "url": config.api.webhookPath,
-            "secret": config.api.webhookSecret,
-            "eventTypes": ["*"]
-        };
-
-        axios(this.options)
-            .then(response => {
-                    if (response.status == 200) {
-                        logger.info(JSON.stringify(response));
-                        callback(null);
-                    } else {
-                        logger.info(JSON.stringify(response));
-                        callback({ message: 'Error on SSO webhook Initialization' });
-                    }
-                })
-			.catch(error => {
-                logger.error(error, 'Exception on SSO webhook Initialization');
-                callback({ message: 'Exception on SSO webhook Initialization', error: error });
-            });
+        try {
+            await this.ensureAuthenticated();
+            
+            const accessToken = this.client.getAccessToken();
+            if (!accessToken) {
+                throw new Error('No access token available');
+            }
+            
+            logger.info('Keycloak -> Creating webhook configuration');
+            
+            const webhookData = {
+                enabled: true,
+                url: config.api.webhookPath,
+                secret: config.api.webhookSecret,
+                eventTypes: ['*']
+            };
+            
+            const webhookOptions = {
+                ...this.options,
+                headers: {
+                    ...this.options.headers,
+                    Authorization: `Bearer ${accessToken}`
+                },
+                data: webhookData
+            };
+            
+            const response: AxiosResponse = await axios(webhookOptions);
+            
+            if (response.status === 200) {
+                logger.info('SSO webhook initialization successful');
+            } else {
+                throw new Error(`Unexpected response status: ${response.status}`);
+            }
+        } catch (error) {
+            logger.error(error, 'Exception on SSO webhook initialization');
+            throw new Error(`Failed to create webhook: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    
+    /**
+     * Create webhook with callback for backward compatibility
+     */
+    createWebhook(callback: (error: any, result?: any) => void): void {
+        this.createWebhookAsync()
+            .then(() => callback(null))
+            .catch(error => callback(error));
     }
 }
+
+const keycloakClient = new KeycloakClient(config.sso);
+export { keycloakClient };
+export default KeycloakClient;

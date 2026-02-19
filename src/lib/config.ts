@@ -127,10 +127,10 @@ config.limesurvey = {};
 config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey.external.test';
 config.limesurvey.protocol = process.env.LIMESURVEY_PROTOCOL || 'https';
 config.limesurvey.port = process.env.LIMESURVEY_PORT || '443';
-config.limesurvey.external_url = config.limesurvey.protocol + '://' + config.limesurvey.host + ((ignored_ports.indexOf(Number(config.limesurvey.port)) !== -1) ? '' : (':' + config.limesurvey.port)) + '/';
+config.limesurvey.external_url = config.limesurvey.protocol + '://' + config.limesurvey.host + ((ignored_ports.indexOf(Number(config.limesurvey.port)) !== -1) ? '' : (':' + config.limesurvey.port));
 config.limesurvey.useNewVersion = process.env.LIMESURVEY_USE_NEW_VERSION === 'true';
-config.limesurvey.adminUser = process.env.LIMESURVEY_ADMIN_USER || 'admin';
-config.limesurvey.adminPassword = process.env.LIMESURVEY_ADMIN_PASSWORD || 'secret';
+config.limesurvey.username = process.env.LIMESURVEY_ADMIN_USER || 'admin';
+config.limesurvey.password = process.env.LIMESURVEY_ADMIN_PASSWORD || 'secret';
 config.limesurvey.secret = process.env.LIMESURVEY_SECRET || 'secret';
 config.limesurvey.headerName = process.env.LIMESURVEY_HEADER_NAME || 'X-Signature-SHA256';
 config.limesurvey.headerPrefix = process.env.LIMESURVEY_HEADER_PREFIX || '';
@@ -154,6 +154,8 @@ config.sso.port = process.env.SSO_PORT || '443';
 config.sso.url = config.sso.protocol + '://' + config.sso.host + ((ignored_ports.indexOf(Number(config.sso.port)) !== -1) ? '' : (':' + config.sso.port));
 config.sso.adminUser = process.env.SSO_ADMIN_USER || 'administrator';
 config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'administrator';
+config.sso.webhookSubUrl = process.env.SSO_WEBHOOK_SUBURL || '/sso-events';
+config.sso.webhookUrl = config.sso.url + config.sso.webhookSubUrl;
 
 // LTI configuration
 config.lti = {};

@@ -3,7 +3,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 import { Op } from "sequelize";
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
-import { KeycloakClient } from "@/lib/utils/keycloakclient";
+import { keycloakClient } from "@/lib/utils/keycloakclient";
 
 /**
  * User mapper class representing a system user.
@@ -230,9 +230,7 @@ export class User {
 
       logger.info('KeyCloak -> Auth');
 
-      const keycloakClient = new KeycloakClient();
       await keycloakClient.initialize();
-      await keycloakClient.AuthClient();
 
       var userid = await keycloakClient.findUserIdByUsername(this.username);
 
