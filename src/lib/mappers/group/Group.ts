@@ -350,7 +350,7 @@ export class Group {
      * permissions.forEach(p => console.log(p.user_id, p.permission_level));
      * ```
      */
-     async getPermissions(): Promise<UserPermission[]> {
+     async getPermissions(): Promise<UserPermission> {
       return await UserPermission.getFromDbData('group', this.group_id);
     }
     
@@ -425,7 +425,7 @@ export class Group {
     async deletePermissionsForUser(userId: number): Promise<void> {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
-        return await permission.delete();
+        await permission.delete();
     }
 
     /**

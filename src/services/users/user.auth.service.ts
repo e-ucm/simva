@@ -160,7 +160,7 @@ async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<
       
       if (user.role !== newRole) {
         // Update user role using model method
-        await user.updateRole({ role: newRole });
+        await user.update({ role: newRole });
         return decoded;
       } else {
         return decoded;
