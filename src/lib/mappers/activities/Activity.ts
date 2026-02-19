@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { minioClient } from "@/lib/utils/minioclient";
+import { JSScormTracker } from "js-tracker";
 
 /**
  * Base Activity mapper class representing an activity within a session.
@@ -341,7 +342,31 @@ export class Activity {
 	 * @param {string} reasonExtension - Reason extension for the trace
 	 * @returns {void}
 	 */
-	sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): void {
+	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
+		let jstracker = new JSScormTracker();
+		jstracker.trackerSettings.actor_homePage = config.external_url;
+		jstracker.trackerSettings.actor_name = username;
+		let scormActivityTracker = jstracker.scorm(this.activity_id.toString(), jstracker.SCORMTYPE.ACTVITY);
+		let statement;
+		switch(verb) {
+			case "initialized":
+				statement = scormActivityTracker.initialized().statement;
+				break;
+			case "resumed":
+				statement = scormActivityTracker.resumed().statement;
+				break;
+			case "suspended":
+				statement = scormActivityTracker.suspended().statement;
+				break;
+			case "terminated":
+				scormActivityTracker.IsInitialized = false;
+				scormActivityTracker.InitializedTime = new Date(timestamp);
+				statement = scormActivityTracker.terminated().statement;
+				break;
+			default:
+				logger.warn(`Unsupported verb ${verb} for xAPI trace`);
+		}
+		logger.info(statement? statement.toXAPI() : "No statement generated", "XAPI Statement:");
 		throw new Error("sendXAPITraceForActivity method not implemented for this activity type");
 	}
 

@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM timbru31/node-alpine-git:22
 
 WORKDIR /home/node/app
 
