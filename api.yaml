@@ -166,6 +166,39 @@ paths:
             schema:
               $ref: '#/components/schemas/events'
         required: true
+  /users/{username}:
+    patch:
+      tags:
+        - admins
+        - teachers
+      summary: updates a user
+      operationId: patchUserByUsername
+      description: |
+        Updates the specified user's information
+      responses:
+        '200':
+          description: user updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'user not found'
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Username of the user to update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+        required: true
   /groups:
     get:
       tags:
@@ -193,7 +226,7 @@ paths:
       tags:
         - teachers
       summary: adds a group for the current user as owner.
-      operationId: addGroup
+      operationId: createGroup
       description: |
         Creates a new group for the current user as owner.
       responses:
@@ -359,6 +392,28 @@ paths:
             schema:
               $ref: '#/components/schemas/user'
         required: true
+  /groups/count:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets the total count of groups
+      operationId: getGroupCount
+      description: |
+        Gets the total number of groups available to the current user
+      responses:
+        '200':
+          description: group count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 42
+        '400':
+          description: 'invalid input'
   /groups/{id}/participants/{participant_id}:
     delete:
       tags:
@@ -378,6 +433,134 @@ paths:
             schema:
               $ref: '#/components/schemas/user'
         required: true
+  /groups/{group_id}/permissions:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets permissions for a group
+      operationId: getGroupPermissions
+      description: |
+        Gets all user permissions for the specified group
+      responses:
+        '200':
+          description: group permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'group not found'
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the group
+  /groups/{group_id}/permissions/{user_id}:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets permissions for a user in a group
+      operationId: getGroupPermissionsForUser
+      description: |
+        Gets permissions for a specific user in the specified group
+      responses:
+        '200':
+          description: user permissions for group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'group or user not found'
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the group
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
+    patch:
+      tags:
+        - admins
+        - teachers
+      summary: updates permissions for a user in a group
+      operationId: patchGroupPermissionsForUser
+      description: |
+        Updates permissions for a specific user in the specified group
+      responses:
+        '200':
+          description: permissions updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'group or user not found'
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the group
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_permission'
+        required: true
+    delete:
+      tags:
+        - admins
+        - teachers
+      summary: deletes permissions for a user in a group
+      operationId: deleteGroupPermissionsForUser
+      description: |
+        Deletes permissions for a specific user in the specified group
+      responses:
+        '200':
+          description: permissions deleted
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'group or user not found'
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the group
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
   /simlets:
     get:
       tags:
@@ -478,7 +661,7 @@ paths:
       tags:
         - teachers
       summary: updates the study
-      operationId: updateStudy
+      operationId: patchSimlet
       description: Updates an existing stidy
       responses:
         '200':
@@ -501,7 +684,7 @@ paths:
       tags:
         - teachers
       summary: Deletes the study with the given ID
-      operationId: deleteStudy
+      operationId: deleteSimlet
       description: |
         Deleted the designed study
       responses:
@@ -638,7 +821,7 @@ paths:
         - admins
         - teachers
       summary: gets the assigned groups to the study
-      operationId: getStudyGroups
+      operationId: getSimletGroups
       description: |
         Obtains the list of groups assigned to the study
       responses:
@@ -661,7 +844,7 @@ paths:
       tags:
         - teachers
       summary: gets the tests from a study
-      operationId: getStudyTests
+      operationId: getSimletSessions
       description: |
         Obtains the list of tests assigned to the study
       responses:
@@ -683,7 +866,7 @@ paths:
       tags:
         - teachers
       summary: adds a test to the study
-      operationId: addTestToStudy
+      operationId: createSimletSession
       description: |
         Adds a test for the current group
       responses:
@@ -708,7 +891,7 @@ paths:
       tags:
         - teachers
       summary: gets the list of participants for this study
-      operationId: getStudyParticipants
+      operationId: getSimletParticipants
       description: |
         Obtains the list of participants of the study
       responses:
@@ -873,7 +1056,7 @@ paths:
       tags:
         - teachers
       summary: gets the allocator from a study
-      operationId: getStudyAllocator
+      operationId: getAllocatorFromSimlet
       description: |
         Obtains the allocator used by the study
       responses:
@@ -893,7 +1076,7 @@ paths:
       tags:
         - teachers
       summary: set the allocator to the study
-      operationId: setStudyAllocator
+      operationId: updateSimletAllocator
       description: |
         Updates the allocator from the study
       responses:
@@ -913,6 +1096,281 @@ paths:
             schema:
               $ref: '#/components/schemas/allocator'
         description: study to be modified
+  /simlets/{simletid}/permissions:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets permissions for a simlet
+      operationId: getSimletPermissions
+      description: |
+        Gets all user permissions for the specified simlet
+      responses:
+        '200':
+          description: simlet permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'simlet not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+    post:
+      tags:
+        - admins
+        - teachers
+      summary: creates permissions for a simlet
+      operationId: createSimletPermissions
+      description: |
+        Creates new user permissions for the specified simlet
+      responses:
+        '200':
+          description: permissions created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'simlet not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_permission'
+        required: true
+  /simlets/{simletid}/permissions/{user_id}:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets permissions for a user in a simlet
+      operationId: getSimletPermissionsForUser
+      description: |
+        Gets permissions for a specific user in the specified simlet
+      responses:
+        '200':
+          description: user permissions for simlet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'simlet or user not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
+    patch:
+      tags:
+        - admins
+        - teachers
+      summary: updates permissions for a user in a simlet
+      operationId: patchSimletPermissionsForUser
+      description: |
+        Updates permissions for a specific user in the specified simlet
+      responses:
+        '200':
+          description: permissions updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'simlet or user not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_permission'
+        required: true
+    delete:
+      tags:
+        - admins
+        - teachers
+      summary: deletes permissions for a user in a simlet
+      operationId: deleteSimletPermissionsForUser
+      description: |
+        Deletes permissions for a specific user in the specified simlet
+      responses:
+        '200':
+          description: permissions deleted
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'simlet or user not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
+  /simlets/{simletid}/sessions/{sessionid}/permissions:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets permissions for a session
+      operationId: getSessionPermissions
+      description: |
+        Gets all user permissions for the specified session
+      responses:
+        '200':
+          description: session permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'session not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+    post:
+      tags:
+        - admins
+        - teachers
+      summary: creates permissions for a session
+      operationId: createSessionPermissions
+      description: |
+        Creates new user permissions for the specified session
+      responses:
+        '200':
+          description: permissions created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'session not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_permission'
+        required: true
+  /simlets/{simletid}/sessions/{sessionid}/permissions/{user_id}:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets permissions for a user in a session
+      operationId: getSessionPermissionsForUser
+      description: |
+        Gets permissions for a specific user in the specified session
+      responses:
+        '200':
+          description: user permissions for session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'session or user not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
+    patch:
+      tags:
+        - admins
+        - teachers
+      summary: updates permissions for a user in a session
+      operationId: patchSessionPermissionsForUser
+      description: |
+        Updates permissions for a specific user in the specified session
+      responses:
+        '200':
+          description: permissions updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_permission'
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'session or user not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user_permission'
+        required: true
+    delete:
+      tags:
+        - admins
+        - teachers
+      summary: deletes permissions for a user in a session
+      operationId: deleteSessionPermissionsForUser
+      description: |
+        Deletes permissions for a specific user in the specified session
+      responses:
+        '200':
+          description: permissions deleted
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'session or user not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user
   /activities:
     get:
       tags:
@@ -2473,12 +2931,6 @@ components:
         email:
           type: string
           example: "email@example.com"
-        isToken:
-          type: boolean
-          example: false
-        token:
-          type: string
-          example: "user"
         role:
           type: string
           description: |
@@ -2493,17 +2945,13 @@ components:
            - "researcher"
            - "admin"
            - "lrsmanager"
-        external_entity:
-          type: array
-          items:
-            type: object
-            properties:
-              domain:
-                type: string
-                example: keycloak
-              id:
-                type: string
-                example: whateveruuidusedthere_12321
+        isToken:
+          type: boolean
+          example: false
+        token:
+          type: string
+          example: "user"
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -2547,86 +2995,111 @@ components:
       type: object
       required:
         - group_id
-        - name
-        - use_new_generation
+        - group_name
+        - group_use_new_generation
       properties:
         group_id:
           type: integer
           example: 123
-        name:
+        group_name:
           type: string
           example: "Test group for School"
-        use_new_generation:
+        group_use_new_generation:
           type: boolean
           example: true
-        created_at:
-          type: string
-          format: date-time
-          example: "2017-07-21T17:32:28Z"
         participants:
           type: array
           items:
-            type: integer
-          example: [101, 102, 103]
-        direct_permissions:
-          type: array
-          items:
-            type: string
-          example: ["READ", "WRITE"]
+            type: object
+            properties:
+              user_id:
+                type: integer
+              username:
+                type: string
+          nullable: true
+        group_owner_user_id:
+          type: integer
+          example: 456
+        group_owner_username:
+          type: string
+          example: "teacher1"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2017-07-21T17:32:28Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2017-07-21T17:32:28Z"
     study:
       type: object
       required:
         - simlet_id
-        - name
-        - user_id
+        - simlet_name
       properties:
         simlet_id:
           type: integer
           example: 123
-        name:
+        simlet_name:
           type: string
           example: "Survey for SG validation"
-        description:
+        simlet_description:
           type: string
           example: "A comprehensive study for serious game validation"
-        user_id:
+        current_user_id:
           type: integer
           example: 456
-        username:
+        current_user_username:
           type: string
           example: "researcher1"
-        permission:
+        current_user_permission:
           type: string
           example: "READ_WRITE"
         allocator_id:
           type: integer
           example: 789
+          nullable: true
         sessions:
           type: array
           items:
-            type: integer
-          example: [201, 202, 203]
+            type: object
+            properties:
+              session_id:
+                type: integer
+              session_name:
+                type: string
+          nullable: true
         groups:
           type: array
           items:
-            type: integer
-          example: [101, 102]
+            type: object
+            properties:
+              group_id:
+                type: integer
+              group_name:
+                type: string
+          nullable: true
         tags:
           type: array
           items:
-            type: string
-          example: ["validation", "serious-games"]
-        direct_permissions:
-          type: array
-          items:
-            type: string
-          example: ["READ", "WRITE"]
+            type: object
+            properties:
+              tag_id:
+                type: integer
+              name:
+                type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     test:
       type: object
       required:
         - session_id
         - simlet_id
-        - user_id
       properties:
         session_id:
           type: integer
@@ -2634,93 +3107,141 @@ components:
         simlet_id:
           type: integer
           example: 123
-        user_id:
+        current_user_id:
           type: integer
           example: 456
-        name:
-          type: string
-          example: "Test A for my study"
-        description:
-          type: string
-          example: "Pre-test session for baseline measurement"
-        username:
+        current_user_username:
           type: string
           example: "researcher1"
-        permission:
+        current_user_permission:
           type: string
           example: "READ_WRITE"
+        session_name:
+          type: string
+          example: "Test A for my study"
+        session_description:
+          type: string
+          example: "Pre-test session for baseline measurement"
+        session_experimental_method:
+          type: string
+          example: "control"
+        session_can_be_manually_activated:
+          type: boolean
+          example: true
+        session_active:
+          type: boolean
+          example: false
+        session_start_date:
+          type: string
+          format: date-time
+          nullable: true
+        session_end_date:
+          type: string
+          format: date-time
+          nullable: true
+        activities:
+          type: array
+          items:
+            type: object
+            properties:
+              activity_id:
+                type: integer
+              activity_name:
+                type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              tag_id:
+                type: integer
+              name:
+                type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-        experimental_method:
-          type: string
-          example: "control"
-        session_open_date:
-          type: string
-          format: date-time
-        session_close_date:
-          type: string
-          format: date-time
-        activities:
-          type: array
-          items:
-            type: integer
-          example: [301, 302, 303]
-        tags:
-          type: array
-          items:
-            type: string
-          example: ["pre-test", "baseline"]
-        direct_permissions:
-          type: array
-          items:
-            type: string
-          example: ["READ", "WRITE"]
     activity:
       type: object
       required:
         - activity_id
         - session_id
         - activity_type
-        - name
+        - activity_name
       properties:
-        activity_id:
-          type: integer
-          example: 301
         session_id:
           type: integer
           example: 201
-        name:
+        activity_id:
+          type: integer
+          example: 301
+        activity_name:
           type: string
           example: "Pre-survey activity"
         activity_type:
           type: string
           enum: ["default", "manual", "limesurvey", "gameplay", "lti_tool"]
           example: "limesurvey"
+        activity_order:
+          type: integer
+          example: 1
+        trace_storage:
+          type: boolean
+          example: true
+        restart:
+          type: boolean
+          example: false
+          description: "Whether the activity can be restarted"
+        description:
+          type: string
+          example: "Survey for validation"
+        activity_open_date:
+          type: string
+          format: date-time
+          nullable: true
+        activity_close_date:
+          type: string
+          format: date-time
+          nullable: true
+        activity_url:
+          type: string
+          nullable: true
+          example: "https://example.com/activity"
+        activity_extra_data:
+          type: string
+          nullable: true
+          description: "JSON string containing extra configuration data"
+        start_completion_policy:
+          type: string
+          nullable: true
+        end_completion_policy:
+          type: string
+          nullable: true
+        lrs_user:
+          type: string
+          nullable: true
+        lrs_password:
+          type: string
+          nullable: true
+        activity_can_be_restarted:
+          type: boolean
+          example: false
+        activity_allow_anonymous_lrs_read:
+          type: boolean
+          example: false
+        activity_can_check_completion_status:
+          type: boolean
+          example: true
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-        presignedURL:
-          type: string
-          example: "https://minio.example.com/bucket/file?presigned=true"
-        generated_at:
-          type: string
-          format: date-time
-        expires_on_seconds:
-          type: integer
-          example: 3600
-        trace_storage:
-          type: boolean
-          example: true
-        description:
-          type: string
-          example: "Survey for validation"
     activityBody:
       type: object
       properties:
