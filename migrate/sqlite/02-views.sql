@@ -12,6 +12,17 @@ SELECT
 	s.permission AS permission
 FROM SIMLETs_permissions s;
 
+DROP VIEW IF EXISTS v_simlet_direct_permissions_users;
+CREATE VIEW v_simlet_direct_permissions_users AS
+SELECT
+    dp.simlet_id,
+    dp.permission,
+    'DIRECT' AS permission_type,
+    u.user_id,
+    u.username
+FROM vv_simlet_direct_permissions dp
+JOIN Users u ON u.user_id = dp.user_id;
+
 DROP VIEW IF EXISTS vv_session_direct_permissions;
 CREATE VIEW vv_session_direct_permissions AS
 SELECT
@@ -26,33 +37,36 @@ SELECT
 	s.permission AS permission
 FROM Sessions_permissions s;
 
-DROP VIEW IF EXISTS vv_direct_permissions;
-CREATE VIEW vv_direct_permissions AS
-SELECT 
-    user_id,
-    simlet_id as object_id,
-    'SIMLET' AS object_type,
-    permission
-FROM vv_simlet_direct_permissions
-UNION ALL
+DROP VIEW IF EXISTS v_session_direct_permissions_users;
+CREATE VIEW v_session_direct_permissions_users AS
 SELECT
-    user_id,
-    session_id as object_id,
-    'SESSION' AS object_type,
-    permission
-FROM vv_session_direct_permissions;
-
-DROP VIEW IF EXISTS vv_direct_permissions_users;
-CREATE VIEW vv_direct_permissions_users AS
-SELECT
-    dp.object_type,
-    dp.object_id,
+    dp.session_id,
     dp.permission,
     'DIRECT' AS permission_type,
     u.user_id,
     u.username
-FROM vv_direct_permissions dp
+FROM vv_session_direct_permissions dp
 JOIN Users u ON u.user_id = dp.user_id;
+
+DROP VIEW IF EXISTS vv_direct_permissions_users;
+CREATE VIEW vv_direct_permissions_users AS
+SELECT 
+    'SIMLET' AS object_type,
+    simlet_id AS object_id,
+    permission,
+    permission_type,
+    user_id,
+    username
+FROM v_simlet_direct_permissions_users
+UNION ALL
+SELECT
+    'SESSION' AS object_type,
+    session_id AS object_id,
+    permission,
+    permission_type,
+    user_id,
+    username
+FROM v_session_direct_permissions_users;
 
 DROP VIEW IF EXISTS vv_user_permissions;
 CREATE VIEW vv_user_permissions AS
@@ -65,9 +79,9 @@ SELECT
     'INDIRECT' AS permission_type,
     p.user_id,
     p.username
-FROM vv_direct_permissions_users p
-JOIN Sessions s ON s.simlet_id = p.object_id AND p.object_type = 'SIMLET'
-LEFT JOIN vv_direct_permissions_users psim ON s.simlet_id = psim.object_id AND psim.object_type = 'SIMLET'
+FROM v_simlet_direct_permissions_users p
+JOIN Sessions s ON s.simlet_id = p.simlet_id
+LEFT JOIN v_simlet_direct_permissions_users psim ON s.simlet_id = psim.simlet_id
 WHERE psim.permission IS NULL
 UNION ALL
 SELECT
@@ -77,9 +91,9 @@ SELECT
     'INDIRECT' AS permission_type,
     p.user_id,
     p.username
-FROM vv_direct_permissions_users p
-JOIN Sessions s ON s.session_id = p.object_id AND p.object_type = 'SESSION'
-LEFT JOIN vv_direct_permissions_users psim ON s.simlet_id = psim.object_id AND psim.object_type = 'SIMLET'
+FROM v_session_direct_permissions_users p
+JOIN Sessions s ON s.session_id = p.session_id
+LEFT JOIN v_simlet_direct_permissions_users psim ON s.simlet_id = psim.simlet_id
 WHERE psim.permission IS NULL
 UNION ALL
 SELECT
@@ -89,10 +103,10 @@ SELECT
     'INDIRECT' AS permission_type,
     p.user_id,
     p.username
-FROM vv_direct_permissions_users p
-JOIN Sessions s ON s.simlet_id = p.object_id AND p.object_type = 'SIMLET'
+FROM v_simlet_direct_permissions_users p
+JOIN Sessions s ON s.simlet_id = p.simlet_id
 JOIN Activities a ON a.session_id = s.session_id
-LEFT JOIN vv_direct_permissions_users psim ON s.session_id = psim.object_id AND psim.object_type = 'SESSION'
+LEFT JOIN v_session_direct_permissions_users psim ON s.session_id = psim.session_id
 WHERE psim.permission IS NULL
 UNION ALL
 SELECT
@@ -102,9 +116,8 @@ SELECT
     'INDIRECT' AS permission_type,
     p.user_id,
     p.username
-FROM vv_direct_permissions_users p
-JOIN Activities a ON a.session_id = p.object_id
-WHERE p.object_type = 'SESSION'
+FROM v_session_direct_permissions_users p
+JOIN Activities a ON a.session_id = p.session_id
 ORDER BY permission_type, permission, object_type;
 
 DROP VIEW IF EXISTS v_complete_simlets_users_permissions;
