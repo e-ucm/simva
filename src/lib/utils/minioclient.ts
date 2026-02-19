@@ -1,5 +1,6 @@
-import * as Minio from 'minio';
+import Minio from 'minio';
 import { logger } from '@/lib/logger';
+import { config } from '@/lib/config';
 
 interface MinioOpts {
     api_host: string;
@@ -12,6 +13,7 @@ interface MinioOpts {
     traces_topic: string;
     outputs_dir: string;
     traces_file: string;
+    presignedUrlFileExpirationTime: number;
 }
 
 class MinioClient {
@@ -59,20 +61,20 @@ class MinioClient {
      * @param {string} activtityId
      * @returns {Promise<string>}
      */
-        async getPresignedFileUrl(activityId: string): Promise<string> {
-            logger.info("Minio : getPresignedFileUrl")
-            const path=`${this.#opts.outputs_dir}/${activityId}/${this.#opts.traces_file}`;
-            logger.info(path)
-            let presignedUrl = ""
-            if(await this.fileExists(path)) {
-               presignedUrl = await this.getPresignedUrl(path)
-            }
-            return presignedUrl;
+    async getPresignedFileUrl(activityId: string): Promise<string> {
+        logger.info("Minio : getPresignedFileUrl")
+        const path=`${this.#opts.outputs_dir}/${activityId}/${this.#opts.traces_file}`;
+        logger.info(path)
+        let presignedUrl = ""
+        if(await this.fileExists(path)) {
+           presignedUrl = await this.getPresignedUrl(path)
         }
+        return presignedUrl;
+    }
 
     async getPresignedUrl(path: string): Promise<string> {
         logger.info("Minio : getPresignedUrl")
-        const presignedUrl = await this.#minio.presignedGetObject(this.#opts.bucket, path, 60*60);
+        const presignedUrl = await this.#minio.presignedGetObject(this.#opts.bucket, path, this.#opts.presignedUrlFileExpirationTime);
         logger.info(presignedUrl)
         return presignedUrl;
     }
@@ -92,7 +94,7 @@ class MinioClient {
 			})
 	}
 
-async getObject(bucket: string, name: string): Promise<string> {
+    async getObject(bucket: string, name: string): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const chunks: Buffer[] = [];
 			this.#minio.getObject(bucket, name)
@@ -135,4 +137,7 @@ async getObject(bucket: string, name: string): Promise<string> {
 	}
 }
 
+let minioClient = new MinioClient(config.minio);
+
+export { minioClient };
 export default MinioClient;

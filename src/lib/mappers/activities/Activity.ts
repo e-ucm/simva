@@ -1,6 +1,8 @@
+import { config } from "@/lib/config";
 import { db } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
+import { minioClient } from "@/lib/utils/minioclient";
 
 /**
  * Base Activity mapper class representing an activity within a session.
@@ -328,58 +330,6 @@ export class Activity {
 	} 
 
 	/**
-	 * Adds participants to this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method addParticipants
-	 * @param {number[]} participants - Array of participant IDs to add
-	 * @returns {Promise<void>} Promise that resolves when participants are added
-	 */
-	async addParticipants(participants: number[]): Promise<void> {
-		// Implementation for adding participants
-	}
-	
-	/**
-	 * Removes participants from this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method removeParticipants
-	 * @param {number[]} participants - Array of participant IDs to remove
-	 * @returns {Promise<void>} Promise that resolves when participants are removed
-	 */
-	async removeParticipants(participants: number[]): Promise<void> {
-		// Implementation for removing participants
-	}
-
-	/**
-	 * Adds a permission for a user on this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @method addPermission
-	 * @param {number} user_id - ID of the user to grant permission
-	 * @param {string} permission - Permission level to grant
-	 * @returns {void}
-	 */
-	addPermission(user_id: number, permission: string): void {
-		// Implementation for adding permission
-	}
-
-	/**
-	 * Removes a permission for a user on this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @method removePermission
-	 * @param {number} user_id - ID of the user to revoke permission
-	 * @param {string} permission - Permission level to revoke
-	 * @returns {void}
-	 */
-	removePermission(user_id: number, permission: string): void {
-		// Implementation for removing permission
-	}
-
-	/**
 	 * Sends an xAPI trace for this activity.
 	 * Stub implementation - to be implemented by subclasses.
 	 * 
@@ -392,6 +342,7 @@ export class Activity {
 	 * @returns {void}
 	 */
 	sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): void {
+		throw new Error("sendXAPITraceForActivity method not implemented for this activity type");
 	}
 
 	/**
@@ -403,7 +354,12 @@ export class Activity {
 	 * @param {number} result - Result value to set
 	 * @returns {void}
 	 */
-	setResult(participant : number, result : number): void {
+	async setResult(participant : number, result : number): Promise<void> {
+		//TODO - Implement result saving logic, e.g., save to MINIO BACKUP BUCKET
+		//await db.Tables.ActivityCompletion.update(
+		//	{ result: result },
+		//	{ where: { participant_id: participant, activity_id: this.activity_id } }
+		//);
 	}
 
 	/**
@@ -417,6 +373,7 @@ export class Activity {
 	 * @returns {Promise<void>} Promise that resolves when file is saved
 	 */
 	async saveToFile(filename: string, content: string): Promise<void>{
+		return;
 	}
 
 	/**
@@ -482,9 +439,9 @@ export class Activity {
 	 * @param {number[]} participants - Array of participant IDs
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
-	async getProgress(participants : number[]): Promise<number[]>{
+	async getProgress(participants : number[]): Promise<any[]>{
 		return [];
-	} 
+	}
 	
 	/**
 	 * Sets progress for participants in this activity.
@@ -496,7 +453,7 @@ export class Activity {
 	 * @param {number} progress - Progress value to set (0-100)
 	 * @returns {Promise<void>} Promise that resolves when progress is set
 	 */
-	async setProgress(participants: number[], progress: number): Promise<void>{
+	async setProgress(participants: number[], progress: number): Promise<void> {
 	} 
 	
 	/**
@@ -563,34 +520,7 @@ export class Activity {
 		return false;
 	}
 
-	/**
-	 * Initializes MinIO client for file operations.
-	 * Currently commented out - stub implementation for future use.
-	 * 
-	 * @method initializeMinioClient
-	 * @returns {void} No return value
-	 */
-	initializeMinioClient(): void {
-		throw new Error("MinIO client initialization not implemented yet");
-		//logger.info("MinioClient");
-		//logger.info(`Minio Config - Host: ${config.minio.api_host}, Port: ${config.minio.port}, SSL: ${config.minio.useSSL}`);
-		//try {
-		//	const minioClient = new Client({
-		//		endPoint: config.minio.api_host,
-		//		port: Number(config.minio.port),
-		//		accessKey: config.minio.access_key,
-		//		secretKey: config.minio.secret_key,
-		//		useSSL: config.minio.useSSL
-		//	});
-		//	logger.info("MinioClient connected");
-		//	return minioClient;
-		//} catch (error) {
-		//	logger.error("Error initializing MinioClient: ");
-		//	logger.error(error);
-		//	throw error;
-		//}
-	}
-
+	
 	/**
 	 * Generates a presigned URL for file access.
 	 * Currently commented out - stub implementation for future MinIO integration.
@@ -599,27 +529,25 @@ export class Activity {
 	 * @method generatePresignedFileUrl
 	 * @returns {Promise<void>} Promise that resolves when presigned URL is generated
 	 */
-	async generatePresignedFileUrl(): Promise<void> {
-		throw new Error("Presigned URL generation not implemented yet");
-		//let path = `${config.minio.outputs_dir}/${this._id}/${config.minio.traces_file}`;
-		//logger.info(path);
-		//let minioClient = this.initializeMinioClient();
-		//if (await this.fileExists(minioClient, path)) {
-		//	let presignedUrl = null;	
-		//	let time_before_expiration=config.minio.presigned_url_expiration_time_in_second;
-		//	presignedUrl = await this.getPresignedUrl(minioClient, path, time_before_expiration);
-		//	const now=new Date().toJSON();
-		//	this.extra_data.miniotrace={
-		//		presignedUrl:presignedUrl,
-		//		generated_at:now,
-		//		expire_on_seconds:time_before_expiration
-		//	};
-		//} else {
-		//	throw `Error the file ${path} don't exist in minio`;
-		//}
+	async generatePresignedFileUrl(): Promise<any> {
+		let path = `${config.minio.outputs_dir}/${this.activity_id}/${config.minio.traces_file}`;
+		logger.info(path);
+		if (await minioClient.fileExists(path)) {
+			let presignedUrl = null;	
+			let time_before_expiration=config.minio.presigned_url_expiration_time_in_second;
+			presignedUrl = await minioClient.getPresignedFileUrl(this.activity_id as unknown as string);
+			const now=new Date().toJSON();
+			return {
+				url: presignedUrl,
+				generated_at: now,
+				expire_on_seconds: time_before_expiration
+			};
+		} else {
+			throw `Error the file ${path} don't exist in minio`;
+		}
 	}
-
-/**
+	
+	/**
 	 * Retrieve file content from Minio
 	 * @param {Object} minioClient - Minio Client object
 	 * @param {string} file - File path
@@ -631,84 +559,41 @@ export class Activity {
 	 * 
 	 * @async
 	 * @method getFile
-	 * @param {Object} minioClient - MinIO client instance
 	 * @param {string} file - File path to retrieve
-	 * @returns {Promise<void>} Promise that resolves when file is retrieved
+	 * @returns {Promise<string>} Promise that resolves to the file content
 	 */
-	async getFile(minioClient : Object, file : string): Promise<void> {
-		throw new Error("File retrieval not implemented yet");
-		//try {
-		//	const objectStream = await minioClient.getObject(config.minio.bucket, file);
-		//	objectStream.setEncoding('utf-8');
-		//	let content = '';
-		//	for await (const chunk of objectStream) {
-		//		content += chunk;
-		//	}
-		//	return content;
-		//} catch (err) {
-		//	logger.error(`Error fetching file: ${err.message}`);
-		//	throw err;
-		//}
+	async getFile(file : string): Promise<string> {
+		try {
+			const objectStream = await minioClient.getObject(config.minio.bucket, file) as any;
+			objectStream.setEncoding('utf-8');
+			let content = '';
+			for await (const chunk of objectStream) {
+				content += chunk;
+			}
+			return content;
+		} catch (err : any) {
+			logger.error(`Error fetching file: ${err.message}`);
+			throw err;
+		}
 	}
-	
-	/**
-	 * Check if the file exists in Minio bucket
-	 * @param {Object} minioClient - Minio Client object
-	 * @param {string} path - File path
-	 * @returns {Promise<boolean>}
-	 */
-	/**
-	 * Checks if a file exists in MinIO storage.
-	 * Currently commented out - stub implementation for future MinIO integration.
-	 * 
-	 * @async
-	 * @method fileExists
-	 * @param {Object} minioClient - MinIO client instance
-	 * @param {string} path - File path to check
-	 * @returns {Promise<boolean>} Promise resolving to true if file exists
-	 */
-	async fileExists(minioClient : Object, path : string): Promise<boolean> {
-		throw new Error("File existence check not implemented yet");
-		//logger.debug("Minio : fileExists");
-		//try {
-		//	const objectsStream = await minioClient.listObjectsV2(config.minio.bucket, path);
-		//	const iterator = objectsStream[Symbol.asyncIterator]();
-		//	const nextValue = await iterator.next();
-		//	return !nextValue.done;
-		//} catch (err) {
-		//	logger.error(`Error checking file existence: ${err.message}`);
-		//	return false;
-		//}
-	}
-	
-	/**
-	 * Generate a presigned URL for a file in Minio
-	 * @param {Object} minioClient - Minio Client object
-	 * @param {string} path - File path
-	 * @returns {Promise<string>}
-	 */
 	/**
 	 * Gets a presigned URL for file access with expiration time.
 	 * Currently commented out - stub implementation for future MinIO integration.
 	 * 
 	 * @async
 	 * @method getPresignedUrl
-	 * @param {Object} minioClient - MinIO client instance
-	 * @param {string} path - File path to get URL for
-	 * @param {string} time - Expiration time for the URL
 	 * @returns {Promise<string>} Promise resolving to the presigned URL
 	 */
-	async getPresignedUrl(minioClient : Object, path : string, time: string): Promise<string> {
-		throw new Error("Presigned URL generation not implemented yet");
-		//logger.info("Minio : getPresignedUrl");
-		//try {
-		//	const presignedUrl = await minioClient.presignedGetObject(config.minio.bucket, path, time);
-		//	logger.info(presignedUrl);
-		//	return presignedUrl;
-		//} catch (err) {
-		//	logger.error(`Error generating presigned URL: ${err.message}`);
-		//	throw err;
-		//}
+	async getPresignedUrl(): Promise<string> {
+		logger.info("Minio : getPresignedUrl");
+		try {
+			const presignedUrl = await minioClient.getPresignedFileUrl(this.activity_id as unknown as string);
+			logger.info(presignedUrl);
+			return presignedUrl;
+		} catch (err : any) {
+			logger.error(`Error generating presigned URL: ${err.message}`);
+			throw err;
+		}
 	}
 
 	/**
