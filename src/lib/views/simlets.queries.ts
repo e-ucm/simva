@@ -115,12 +115,13 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
-  byUserIdAndSimletIdWithAllocatedUser: {
-    description: "Get a SIMLET for a certain User and Simlet ID, including allocated user information",
+  ByAllocatedUserId: {
+    description: "Get all SIMLETs for a certain Allocated User",
     sql: `
       SELECT *
-      FROM v_complete_allocation_participants 
-      WHERE user_id = :current_user_id AND simlet_id = :simlet_id
+      FROM v_complete_simlet_allocation_participants
+      WHERE allocated_user_id = :current_user_id
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
     `,
     params: {
       current_user_id: {
@@ -129,11 +130,48 @@ const queries: Record<string, QueryTemplate> = {
         description: "User Identifier",
         example: 123,
       },
-      simlet_id: {
-        type: "number",
-        required: true,
-        description: "Simlet Identifier",
-        example: 1,
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+    },
+  },
+  byAllocatedUserIdWithPagination: {
+    description: "Get all SIMLETs for a certain Allocated User with pagination and search",
+    sql: `
+      SELECT *
+      FROM v_complete_simlet_allocation_participants
+      WHERE allocated_user_id = :current_user_id
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      ORDER BY simlet_id
+      LIMIT :limit OFFSET :offset
+    `,
+    params: {
+      current_user_id: {
+      type: "number",
+      required: true,
+      description: "User Identifier",
+      example: 123,
+      },
+      search: {
+      type: "string",
+      required: false,
+      description: "Search string to filter simlets by name or description",
+      example: "math",
+      },
+      limit: {
+      type: "number",
+      required: true,
+      description: "Maximum number of simlets to return",
+      example: 10,
+      },
+      offset: {
+      type: "number",
+      required: true,
+      description: "Number of simlets to skip for pagination",
+      example: 20,
       },
     },
   },

@@ -16,6 +16,7 @@ import { Request, Response, NextFunction } from "express";
 import * as simletService from "@/services/simlets/simlet.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
+import { ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * Retrieves simlets from the database.
@@ -55,6 +56,12 @@ export async function getAllSimlets(
         simlets = await simletService.getSimletsByUserId(currentUser!.user_id as number, searchString, limit, offset);
         res.json(simlets.map(s => s.toJSON()));
         break;
+      case "student":
+          simlets = await simletService.getSimletsForStudent(currentUser!.user_id as number, searchString, limit, offset);
+          res.json(simlets.map(s => s.toJSON()));
+          break;  
+      default:
+        throw new ValidationError("Invalid user role");
     }
   } catch (err) {
     next(err);
@@ -452,7 +459,7 @@ export async function getSimletSchedule(
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting schedule for simlet ID and user ID");
     const schedule = await simletService.getSimletSchedule(simletId, currentUser!.user_id as number);
     logger.debug({schedule} , "Schedule retrieved for simlet ID and user ID");
-    res.json(schedule.toJSON());
+    res.json(schedule);
   } catch (err) {
     next(err);
   }

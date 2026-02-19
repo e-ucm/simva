@@ -718,7 +718,7 @@ export class Activity {
 	 * @returns {object} JSON object representing the activity
 	 */
 	toJSON(): object {
-		return {
+		let obj = {
 			session_id: this.session_id,
 			activity_id: this.activity_id,
 			activity_name: this.activity_name,
@@ -734,5 +734,21 @@ export class Activity {
 			activity_expire_on_seconds: this.activity_expire_on_seconds,
 			activity_comply_with_GDPR: this.activity_comply_with_GDPR
 		};
+		if(this.allocated_user) {
+			 return {
+				...obj,
+				session_active: this.session_active,
+				session_start_date: this.session_start_date,
+				session_end_date: this.session_end_date,
+				activity_initialized: this.activity_initialized,
+				activity_progress: this.activity_progress,
+				activity_completed: this.activity_completed
+			};
+		} else {
+			return {
+				...obj,
+				allocated_user: this.allocated_user
+			};
+		}
 	}
 }

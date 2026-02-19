@@ -5,6 +5,7 @@ import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
 import { UserPermission } from "../UserPermisions/UserPermission";
 import { SingleUserPermission } from "../UserPermisions/SingleUserPermission";
+import { scheduler } from "node:timers/promises";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -28,17 +29,17 @@ export class Session {
     /**
      * ID of the current session user
      */
-    current_user_id: number;
+    current_user_id?: number;
 
     /**
      * Username of the current session user
      */
-    current_user_username: string;
+    current_user_username?: string;
     
     /**
      * Permission level for the current session user
      */
-    current_user_permission: string;
+    current_user_permission?: string;
     
     /**
      * Human-readable name for the session
@@ -85,13 +86,20 @@ export class Session {
     /**
      * Array of activity IDs that belong to this session
      */
-    activities: number[];
+    activities?: number[] = [];
     
     /**
      * Array of tags for categorizing the session
      */
-    tags: string[];
-
+    tags?: string[] = [];
+    
+    allocated_user: boolean;
+    allocated_user_id?: number;
+    allocated_username?: string;
+    allocated_isToken?: boolean;
+    allocated_token?: string;
+    allocated_session_id?: number;
+    allocated_activities?: Activity[];
     /**
      * Creates a new Session instance
      * 
@@ -99,12 +107,23 @@ export class Session {
      * @description Initializes session properties and parses array fields from string format.
      * Uses database utility functions to properly convert string arrays to typed arrays.
      */
-    constructor(data: any) {
+    constructor(data: any, allocated_user: boolean = false) {
         this.session_id = data.session_id;
         this.simlet_id = data.simlet_id;
         this.current_user_id = data.current_user_id;
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission || "";
+        this.allocated_user = allocated_user;
+        if(this.allocated_user) {
+            this.allocated_user_id = data.allocated_user_id;
+            this.allocated_username = data.allocated_username || "";
+            this.allocated_isToken = Boolean(data.allocated_isToken);
+            this.allocated_token = data.allocated_token || "";
+            this.allocated_session_id = data.allocated_session_id;
+        } else {
+            this.activities = [];
+            this.tags = [];
+        }
         this.session_name = data.session_name || "";
         this.session_description = data.session_description || "";
         this.createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
@@ -114,8 +133,6 @@ export class Session {
         this.session_active = data.session_active || false;
         this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : new Date();
         this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : new Date();
-        this.activities = [];
-        this.tags = [];
     }
 
     /**
@@ -127,11 +144,13 @@ export class Session {
      * @returns {Promise<void>} Promise that resolves when initialization is complete
      */
     async init(): Promise<void> {
-        //Additional initialization logic can be added here if needed in the future
-        const tagIds = await db.Functions.runViewQuery(db.Views.Session.tagsBySessionId, { session_id: this.session_id })
-        this.tags = tagIds.map((row: any) => row.tag_name) || [];
-        const sessionIds = await db.Functions.runViewQuery(db.Views.Activity.IdsBySessionId, { session_id: this.session_id })
-        this.activities = sessionIds.map((row: any) => row.activity_id) || [];
+        if(!this.allocated_user) {
+            //Additional initialization logic can be added here if needed in the future
+            const tagIds = await db.Functions.runViewQuery(db.Views.Session.tagsBySessionId, { session_id: this.session_id })
+            this.tags = tagIds.map((row: any) => row.tag_name) || [];
+            const sessionIds = await db.Functions.runViewQuery(db.Views.Activity.IdsBySessionId, { session_id: this.session_id })
+            this.activities = sessionIds.map((row: any) => row.activity_id) || [];
+        }
     }
 
     static async getAllFromDbData(simlet_id: number, current_user_id: number, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Session[]> {
@@ -149,7 +168,7 @@ export class Session {
         }
         logger.debug({sessions} , "Sessions data from view");
         return Promise.all(sessions.map(async (session: any) => {
-            const sessionInstance = new Session(session);
+            const sessionInstance = new Session(session, false);
             await sessionInstance.init();
             return sessionInstance;
         }));
@@ -170,6 +189,22 @@ export class Session {
         return sessionInstance;
     }
 
+    static async getScheduledSessionForUser(simlet_id: number, current_user_id: number): Promise<Session> {
+        const activities = await db.Functions.runViewQuery(
+            db.Views.Session.byAllocatedUserIdAndSimletId,
+            { current_user_id, simlet_id }
+        );
+        if(activities.length === 0){
+            throw new ValidationError(`Allocated session with SIMLET ID ${simlet_id} not found for user ID ${current_user_id}.`);
+        }
+        logger.debug({activities} , "Scheduled sessions data from view");
+        const session = new Session(activities[0], true);
+        await session.init();
+        session.allocated_activities = await Promise.all(activities.map(async (activity: any) => {
+            return await ActivityToClass(activity.activity_id, current_user_id, true, activity);
+        }));
+        return session;
+    }
       /**
      * Create a new session.
      * 
@@ -205,7 +240,7 @@ export class Session {
      * @returns {Promise<Activity[]>} Array of Activity instances belonging to this session
      */
     async getActivities(): Promise<Activity[]> {
-        return await Activity.getAllFromDbData(this.session_id, this.current_user_id, false);
+        return await Activity.getAllFromDbData(this.session_id, this.current_user_id as number, this.allocated_user);
     }
 
     /**
@@ -221,9 +256,9 @@ export class Session {
     async addActivity(activityData: Partial<InstanceType<typeof db.Tables.Activities>>): Promise<Activity> {
         this.canEdit();
         activityData.session_id = this.session_id;
-        activityData.activity_order = this.activities.length + 1; // Add to the end of the activity list
+        activityData.activity_order = (this.activities?.length ?? 0) + 1; // Add to the end of the activity list
         let activity = await db.Tables.Activities.create(activityData);
-        return Activity.getFromDbData(activity.activity_id, this.current_user_id, false);
+        return Activity.getFromDbData(activity.activity_id, this.current_user_id as number, false);
      }
 
     /**
@@ -234,7 +269,7 @@ export class Session {
      * @throws {AuthentificationError} When user lacks edit permissions
      */
     canEdit() : boolean {
-        if(this.current_user_permission === "full" || this.current_user_permission === "write") {
+        if(this.current_user_permission === "FULL" || this.current_user_permission === "WRITE") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to edit this session");
@@ -249,7 +284,7 @@ export class Session {
      * @throws {AuthentificationError} When user lacks delete permissions
      */
     canDelete() : boolean {
-        if(this.current_user_permission.toLowerCase() === "full") {
+        if(this.current_user_permission === "FULL") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to delete this session");
@@ -304,7 +339,7 @@ export class Session {
      * @returns {Promise<UserPermission>} UserPermission instance for this session
      */
      async getPermissions(): Promise<UserPermission> {
-      return await UserPermission.getFromDbData('session', this.session_id, this.current_user_id);
+      return await UserPermission.getFromDbData('session', this.session_id, this.current_user_id as number);
     }
     
     /**
@@ -319,7 +354,7 @@ export class Session {
      */
     async createPermissions(body: any): Promise<any> {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id);
+        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id as number);
         return await permissions.createPermissions(body);
     }
     
@@ -332,7 +367,7 @@ export class Session {
      * @returns {Promise<SingleUserPermission>} Permission instance for the user
      */
     async getPermissionsForUser(userId: number): Promise<SingleUserPermission> {
-        return await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id);
+        return await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number);
     }
     
     /**
@@ -348,7 +383,7 @@ export class Session {
      */
     async patchPermissionsForUser(userId: number, body: any): Promise<any> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id);
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number);
         return await permission.update(body.permission);
     }
 
@@ -364,7 +399,7 @@ export class Session {
      */
     async deletePermissionsForUser(userId: number): Promise<any> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id);
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number);
         return await permission.delete();
     }
 
@@ -379,7 +414,7 @@ export class Session {
      */
     async deleteAllPermissions(): Promise<any> {
         this.canDelete();
-        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id);
+        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id as number);
         return await permissions.deleteAllPermissions();
     }
 

@@ -288,7 +288,7 @@ SELECT
     ap.isToken as allocated_isToken,
     ap.token as allocated_token,
     ap.simlet_id,
-    ap.session_id,
+    ap.session_id as allocated_session_id,
     s.session_active,
     s.session_start_date,
     s.session_end_date,
@@ -307,6 +307,26 @@ LEFT JOIN Sessions s ON ap.session_id = s.session_id
 LEFT JOIN Activities act ON ap.session_id = act.session_id
 LEFT JOIN Activities_completion ac ON ac.activity_id = act.activity_id AND ac.participant_id = ap.user_id
 WHERE act.activity_id IS NOT NULL;
+
+DROP VIEW IF EXISTS v_complete_simlet_allocation_participants;
+CREATE VIEW v_complete_simlet_allocation_participants AS
+SELECT
+    ap.user_id as allocated_user_id,
+    ap.username as allocated_username,
+    ap.isToken as allocated_isToken,
+    ap.token as allocated_token,
+    ap.simlet_id,
+    s.simlet_name,
+    s.createdAt,
+    s.updatedAt,
+    s.simlet_description,
+    s.simlet_objective,
+    shlink.short_url,
+    s.allocator_id
+FROM v_complete_allocation_participants ap
+LEFT JOIN SIMLETs s ON ap.simlet_id = s.simlet_id
+LEFT JOIN SIMLETs_shlinks shlink ON s.simlet_id = shlink.simlet_id
+WHERE s.simlet_id IS NOT NULL;
 
 DROP VIEW IF EXISTS v_complete_groups_simlets;
 CREATE VIEW v_complete_groups_simlets AS

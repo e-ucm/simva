@@ -4,9 +4,10 @@ import { logger } from "@/lib/logger";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
-import { SimletParticipant } from "./SimletParticipant";
-import { SimletGroup } from "./SimletGroup";
-import { Session } from "../session/Session";
+import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
+import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
+import { Session } from "@/lib/mappers/session/Session";
+import { Activity } from "@/lib/mappers/activities/Activity";
 
 /**
  * Simlet (Simple Study) mapper class representing a research study.
@@ -47,17 +48,17 @@ export class Simlet {
     /**
      * Array of session IDs that belong to this study
      */
-    sessions: number[];
+    sessions: number[] = [];
     
     /**
      * Array of group IDs assigned to this study
      */
-    groups: number[];
+    groups: number[] = [];
     
     /**
      * Array of tags for categorizing the study
      */
-    tags: string[];
+    tags: string[] = [];
      
     allocator_id: number;
 
@@ -75,15 +76,12 @@ export class Simlet {
         this.simlet_id = data.simlet_id; // Ensure simlet_id is included in the data
         this.simlet_name = data.simlet_name || ""; // Ensure simlet_name is included in the data
         this.simlet_description = data.simlet_description || ""; // Ensure simlet_description is included in the data
-        this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
-        this.current_user_username = data.current_user_username || "";
-        this.current_user_permission = data.current_user_permission;
         this.allocator_id = data.allocator_id;
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
-        this.sessions = [];
-        this.tags = [];
-        this.groups = [];
+        this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
+        this.current_user_username = data.current_user_username || "";
+        this.current_user_permission = data.current_user_permission;
     }
 
     async init() {
@@ -96,18 +94,32 @@ export class Simlet {
         this.sessions = sessionIds.map((row: any) => row.session_id) || [];
     }
 
-    static async getAllFromDbData(current_user_id: number, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
+    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
           let results;
-        if(limit !== undefined && offset !== undefined) {
-            results = await db.Functions.runViewQuery(
-            db.Views.Simlet.byUserIdWithPagination,
-            { current_user_id, limit, offset, search: searchString }
-            );
+          if(allocated_user) {
+            if(limit !== undefined && offset !== undefined) {
+                results = await db.Functions.runViewQuery(
+                db.Views.Simlet.byAllocatedUserIdWithPagination,
+                { current_user_id, limit, offset, search: searchString }
+                );
+            } else {
+                results = await db.Functions.runViewQuery(
+                db.Views.Simlet.ByAllocatedUserId,
+                { current_user_id, search: searchString }
+                );
+            }
         } else {
-            results = await db.Functions.runViewQuery(
-            db.Views.Simlet.byUserId,
-            { current_user_id, search: searchString }
-            );
+            if(limit !== undefined && offset !== undefined) {
+                results = await db.Functions.runViewQuery(
+                db.Views.Simlet.byUserIdWithPagination,
+                { current_user_id, limit, offset, search: searchString }
+                );
+            } else {
+                results = await db.Functions.runViewQuery(
+                db.Views.Simlet.byUserId,
+                { current_user_id, search: searchString }
+                );
+            }
         }
         logger.debug({results} , "getSimletsByUserId results");
         const processedResults =  await Promise.all(results.map(async (simlet: any) => {
@@ -134,19 +146,11 @@ export class Simlet {
         return new Simlet(createdSimlet);
     }
 
-    static async getFromDbData(simlet_id: number, current_user_id: number, allocated_user : boolean = false) : Promise<Simlet> {
-        let result;
-        if(allocated_user) {
-            result = await db.Functions.runViewQuery(
-                db.Views.Simlet.byUserIdAndSimletIdWithAllocatedUser,
-                { current_user_id, simlet_id }
-            );
-        } else {
-            result = await db.Functions.runViewQuery(
-                db.Views.Simlet.byUserIdAndSimletId,
-                { current_user_id, simlet_id }
-            );
-        }
+    static async getFromDbData(simlet_id: number, current_user_id: number) : Promise<Simlet> {
+        let result = await db.Functions.runViewQuery(
+            db.Views.Simlet.byUserIdAndSimletId,
+            { current_user_id, simlet_id }
+        );
         logger.debug({result} , "getSimletBySimletIdAndUserId results");
         if(result.length === 0){
             throw new ValidationError(`Simlet with ID ${simlet_id} not found for user ID ${current_user_id}.`);
@@ -199,14 +203,14 @@ export class Simlet {
     }
 
     canEdit() : boolean {
-        if(this.current_user_permission === "full" || this.current_user_permission === "write") {
+        if(this.current_user_permission === "FULL" || this.current_user_permission === "WRITE") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to edit this simlet");
     }
 
     canDelete() : boolean {
-        if(this.current_user_permission.toLowerCase() === "full") {
+        if(this.current_user_permission === "FULL") {
             return true;
         }
         throw new AuthentificationError("User does not have permission to delete this simlet");
@@ -232,21 +236,21 @@ export class Simlet {
     async getUserPermissions() : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for retrieving user permissions for this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
         return permissions.permissions;
     }
 
     async addUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for adding user permission to this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
         return await permissions.addUserPermission(user_id, permission);
     }
 
     async removeUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for removing user permission from this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
         return await permissions.removeUserPermission(user_id, permission);
     }
 
@@ -294,40 +298,36 @@ export class Simlet {
     }
 
     async getSessions(searchString?: string, limit?: number, offset?: number): Promise<Session[]> {
-        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString);
+        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id as number, limit, offset, searchString);
     }
 
-    async getSession(sessionId: number): Promise<Session> {
-      return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id);
-    }
-
-    async getSchedule() : Promise<Simlet> {
-      throw new Error("Method not implemented.");
+    async getSession(sessionId: number): Promise<Session> {  
+        return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id as number);
     }
 
     async getPermissions() {
-      return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+      return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
     }
     
     async createPermissions(body: any) {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
         return await permissions.createPermissions(body);
     }
     
     async getPermissionsForUser(userId: number) {
-        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
+        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id as number);
     }
     
     async patchPermissionsForUser(userId: number, body: any) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id as number);
         return await permission.update(body.permission);
     }
 
     async deletePermissionsForUser(userId: number) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id as number);
         return await permission.delete();
     }
 

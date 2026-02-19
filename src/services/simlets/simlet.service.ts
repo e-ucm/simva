@@ -43,7 +43,7 @@ import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPer
  * ```
  */
 export async function getSimletsByUserId(user_id: number, searchString?: string, limit?: number, offset?: number): Promise<Simlet[]> {
-  return await Simlet.getAllFromDbData(user_id, searchString, limit, offset);
+  return await Simlet.getAllFromDbData(user_id, false, searchString, limit, offset);
 }
 
 /**
@@ -402,9 +402,25 @@ export async function createSimletSession(simletId: number, current_user_id: num
   return await simlet.addSession(body);
 }
 
-export async function getSimletSchedule(simletId: number, current_user_id: number) : Promise<Simlet> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id, true);
-  return await simlet.getSchedule();
+export async function getSimletSchedule(simletId: number, current_user_id: number) : Promise<any> {
+  const session = await Session.getScheduledSessionForUser(simletId, current_user_id);
+  let schedule : any = {
+      activities: {},
+      next: null
+  };
+  let foundNext = false;
+  if(session.allocated_activities && session.allocated_activities.length > 0) {
+      for(const activity of session.allocated_activities) {
+          schedule.activities[activity.activity_id] = activity;
+          if(!schedule.next) {
+            if(!activity.activity_completed) {
+                schedule.next = activity;
+            }
+          }
+      }
+  }
+  logger.info(schedule);
+  return schedule;
 }
 
 /**
@@ -714,4 +730,8 @@ export async function createSessionPermissions(simletId: number, sessionId: numb
 export async function getSessionPermissions(simletId: number, sessionId: number, current_user_id: number): Promise<UserPermission> {
   let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
   return await session.getPermissions();
+}
+
+export async function getSimletsForStudent(current_user_id: number, searchString: string, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
+  return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset);
 }
