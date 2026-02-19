@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS "Activities_completion" (
 	"activity_completed" BOOLEAN NOT NULL,
 	"activity_completion_date" DATETIME,
 	"activity_suspended" BOOLEAN NOT NULL,
+	"activity_suspension_date" DATETIME,
 	"activity_registration_id" VARCHAR(50),
 	PRIMARY KEY("activity_id", "participant_id"),
 	FOREIGN KEY ("activity_id") REFERENCES "Activities"("activity_id")

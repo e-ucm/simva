@@ -298,10 +298,15 @@ SELECT
     act.activity_type,
     act.activity_trace_storage,
     act.activity_comply_with_GDPR,
+    act.activity_can_be_restarted,
     ac.activity_initialized,
+    ac.activity_initialization_date,
     ac.activity_progress,
+    ac.activity_suspended,
+    ac.activity_suspension_date,
     ac.activity_completed,
-    act.activity_can_be_restarted
+    ac.activity_completion_date,
+    ac.activity_registration_id
 FROM v_complete_allocation_participants ap
 LEFT JOIN Sessions s ON ap.session_id = s.session_id
 LEFT JOIN Activities act ON ap.session_id = act.session_id
