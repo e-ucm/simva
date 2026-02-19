@@ -304,7 +304,7 @@ export class Session {
      * @returns {Promise<UserPermission>} UserPermission instance for this session
      */
      async getPermissions(): Promise<UserPermission> {
-      return await UserPermission.getFromDbData('session', this.session_id);
+      return await UserPermission.getFromDbData('session', this.session_id, this.current_user_id);
     }
     
     /**
@@ -319,7 +319,7 @@ export class Session {
      */
     async createPermissions(body: any): Promise<any> {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('session', this.session_id);
+        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id);
         return await permissions.createPermissions(body);
     }
     
@@ -332,7 +332,7 @@ export class Session {
      * @returns {Promise<SingleUserPermission>} Permission instance for the user
      */
     async getPermissionsForUser(userId: number): Promise<SingleUserPermission> {
-        return await SingleUserPermission.getFromDbData('session', this.session_id, userId);
+        return await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id);
     }
     
     /**
@@ -348,7 +348,7 @@ export class Session {
      */
     async patchPermissionsForUser(userId: number, body: any): Promise<any> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId);
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id);
         return await permission.update(body.permission);
     }
 
@@ -364,7 +364,7 @@ export class Session {
      */
     async deletePermissionsForUser(userId: number): Promise<any> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId);
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id);
         return await permission.delete();
     }
 
@@ -379,7 +379,7 @@ export class Session {
      */
     async deleteAllPermissions(): Promise<any> {
         this.canDelete();
-        let permissions = await UserPermission.getFromDbData('session', this.session_id);
+        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id);
         return await permissions.deleteAllPermissions();
     }
 

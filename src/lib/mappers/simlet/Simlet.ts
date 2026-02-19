@@ -232,21 +232,21 @@ export class Simlet {
     async getUserPermissions() : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for retrieving user permissions for this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return permissions.permissions;
     }
 
     async addUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for adding user permission to this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.addUserPermission(user_id, permission);
     }
 
     async removeUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for removing user permission from this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.removeUserPermission(user_id, permission);
     }
 
@@ -306,28 +306,28 @@ export class Simlet {
     }
 
     async getPermissions() {
-      return await UserPermission.getFromDbData('simlet', this.simlet_id);
+      return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
     }
     
     async createPermissions(body: any) {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.createPermissions(body);
     }
     
     async getPermissionsForUser(userId: number) {
-        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId);
+        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
     }
     
     async patchPermissionsForUser(userId: number, body: any) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
         return await permission.update(body.permission);
     }
 
     async deletePermissionsForUser(userId: number) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
         return await permission.delete();
     }
 

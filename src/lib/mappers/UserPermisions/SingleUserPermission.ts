@@ -26,31 +26,34 @@ export class SingleUserPermission {
      */
     permission: string;
 
+    current_user_id: number;
+
     /**
      * Creates a new UserPermission instance
      * 
      * @param {any} data - Raw data object containing username and permission
      * @description Initializes user permission mapping from provided data.
      */
-    constructor(object_type: string, object_id: number, data: any) {
+    constructor(object_type: string, object_id: number, data: any, current_user_id: number) {
         this.user_id = data.user_id;
         this.username = data.username;
         this.permission = data.permission;
         this.object_id = object_id;
         this.object_type = object_type;
+        this.current_user_id = current_user_id;
     }
 
-    static async getFromDbData(object_type: string, object_id: number, user_id: number): Promise<SingleUserPermission> {
+    static async getFromDbData(object_type: string, object_id: number, user_id: number, current_user_id: number): Promise<SingleUserPermission> {
         switch (object_type) {
             case 'simlet':
                 let simletPermissions = await db.Functions.runViewQuery(db.Views.Simlet.directPermissionsBySimletId, { simlet_id: object_id, user_id: user_id });
-                return new SingleUserPermission(object_type, object_id, simletPermissions);
+                return new SingleUserPermission(object_type, object_id, simletPermissions, current_user_id);
             case 'session':
                 const sessionPermissions = await db.Functions.runViewQuery(db.Views.Session.directPermissionsBySessionId, { session_id: object_id, user_id: user_id }); 
-                return new SingleUserPermission(object_type, object_id, sessionPermissions);
+                return new SingleUserPermission(object_type, object_id, sessionPermissions, current_user_id);
             case 'group':
                 const groupPermissions = await db.Functions.runViewQuery(db.Views.Group.directPermissionsByGroupId, { group_id: object_id, user_id: user_id });
-                return new SingleUserPermission(object_type, object_id, groupPermissions);
+                return new SingleUserPermission(object_type, object_id, groupPermissions, current_user_id);
             default:
                 throw new Error(`Unsupported object type: ${object_type}`);
         }
@@ -118,7 +121,8 @@ export class SingleUserPermission {
         return {
             user_id: this.user_id,
             username: this.username,
-            permission: this.permission
+            permission: this.permission,
+            isCurrentUser: this.user_id === this.current_user_id
         };
     }
 }

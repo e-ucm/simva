@@ -351,12 +351,12 @@ export class Group {
      * ```
      */
      async getPermissions(): Promise<UserPermission> {
-      return await UserPermission.getFromDbData('group', this.group_id);
+      return await UserPermission.getFromDbData('group', this.group_id, this.current_user_id);
     }
     
     async createPermissions(body: any) : Promise<UserPermission> {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('group', this.group_id);
+        let permissions = await UserPermission.getFromDbData('group', this.group_id, this.current_user_id);
         return await permissions.createPermissions(body);
     }
     
@@ -377,7 +377,7 @@ export class Group {
      * ```
      */
     async getPermissionsForUser(userId: number): Promise<SingleUserPermission> {
-        return await SingleUserPermission.getFromDbData('group', this.group_id, userId);
+        return await SingleUserPermission.getFromDbData('group', this.group_id, userId, this.current_user_id);
     }
     
     /**
@@ -402,7 +402,7 @@ export class Group {
      */
     async patchPermissionsForUser(userId: number, body: any): Promise<SingleUserPermission> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
+        let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId, this.current_user_id);
         return await permission.update(body.permission);
     }
 
@@ -424,7 +424,7 @@ export class Group {
      */
     async deletePermissionsForUser(userId: number): Promise<void> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId);
+        let permission = await SingleUserPermission.getFromDbData('group', this.group_id, userId, this.current_user_id);
         await permission.delete();
     }
 
