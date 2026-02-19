@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * User Permission mapper class representing user access permissions.
@@ -69,6 +70,7 @@ export class SingleUserPermission {
      * @throws {Error} When object_type is not supported
      */
     async update(permission: string) : Promise<SingleUserPermission> {
+        this.canEdit();
         switch (this.object_type) {
             case 'simlet':
                 await db.Tables.SimletPermissions.update({ permission }, { where: { simlet_id: this.object_id, user_id: this.user_id } });
@@ -95,6 +97,7 @@ export class SingleUserPermission {
      * @throws {Error} When object_type is not supported
      */
     async delete() : Promise<boolean> {
+        this.canDelete();
         switch (this.object_type) {
             case 'simlet':
                 await db.Tables.SimletPermissions.destroy({ where: { simlet_id: this.object_id, user_id: this.user_id } });
@@ -109,6 +112,20 @@ export class SingleUserPermission {
                 throw new Error(`Unsupported object type: ${this.object_type}`);
         }
         return true;
+    }
+
+    canEdit(): boolean {
+        if(this.user_id != this.current_user_id) {
+            return true;
+        }
+        throw new ValidationError('User does not have permission to edit');
+    }
+
+    canDelete(): boolean {
+        if(this.user_id != this.current_user_id) {
+            return true;
+        }
+        throw new ValidationError('User does not have permission to delete');
     }
 
     /**
