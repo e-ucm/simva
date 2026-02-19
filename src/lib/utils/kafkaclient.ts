@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
 import { Kafka, EachMessagePayload, RecordMetadata, KafkaMessage, Producer, Consumer, logLevel } from 'kafkajs'; 
+import { config } from '@/lib/config';
 
 /**
  * Configuration options for KafkaClient
@@ -312,5 +313,6 @@ class KafkaClient {
     }
 }
 
-export { KafkaClient };
+let kafkaClient = new KafkaClient(config.kafka);
+export { kafkaClient };
 export default KafkaClient;
