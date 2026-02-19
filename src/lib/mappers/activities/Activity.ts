@@ -4,6 +4,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { minioClient } from "@/lib/utils/minioclient";
 import { JSScormTracker } from "js-tracker";
+import { ActivityCompletion } from "../ActivityCompletion/ActivityCompletion";
 
 /**
  * Base Activity mapper class representing an activity within a session.
@@ -19,6 +20,7 @@ export class Activity {
 	allocated_username?:string;
 	allocated_isToken?:string;
 	allocated_token?:string;
+	allocated_activity_result?: ActivityCompletion;
 
 	current_user_id?:number;
 	current_user_username?:string;
@@ -97,6 +99,7 @@ export class Activity {
 	 * Whether this activity complies with GDPR requirements
 	 */
 	activity_comply_with_GDPR?: boolean;
+
 	
 	/**
 	 * Creates a new Activity instance
@@ -116,21 +119,20 @@ export class Activity {
 		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
 		if(this.allocated_user) {
 			this.session_active = data.session_active;
-			this.session_start_date = data.session_start_date;
-			this.session_end_date = data.session_end_date;
-			this.activity_initialized = data.activity_initialized;
-			this.activity_progress = data.activity_progress;
-			this.activity_completed = data.activity_completed;
+			this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
+			this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
+			this.allocated_activity_result = new ActivityCompletion(data);
 		} else {
 			this.activity_description = data.activity_description || ""; // Default to empty string if not provided
 			this.activity_comply_with_GDPR = data.activity_comply_with_GDPR || false;
-			this.createdAt = data.createdAt;
-			this.updatedAt = data.updatedAt;
+			this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+			this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
 			this.activity_presignedUrl = data.activity_presignedUrl || "";
-			this.activity_generated_at = data.activity_generated_at || "";
+			this.activity_generated_at = data.activity_generated_at ? new Date(data.activity_generated_at) : undefined;
 			this.activity_expire_on_seconds = data.activity_expire_on_seconds || -1;
 		}
 	}
+
     /**
      * Retrieves all activities for a session with user access control.
      * Returns activities visible to the specified user or allocated participant.
@@ -649,9 +651,7 @@ export class Activity {
 				session_active: this.session_active,
 				session_start_date: this.session_start_date,
 				session_end_date: this.session_end_date,
-				activity_initialized: this.activity_initialized,
-				activity_progress: this.activity_progress,
-				activity_completed: this.activity_completed
+				allocated_activity_result: this.allocated_activity_result?.toJSON()
 			};
 		} else {
 			return {

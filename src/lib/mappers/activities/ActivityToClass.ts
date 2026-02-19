@@ -26,17 +26,19 @@ import { logger } from "@/lib/logger";
  */
 export async function ActivityToClass(activity_id: number, user_id: number, allocated : boolean, activityData: any) : Promise<Activity> {
     logger.debug({activityData}, activityData.activity_type);
+    let activity: Activity;
     switch (activityData.activity_type) {
         case GamePlayActivity.getType():
-            return await GamePlayActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            activity = await GamePlayActivity.getFromDbData(activity_id, user_id, allocated, activityData);
         case LimesurveyActivity.getType():
-            return await LimesurveyActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            activity = await LimesurveyActivity.getFromDbData(activity_id, user_id, allocated, activityData);
         case ManualActivity.getType():
-            return await ManualActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            activity = await ManualActivity.getFromDbData(activity_id, user_id, allocated, activityData);
         case Activity.getType():
-            return new Activity(allocated, activityData);
+            activity = new Activity(allocated, activityData);
         default:
             logger.warn(`Unknown activity type: ${activityData.activity_type}, returning default Activity instance.`);
-            return new Activity(allocated, activityData);
+            activity = new Activity(allocated, activityData);
     }
+    return activity;
 }
