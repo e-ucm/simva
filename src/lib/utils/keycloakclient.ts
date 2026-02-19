@@ -3,7 +3,7 @@ import axios from 'axios';
 import { config } from '@/lib/config';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
-import { GroupParticipant } from '../group/GroupParticipant';
+import { GroupParticipant } from '@/lib/mappers/group/GroupParticipant';
 import { NotFoundError } from '@/lib/errors/appErrors';
 
 interface KeycloakOption {
