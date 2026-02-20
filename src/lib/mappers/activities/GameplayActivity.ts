@@ -73,22 +73,18 @@ export class GamePlayActivity extends Activity {
 	 */
 	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<GamePlayActivity> {
 		const instance = new GamePlayActivity(allocated, activityData);
+				
+		const gameplayData = await db.Tables.GamePlayActivities.findOne({ 
+			where: { activity_id: activity_id } 
+		});
 		
-		try {
-			const gameplayData = await db.Tables.GamePlayActivities.findOne({ 
-				where: { activity_id: activity_id } 
-			});
-			
-			if (gameplayData) {
-				instance.game_backup = gameplayData.game_backup ?? false;
-				instance.game_scorm_xapi = gameplayData.game_scorm_xapi ?? false;
-				instance.category_id = gameplayData.category_id as number;
-				instance.subject_area_id = gameplayData.subject_area_id as number;
-				instance.game_type = gameplayData.game_type;
-				instance.game_url = gameplayData.game_url;
-			}
-		} catch (error) {
-			logger.error(error, 'Error loading GamePlayActivity data:');
+		if (gameplayData) {
+			instance.game_backup = gameplayData.game_backup ?? false;
+			instance.game_scorm_xapi = gameplayData.game_scorm_xapi ?? false;
+			instance.category_id = gameplayData.category_id as number;
+			instance.subject_area_id = gameplayData.subject_area_id as number;
+			instance.game_type = gameplayData.game_type;
+			instance.game_url = gameplayData.game_url;
 		}
 		
 		return instance;

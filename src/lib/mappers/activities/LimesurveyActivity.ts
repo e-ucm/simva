@@ -60,18 +60,14 @@ export class LimesurveyActivity extends Activity {
 	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<LimesurveyActivity> {
 		const instance = new LimesurveyActivity(allocated, activityData);
 		
-		try {
-			const limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 
-				where: { activity_id: activity_id } 
-			});
-			
-			if (limesurveyData) {
-				instance.survey_id = limesurveyData.survey_id ?? -1;
-				instance.suvey_language = limesurveyData.suvey_language ?? '';
-				instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
-			}
-		} catch (error) {
-			logger.error(error, 'Error loading LimesurveyActivity data:');
+		const limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 
+			where: { activity_id: activity_id } 
+		});
+		
+		if (limesurveyData) {
+			instance.survey_id = limesurveyData.survey_id ?? -1;
+			instance.suvey_language = limesurveyData.suvey_language ?? '';
+			instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
 		}
 		
 		return instance;

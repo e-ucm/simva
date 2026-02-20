@@ -57,21 +57,14 @@ export class ManualActivity extends Activity {
 	 */
 	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<ManualActivity> {
 		const instance = new ManualActivity(allocated, activityData);
-		
-		try {
-			const manualData = await db.Tables.ManualActivities.findOne({ 
-				where: { activity_id: activity_id } 
-			});
-			
-			if (manualData) {
-				instance.manual_user_managed = manualData.manual_user_managed ?? false;
-				instance.manual_ressource_type = manualData.manual_ressource_type ?? '';
-				instance.manual_ressource_url = manualData.manual_ressource_url ?? '';
-			}
-		} catch (error) {
-			logger.error(error, 'Error loading ManualActivity data:');
+		const manualData = await db.Tables.ManualActivities.findOne({ 
+			where: { activity_id: activity_id } 
+		});
+		if (manualData) {
+			instance.manual_user_managed = manualData.manual_user_managed ?? false;
+			instance.manual_ressource_type = manualData.manual_ressource_type ?? '';
+			instance.manual_ressource_url = manualData.manual_ressource_url ?? '';
 		}
-		
 		return instance;
 	}
 	
