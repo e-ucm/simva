@@ -235,10 +235,6 @@ export class Authenticator {
         }
         
         logger.debug(`[AUTH] Starting authentication for ${req.method} ${req.path}`);
-        logger.debug('[AUTH] Request details Headers:');
-        logger.debug(req.headers);
-        logger.debug('[AUTH] Query parameters:');
-        logger.debug(req.query);
         let token: string | undefined = typeof req.headers.authorization === 'string' ? req.headers.authorization : undefined;
         if (!token && req.query && typeof (req.query as any).token === 'string' && (req.query as any).token) {
           token = `Bearer ${(req.query as any).token}`;
@@ -263,7 +259,7 @@ export class Authenticator {
         try {
           logger.debug('[AUTH] Starting JWT validation');
           req.user = await validateJWT(token);
-          logger.debug(req.user,`[AUTH] JWT validation successful for user: ${req.user.sql.username}`);
+          logger.debug(`[AUTH] JWT validation successful for user: ${req.user.sql.username}`);
           // After successful authentication and user resolution, proceed
           return next();
         } catch (error) {
@@ -392,7 +388,7 @@ export class Authenticator {
         try {
           const tokenString = token.substring(7);
           req.user = await validateJWT(tokenString);
-          logger.debug(req.user, `[AUTH] User authenticated: ${req.user.sql.username}`);
+          logger.debug(`[AUTH] User authenticated: ${req.user.sql.username}`);
         } catch (e) {
           // Swallow authentication errors and continue
           logger.debug('[AUTH] Optional authentication failed, continuing without user context');

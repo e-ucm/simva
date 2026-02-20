@@ -25,7 +25,7 @@ import { logger } from "@/lib/logger";
  * // Returns a LimesurveyActivity instance with database data loaded
  */
 export async function ActivityToClass(activity_id: number, user_id: number, allocated : boolean, activityData: any) : Promise<Activity> {
-    logger.debug({activityData}, activityData.activity_type);
+    //logger.debug({activityData}, activityData.activity_type);
     let activity: Activity;
     switch (activityData.activity_type) {
         case GamePlayActivity.getType():

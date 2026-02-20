@@ -189,7 +189,7 @@ export default (sequelize: Sequelize) => {
         .filter(Boolean);
 
       for (const stmt of statements) {
-        logger.debug('EXECUTING:' + stmt);
+        //logger.debug('EXECUTING:' + stmt);
         await sequelize.query(stmt);
       }
     },
