@@ -29,6 +29,7 @@ export class Activity {
  	/**
  	 * The ID of the session this activity belongs to
  	 */
+	simlet_id: number;
  	session_id: number;
 	session_active?:boolean;
 	session_start_date?:Date;
@@ -110,6 +111,7 @@ export class Activity {
 	 */
 	constructor(allocated: boolean, data: any) {
 		this.allocated_user = allocated;
+		this.simlet_id = data.simlet_id;
 		this.session_id = data.session_id;
 		this.activity_id = data.activity_id;
 		this.activity_name = data.activity_name;
@@ -332,6 +334,202 @@ export class Activity {
 		return false;
 	} 
 
+	async getAllCurrentParticipantsId(participants_id?: number[]): Promise<number[]> {
+		if(this.allocated_user) {
+			participants_id = [this.allocated_user_id!];
+		} else if (!participants_id || participants_id.length === 0) {
+			participants_id = await ActivityCompletion.getAllIdsFromDbData(this.activity_id);
+		}
+		return participants_id;
+	}
+
+	/**
+	 * Give the target resource for a participant if the activity is openable.
+	 * 
+	 * @async
+	 * @method target
+	 * @param {number[]} participants_id - Array of participant IDs to check
+	 * @returns {Promise<Map<number, string>>} Promise resolving to a map of participant IDs to target resource URLs or identifiers
+	 * @description Returns the target resources for multiple participants if the activity can be opened. Base implementation returns undefined.
+	 * Should be overridden by openable activity types to provide actual target resources.
+	 * 
+	 * @example
+	 * ```typescript
+	 * const targetResource = await activity.target(participantIds);
+	 * if (targetResource) {
+	 *   // Use targetResource to launch activity for participants
+	 * }
+	 * ```
+	 */
+	async target(participants_id?: number[]): Promise<Map<number, string>|undefined> {
+		return undefined;
+	}
+
+	async getCurrentCompletionData(participants_id?: number[], columns?: string[]): Promise<ActivityCompletion[]> {
+		let data;
+		if(this.allocated_user) {
+			participants_id = [this.allocated_user_id!];
+			data = await ActivityCompletion.getAllFromDbData(this.activity_id, columns, participants_id);
+		} else if (!participants_id || participants_id.length === 0) {
+			data = await ActivityCompletion.getAllFromDbData(this.activity_id, columns);
+		} else {
+			data = await ActivityCompletion.getAllFromDbData(this.activity_id, columns, participants_id);
+		}
+		return data;
+	}
+
+	/**
+	 * Retrieves progress information for participants.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method getProgress
+	 * @param {number[]} participants - Array of participant IDs
+	 * @returns {Promise<number[]>} Promise resolving to array of progress values
+	 */
+	async getInitialized(participants_id?: number[]): Promise<Map<number, boolean>>{
+		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_initialized"]);
+		let progressMap = new Map<number, boolean>();
+		for (const cd of progressData) {
+			progressMap.set(cd.participant_id, cd.activity_initialized);
+		}
+		return progressMap;
+	}
+
+	/**
+	 * Sets initialized status for participants in this activity.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method setInitialized
+	 * @param {boolean} initialized - Initialized status to set
+	 * @param {number[]} participants_id - Array of participant IDs
+	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when initialized status is set
+	 */
+	async setInitialized(initialized: boolean, participants_id?: number[]): Promise<ActivityCompletion[]>{
+		let progressData = await this.getCurrentCompletionData(participants_id);
+		for (const cd of progressData) {
+			await cd.update({ activity_initialized: initialized });
+			cd.activity_initialized = initialized; // Update local instance to reflect change
+		}
+		return progressData;
+	}
+
+	/**
+	 * Retrieves progress information for participants.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method getProgress
+	 * @param {number[]} participants_id - Array of participant IDs
+	 * @returns {Promise<number[]>} Promise resolving to array of progress values
+	 */
+	async getProgress(participants_id?: number[]): Promise<Map<number, number>>{
+		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_progress"]);
+		let progressMap = new Map<number, number>();
+		for (const cd of progressData) {
+			progressMap.set(cd.participant_id, cd.activity_progress);
+		}
+		return progressMap;
+	}
+	
+	/**
+	 * Sets progress for participants in this activity.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method setProgress
+	 * @param {number} progress - Progress value to set (0-100)
+	 * @param {number[]} participants_id - Array of participant IDs
+	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when progress is set
+	 */
+	async setProgress(progress: number, participants_id?: number[]): Promise<ActivityCompletion[]>{
+		let progressData = await this.getCurrentCompletionData(participants_id);
+		for (const cd of progressData) {
+			await cd.update({ activity_progress: progress });
+			cd.activity_progress = progress; // Update local instance to reflect change
+		}
+		return progressData;
+	}
+
+		/**
+	 * Retrieves progress information for participants.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method getProgress
+	 * @param {number[]} participants - Array of participant IDs
+	 * @returns {Promise<number[]>} Promise resolving to array of progress values
+	 */
+	async getCompletion(participants_id?: number[]): Promise<Map<number, boolean>>{
+		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_completed"]);
+		let progressMap = new Map<number, boolean>();
+		for (const cd of progressData) {
+			progressMap.set(cd.participant_id, cd.activity_completed);
+		}
+		return progressMap;
+	}
+
+	/**
+	 * Sets progress for participants in this activity.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method setCompletion
+	 * @param {boolean} completed - Completion status to set
+	 * @param {number[]} participants_id - Array of participant IDs
+	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when completion is set
+	 */
+	async setCompletion(completed: boolean, participants_id?: number[]): Promise<ActivityCompletion[]>{
+		let data = await this.getCurrentCompletionData(participants_id);
+		for (const cd of data) {
+			await cd.update({ activity_completed: completed });
+			cd.activity_completed = completed; // Update local instance to reflect change
+		}
+		return data;
+	} 
+	
+	/**
+	 * Sets multi-completion status for the activity.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method setMultiCompletion
+	 * @param {boolean} status - Completion status to set
+	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when multi-completion is set
+	 */
+	async setMultiCompletion(status : boolean): Promise<ActivityCompletion[]> {
+		return await this.setCompletion(status);
+	}
+
+	/**
+	 * Sets suspension status for a specific participant.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method setSuspension
+	 * @param {boolean} status - Suspension status to set
+	 * @param {number[]} participants_id - Array of participant IDs to set suspension for
+	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when suspension status is set
+	 */
+	async setSuspension(status : boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
+		let completionData = await this.getCurrentCompletionData(participants_id);
+		for (const cd of completionData) {
+			await cd.update({ activity_suspended: status });
+			cd.activity_suspended = status; // Update local instance to reflect change
+		}
+		return completionData;
+	}
+
+	async getSuspension(participants_id?: number[]): Promise<Map<number, boolean>> {
+		let suspensionData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_suspended"]);
+		let suspensionMap = new Map<number, boolean>();
+		for (const cd of suspensionData) {
+			suspensionMap.set(cd.participant_id, cd.activity_suspended);
+		}
+		return suspensionMap;
+	}
+
 	/**
 	 * Sends an xAPI trace for this activity.
 	 * Stub implementation - to be implemented by subclasses.
@@ -371,22 +569,32 @@ export class Activity {
 		}
 		logger.info(statement? statement.toXAPI() : "No statement generated", "XAPI Statement:");
 	}
+	
+	/**
+	 * Checks if participants have results for this activity.
+	 * Stub implementation - to be implemented by subclasses.
+	 * 
+	 * @async
+	 * @method hasResults
+	 * @param {string} type - Type of results to check
+	 * @param {number[]} participants_id - Array of participant IDs
+	 * @returns {Promise<boolean>} Promise resolving to true if participants have results
+	 */
+	async hasResults(type: string, participants_id?: number[]): Promise<boolean>{
+		return false;
+	}
 
 	/**
 	 * Sets a result for a participant in this activity.
 	 * Stub implementation - to be implemented by subclasses.
 	 * 
 	 * @method setResult
-	 * @param {number} participant - ID of the participant
-	 * @param {number} result - Result value to set
+	 * @param {any} result - Result value to set
+	 * @param {number[]} participants_id -  Array of participant IDs to set results for
 	 * @returns {void}
 	 */
-	async setResult(participant : number, result : number): Promise<void> {
-		//TODO - Implement result saving logic, e.g., save to MINIO BACKUP BUCKET
-		//await db.Tables.ActivityCompletion.update(
-		//	{ result: result },
-		//	{ where: { participant_id: participant, activity_id: this.activity_id } }
-		//);
+	async setResult(result: any, participants_id?: number[]): Promise<void> {
+		throw new Error("setResult method not implemented for this activity type");
 	}
 
 	/**
@@ -428,125 +636,6 @@ export class Activity {
 	async localFileExists(filename: string): Promise<boolean> {
 		return false;
 	}
-
-	/**
-	 * Retrieves results for participants in this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method getResults
-	 * @param {number[]} participants - Array of participant IDs
-	 * @param {string} type - Type of results to retrieve
-	 * @returns {Promise<any[]>} Promise resolving to array of participant results
-	 */
-	async getResults(participants: number[], type: string): Promise<any[]>{
-		return [];
-	}
-	
-	/**
-	 * Checks if participants have results for this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method hasResults
-	 * @param {number[]} participants - Array of participant IDs
-	 * @param {string} type - Type of results to check
-	 * @returns {Promise<boolean>} Promise resolving to true if participants have results
-	 */
-	async hasResults(participants: number[], type: string): Promise<boolean>{
-		return false;
-	}
-
-	/**
-	 * Retrieves progress information for participants.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method getProgress
-	 * @param {number[]} participants - Array of participant IDs
-	 * @returns {Promise<number[]>} Promise resolving to array of progress values
-	 */
-	async getProgress(participants : number[]): Promise<any[]>{
-		return [];
-	}
-	
-	/**
-	 * Sets progress for participants in this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method setProgress
-	 * @param {number[]} participants - Array of participant IDs
-	 * @param {number} progress - Progress value to set (0-100)
-	 * @returns {Promise<void>} Promise that resolves when progress is set
-	 */
-	async setProgress(participants: number[], progress: number): Promise<void> {
-	} 
-	
-	/**
-	 * Sets multi-completion status for the activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method setMultiCompletion
-	 * @param {boolean} status - Completion status to set
-	 * @returns {Promise<void>} Promise that resolves when multi-completion is set
-	 */
-	async setMultiCompletion(status : boolean): Promise<void>{
-	}
-
-	/**
-	 * Sets completion status for a specific participant.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method setCompletion
-	 * @param {number} participant - Participant ID
-	 * @param {boolean} status - Completion status to set
-	 * @returns {Promise<void>} Promise that resolves when completion status is set
-	 */
-	async setCompletion(participant: number, status : boolean): Promise<void>{
-	}
-
-	/**
-	 * Sets suspension status for a specific participant.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method setSuspension
-	 * @param {number} participant - Participant ID
-	 * @param {boolean} status - Suspension status to set
-	 * @returns {Promise<void>} Promise that resolves when suspension status is set
-	 */
-	async setSuspension(participant : number, status : boolean): Promise<void> {
-	}
-
-	/**
-	 * Determines if a participant is a target for this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method target
-	 * @param {number} participant - Participant ID to check
-	 * @returns {Promise<boolean>} Promise resolving to true if participant is a target
-	 */
-	async target(participant : number): Promise<boolean>{
-		return false;
-	}
-
-	/**
-	 * Opens an activity for a specific participant.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @method open
-	 * @param {number} res - Resource identifier
-	 * @param {number} participant - Participant ID
-	 * @returns {boolean} Returns false as default stub implementation
-	 */
-	open(res : number, participant : number): boolean{
-		return false;
-	}
-
 	
 	/**
 	 * Generates a presigned URL for file access.

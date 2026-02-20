@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export class ActivityCompletion {
     /**
@@ -27,11 +28,29 @@ export class ActivityCompletion {
 
     activity_completed : boolean;
 
-    static async getAllFromDbData(activity_id: number): Promise<ActivityCompletion[]> {
+    static async getAllIdsFromDbData(activity_id: number): Promise<number[]> {
         const data = await db.Tables.ActivityCompletion.findAll({
-            where: { activity_id: activity_id }
+            where: { activity_id: activity_id },
+            attributes: ['participant_id']
         });
-        return data.map((record: any) => new ActivityCompletion(record));
+        logger.debug(data, `getAllIdsFromDbData: Retrieved participant IDs for activity_id ${activity_id}`);
+        return data.map((record: any) => record.participant_id);
+    }
+
+    static async getAllFromDbData(activity_id: number, attributes?: string[], participants_id?: number[]): Promise<ActivityCompletion[]> {
+        let data;
+        if(!participants_id || (participants_id && participants_id.length === 0)) {
+            data = await db.Tables.ActivityCompletion.findAll({
+                where: { activity_id: activity_id },
+                attributes: attributes || undefined
+            });
+        } else {
+            data = await db.Tables.ActivityCompletion.findAll({
+                where: { activity_id: activity_id, participant_id: { $in: participants_id } }
+            });
+        }
+        logger.debug(data, `getAllFromDbData: Retrieved activity completion data for activity_id ${activity_id}`);
+        return data.map((record: any) => new ActivityCompletion(record)); 
     }
 
     static async getFromDbData(activity_id: number, participant_id: number): Promise<ActivityCompletion> {
@@ -41,6 +60,7 @@ export class ActivityCompletion {
         if (!data) {
             throw new Error(`No activity completion record found for activity_id ${activity_id} and participant_id ${participant_id}`);
         }
+        logger.debug(data, `getFromDbData: Retrieved activity completion data for activity_id ${activity_id} and participant_id ${participant_id}`);
         return new ActivityCompletion(data);
     }
 
@@ -62,11 +82,13 @@ export class ActivityCompletion {
         this.activity_registration_id = data.activity_registration_id;
     }
 
-    async update(data : Partial<ActivityCompletion>): Promise<void> {
+    async update(data : Partial<ActivityCompletion>): Promise<ActivityCompletion> {
         await db.Tables.ActivityCompletion.update(
             data,
             { where: { activity_id: this.activity_id, participant_id: this.participant_id } }
         );
+        Object.assign(this, data);
+        return this;
     }
 
     async delete(): Promise<void> {
