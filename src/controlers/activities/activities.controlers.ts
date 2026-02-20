@@ -117,6 +117,23 @@ export async function isActivityAccessible(
   }
 }
 
+export async function openTargetForActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    let currentUser = req.user?.sql;
+    const activityId = parseInt(req.params.activity_id as string);
+    let currentUserId: number = currentUser!.user_id as number;
+    const targetUrl = await activitiesService.getUserTargetForActivity(activityId, currentUserId, true);
+    logger.debug(`Redirecting to target URL: ${targetUrl}`);
+    return res.redirect(targetUrl); 
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getTargetForActivity(
   req: AuthenticatedRequest,
   res: Response,

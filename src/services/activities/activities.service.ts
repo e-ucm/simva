@@ -49,6 +49,15 @@ export async function isActivityAccessible(activityId: number, current_user_id: 
     return activity.canBeOpened();
 }
 
+export async function getUserTargetForActivity(activityId: number, current_user_id: number, allocated: boolean): Promise<string> {
+    let targetMap = await getTargetForActivity(activityId, current_user_id, allocated, [current_user_id]);
+    const target = targetMap ? targetMap.get(current_user_id) : undefined;
+    if (!target) {
+        throw new NotFoundError("Target URL not found for the current user");
+    }
+    return target;
+}
+
 export async function getTargetForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<Map<number, string>|undefined> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.target(participants_id);
