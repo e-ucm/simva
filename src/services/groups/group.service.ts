@@ -58,12 +58,8 @@ export async function getGroups(current_user_id: number, version?: boolean, sear
  * 
  * @example
  * ```typescript
- * try {
  *   const group = await getGroup(456, 123);
  *   logger.info(group.name);
- * } catch (error) {
- *   // Handle group not found or access denied
- * }
  * ```
  */
 export async function getGroup(group_id: number, current_user_id: number): Promise<Group> {

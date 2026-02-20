@@ -589,18 +589,13 @@ export class Activity {
 	 * @returns {Promise<string>} Promise that resolves to the file content
 	 */
 	async getFile(file : string): Promise<string> {
-		try {
-			const objectStream = await minioClient.getObject(config.minio.bucket, file) as any;
-			objectStream.setEncoding('utf-8');
-			let content = '';
-			for await (const chunk of objectStream) {
-				content += chunk;
-			}
-			return content;
-		} catch (err : any) {
-			logger.error(`Error fetching file: ${err.message}`);
-			throw err;
+		const objectStream = await minioClient.getObject(config.minio.bucket, file) as any;
+		objectStream.setEncoding('utf-8');
+		let content = '';
+		for await (const chunk of objectStream) {
+			content += chunk;
 		}
+		return content;
 	}
 	/**
 	 * Gets a presigned URL for file access with expiration time.
@@ -612,14 +607,9 @@ export class Activity {
 	 */
 	async getPresignedUrl(): Promise<string> {
 		logger.info("Minio : getPresignedUrl");
-		try {
-			const presignedUrl = await minioClient.getPresignedFileUrl(this.activity_id as unknown as string);
-			logger.info(presignedUrl);
-			return presignedUrl;
-		} catch (err : any) {
-			logger.error(`Error generating presigned URL: ${err.message}`);
-			throw err;
-		}
+		const presignedUrl = await minioClient.getPresignedFileUrl(this.activity_id as unknown as string);
+		logger.info(presignedUrl);
+		return presignedUrl;
 	}
 
 	/**

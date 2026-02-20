@@ -33,14 +33,8 @@ import { Activity } from "@/lib/mappers/activities/Activity";
  * 
  * @example
  * ```typescript
- * try {
  *   const activity = await getActivity(789, 123);
  *   logger.info(activity.name, activity.type);
- * } catch (error) {
- *   if (error instanceof NotFoundError) {
- *     logger.info('Activity not found or access denied');
- *   }
- * }
  * ```
  */
 export async function getActivity(activityId: number, user_id: number): Promise<Activity> {

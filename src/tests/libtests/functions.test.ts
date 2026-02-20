@@ -7,12 +7,7 @@ import { logger } from "@/lib/logger";
  */
 describe("Database Functions", () => {
   beforeAll(async () => {
-    try {
-      await db.sequelize.sync({ force: true });
-      
-    } catch (err) {
-      logger.error({ err }, "Setup failed");
-    }
+    await db.sequelize.sync({ force: true });
   });
 
   afterAll(async () => {

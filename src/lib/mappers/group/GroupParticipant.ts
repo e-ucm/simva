@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { config } from "@/lib/config";
 import { keycloakClient, KeycloakUser } from "@/lib/utils/keycloakclient";
-import { ValidationError } from "@/lib/errors/appErrors";
+import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * Group Participant mapper class representing a participant within a group.
@@ -166,16 +166,10 @@ export class GroupParticipant {
             try {
                 await keycloakClient.removeUserFromGroup(userid, `group_${this.group_id}`);
             } catch(e) {
-                logger.error(e);
-                //throw { message: 'Failed removing the user from keycloak group' };
+                logger.warn(e);
             }
             logger.info('KeyCloak -> Remove user from keycloak');
-            try {
-                await keycloakClient.removeUser(userid);
-            } catch(e) {
-                logger.error(e);
-                throw { message: 'Failed removing the user into keycloak' };
-            }
+            await keycloakClient.removeUser(userid);
 
             logger.info('KeyCloak -> User removed from Keycloak!');
             return true;
@@ -192,16 +186,14 @@ export class GroupParticipant {
 
         logger.info('KeyCloak -> Adding user');
         let user: KeycloakUser;
-        try{
-            user = await keycloakClient.addUser({ username: userData.username!, email: userData.email!, enabled: true });
-        }catch(e){
-            logger.error(e);
-            throw { message: 'Failed creating the user into keycloak' };
+        user = await keycloakClient.addUser({ username: userData.username!, email: userData.email!, enabled: true });
+        if (!user || !user.id) {
+            throw new NotFoundError('Failed creating the user into keycloak');
         }
 
         logger.info('KeyCloak -> Adding user to Keycloak Group');
         if (!group_id) {
-            throw { message: 'Group ID is not defined' };
+            throw new NotFoundError('Group ID is not defined');
         }
         await keycloakClient.addUserToGroup(user.id!, `group_${group_id}`);
 
@@ -217,7 +209,7 @@ export class GroupParticipant {
         }
 
         if (!selectedRole) {
-            throw { message: 'Role not found in available realm role mappings' };
+            throw new NotFoundError('Role not found in available realm role mappings');
         }
 
         logger.info('KeyCloak -> Adding Role to User');
