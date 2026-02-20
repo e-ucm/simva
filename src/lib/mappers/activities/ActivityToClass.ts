@@ -30,15 +30,20 @@ export async function ActivityToClass(activity_id: number, user_id: number, allo
     switch (activityData.activity_type) {
         case GamePlayActivity.getType():
             activity = await GamePlayActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            break;
         case LimesurveyActivity.getType():
             activity = await LimesurveyActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            break;
         case ManualActivity.getType():
             activity = await ManualActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            break;
         case Activity.getType():
             activity = new Activity(allocated, activityData);
+            break;
         default:
             logger.warn(`Unknown activity type: ${activityData.activity_type}, returning default Activity instance.`);
             activity = new Activity(allocated, activityData);
+            break;
     }
     return activity;
 }
