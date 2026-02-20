@@ -1,5 +1,6 @@
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 /**
  * Manual Activity mapper class extending base Activity.
@@ -68,7 +69,7 @@ export class ManualActivity extends Activity {
 				instance.manual_ressource_url = manualData.manual_ressource_url ?? '';
 			}
 		} catch (error) {
-			console.error('Error loading ManualActivity data:', error);
+			logger.error('Error loading ManualActivity data:', error);
 		}
 		
 		return instance;

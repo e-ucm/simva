@@ -1,7 +1,9 @@
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { db } from "@/lib/db";
 import { config } from "@/lib/config";
+import { logger } from "@/lib/logger";
 import { limeSurveyClient } from "@/lib/utils/limesurveyclient";
+
 /**
  * LimeSurvey Activity mapper class extending base Activity.
  * Represents activities that integrate with LimeSurvey platform for surveys and questionnaires.
@@ -69,7 +71,7 @@ export class LimesurveyActivity extends Activity {
 				instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
 			}
 		} catch (error) {
-			console.error('Error loading LimesurveyActivity data:', error);
+			logger.error('Error loading LimesurveyActivity data:', error);
 		}
 		
 		return instance;

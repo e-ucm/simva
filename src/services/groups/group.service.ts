@@ -60,7 +60,7 @@ export async function getGroups(current_user_id: number, version?: boolean, sear
  * ```typescript
  * try {
  *   const group = await getGroup(456, 123);
- *   console.log(group.name);
+ *   logger.info(group.name);
  * } catch (error) {
  *   // Handle group not found or access denied
  * }
@@ -88,7 +88,7 @@ export async function getGroup(group_id: number, current_user_id: number): Promi
  * // Get all participants for group 456
  * const participants = await getGroupParticipants(456, 123);
  * participants.forEach(participant => {
- *   console.log(participant.username, participant.role);
+ *   logger.info(participant.username, participant.role);
  * });
  * ```
  */
@@ -156,7 +156,7 @@ export async function deleteGroup(groupId: number, current_user_id: number): Pro
  * @example
  * ```typescript
  * const totalGroups = await getGroupCount(123, 'math');
- * console.log(`Found ${totalGroups} math-related groups`);
+ * logger.info(`Found ${totalGroups} math-related groups`);
  * ```
  */
 export async function getGroupCount(current_user_id: number, searchString: string): Promise<number> {
@@ -303,7 +303,7 @@ export async function patchGroupPermissionsForUser(groupId: number, userId: numb
  * @example
  * ```typescript
  * const permissions = await getGroupPermissionsForUser(456, 789, 123);
- * console.log('User permission level:', permissions.permission_level);
+ * logger.info('User permission level:', permissions.permission_level);
  * ```
  */
 export async function getGroupPermissionsForUser(groupId: number, userId: number, current_user_id: number): Promise<SingleUserPermission> {
@@ -331,7 +331,7 @@ export async function createGroupPermissions(groupId: number, current_user_id: n
  * ```typescript
  * const allPermissions = await getGroupPermissions(456, 123);
  * allPermissions.forEach(perm => {
- *   console.log(`User ${perm.user_id}: ${perm.permission_level}`);
+ *   logger.info(`User ${perm.user_id}: ${perm.permission_level}`);
  * });
  * ```
  */

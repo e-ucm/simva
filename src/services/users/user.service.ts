@@ -1,4 +1,5 @@
 import { User } from "@/lib/mappers/Users/User";
+import { logger } from "@/lib/logger";
 
   /**
    * Retrieve a user by their username.
@@ -77,7 +78,7 @@ export async function updateUser(user_id: number, body: any): Promise<User> {
  * @example
  * ```typescript
  * const user = await getUserById(123);
- * console.log(user.username, user.email);
+ * logger.info(user.username, user.email);
  * ```
  */
 export async function getUserById(userId: number): Promise<User> {

@@ -180,10 +180,10 @@ config.shlink.serverApiKey = process.env.SHLINK_SERVER_API_KEY || 'password';
  * ```typescript
  * import { config } from '@/lib/config';
  * 
- * console.log(config.api.url); // https://simva.external.test
- * console.log(config.db.complete_path); // /data/db/simva_data.db
- * console.log(config.minio.accessKey); // minio
- * console.log(config.sso.realm); // simva
+ * logger.info(config.api.url); // https://simva.external.test
+ * logger.info(config.db.complete_path); // /data/db/simva_data.db
+ * logger.info(config.minio.accessKey); // minio
+ * logger.info(config.sso.realm); // simva
  * ```
  */
 export { config };

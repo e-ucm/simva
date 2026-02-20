@@ -57,7 +57,7 @@ function formatType(param: { type: string; of?: string }): string {
  * import generateDocs from '@/lib/generateQueryDocs';
  * 
  * const docs = generateDocs();
- * console.log(docs); // Complete Markdown documentation
+ * logger.info(docs); // Complete Markdown documentation
  * 
  * // Write to file
  * fs.writeFileSync('QUERY_DOCS.md', docs);

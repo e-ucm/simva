@@ -266,7 +266,7 @@ export class User {
    * @example
    * ```typescript
    * const userData = user.toJSON();
-   * console.log('Username:', userData.username);
+   * logger.info('Username:', userData.username);
    * ```
    */
   toJSON(): object {

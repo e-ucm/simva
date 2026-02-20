@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
+import { logger } from "@/lib/logger";
+
 /**
  * User Permission mapper class representing user access permissions.
  * Maps users to their permission levels within the system.
@@ -88,7 +90,7 @@ export class UserPermission {
      * @example
      * ```typescript
      * if (userPermission.checkUserPermission(123)) {
-     *   console.log('User has access');
+     *   logger.info('User has access');
      * }
      * ```
      */
@@ -111,7 +113,7 @@ export class UserPermission {
      * @example
      * ```typescript
      * if (userPermission.checkSpecificUserPermission(123, 'WRITE')) {
-     *   console.log('User can write');
+     *   logger.info('User can write');
      * }
      * ```
      */

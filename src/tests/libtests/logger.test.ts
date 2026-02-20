@@ -92,7 +92,7 @@ describe("Logger", () => {
 
   describe("process handlers", () => {
     it("should handle uncaught exceptions without logger errors", () => {
-      // Mock console.error to capture fallback behavior
+      // Mock logger.error to capture fallback behavior
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       
       // Simulate logger throwing an error
@@ -106,7 +106,7 @@ describe("Logger", () => {
       const testError = new Error('Test uncaught exception');
       process.emit('uncaughtException' as any, testError);
       
-      // Should have fallen back to console.error
+      // Should have fallen back to logger.error
       expect(consoleSpy).toHaveBeenCalledWith('uncaughtException', testError);
       
       // Restore
@@ -115,7 +115,7 @@ describe("Logger", () => {
     });
 
     it("should handle unhandled rejections without logger errors", () => {
-      // Mock console.error to capture fallback behavior
+      // Mock logger.error to capture fallback behavior
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       
       // Simulate logger throwing an error
@@ -129,7 +129,7 @@ describe("Logger", () => {
       const testReason = new Error('Test unhandled rejection');
       process.emit('unhandledRejection' as any, testReason);
       
-      // Should have fallen back to console.error
+      // Should have fallen back to logger.error
       expect(consoleSpy).toHaveBeenCalledWith('unhandledRejection', testReason);
       
       // Restore

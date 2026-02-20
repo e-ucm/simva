@@ -105,19 +105,19 @@ export const db = globalForDb.db!;
  * ```typescript
  * const isConnected = await checkDatabaseConnection();
  * if (isConnected) {
- *   console.log('Database is ready');
+ *   logger.info('Database is ready');
  * } else {
- *   console.log('Database connection failed');
+ *   logger.info('Database connection failed');
  * }
  * ```
  */
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
     await db.sequelize.authenticate(); // Try to connect
-    console.log('✅ Database connection has been established successfully.');
+    logger.info('✅ Database connection has been established successfully.');
     return true;
   } catch (error) {
-    console.error('❌ Unable to connect to the database:', (error as Error).message);
+    logger.error('❌ Unable to connect to the database:', (error as Error).message);
     //process.exit(1); // Exit with error code
     return false;
   }

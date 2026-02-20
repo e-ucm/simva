@@ -131,7 +131,7 @@ export class Allocator {
     }
 
     printInfo() {
-        console.log({allocator : this}, `Allocator ID: ${this.allocator_id}, Type: ${this.allocator_type}`);
+        logger.info({allocator : this}, `Allocator ID: ${this.allocator_id}, Type: ${this.allocator_type}`);
     }
 
     toJSON(): object {

@@ -151,7 +151,7 @@ export async function deleteSimlet(simletId: number, current_user_id: number): P
  * @example
  * ```typescript
  * const allocator = await getAllocatorFromSimlet(123, 456);
- * console.log(allocator.type); // 'random', 'manual', etc.
+ * logger.info(allocator.type); // 'random', 'manual', etc.
  * ```
  */
 export async function getAllocatorFromSimlet(simletId: number, current_user_id: number): Promise<Allocator> {
@@ -174,7 +174,7 @@ export async function getAllocatorFromSimlet(simletId: number, current_user_id: 
  * @example
  * ```typescript
  * const participants = await getSimletParticipants(123, 456);
- * participants.forEach(p => console.log(p.user_id, p.allocated_group));
+ * participants.forEach(p => logger.info(p.user_id, p.allocated_group));
  * ```
  */
 export async function getSimletParticipants(simletId: number, current_user_id: number): Promise<SimletParticipant[]> {
@@ -197,7 +197,7 @@ export async function getSimletParticipants(simletId: number, current_user_id: n
  * @example
  * ```typescript
  * const groups = await getSimletGroups(123, 456);
- * groups.forEach(g => console.log(g.group_name, g.participant_count));
+ * groups.forEach(g => logger.info(g.group_name, g.participant_count));
  * ```
  */
 export async function getSimletGroups(simletId: number, current_user_id: number): Promise<SimletGroup[]> {
@@ -220,7 +220,7 @@ export async function getSimletGroups(simletId: number, current_user_id: number)
  * @example
  * ```typescript
  * const sessions = await getSimletSessions(123, 456);
- * sessions.forEach(s => console.log(s.name, s.open_date, s.close_date));
+ * sessions.forEach(s => logger.info(s.name, s.open_date, s.close_date));
 * ``` */ 
 export async function getSimletSessions(simletId: number, current_user_id: number, searchString?: string, limit?: number, offset?: number): Promise<Session[]> { 
   let simlet = await Simlet.getFromDbData(simletId, current_user_id); 
@@ -242,7 +242,7 @@ export async function getSimletSessions(simletId: number, current_user_id: numbe
  * @example
  * ```typescript
  * const session = await getSimletSession(123, 789, 456);
- * console.log(session.name, session.status);
+ * logger.info(session.name, session.status);
  * ```
  */
 export async function getSimletSession(simletId: number, sessionId: number, current_user_id: number): Promise<Session> {
@@ -266,7 +266,7 @@ export async function getSimletSession(simletId: number, sessionId: number, curr
  * @example
  * ```typescript
  * const activities = await getSessionActivities(123, 789, 456);
- * activities.forEach(a => console.log(a.name, a.type, a.url));
+ * activities.forEach(a => logger.info(a.name, a.type, a.url));
  * ```
  */
 export async function getSessionActivities(simlet_id: number, sessionId: number, current_user_id: number): Promise<Activity[]> {
@@ -288,7 +288,7 @@ export async function getSessionActivities(simlet_id: number, sessionId: number,
  * @example
  * ```typescript
  * const totalSimlets = await getSimletCountByUserId(123, 'experiment');
- * console.log(`Found ${totalSimlets} experiment simlets`);
+ * logger.info(`Found ${totalSimlets} experiment simlets`);
  * ```
  */
 export async function getSimletCountByUserId(current_user_id: number, searchString: string): Promise<number> {
@@ -309,7 +309,7 @@ export async function getSimletCountByUserId(current_user_id: number, searchStri
  * @example
  * ```typescript
  * const sessionCount = await getSimletSessionCountByUserId(456, 123, 'test');
- * console.log(`Found ${sessionCount} test sessions`);
+ * logger.info(`Found ${sessionCount} test sessions`);
  * ```
  */
 export async function getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString: string): Promise<number> {
@@ -490,7 +490,7 @@ export async function deleteSimletSession(simletId: number, sessionId: number, c
  * ```typescript
  * const permissions = await getSimletPermissions(123, 456);
  * permissions.forEach(perm => {
- *   console.log(`User ${perm.user_id}: ${perm.permission_level}`);
+ *   logger.info(`User ${perm.user_id}: ${perm.permission_level}`);
  * });
  * ```
  */
@@ -542,7 +542,7 @@ export async function createSimletPermissions(simletId: number, current_user_id:
  * @example
  * ```typescript
  * const permissions = await getSimletPermissionsForUser(123, 789, 456);
- * console.log('User permission level:', permissions.permission_level);
+ * logger.info('User permission level:', permissions.permission_level);
  * ```
  */
 export async function getSimletPermissionsForUser(simletId: number, userId: number, current_user_id: number): Promise<SingleUserPermission> {
@@ -671,7 +671,7 @@ export async function patchSessionPermissionsForUser(simletId: number, sessionId
  * @example
  * ```typescript
  * const permissions = await getSessionPermissionsForUser(123, 456, 789, 555);
- * console.log('User session permission:', permissions.permission_level);
+ * logger.info('User session permission:', permissions.permission_level);
  * ```
  */
 export async function getSessionPermissionsForUser(simletId: number, sessionId: number, userId: number, current_user_id: number): Promise<SingleUserPermission> {
@@ -723,7 +723,7 @@ export async function createSessionPermissions(simletId: number, sessionId: numb
  * ```typescript
  * const permissions = await getSessionPermissions(123, 456, 789);
  * permissions.forEach(perm => {
- *   console.log(`User ${perm.user_id}: ${perm.permission_level}`);
+ *   logger.info(`User ${perm.user_id}: ${perm.permission_level}`);
  * });
  * ```
  */

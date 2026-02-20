@@ -54,9 +54,9 @@ class AllocatorType {
  * ```typescript
  * const allocatorTypes = await getAllocatorTypes();
  * allocatorTypes.forEach(type => {
- *   console.log(`${type.name}: ${type.description}`);
+ *   logger.info(`${type.name}: ${type.description}`);
  *   // Access type-specific utilities
- *   console.log(type.utils);
+ *   logger.info(type.utils);
  * });
  * ```
  * 
@@ -105,7 +105,7 @@ class AllocatorType {
  * ```typescript
  * const types = await getAllocatorTypes();
  * types.forEach(type => {
- *   console.log(`${type.name}: ${type.description}`);
+ *   logger.info(`${type.name}: ${type.description}`);
  * });
  * ```
  */

@@ -35,10 +35,10 @@ import { Activity } from "@/lib/mappers/activities/Activity";
  * ```typescript
  * try {
  *   const activity = await getActivity(789, 123);
- *   console.log(activity.name, activity.type);
+ *   logger.info(activity.name, activity.type);
  * } catch (error) {
  *   if (error instanceof NotFoundError) {
- *     console.log('Activity not found or access denied');
+ *     logger.info('Activity not found or access denied');
  *   }
  * }
  * ```

@@ -48,9 +48,9 @@ export interface KeycloakJWTPayload {
  * ```typescript
  * try {
  *   const decoded = await validateJWT(token);
- *   console.log('User:', decoded.data.username);
+ *   logger.info('User:', decoded.data.username);
  * } catch (error) {
- *   console.error('Invalid token:', error.message);
+ *   logger.error('Invalid token:', error.message);
  * }
  * ```
  */

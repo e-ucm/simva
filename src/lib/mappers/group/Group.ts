@@ -81,7 +81,7 @@ export class Group {
      * ```typescript
      * const group = new Group(data);
      * await group.init();
-     * console.log('Participants:', group.participants);
+     * logger.info('Participants:', group.participants);
      * ```
      */
     async init(): Promise<void> {
@@ -152,7 +152,7 @@ export class Group {
      * @example
      * ```typescript
      * const participants = await group.getParticipants();
-     * participants.forEach(p => console.log(p.username));
+     * participants.forEach(p => logger.info(p.username));
      * ```
      */
     async getParticipants(): Promise<GroupParticipant[]> {
@@ -346,7 +346,7 @@ export class Group {
      * @example
      * ```typescript
      * const permissions = await group.getPermissions();
-     * permissions.forEach(p => console.log(p.user_id, p.permission_level));
+     * permissions.forEach(p => logger.info(p.user_id, p.permission_level));
      * ```
      */
      async getPermissions(): Promise<UserPermission> {
@@ -372,7 +372,7 @@ export class Group {
      * @example
      * ```typescript
      * const userPerms = await group.getPermissionsForUser(456);
-     * console.log('Permission level:', userPerms.permission_level);
+     * logger.info('Permission level:', userPerms.permission_level);
      * ```
      */
     async getPermissionsForUser(userId: number): Promise<SingleUserPermission> {
@@ -437,7 +437,7 @@ export class Group {
      * @example
      * ```typescript
      * const groupData = group.toJSON();
-     * console.log('Group name:', groupData.group_name);
+     * logger.info('Group name:', groupData.group_name);
      * ```
      */
     toJSON(): object {

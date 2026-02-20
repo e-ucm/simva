@@ -17,6 +17,7 @@
 import { GamePlayActivity } from "@/lib/mappers/activities/GameplayActivity";
 import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
 import { ManualActivity } from "@/lib/mappers/activities/ManualActivity";
+import { logger } from "@/lib/logger";
 
 /**
  * Represents metadata about an activity type.
@@ -53,9 +54,9 @@ let activitytypes : ActivityType[] = [];
  * ```typescript
  * const types = await getActivityTypes('teacher123');
  * types.forEach(type => {
- *   console.log(`${type.name}: ${type.description}`);
+ *   logger.info(`${type.name}: ${type.description}`);
  *   // Access type-specific utilities
- *   console.log(type.utils);
+ *   logger.info(type.utils);
  * });
  * ```
  * 

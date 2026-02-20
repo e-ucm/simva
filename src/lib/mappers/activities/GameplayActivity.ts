@@ -1,6 +1,6 @@
 import { Activity } from "@/lib/mappers/activities/Activity";
 import {db } from "@/lib/db";
-
+import { logger } from "@/lib/logger";
 /**
  * Gameplay Activity mapper class extending base Activity.
  * Represents activities involving serious games and interactive gameplay sessions.
@@ -88,7 +88,7 @@ export class GamePlayActivity extends Activity {
 				instance.game_url = gameplayData.game_url;
 			}
 		} catch (error) {
-			console.error('Error loading GamePlayActivity data:', error);
+			logger.error('Error loading GamePlayActivity data:', error);
 		}
 		
 		return instance;
