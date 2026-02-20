@@ -173,6 +173,7 @@ SELECT
     ses.updatedAt,
     ses.session_experimental_method,
     ses.session_active,
+    ses.session_can_be_manually_activated,
     ses.session_start_date,
     ses.session_end_date
 FROM Sessions ses
@@ -289,6 +290,7 @@ SELECT
     ap.token as allocated_token,
     ap.simlet_id,
     ap.session_id as allocated_session_id,
+    s.session_can_be_manually_activated,
     s.session_active,
     s.session_start_date,
     s.session_end_date,

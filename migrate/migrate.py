@@ -396,8 +396,8 @@ with open(MONGO_BACKUP_FOLDER + "/tests.json", "r") as f:
 
 # Adding Sessions into sesions table
 sessions_sql = """
-INSERT INTO Sessions (simlet_id, mongo_id, session_name, session_description, session_active, session_supervisor_id)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO Sessions (simlet_id, mongo_id, session_name, session_description, session_active, session_supervisor_id, session_can_be_manually_activated)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 """
 
 filtered_sessions = [
@@ -413,8 +413,9 @@ sessions_values = [
         s["_id"]["$oid"],
         s["name"],
         "",
-        True,
-        mongo_simlet_owners_to_mysql_id[s["study"]]
+        False,
+        mongo_simlet_owners_to_mysql_id[s["study"]],
+        True
         )
     for s in filtered_sessions
 ]
@@ -577,8 +578,8 @@ print("  GameplayActivities:", len(gameplay_activities_values))
 #adding Activities completion
 print("Adding Activities completion")
 activities_completion_sql = """
-INSERT INTO Activities_completion (activity_id, participant_id, activity_initialized, activity_progress, activity_completed)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO Activities_completion (activity_id, participant_id, activity_initialized, activity_progress, activity_suspended, activity_completed)
+VALUES (?, ?, ?, ?, ?, ?)
 """
 
 activities_completion_values=[]
@@ -590,7 +591,8 @@ for a in filtered_activities:
         actual_progress=participant_value.get("progress", 0)
         progress=None if actual_progress == 0 and not completed else actual_progress
         initialized=False if progress is None else True
-        activities_completion_values.append((mongo_activity_to_mysql_id[activity_mongo_id],mongo_user_to_mysql_id[participant_mongo_id], initialized, progress, completed))
+        suspended=participant_value.get("suspended", "false") == "true"
+        activities_completion_values.append((mongo_activity_to_mysql_id[activity_mongo_id],mongo_user_to_mysql_id[participant_mongo_id], initialized, progress, suspended, completed))
 print(activities_completion_values)
 
 cursor.executemany(activities_completion_sql, activities_completion_values)

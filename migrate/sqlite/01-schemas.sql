@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS "Sessions" (
 	"session_name" VARCHAR NOT NULL,
 	"session_description" VARCHAR NOT NULL,
 	"session_experimental_method" VARCHAR,
+	"session_can_be_manually_activated" BOOLEAN NOT NULL,
 	"session_active" BOOLEAN,
 	"session_start_date" DATETIME,
 	"session_end_date" DATETIME,
