@@ -95,7 +95,7 @@ export class KeycloakClient {
                 }
             }
         } catch (error) {
-            logger.error('Failed to initialize Keycloak client:', error);
+            logger.error(error, 'Failed to initialize Keycloak client');
         }
     }
 

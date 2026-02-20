@@ -71,7 +71,7 @@ export class LimesurveyActivity extends Activity {
 				instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
 			}
 		} catch (error) {
-			logger.error('Error loading LimesurveyActivity data:', error);
+			logger.error(error, 'Error loading LimesurveyActivity data:');
 		}
 		
 		return instance;

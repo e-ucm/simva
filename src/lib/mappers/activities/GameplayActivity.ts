@@ -88,7 +88,7 @@ export class GamePlayActivity extends Activity {
 				instance.game_url = gameplayData.game_url;
 			}
 		} catch (error) {
-			logger.error('Error loading GamePlayActivity data:', error);
+			logger.error(error, 'Error loading GamePlayActivity data:');
 		}
 		
 		return instance;

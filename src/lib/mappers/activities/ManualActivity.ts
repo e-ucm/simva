@@ -69,7 +69,7 @@ export class ManualActivity extends Activity {
 				instance.manual_ressource_url = manualData.manual_ressource_url ?? '';
 			}
 		} catch (error) {
-			logger.error('Error loading ManualActivity data:', error);
+			logger.error(error, 'Error loading ManualActivity data:');
 		}
 		
 		return instance;
