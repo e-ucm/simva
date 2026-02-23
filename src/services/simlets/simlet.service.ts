@@ -20,6 +20,7 @@ import { Session } from "@/lib/mappers/session/Session";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
+import { config } from "@/lib/config";
 
 /**
  * Service for Simlet entity operations.
@@ -406,15 +407,17 @@ export async function getSimletSchedule(simletId: number, current_user_id: numbe
   const session = await Session.getScheduledSessionForUser(simletId, current_user_id);
   let schedule : any = {
       activities: {},
-      next: null
+      next: null,
+      simlet: simletId,
+      session: session ? session.session_id : null,
+      url : `${config.externalUrl}/scheduler/${simletId}`
   };
-  let foundNext = false;
   if(session.allocated_activities && session.allocated_activities.length > 0) {
       for(const activity of session.allocated_activities) {
           schedule.activities[activity.activity_id] = activity;
           if(!schedule.next) {
             if(!activity.activity_completed) {
-                schedule.next = activity;
+                schedule.next = activity.activity_id;
             }
           }
       }
