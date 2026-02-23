@@ -105,15 +105,6 @@ config.admin.password = process.env.ADMIN_PASSWORD || 'password';
 config.upload = {};
 config.upload.maxFileSize = Number(process.env.MAX_UPLOAD_FILE_SIZE || 33554432);
 
-// Kafka configuration
-config.kafka = {};
-config.kafka.host = process.env.KAFKA_HOST || 'kafka1.internal.test';
-config.kafka.port = process.env.KAFKA_PORT || '9092';
-config.kafka.groupId = process.env.KAFKA_GROUP_ID || 'simva-group';
-config.kafka.clientId = process.env.KAFKA_CLIENT_ID || 'simva-client';
-config.kafka.topic = config.minio.tracesTopic;
-config.kafka.brokers = process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS.split(',') : [`${config.kafka.host}:${config.kafka.port}`];
-
 // MinIO configuration
 config.minio = {};
 config.minio.url = process.env.MINIO_URL || 'https://minio.external.test/';
@@ -128,6 +119,15 @@ config.minio.tracesTopic = process.env.MINIO_TRACES_TOPIC || 'traces';
 config.minio.outputsDir = process.env.MINIO_OUTPUTS_DIR || 'outputs';
 config.minio.tracesFile = process.env.MINIO_TRACES_FILE || 'traces.json';
 config.minio.presignedUrlFileExpirationTime = process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME || '1h';
+
+// Kafka configuration
+config.kafka = {};
+config.kafka.host = process.env.KAFKA_HOST || 'kafka1.internal.test';
+config.kafka.port = process.env.KAFKA_PORT || '9092';
+config.kafka.groupId = process.env.KAFKA_GROUP_ID || 'simva-group';
+config.kafka.clientId = process.env.KAFKA_CLIENT_ID || 'simva-client';
+config.kafka.topic = config.minio.tracesTopic;
+config.kafka.brokers = process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS.split(',') : [`${config.kafka.host}:${config.kafka.port}`];
 
 // LimeSurvey configuration
 config.limesurvey = {};

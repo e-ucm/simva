@@ -17,5 +17,21 @@ const queries: Record<string, QueryTemplate> = {
             },
         },
     },
+    bySessionId: {
+        description: "Get all allocated participants for a certain Session ID",
+        sql: `
+        SELECT *
+        FROM v_complete_allocation_participants 
+        WHERE session_id = :session_id
+        `,
+        params: {
+            session_id: {
+                type: "number",
+                required: true,
+                description: "Session Identifier",
+                example: 1
+            },
+        },
+    },
 };
 export default queries;

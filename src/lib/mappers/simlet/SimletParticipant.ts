@@ -1,3 +1,4 @@
+import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 /**
@@ -18,6 +19,8 @@ export class SimletParticipant {
      * ID of the allocator used to assign this participant
      */
     allocator_id: number;
+
+    session_id: string;
     
     /**
      * ID of the group this participant belongs to
@@ -62,9 +65,9 @@ export class SimletParticipant {
      * Logs participant data for debugging purposes.
      */
     constructor(data: any) {
-        logger.debug(data);
         this.simlet_id = data.simlet_id;
         this.allocator_id = data.allocator_id;
+        this.session_id = data.session_id;
         this.group_id = data.group_id;
         this.participant_id = data.participant_id;
         this.username = data.username;
@@ -74,6 +77,25 @@ export class SimletParticipant {
         this.email = data.email;
     }
 
+    static async getAllFromDbData(type: string, object_id: number): Promise<SimletParticipant[]> {
+        let allocated;
+        if(type === 'simlet') {
+            allocated = await db.Functions.runViewQuery(
+              db.Views.AllocatedParticipants.bySimletId,
+              { simlet_id: object_id }
+            );
+        } else if(type === 'session') {
+            allocated = await db.Functions.runViewQuery(
+              db.Views.AllocatedParticipants.bySessionId,
+              { session_id: object_id }
+            );
+        } else {
+            throw new Error(`Invalid type: ${type}`);
+        }
+        logger.debug({allocated} , "Participants data from view");
+        return allocated.map((participant: any) => new SimletParticipant(participant));
+    }
+
     printInfo() {
         logger.debug({ SimletParticipant : this }, `SimletParticipant information - Simlet ID: ${this.simlet_id}, Allocator ID: ${this.allocator_id}, Group ID: ${this.group_id}, Participant ID: ${this.participant_id}, Username: ${this.username}, Role: ${this.role}`);
     }
@@ -81,6 +103,7 @@ export class SimletParticipant {
     toJSON(): object {
         return {
             simlet_id: this.simlet_id,
+            session_id: this.session_id,
             allocator_id: this.allocator_id,
             group_id: this.group_id,
             participant_id: this.participant_id,

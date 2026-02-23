@@ -735,3 +735,8 @@ export async function getSessionPermissions(simletId: number, sessionId: number,
 export async function getSimletsForStudent(current_user_id: number, searchString: string, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
   return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset);
 }
+
+export async function getSimletSessionParticipants(simletId: number, sessionId: number, current_user_id: number) {
+  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+  return await session.getParticipants();
+}

@@ -268,14 +268,16 @@ JOIN v_complete_group_participants pg ON pg.group_id = g.group_id;
 DROP VIEW IF EXISTS v_complete_allocation_participants;
 CREATE VIEW v_complete_allocation_participants AS
 SELECT
+    s.simlet_id,
+    a.allocator_id,
+    a.session_id,
+    a.group_id,
     u.user_id,
     u.username,
     u.isToken,
     u.token,
-    a.group_id,
-    a.session_id,
-    s.simlet_id,
-    a.allocator_id
+    u.email,
+    u.role
 FROM Experimental_Participants a
 JOIN SIMLETs s ON a.allocator_id = s.allocator_id
 JOIN Users u ON u.user_id = a.participant_id

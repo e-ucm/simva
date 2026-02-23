@@ -356,6 +356,36 @@ export async function getSimletSession(
   }
 }
 
+export async function getSimletSessionParticipants(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, sessionId, userId: currentUser?.user_id} , "Getting participants for simlet session with simlet ID, session ID and user ID");
+    const participants = await simletService.getSimletSessionParticipants(simletId, sessionId, currentUser!.user_id as number);
+    logger.debug({participants} , "Participants retrieved for simlet session with simlet ID, session ID and user ID");
+    res.json(participants.map(p => p.toJSON()));
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * @route /simlets/:simlet_id/sessions/:session_id/activities
+ * @method GET
+ * @description Get activities for a session in a simlet
+ * @access Protected (requires authentication)
+ * 
+ * @param {AuthenticatedRequest} req - Express request object containing simlet_id and session_id in URL params and authenticated user info
+ * @param {Response} res - Express response object for sending the list of activities
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>} - Returns a promise that resolves when the response is sent
+ * @throws {Error} - Passes any errors to the next middleware for handling
+ */
 export async function getSessionActivities(
   req: AuthenticatedRequest,
   res: Response,

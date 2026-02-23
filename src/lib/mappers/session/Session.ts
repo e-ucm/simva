@@ -5,6 +5,7 @@ import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
+import { SimletParticipant } from "../simlet/SimletParticipant";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -470,6 +471,19 @@ export class Session {
             throw new ValidationError(`Session with ID ${this.session_id} not found for deactivation`);
         }
         await session.update({ session_active: false });
+    }
+
+    /**
+     * Retrieves all participants for this session.
+     * Requires read permissions.
+     * 
+     * @async
+     * @method getParticipants
+     * @returns {Promise<SimletParticipant[]>} Array of participants in this session
+     * @throws {AuthentificationError} When user lacks read permissions
+     */
+    async getParticipants(): Promise<SimletParticipant[]> {
+        return await SimletParticipant.getAllFromDbData('session', this.session_id);
     }
 
     /**

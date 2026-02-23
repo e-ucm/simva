@@ -284,12 +284,7 @@ export class Simlet {
     }
 
     async getAllocatedParticipants(): Promise<SimletParticipant[]> {
-      const allocated = await db.Functions.runViewQuery(
-        db.Views.AllocatedParticipants.bySimletId,
-        { simlet_id: this.simlet_id }
-      );
-      logger.debug({allocated} , "Participants data from view");
-      return allocated.map((participant: any) => new SimletParticipant(participant));
+      return await SimletParticipant.getAllFromDbData("simlet", this.simlet_id);
     }
 
     async getGroups(): Promise<SimletGroup[]> {
