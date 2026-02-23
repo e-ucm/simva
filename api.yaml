@@ -1003,6 +1003,30 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
+  /simlets/{simletid}/sessions/{sessionid}/participants:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of participants for this session
+      operationId: getSimletParticipants
+      description: |
+        Obtains the list of participants of the session
+      responses:
+        '200':
+          description: list of participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/simlet_participant'
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'session not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
   /simlets/{simletid}/sessions/{sessionid}/activities:
     get:
       tags:
