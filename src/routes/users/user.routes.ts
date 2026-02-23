@@ -37,6 +37,24 @@ router.get("/", getUsers);
 // profile
 router.get("/me", getMe);
 
+/**
+ * Obtains the list of surveys owned by current user.
+ * 
+ */
+//router.get('/islimesurveyadmin', isLimesurveyAdmin); // For testing purposes, can be removed later
+
+/**
+ * Receives two valid JWT tokens and adds to the main
+ * account, as an external_entity, the secondary account
+ * 
+ */
+//router.post('/link', linkAccount); // For testing purposes, can be removed later
+/**
+ * Receives the SSO events and updates the users, both creating
+ * the users and updating their roles and permissions 
+ * 
+ */
+//router.post('/events', getUserEvents);
 // User-specific operations
 router.patch("/:username", patchUser);
 

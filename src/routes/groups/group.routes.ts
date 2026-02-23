@@ -59,6 +59,8 @@ router.get("/:id", getGroupById);
 router.patch("/:id", updateGroup);
 router.delete("/:id", deleteGroup);
 
+//router.get("/:id/simlets", getGroupSimlets); // For testing purposes, can be removed later
+
 // Group permissions operations
 router.get("/:group_id/permissions", getGroupPermissions);
 router.get("/:group_id/permissions/:user_id", getGroupPermissionsForUser);

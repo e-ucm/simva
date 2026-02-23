@@ -101,6 +101,8 @@ const router = Router();
 // Collection endpoints (should come before parameterized routes)
 router.get("/", getAllSimlets);
 router.post("/", createSimlet);
+//router.post('/import', importSimlet);
+//router.get('/export', exportSimlet);
 
 // Individual resource endpoints
 router.get("/:simlet_id", getSimletById);
@@ -131,6 +133,8 @@ router.delete("/:simlet_id/sessions/:session_id/permissions/:user_id", deleteSes
 // Activity list endpoints
 router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
 router.post("/:simlet_id/sessions/:session_id/activities", createSessionActivity);
+//router.patch("/:simlet_id/sessions/:session_id/activities/:activity_id", updateActivity);
+//router.delete("/:simlet_id/sessions/:session_id/activities/:activity_id", deleteActivity);
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/groups", getSimletGroups);
