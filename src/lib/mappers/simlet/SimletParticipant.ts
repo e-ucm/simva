@@ -30,7 +30,7 @@ export class SimletParticipant {
     /**
      * Unique identifier for this participant
      */
-    participant_id: number;
+    user_id: number;
     
     /**
      * Username of the participant
@@ -69,7 +69,7 @@ export class SimletParticipant {
         this.allocator_id = data.allocator_id;
         this.session_id = data.session_id;
         this.group_id = data.group_id;
-        this.participant_id = data.participant_id;
+        this.user_id = data.user_id;
         this.username = data.username;
         this.token = data.token;
         this.isToken = data.isToken;
@@ -97,7 +97,7 @@ export class SimletParticipant {
     }
 
     printInfo() {
-        logger.debug({ SimletParticipant : this }, `SimletParticipant information - Simlet ID: ${this.simlet_id}, Allocator ID: ${this.allocator_id}, Group ID: ${this.group_id}, Participant ID: ${this.participant_id}, Username: ${this.username}, Role: ${this.role}`);
+        logger.debug({ SimletParticipant : this }, `SimletParticipant information - Simlet ID: ${this.simlet_id}, Allocator ID: ${this.allocator_id}, Group ID: ${this.group_id}, Participant ID: ${this.user_id}, Username: ${this.username}, Role: ${this.role}`);
     }
 
     toJSON(): object {
@@ -106,7 +106,7 @@ export class SimletParticipant {
             session_id: this.session_id,
             allocator_id: this.allocator_id,
             group_id: this.group_id,
-            participant_id: this.participant_id,
+            user_id: this.user_id,
             username: this.username,
             token: this.token,
             isToken: this.isToken,
