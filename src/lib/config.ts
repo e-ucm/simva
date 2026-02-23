@@ -159,6 +159,7 @@ config.sso.host = process.env.SSO_HOST || 'sso.external.test';
 config.sso.protocol = process.env.SSO_PROTOCOL || 'https';
 config.sso.port = process.env.SSO_PORT || '443';
 config.sso.url = config.sso.protocol + '://' + config.sso.host + ((ignored_ports.indexOf(Number(config.sso.port)) !== -1) ? '' : (':' + config.sso.port));
+config.sso.tokenUrl = config.sso.url + '/realms/' + config.sso.realm + '/protocol/openid-connect/token';
 config.sso.adminUser = process.env.SSO_ADMIN_USER || 'administrator';
 config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'administrator';
 config.sso.webhookSubUrl = process.env.SSO_WEBHOOK_SUBURL || '/sso-events';

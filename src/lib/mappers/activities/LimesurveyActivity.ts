@@ -124,13 +124,7 @@ export class LimesurveyActivity extends Activity {
 	}
 
 	async getAllCurrentParticipantsUsername(participants_id?: number[]): Promise<Map<number, string>> {
-		const participantIds = await this.getAllCurrentParticipantsId(participants_id);
-		const usernames: Map<number, string> = new Map<number, string>();
-		let users = await User.getFromListDbData(participantIds);
-		for (const user of users) {
-			usernames.set(user.user_id, user.username);
-		}
-		return usernames;
+		return super.getAllCurrentParticipantsUsername(participants_id);
 	}
 
 	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {

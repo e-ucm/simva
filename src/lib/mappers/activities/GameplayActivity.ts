@@ -133,44 +133,53 @@ export class GamePlayActivity extends Activity {
 	async getAllCurrentParticipantsId(participants_id?: number[]): Promise<number[]> {
 		return super.getAllCurrentParticipantsId(participants_id);
 	}
-
+	async getAllCurrentParticipantsUsername(participants_id?: number[]): Promise<Map<number, string>> {
+		return super.getAllCurrentParticipantsUsername(participants_id);
+	}
 	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {
 		participants_id = await this.getAllCurrentParticipantsId(participants_id);
 		let targetMap = new Map<number, string>();
+		let usernames=await this.getAllCurrentParticipantsUsername(participants_id);
 		for (const participant_id of participants_id) {
-			let customUri = this.game_url;
-			if(this.game_url.indexOf('?') !== -1){
-				if(this.game_url.indexOf('{authToken}') !== -1){
-					//let authToken = await UsersController.generateJWT(users[participants[i]]);
-					//customUri = customUri.replace('{authToken}', authToken);
-				}
-				customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)); //OK
-				customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)); //OK
-				customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`)); //OK
-				customUri = customUri.replace('{tokenEndpoint}', encodeURIComponent(`${config.sso.tokenUrl}`)); //OK
-				customUri = customUri.replace('{userToken}', participant_id.toString()); //OK
-				customUri = customUri.replace('{activityId}', this.activity_id.toString()); //OK
-				customUri = customUri.replace('{studyId}', this.simlet_id.toString()); //OK
-				customUri = customUri.replace('{username}', participant_id.toString()); //OK
-			} else {
-				customUri += `?${this.game_url}
-				?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)}
-				&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}
-				&backup_type=XAPI
-				&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}
-				&actor_user=${participant_id}
-				&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}
-				&sso_client_id=simva-plugin
-				&sso_login_hint=${this.simlet_id}
-				&sso_username=${participant_id}
-				&sso_grant_type=password
-				&sso_scope=offline_access
-				&batch_length=200
-				&batch_timeout=5min
-				&max_retry_delay=30min
-			`;
+			let customUri;
+			switch(this.game_type) {
+				case "WEB":
+					logger.info(this.game_url);
+					if(this.game_url && this.game_url.indexOf('?') !== -1){
+						if(this.game_url.indexOf('{authToken}') !== -1){
+							//let authToken = await UsersController.generateJWT(users[participants[i]]);
+							//customUri = customUri.replace('{authToken}', authToken);
+						}
+						customUri = this.game_url;
+						customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)); //OK
+						customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)); //OK
+						customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`)); //OK
+						customUri = customUri.replace('{tokenEndpoint}', encodeURIComponent(`${config.sso.tokenUrl}`)); //OK
+						customUri = customUri.replace('{userToken}', participant_id.toString()); //OK
+						customUri = customUri.replace('{activityId}', this.activity_id.toString()); //OK
+						customUri = customUri.replace('{studyId}', this.simlet_id.toString()); //OK
+						customUri = customUri.replace('{username}', participant_id.toString()); //OK
+					} else {
+						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)}`
+							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
+							+ `&backup_type=XAPI`
+							+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
+							+ `&actor_user=${usernames.get(participant_id)}`
+							+ `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
+							+ `&sso_client_id=simva-plugin`
+							+ `&sso_login_hint=${this.simlet_id}`
+							+ `&sso_username=${usernames.get(participant_id)}`
+							+ `&sso_grant_type=password`
+							+ `&sso_scope=offline_access`
+							+ `&batch_length=200`
+							+ `&batch_timeout=5min`
+							+ `&max_retry_delay=30min`;
+					}
+					targetMap.set(participant_id, customUri);
+				default:
+					break;
 			}
-			targetMap.set(participant_id, customUri);
+			
 		}
 		logger.debug(targetMap.toString());
 		return new ActivityMappingResult(targetMap);
