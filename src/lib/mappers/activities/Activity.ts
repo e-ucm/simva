@@ -123,6 +123,9 @@ export class Activity {
 		this.activity_trace_storage = data.activity_trace_storage || false; // Default to false if not provided
 		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
 		if(this.allocated_user) {
+			this.allocated_user_id = data.allocated_user_id ?? data.participant_id;
+			this.allocated_username = data.allocated_username ?? data.participant_username;
+			this.allocated_token = data.allocated_token ?? data.participant_token;
 			this.session_active = data.session_active;
 			this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
 			this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;

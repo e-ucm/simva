@@ -103,6 +103,19 @@ export class User {
     return users.map((user: any) => new User(user));
   }
 
+  static async getFromListDbData(participants_id: number[]): Promise<User[]> {
+    let users = await db.Tables.User.findAll({
+      order: [['user_id', 'ASC']],
+      where: {
+        user_id: {
+          [Op.in]: participants_id
+        }
+      }
+    });
+    return users.map((user: any) => new User(user));
+  }
+
+
   /**
    * Retrieves a single user by ID or username.
    * Provides flexible user lookup supporting both primary key and unique username.

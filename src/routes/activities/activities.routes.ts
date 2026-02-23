@@ -7,6 +7,7 @@ import {
   getSuspensionForActivity,
   getTargetForActivity,
   isActivityAccessible,
+  openTargetForActivity,
   setCompletionForActivity,
   setInitializedForActivity,
   setMultiCompletionForActivity,
@@ -65,7 +66,7 @@ const router = Router();
 router.get("/:activity_id", getActivity);
 router.get("/:activity_id/openable", isActivityAccessible);
 router.get("/:activity_id/target", getTargetForActivity);
-router.get("/:activity_id/open", getTargetForActivity);
+router.get("/:activity_id/open", openTargetForActivity);
 router.get("/:activity_id/initialized", getInitializedForActivity);
 router.get("/:activity_id/progress", getProgressForActivity);
 router.get("/:activity_id/completion", getCompletionForActivity);

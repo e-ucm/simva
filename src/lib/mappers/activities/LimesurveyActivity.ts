@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { limeSurveyClient } from "@/lib/utils/limesurveyclient";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
+import { User } from "../Users/User";
 
 /**
  * LimeSurvey Activity mapper class extending base Activity.
@@ -122,11 +123,22 @@ export class LimesurveyActivity extends Activity {
 		return super.getAllCurrentParticipantsId(participants_id);
 	}
 
+	async getAllCurrentParticipantsUsername(participants_id?: number[]): Promise<Map<number, string>> {
+		const participantIds = await this.getAllCurrentParticipantsId(participants_id);
+		const usernames: Map<number, string> = new Map<number, string>();
+		let users = await User.getFromListDbData(participantIds);
+		for (const user of users) {
+			usernames.set(user.user_id, user.username);
+		}
+		return usernames;
+	}
+
 	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {
 		participants_id = await this.getAllCurrentParticipantsId(participants_id);
 		let targetMap = new Map<number, string>();
-		for (const participant_id of participants_id) {
-			targetMap.set(participant_id, `${config.limesurvey.external_url}/${this.survey_id}?token=${participant_id}&lang=${this.suvey_language}`);
+		const usernames = await this.getAllCurrentParticipantsUsername(participants_id);
+		for (let i = 0; i < participants_id.length; i++) {
+			targetMap.set(participants_id[i], `${config.limesurvey.external_url}/${this.survey_id}?token=${usernames.get(participants_id[i])}&lang=${this.suvey_language}`);
 		}
 		logger.debug(targetMap.toString());
 		return new ActivityMappingResult(targetMap);
