@@ -2,6 +2,7 @@ import { Activity } from "@/lib/mappers/activities/Activity";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ActivityCompletion } from "../ActivityCompletion/ActivityCompletion";
+import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 
 /**
  * Manual Activity mapper class extending base Activity.
@@ -100,17 +101,17 @@ export class ManualActivity extends Activity {
 		return super.getAllCurrentParticipantsId(participants_id);
 	}
 
-	async target(participants_id?: number[]): Promise<Map<number, string>|undefined> {
+	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {
 		participants_id = await this.getAllCurrentParticipantsId(participants_id);
 		let targetMap = new Map<number, string>();
 		for (const participant_id of participants_id) {
 			targetMap.set(participant_id, this.manual_ressource_url);
 		}
 		logger.debug(targetMap.toString());
-		return targetMap;
+		return new ActivityMappingResult(targetMap);
 	}
 
-	async getInitialized(participants_id?: number[]): Promise<Map<number, boolean>> {
+	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		return super.getInitialized(participants_id);
 	}
 
@@ -118,7 +119,7 @@ export class ManualActivity extends Activity {
 		return super.setInitialized(initialized, participants_id);
 	}
 
-	async getProgress(participants_id?: number[]): Promise<Map<number, number>> {
+	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number>> {
 		return super.getProgress(participants_id);
 	}
 	
@@ -126,7 +127,7 @@ export class ManualActivity extends Activity {
 		return super.setProgress(progress, participants_id);
 	}
 
-	async getCompletion(participants_id?: number[]): Promise<Map<number, boolean>> {
+	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		return super.getCompletion(participants_id);
 	}
 
@@ -142,7 +143,7 @@ export class ManualActivity extends Activity {
 		return super.setSuspension(status, participants_id);
 	}
 
-	async getSuspension(participants_id?: number[]): Promise<Map<number, boolean>> {
+	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		return super.getSuspension(participants_id);
 	}
 

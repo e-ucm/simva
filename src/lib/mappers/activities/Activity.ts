@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { minioClient } from "@/lib/utils/minioclient";
 import { JSScormTracker } from "js-tracker";
 import { ActivityCompletion } from "../ActivityCompletion/ActivityCompletion";
+import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 
 /**
  * Base Activity mapper class representing an activity within a session.
@@ -361,8 +362,8 @@ export class Activity {
 	 * }
 	 * ```
 	 */
-	async target(participants_id?: number[]): Promise<Map<number, string>|undefined> {
-		return undefined;
+	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {
+		return new ActivityMappingResult(new Map<number, string>());
 	}
 
 	async getCurrentCompletionData(participants_id?: number[], columns?: string[]): Promise<ActivityCompletion[]> {
@@ -387,13 +388,13 @@ export class Activity {
 	 * @param {number[]} participants - Array of participant IDs
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
-	async getInitialized(participants_id?: number[]): Promise<Map<number, boolean>>{
+	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
 		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_initialized"]);
 		let progressMap = new Map<number, boolean>();
 		for (const cd of progressData) {
 			progressMap.set(cd.participant_id, cd.activity_initialized);
 		}
-		return progressMap;
+		return new ActivityMappingResult(progressMap);
 	}
 
 	/**
@@ -424,13 +425,13 @@ export class Activity {
 	 * @param {number[]} participants_id - Array of participant IDs
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
-	async getProgress(participants_id?: number[]): Promise<Map<number, number>>{
+	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number>>{
 		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_progress"]);
 		let progressMap = new Map<number, number>();
 		for (const cd of progressData) {
 			progressMap.set(cd.participant_id, cd.activity_progress);
 		}
-		return progressMap;
+		return new ActivityMappingResult(progressMap);
 	}
 	
 	/**
@@ -461,13 +462,13 @@ export class Activity {
 	 * @param {number[]} participants - Array of participant IDs
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
-	async getCompletion(participants_id?: number[]): Promise<Map<number, boolean>>{
+	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
 		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_completed"]);
 		let progressMap = new Map<number, boolean>();
 		for (const cd of progressData) {
 			progressMap.set(cd.participant_id, cd.activity_completed);
 		}
-		return progressMap;
+		return new ActivityMappingResult(progressMap);
 	}
 
 	/**
@@ -521,13 +522,13 @@ export class Activity {
 		return completionData;
 	}
 
-	async getSuspension(participants_id?: number[]): Promise<Map<number, boolean>> {
+	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		let suspensionData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_suspended"]);
 		let suspensionMap = new Map<number, boolean>();
 		for (const cd of suspensionData) {
 			suspensionMap.set(cd.participant_id, cd.activity_suspended);
 		}
-		return suspensionMap;
+		return new ActivityMappingResult(suspensionMap);
 	}
 
 	/**

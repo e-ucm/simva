@@ -17,12 +17,6 @@ import * as activitiesService from "@/services/activities/activities.service";
 import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
-function mapToParticipantJson<T>(data?: Map<number, T>): Record<string, T> {
-  if (!data) {
-    return {};
-  }
-  return Object.fromEntries(data) as Record<string, T>;
-}
 
 function parseParticipantsId(participantsIdQuery: unknown): number[] | undefined {
   logger.debug(parseParticipantsId, "Received participants_id query param:");
@@ -146,12 +140,12 @@ export async function getTargetForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const target = await activitiesService.getTargetForActivity(activityId, currentUser!.user_id as number, false, participants_id);
-        logger.debug(mapToParticipantJson(target));
-        return res.json(mapToParticipantJson(target));
+        logger.debug(target.toJSON());
+        return res.json(target.toJSON());
       case "student":
         const allocatedTarget = await activitiesService.getTargetForActivity(activityId, currentUser!.user_id as number, true, participants_id);
-        logger.debug(mapToParticipantJson(allocatedTarget));
-        return res.json(mapToParticipantJson(allocatedTarget));  
+        logger.debug(allocatedTarget.toJSON());
+        return res.json(allocatedTarget.toJSON());  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -172,12 +166,12 @@ export async function getProgressForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const progress = await activitiesService.getProgressForActivity(activityId, currentUser!.user_id as number, false, participants_id);
-        logger.debug(mapToParticipantJson(progress));
-        return res.json(mapToParticipantJson(progress));
+        logger.debug(progress.toJSON());
+        return res.json(progress.toJSON());
       case "student":
         const allocatedProgress = await activitiesService.getProgressForActivity(activityId, currentUser!.user_id as number, true, participants_id);
-        logger.debug(mapToParticipantJson(allocatedProgress));
-        return res.json(mapToParticipantJson(allocatedProgress));  
+        logger.debug(allocatedProgress.toJSON());
+        return res.json(allocatedProgress.toJSON());  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -199,12 +193,12 @@ export async function setProgressForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const result = await activitiesService.setProgressForActivity(activityId, currentUser!.user_id as number, false, progress, participants_id);
-        logger.debug(result);
-        return res.json(result);
+        logger.debug(result.map((r) => r.toJSON()));
+        return res.json(result.map((r) => r.toJSON()));
       case "student":
         const allocatedResult = await activitiesService.setProgressForActivity(activityId, currentUser!.user_id as number, true, progress, participants_id);
-        logger.debug(allocatedResult);
-        return res.json(allocatedResult);  
+        logger.debug(allocatedResult.map((r) => r.toJSON()));
+        return res.json(allocatedResult.map((r) => r.toJSON()));  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -225,12 +219,12 @@ export async function getInitializedForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const initialized = await activitiesService.getInitializedForActivity(activityId, currentUser!.user_id as number, false, participants_id);
-        logger.debug(mapToParticipantJson(initialized));
-        return res.json(mapToParticipantJson(initialized));
+        logger.debug(initialized.toJSON());
+        return res.json(initialized.toJSON());
       case "student":
         const allocatedInitialized = await activitiesService.getInitializedForActivity(activityId, currentUser!.user_id as number, true, participants_id);
-        logger.debug(mapToParticipantJson(allocatedInitialized));
-        return res.json(mapToParticipantJson(allocatedInitialized));  
+        logger.debug(allocatedInitialized.toJSON());
+        return res.json(allocatedInitialized.toJSON());  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -252,12 +246,12 @@ export async function setInitializedForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const result = await activitiesService.setInitializedForActivity(activityId, currentUser!.user_id as number, false, initialized, participants_id);
-        logger.debug(result);
-        return res.json(result);
+        logger.debug(result.map((r) => r.toJSON()));
+        return res.json(result.map((r) => r.toJSON()));
       case "student":
         const allocatedResult = await activitiesService.setInitializedForActivity(activityId, currentUser!.user_id as number, true, initialized, participants_id);
-        logger.debug(allocatedResult);
-        return res.json(allocatedResult);  
+        logger.debug(allocatedResult.map((r) => r.toJSON()));
+        return res.json(allocatedResult.map((r) => r.toJSON()));  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -278,12 +272,12 @@ export async function getCompletionForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const completion = await activitiesService.getCompletionForActivity(activityId, currentUser!.user_id as number, false, participants_id);
-        logger.debug(mapToParticipantJson(completion));
-        return res.json(mapToParticipantJson(completion));
+        logger.debug(completion.toJSON());
+        return res.json(completion.toJSON());
       case "student":
         const allocatedCompletion = await activitiesService.getCompletionForActivity(activityId, currentUser!.user_id as number, true, participants_id);
-        logger.debug(mapToParticipantJson(allocatedCompletion));
-        return res.json(mapToParticipantJson(allocatedCompletion));  
+        logger.debug(allocatedCompletion.toJSON());
+        return res.json(allocatedCompletion.toJSON());  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -305,12 +299,12 @@ export async function setCompletionForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const result = await activitiesService.setCompletionForActivity(activityId, currentUser!.user_id as number, false, completed, participants_id);
-        logger.debug(result);
-        return res.json(result);
+        logger.debug(result.map((r) => r.toJSON()));
+        return res.json(result.map((r) => r.toJSON()));
       case "student":
         const allocatedResult = await activitiesService.setCompletionForActivity(activityId, currentUser!.user_id as number, true, completed, participants_id);
-        logger.debug(allocatedResult);
-        return res.json(allocatedResult);  
+        logger.debug(allocatedResult.map((r) => r.toJSON()));
+        return res.json(allocatedResult.map((r) => r.toJSON()));  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -331,12 +325,12 @@ export async function setMultiCompletionForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const result = await activitiesService.setMultiCompletionForActivity(activityId, currentUser!.user_id as number, false, status);
-        logger.debug(result);
-        return res.json(result);
+        logger.debug(result.map((r) => r.toJSON()));
+        return res.json(result.map((r) => r.toJSON()));
       case "student":
         const allocatedResult = await activitiesService.setMultiCompletionForActivity(activityId, currentUser!.user_id as number, true, status);
-        logger.debug(allocatedResult);
-        return res.json(allocatedResult);  
+        logger.debug(allocatedResult.map((r) => r.toJSON()));
+        return res.json(allocatedResult.map((r) => r.toJSON()));  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -358,12 +352,12 @@ export async function setSuspensionForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const result = await activitiesService.setSuspensionForActivity(activityId, currentUser!.user_id as number, false, status, participants_id);
-        logger.debug(result);
-        return res.json(result);
+        logger.debug(result.map((r) => r.toJSON()));
+        return res.json(result.map((r) => r.toJSON()));
       case "student":
         const allocatedResult = await activitiesService.setSuspensionForActivity(activityId, currentUser!.user_id as number, true, status, participants_id);
-        logger.debug(allocatedResult);
-        return res.json(allocatedResult);  
+        logger.debug(allocatedResult.map((r) => r.toJSON()));
+        return res.json(allocatedResult.map((r) => r.toJSON()));  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -384,12 +378,12 @@ export async function getSuspensionForActivity(
     switch(currentUser?.role) {
       case "teacher":
         const suspension = await activitiesService.getSuspensionForActivity(activityId, currentUser!.user_id as number, false, participants_id);
-        logger.debug(mapToParticipantJson(suspension));
-        return res.json(mapToParticipantJson(suspension));
+        logger.debug(suspension.toJSON());
+        return res.json(suspension.toJSON());
       case "student":
         const allocatedSuspension = await activitiesService.getSuspensionForActivity(activityId, currentUser!.user_id as number, true, participants_id);
-        logger.debug(mapToParticipantJson(allocatedSuspension));
-        return res.json(mapToParticipantJson(allocatedSuspension));  
+        logger.debug(allocatedSuspension.toJSON());
+        return res.json(allocatedSuspension.toJSON());  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }

@@ -17,6 +17,7 @@ import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
+import { ActivityMappingResult } from "@/lib/mappers/ActivityCompletion/ActivityMappingResult";
 
 /**
  * Retrieves a single activity by ID for a specific user.
@@ -58,12 +59,12 @@ export async function getUserTargetForActivity(activityId: number, current_user_
     return target;
 }
 
-export async function getTargetForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<Map<number, string>|undefined> {
+export async function getTargetForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<ActivityMappingResult<string>> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.target(participants_id);
 }
 
-export async function getProgressForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<Map<number, number>|undefined> {
+export async function getProgressForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<ActivityMappingResult<number>> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.getProgress(participants_id);
 }
@@ -74,7 +75,7 @@ export async function setProgressForActivity(activityId: number, current_user_id
 }
 
 
-export async function getInitializedForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<Map<number, boolean>|undefined> {
+export async function getInitializedForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.getInitialized(participants_id);
 }
@@ -84,7 +85,7 @@ export async function setInitializedForActivity(activityId: number, current_user
     return activity.setInitialized(initialized, participants_id);
 }
 
-export async function getCompletionForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<Map<number, boolean>|undefined> {
+export async function getCompletionForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.getCompletion(participants_id);
 }
@@ -104,7 +105,7 @@ export async function setSuspensionForActivity(activityId: number, current_user_
     return activity.setSuspension(status, participants_id);
 }
 
-export async function getSuspensionForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<Map<number, boolean>|undefined> {
+export async function getSuspensionForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.getSuspension(participants_id);
 }
