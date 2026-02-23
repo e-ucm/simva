@@ -7,16 +7,16 @@ import { config } from '@/lib/config';
  * Configuration options for MinioClient
  */
 interface MinioOpts {
-    api_host: string;
-    useSSL?: boolean;
+    apiUrl: string;
+    ssl?: boolean;
     port?: number;
-    access_key: string;
-    secret_key: string;
+    accessKey: string;
+    secretKey: string;
     bucket: string;
-    topics_dir: string;
-    traces_topic: string;
-    outputs_dir: string;
-    traces_file: string;
+    topicsDir: string;
+    tracesTopic: string;
+    outputsDir: string;
+    tracesFile: string;
     presignedUrlFileExpirationTime: number;
 }
 
@@ -38,11 +38,11 @@ class MinioClient {
         try {
             this.#opts = opts;
             this.#minio = new Minio({
-                endPoint: opts.api_host,
+                endPoint: opts.apiUrl,
                 port: opts.port,
-                useSSL: opts.useSSL,
-                accessKey: opts.access_key,
-                secretKey: opts.secret_key
+                useSSL: opts.ssl,
+                accessKey: opts.accessKey,
+                secretKey: opts.secretKey
             });
             this.#initialized = true;
             logger.info('MinioClient initialized successfully');
@@ -139,10 +139,9 @@ class MinioClient {
      */
     async getPresignedFileUrl(activityId: string): Promise<string> {
         this.ensureInitialized();
-        
-        const path = `${this.#opts.outputs_dir}/${activityId}/${this.#opts.traces_file}`;
+
+        const path = `${this.#opts.outputsDir}/${activityId}/${this.#opts.tracesFile}`;
         logger.info({ activityId, path }, 'Minio: getPresignedFileUrl');
-        
         if (await this.fileExists(path)) {
             return this.getPresignedUrl(path);
         }

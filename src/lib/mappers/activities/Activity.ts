@@ -1,11 +1,13 @@
 import { config } from "@/lib/config";
 import { db } from "@/lib/db";
-import { NotFoundError } from "@/lib/errors/appErrors";
+import { AuthentificationError, NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { minioClient } from "@/lib/utils/minioclient";
 import { JSScormTracker } from "js-tracker";
 import { ActivityCompletion } from "../ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
+import { lrsclient } from "@/lib/utils/LRSclient";
+import { User } from "../Users/User";
 
 /**
  * Base Activity mapper class representing an activity within a session.
@@ -133,6 +135,9 @@ export class Activity {
 			this.activity_presignedUrl = data.activity_presignedUrl || "";
 			this.activity_generated_at = data.activity_generated_at ? new Date(data.activity_generated_at) : undefined;
 			this.activity_expire_on_seconds = data.activity_expire_on_seconds || -1;
+			this.current_user_id = data.current_user_id;
+			this.current_user_username = data.current_user_username;
+			this.current_user_permission = data.current_user_permission;
 		}
 	}
 
@@ -570,7 +575,54 @@ export class Activity {
 		}
 		logger.info(statement? statement.toXAPI() : "No statement generated", "XAPI Statement:");
 	}
-	
+
+	async canSendStatementsLRS(): Promise<boolean> {
+        if(this.session_active) {
+			if(this.session_end_date && Date.now() > this.session_end_date.getTime()) {
+				throw new AuthentificationError("The session for this activity has ended, cannot send statements to LRS.");
+			} else if(this.session_start_date && Date.now() < this.session_start_date.getTime()) {
+				throw new AuthentificationError("The session for this activity has not started yet, cannot send statements to LRS.");
+			}
+			if(this.activity_completed) {
+				throw new AuthentificationError("The activity is already completed, cannot send statements to LRS.");
+			}	
+			if(this.activity_order === 1) {
+				return true; // First activity can always send statements if session is active
+			} else {
+				// For subsequent activities, check if the previous activity is completed
+				let previousActivities;
+				if(this.allocated_user) {
+					previousActivities = await Activity.getPreviousAllocatedActivity(this.activity_id, this.allocated_user_id!);
+				} else {
+					throw new AuthentificationError("Cannot verify previous activity completion for non-allocated user, cannot send statements to LRS.");
+				}
+				for(const previousActivity of previousActivities) {
+					if(!previousActivity.activity_completed && !previousActivity.activity_can_be_restarted) {
+						throw new AuthentificationError(`The previous activity ${previousActivity.activity_name} is not completed, cannot send statements to LRS.`);
+					}
+				}
+			}
+			return true;
+		}
+        throw new AuthentificationError("The session for this activity is not active, cannot send statements to LRS.");
+    }
+
+	static async getPreviousAllocatedActivity(activity_id: number, allocated_user_id: number): Promise<Activity[]> {
+		const previousActivitiesData = await db.Functions.runViewQuery(
+			db.Views.Activity.byPreviousActivityIdAndParticipantId,
+			{ activity_id, allocated_user_id }
+		);
+		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
+		return await Promise.all(previousActivitiesData.map(async (activity: any) =>
+			await ActivityToClass(activity.activity_id, allocated_user_id, true, activity)
+	));
+	}
+
+	async sendStatementsLRSForActivity(current_user_id: number, body: any): Promise<number[]> {
+		let ids = await lrsclient.setStatement(body, this.activity_id, (await User.getFromDbData(current_user_id)).username);
+		return ids;
+	}
+
 	/**
 	 * Checks if participants have results for this activity.
 	 * Stub implementation - to be implemented by subclasses.

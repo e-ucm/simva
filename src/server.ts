@@ -20,6 +20,7 @@ import { db } from '@/lib/db';
 import { config } from '@/lib/config';
 import { logger } from '@/lib/logger';
 import { Server } from 'http';
+import { lrsclient } from '@/lib/utils/LRSclient';
 
 const PORT = config.api.port;
 
@@ -34,7 +35,12 @@ async function shutdown(signal: string) {
   if (server) {
     server.close(async () => {
       logger.info('HTTP server closed');
-      
+      try { 
+        lrsclient.saveToFile();
+        logger.info('LRS client state saved');
+      } catch (err) {
+        logger.error({err}, 'Error saving LRS client state');
+      }
       try {
         await db.sequelize.close();
         logger.info('Database connection closed');
@@ -43,6 +49,7 @@ async function shutdown(signal: string) {
         logger.error({err},'Error closing database connection');
         process.exit(1);
       }
+      
     });
     
     // Force close after 3 seconds

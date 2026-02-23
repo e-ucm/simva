@@ -67,6 +67,9 @@ config.db.complete_path = path.join(config.db.path, config.db.file);
 config.db.view_file_path = process.env.SQL_VIEW_FILE || 'migrate/sqlite/02-views.sql';
 config.db.view_complete_path = path.join(config.appFolder, config.db.view_file_path);
 
+config.bloomFilterBackupPath = process.env.BLOOM_FILTER_BACKUP_PATH || path.join(config.appFolder, '../bloom-filter/');
+config.bloomFilterBackupFile = process.env.BLOOM_FILTER_BACKUP_FILE || 'bloom-filter-backup.json';
+
 config.api = {};
 config.api.host = process.env.SIMVA_API_HOST || 'simva.external.test';
 config.api.port = Number(process.env.SIMVA_API_PORT || 3000);
@@ -106,6 +109,10 @@ config.upload.maxFileSize = Number(process.env.MAX_UPLOAD_FILE_SIZE || 33554432)
 config.kafka = {};
 config.kafka.host = process.env.KAFKA_HOST || 'kafka1.internal.test';
 config.kafka.port = process.env.KAFKA_PORT || '9092';
+config.kafka.groupId = process.env.KAFKA_GROUP_ID || 'simva-group';
+config.kafka.clientId = process.env.KAFKA_CLIENT_ID || 'simva-client';
+config.kafka.topic = process.env.KAFKA_TOPIC || 'simva-topic';
+config.kafka.brokers = process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS.split(',') : [`${config.kafka.host}:${config.kafka.port}`];
 
 // MinIO configuration
 config.minio = {};
@@ -117,7 +124,7 @@ config.minio.accessKey = process.env.MINIO_ACCESS_KEY || 'minio';
 config.minio.secretKey = process.env.MINIO_SECRET_KEY || 'secret';
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces';
 config.minio.topicsDir = process.env.MINIO_TOPICS_DIR || 'kafka-topics';
-config.minio.tracesToxic = process.env.MINIO_TRACES_TOPIC || 'traces';
+config.minio.tracesTopic = process.env.MINIO_TRACES_TOPIC || 'traces';
 config.minio.outputsDir = process.env.MINIO_OUTPUTS_DIR || 'outputs';
 config.minio.tracesFile = process.env.MINIO_TRACES_FILE || 'traces.json';
 config.minio.presignedUrlFileExpirationTime = process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME || '1h';

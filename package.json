@@ -35,7 +35,8 @@
     "sqlite3": "^5.1.7",
     "uuid": "^13.0.0",
     "yaml": "^2.8.2",
-    "js-tracker": "github:e-ucm/js-tracker#v1.1.2"
+    "js-tracker": "github:e-ucm/js-tracker#v1.1.2",
+    "bloom-filters": "^3.0.4"
   },
   "devDependencies": {
     "@faker-js/faker": "^7",
