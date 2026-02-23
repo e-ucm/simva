@@ -7,6 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT activity_id
         FROM Activities
         WHERE session_id = :session_id
+        ORDER BY activity_order
         `,
         params: {
             session_id: {
@@ -23,6 +24,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activities_users_permissions
       WHERE current_user_id = :current_user_id AND (:session_id IS NULL OR session_id = :session_id)
+      ORDER BY activity_order
     `,
     params: {
       current_user_id: {
@@ -46,6 +48,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activities_users_permissions 
       WHERE activity_id = :activity_id AND current_user_id = :current_user_id
+      ORDER BY activity_order
     `,
     params: {
       activity_id: {
@@ -69,6 +72,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants  
       WHERE activity_id = :activity_id AND allocated_user_id = :allocated_user_id
+      ORDER BY activity_order
     `,
     params: {
       activity_id: {
@@ -92,6 +96,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants  
       WHERE activity_id < :activity_id AND allocated_user_id = :allocated_user_id
+      ORDER BY activity_order
     `,
     params: {
       activity_id: {

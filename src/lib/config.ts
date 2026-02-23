@@ -111,7 +111,7 @@ config.kafka.host = process.env.KAFKA_HOST || 'kafka1.internal.test';
 config.kafka.port = process.env.KAFKA_PORT || '9092';
 config.kafka.groupId = process.env.KAFKA_GROUP_ID || 'simva-group';
 config.kafka.clientId = process.env.KAFKA_CLIENT_ID || 'simva-client';
-config.kafka.topic = process.env.KAFKA_TOPIC || 'simva-topic';
+config.kafka.topic = config.minio.tracesTopic;
 config.kafka.brokers = process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS.split(',') : [`${config.kafka.host}:${config.kafka.port}`];
 
 // MinIO configuration
