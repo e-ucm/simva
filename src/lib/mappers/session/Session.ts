@@ -76,12 +76,12 @@ export class Session {
     /**
      * Start date for session availability
      */
-    session_start_date: Date;
+    session_start_date?: Date;
     
     /**
      * End date for session availability
      */
-    session_end_date: Date;
+    session_end_date?: Date;
     
     /**
      * Array of activity IDs that belong to this session
@@ -126,13 +126,13 @@ export class Session {
         }
         this.session_name = data.session_name || "";
         this.session_description = data.session_description || "";
-        this.createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
-        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : new Date();
-        this.session_experimental_method = data.session_experimental_method || "";
-        this.session_can_be_manually_activated = data.session_can_be_manually_activated || false;
-        this.session_active = data.session_active || false;
-        this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : new Date();
-        this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : new Date();
+        this.createdAt = new Date(data.createdAt);
+        this.updatedAt = new Date(data.updatedAt);
+        this.session_experimental_method = data.session_experimental_method;
+        this.session_can_be_manually_activated = data.session_can_be_manually_activated;
+        this.session_active = data.session_active;
+        this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
+        this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
     }
 
     /**
