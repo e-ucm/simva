@@ -34,11 +34,11 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
                 if(postuser) {
                     const postuserId = (await User.getFromDbData(undefined, postuser)).user_id;
                     if(isNaN(postuserId)) {
-                        throw new ValidationError("Invalid user ID in query parameter");
+                        throw new ValidationError("Invalid username in query parameter");
                     }
                     ids = await activitiesService.sendStatementsLRSForActivity(postuserId, activityId, body, currentUserId!);
                 } else {
-                    throw new ValidationError("Missing user ID in query parameter for lrsmanager role");
+                    throw new ValidationError("Missing username in query parameter for lrsmanager role");
                 }
                 break;
             case "teacher":
@@ -46,7 +46,7 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
                 ids = await activitiesService.sendStatementsLRSForActivity(currentUserId, activityId, body, currentUserId);
                 break;
             default:
-                throw new AuthentificationError("User role not recognized");
+                throw new ValidationError("User role not recognized");
         }
         return res.status(201).json({ ids });
     } catch (err) {
