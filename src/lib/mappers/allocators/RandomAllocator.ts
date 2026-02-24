@@ -1,5 +1,6 @@
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { RandomPercentages } from "@/lib/mappers/allocators/RandomPercentages";
+import { ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * Random Allocator mapper class extending base Allocator.
@@ -85,6 +86,10 @@ export class RandomAllocator extends Allocator {
         super.init();
         this.percentages = await RandomPercentages.getAllFromDbData(this.allocator_id);
         // Additional initialization logic for RandomAllocator can be added here if needed in the future
+    }
+
+    async allocate(sessionId: number, object_id: number) {
+        throw new ValidationError("Not implemented");
     }
 
     toJSON(): object {

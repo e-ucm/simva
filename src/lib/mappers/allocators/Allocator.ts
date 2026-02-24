@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
-import { NotFoundError } from "@/lib/errors/appErrors";
+import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
+import { GroupAllocator } from "./GroupAllocator";
 
 /**
  * Base Allocator mapper class for managing participant allocation to sessions.
@@ -127,6 +128,40 @@ export class Allocator {
             return Allocator.getFromDbData(this.allocator_id);
         } else {
             throw new NotFoundError("allocator not found");
+        }
+    }
+
+    async allocate(sessionId: number, object_id: number) {
+        if(this.allocator_type !== Allocator.getType()) {
+            throw new ValidationError("Not valid");
+        }
+        let foundParticipant = await db.Functions.runViewQuery(db.Views.AllocatedParticipants.byAllocatorId, { allocator_id:this.allocator_id, user_id: object_id });
+        if(!foundParticipant) {
+            throw new NotFoundError("participant not found");
+        }
+        let groupId = foundParticipant[0].group_id as number;
+        let participantToUpdate = await db.Tables.ExperimentalParticipants.findOne({ where: { group_id : groupId, participant_id : object_id, allocator_id : this.allocator_id } })
+        if(!participantToUpdate) {
+            await db.Tables.ExperimentalParticipants.create({ group_id : groupId, participant_id : object_id, allocator_id : this.allocator_id, session_id: sessionId });
+        } else {
+            if(participantToUpdate.session_id == sessionId) {
+                return;
+            }
+            await participantToUpdate.update({session_id : sessionId});
+        }
+    }
+
+    async allocateToDefault(defaultSession: number) {
+        let founds = await db.Functions.runViewQuery(db.Views.AllocatedParticipants.byAllocatorId, { allocator_id:this.allocator_id });
+        let allocateParticipantsToUpdate = await db.Tables.ExperimentalParticipants.findAll({ where: { allocator_id : this.allocator_id } })
+        if(!allocateParticipantsToUpdate) {
+            founds.forEach(async (user) => {
+                await db.Tables.ExperimentalParticipants.create({ group_id: user.group_id, participant_id : user.user_id, allocator_id : this.allocator_id, session_id: defaultSession });
+            })
+        } else {
+            allocateParticipantsToUpdate.forEach(async (user) => {
+                await db.Tables.ExperimentalParticipants.update({session_id: defaultSession }, { where : { group_id: user.group_id, participant_id : user.participant_id, allocator_id : this.allocator_id}});
+            })
         }
     }
 

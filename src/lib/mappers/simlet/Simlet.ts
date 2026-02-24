@@ -7,6 +7,9 @@ import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
+import { GroupAllocator } from "../allocators/GroupAllocator";
+import { SessionAllocator } from "../allocators/SessionAllocator";
+import { RandomAllocator } from "../allocators/RandomAllocator";
 
 /**
  * Simlet (Simple Study) mapper class representing a research study.
@@ -229,6 +232,9 @@ export class Simlet {
         // Implementation for adding a group to this simlet
         let group = await SimletGroup.createSimletGroup(this.simlet_id, group_id);
         this.groups.push(group.group_id);
+        if(this.sessions.length > 0) {
+            await this.allocateGroupToDefaut(group_id);
+        }
         return this;
     }
 
@@ -257,6 +263,7 @@ export class Simlet {
         this.canEdit();
         // Implementation for remove a group to this simlet
         let group = await SimletGroup.getFromDbData(this.simlet_id, group_id);
+        await db.Tables.ExperimentalParticipants.destroy({ where: { group_id : group_id, allocator_id : this.allocator_id }});
         await group.delete();
         this.groups = this.groups.filter(id => id !== group_id);
         return this;
@@ -268,6 +275,11 @@ export class Simlet {
         session_data.session_supervisor_id = this.current_user_id;
         let session = await Session.createFromDbData(session_data);
         this.sessions.push(session.session_id);
+        if(this.sessions.length == 1) {
+             this.groups.forEach(async (group_id) => {
+                await this.allocateGroupToDefaut(group_id);
+             })
+        }
         return this;
     }
 
@@ -275,11 +287,45 @@ export class Simlet {
       return await Allocator.getFromDbData(this.allocator_id);
     }
 
+    async allocateGroupToDefaut(group_id: number) {
+        let allocator = await this.getAllocator();
+            switch(allocator.allocator_type) {
+                case Allocator.getType():
+                    let groupParticipants =await db.Tables.GroupParticipants.findAll({where : { group_id}})
+                    groupParticipants.forEach(async (participant) => {
+                       await allocator.allocate(this.sessions[0], participant.participant_id); 
+                    });
+                    break;
+                case GroupAllocator.getType():
+                    await allocator.allocate(this.sessions[0], group_id);
+                    break;
+                default:
+                    throw new ValidationError("Method not implemented for this unknwown type.");
+            }
+    }
+
+    async allocateToSession(sessionId: number, id: number) : Promise<void> {
+        this.canEdit();
+        let allocator = await this.getAllocator();
+        await allocator.allocate(sessionId, id);
+    }
 
     async updateAllocator(data: Partial<Allocator>) : Promise<Allocator> {
       this.canEdit();
       let allocator = await Allocator.getFromDbData(this.allocator_id);
       allocator.update(data);
+      switch(allocator.allocator_type) {
+            case Allocator.getType():
+                break;
+            case SessionAllocator.getType():
+                break;
+            case GroupAllocator.getType():
+                break;
+            case RandomAllocator.getType():
+                break;
+            default:
+                throw new ValidationError("Method not implemented for this unknwown type.");
+        }
       return allocator;
     }
 

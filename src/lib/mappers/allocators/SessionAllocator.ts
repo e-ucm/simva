@@ -1,3 +1,4 @@
+import { ValidationError } from "@/lib/errors/appErrors";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
 
 /**
@@ -68,6 +69,11 @@ export class SessionAllocator extends Allocator {
     async init() : Promise<void> {
         super.init();
         // Additional initialization logic for SessionAllocator can be added here if needed in the future
+    }
+
+
+    async allocate(sessionId: number, object_id: number) {
+        throw new ValidationError("Not implemented");
     }
 
 }

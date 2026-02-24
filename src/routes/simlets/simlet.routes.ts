@@ -40,7 +40,10 @@ import {
   patchSessionPermissionsForUser,
   deleteSessionPermissionsForUser,
   getSimletSessionParticipants,
-  activateSimletSession
+  activateSimletSession,
+  allocateToSessionSimlet,
+  addSimletGroup,
+  deleteSimletGroup
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -104,7 +107,7 @@ const router = Router();
 router.get("/", getAllSimlets);
 router.post("/", createSimlet);
 //router.post('/import', importSimlet);
-//router.get('/export', exportSimlet);
+//router.get('/:simlet_id/export', exportSimlet);
 
 // Individual resource endpoints
 router.get("/:simlet_id", getSimletById);
@@ -126,6 +129,7 @@ router.patch("/:simlet_id/sessions/:session_id", patchSimletSession);
 router.delete("/:simlet_id/sessions/:session_id", deleteSimletSession);
 router.get("/:simlet_id/sessions/:session_id/participants", getSimletSessionParticipants);
 router.post("/:simlet_id/sessions/:session_id/activate", activateSimletSession);
+router.post("/:simlet_id/sessions/:session_id/allocate/:id", allocateToSessionSimlet);
 
 //session permissions endpoints
 router.get("/:simlet_id/sessions/:session_id/permissions", getSessionPermissions);
@@ -142,6 +146,8 @@ router.post("/:simlet_id/sessions/:session_id/activities", createSessionActivity
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/groups", getSimletGroups);
+router.post("/:simlet_id/groups/:group_id", addSimletGroup);
+router.delete("/:simlet_id/groups/:group_id", deleteSimletGroup);
 router.get("/:simlet_id/participants", getSimletParticipants);
 router.get("/:simlet_id/allocator", getAllocatorFromSimlet);
 router.patch("/:simlet_id/allocator", updateSimletAllocator);

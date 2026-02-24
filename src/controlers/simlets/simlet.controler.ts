@@ -313,6 +313,42 @@ export async function getSimletGroups(
   }
 }
 
+export async function addSimletGroup(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const groupId = parseInt(req.params.group_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId} , "Getting groups for simlet ID");
+    const simlet = await simletService.addSimletGroups(simletId, groupId, currentUser!.user_id as number);
+    logger.debug({simlet} , "Groups retrieved for simlet ID");
+    res.json(simlet.toJSON());
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteSimletGroup(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const groupId = parseInt(req.params.group_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId} , "Getting groups for simlet ID");
+    const simlet = await simletService.deleteSimletGroup(simletId, groupId, currentUser!.user_id as number);
+    logger.debug({simlet} , "Groups retrieved for simlet ID");
+    res.json(simlet.toJSON());
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getSimletSessions(
   req: AuthenticatedRequest,
   res: Response,
@@ -404,6 +440,25 @@ export async function getSessionActivities(
   }
 }
 
+export async function allocateToSessionSimlet(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    const objectId = parseInt(req.params.id as string);
+    let body = req.body;
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id, body});
+    await simletService.allocateToSessionSimlet(simletId, sessionId, currentUser!.user_id as number, objectId);
+    logger.debug("Session allocated for simlet ID and user ID");
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
 
 export async function activateSimletSession(
   req: AuthenticatedRequest,
@@ -415,7 +470,7 @@ export async function activateSimletSession(
     const sessionId = parseInt(req.params.session_id as string);
     let activate = Boolean(req.body.activate);
     let currentUser = req.user?.sql;
-    logger.debug({simletId, userId: currentUser?.user_id, activate} , "Creating session for simlet ID and user ID");
+    logger.debug({simletId, userId: currentUser?.user_id, activate} , "Activare/desactivate session for simlet ID and user ID");
     const session = await simletService.activateSession(simletId, sessionId, currentUser!.user_id as number, activate);
     logger.debug({session} , "Session created for simlet ID and user ID");
     res.json(session.toJSON());

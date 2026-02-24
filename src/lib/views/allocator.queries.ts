@@ -33,5 +33,35 @@ const queries: Record<string, QueryTemplate> = {
             },
         },
     },
+    byAllocatorId: {
+        description: "Get all allocated participants for a certain Allocator ID",
+        sql: `
+        SELECT *
+        FROM vv_complete_groups_from_allocator_and_simlets  
+        WHERE allocator_id = :allocator_id 
+        AND (:group_id IS NULL or group_id = :group_id)
+        AND (:user_id IS NULL or user_id = :user_id)
+        `,
+        params: {
+            allocator_id: {
+                type: "number",
+                required: true,
+                description: "Allocator Identifier",
+                example: 1
+            },
+            group_id: {
+                type: "number",
+                required: false,
+                description: "Group Identifier",
+                example: 1
+            },
+            user_id: {
+                type: "number",
+                required: false,
+                description: "User Identifier",
+                example: 5
+            },
+        },
+    }
 };
 export default queries;
