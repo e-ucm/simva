@@ -315,13 +315,17 @@ export class Simlet {
       let allocator = await Allocator.getFromDbData(this.allocator_id);
       allocator.update(data);
       switch(allocator.allocator_type) {
-            case Allocator.getType():
-                break;
             case SessionAllocator.getType():
-                break;
-            case GroupAllocator.getType():
+                this.sessions.forEach(async (session) => {
+                        await allocator.allocate(session, this.groups);
+                });
                 break;
             case RandomAllocator.getType():
+                await (allocator as RandomAllocator).allocateRandomly(this.sessions, this.groups);
+                break;
+            case GroupAllocator.getType():
+            case Allocator.getType():
+                allocator.allocateToDefault(this.sessions[0]);
                 break;
             default:
                 throw new ValidationError("Method not implemented for this unknwown type.");

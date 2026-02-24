@@ -71,18 +71,21 @@ export class GroupAllocator extends Allocator {
         // Additional initialization logic for GroupAllocator can be added here if needed in the future
     }
 
-    async allocate(sessionId: number, object_id: number) {
+    async allocate(sessionId: number, group_id: number | number[]) {
+        if(typeof group_id !== typeof Number) {
+            throw new ValidationError("Not valid");
+        }
         if(this.allocator_type !== GroupAllocator.getType()) {
             throw new ValidationError("Not valid");
         }
-        let foundGroup = await db.Functions.runViewQuery(db.Views.AllocatedParticipants.byAllocatorId, { allocator_id:this.allocator_id, group_id : object_id });
+        let foundGroup = await db.Functions.runViewQuery(db.Views.AllocatedParticipants.byAllocatorId, { allocator_id:this.allocator_id, group_id : group_id });
         if(!foundGroup) {
             throw new NotFoundError("Group not found");
         }
-        let groupParticipantsToUpdate = await db.Tables.ExperimentalParticipants.findAll({ where: { group_id: object_id, allocator_id : this.allocator_id } })
+        let groupParticipantsToUpdate = await db.Tables.ExperimentalParticipants.findAll({ where: { group_id: group_id, allocator_id : this.allocator_id } })
         if(!groupParticipantsToUpdate) {
             foundGroup.forEach(async (user) => {
-                await db.Tables.ExperimentalParticipants.create({ group_id: object_id, participant_id : user.user_id, allocator_id : this.allocator_id, session_id: sessionId });
+                await db.Tables.ExperimentalParticipants.create({ group_id: group_id, participant_id : user.user_id, allocator_id : this.allocator_id, session_id: sessionId });
             })
         } else {
             if(groupParticipantsToUpdate[0].session_id == sessionId) {

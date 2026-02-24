@@ -1,4 +1,5 @@
-import { ValidationError } from "@/lib/errors/appErrors";
+import { db } from "@/lib/db";
+import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
 
 /**
@@ -72,8 +73,26 @@ export class SessionAllocator extends Allocator {
     }
 
 
-    async allocate(sessionId: number, object_id: number) {
-        throw new ValidationError("Not implemented");
+    async allocate(sessionId: number, groups_id: number | number[]) {
+        const foundGroups = await db.Functions.runViewQuery(db.Views.AllocatedParticipants.byAllocatorId, { allocator_id:this.allocator_id, groups_id : groups_id });
+        if(!foundGroups || foundGroups.length === 0) {
+            throw new NotFoundError("Groups not found");
+        }
+        const groupParticipants = await db.Tables.ExperimentalParticipants.findAll({ where: { session_id : sessionId, allocator_id : this.allocator_id } });
+        const existingParticipantIds = new Set(groupParticipants.map((participant) => participant.participant_id));
+        const groupParticipantsToCreate = foundGroups.filter((user: { user_id: number }) => !existingParticipantIds.has(user.user_id));
+
+        await Promise.all(
+            groupParticipantsToCreate.map((user: { group_id: number; user_id: number }) =>
+                db.Tables.ExperimentalParticipants.create({
+                    group_id: user.group_id,
+                    participant_id: user.user_id,
+                    allocator_id: this.allocator_id,
+                    session_id: sessionId,
+                })
+            )
+        );
+
     }
 
 }

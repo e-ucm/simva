@@ -131,7 +131,10 @@ export class Allocator {
         }
     }
 
-    async allocate(sessionId: number, object_id: number) {
+    async allocate(sessionId: number, object_id: number | number[]) {
+        if(typeof object_id !== typeof Number) {
+            throw new ValidationError("Not valid");
+        }
         if(this.allocator_type !== Allocator.getType()) {
             throw new ValidationError("Not valid");
         }

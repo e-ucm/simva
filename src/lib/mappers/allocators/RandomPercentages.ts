@@ -3,12 +3,12 @@ import { db } from "@/lib/db";
 export class RandomPercentages {
     allocator_id: number;
     session_id: number;
-    percentage: RandomPercentages[];
+    percentage: number;
  
     constructor(data: any) {
         this.allocator_id = data.allocator_id;
         this.session_id = data.session_id;
-        this.percentage = data.percentage;
+        this.percentage = Number(data.allocator_percentage ?? data.percentage ?? 0);
     }
 
     static async getAllFromDbData(allocator_id: number) : Promise<RandomPercentages[]> {
@@ -19,7 +19,7 @@ export class RandomPercentages {
     toJSON(): object {
         return {
             session_id: this.session_id,
-            percentage: this.percentage.map(p => p.toJSON())
+            percentage: this.percentage
         }
     }
 }

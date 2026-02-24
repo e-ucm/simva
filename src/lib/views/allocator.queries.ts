@@ -40,6 +40,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM vv_complete_groups_from_allocator_and_simlets  
         WHERE allocator_id = :allocator_id 
         AND (:group_id IS NULL or group_id = :group_id)
+        AND (:groups_id IS NULL or group_id IN (:groups_id))
         AND (:user_id IS NULL or user_id = :user_id)
         `,
         params: {
@@ -54,6 +55,13 @@ const queries: Record<string, QueryTemplate> = {
                 required: false,
                 description: "Group Identifier",
                 example: 1
+            },
+            groups_id: {
+                type: "array",
+                of: "number",
+                required: false,
+                description: "Groups Identifier",
+                example: [1,2,3]
             },
             user_id: {
                 type: "number",
