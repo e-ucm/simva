@@ -21,6 +21,8 @@ import { Activity } from "@/lib/mappers/activities/Activity";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { config } from "@/lib/config";
+import { SessionScheduler } from "@/lib/mappers/session/SessionScheduler";
+import { ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * Service for Simlet entity operations.
@@ -403,26 +405,8 @@ export async function createSimletSession(simletId: number, current_user_id: num
   return await simlet.addSession(body);
 }
 
-export async function getSimletSchedule(simletId: number, current_user_id: number) : Promise<any> {
-  const session = await Session.getScheduledSessionForUser(simletId, current_user_id);
-  let schedule : any = {
-      activities: {},
-      next: null,
-      simlet: simletId,
-      session: session ? session.session_id : null,
-      url : `${config.externalUrl}/scheduler/${simletId}`
-  };
-  if(session.allocated_activities && session.allocated_activities.length > 0) {
-      for(const activity of session.allocated_activities) {
-          schedule.activities[activity.activity_id] = activity;
-          if(!schedule.next) {
-            if(!activity.activity_completed) {
-                schedule.next = activity.activity_id;
-            }
-          }
-      }
-  }
-  logger.info(schedule);
+export async function getSimletSchedule(simletId: number, current_user_id: number) : Promise<SessionScheduler> {
+  const schedule = await SessionScheduler.getFromDbData(simletId, current_user_id);
   return schedule;
 }
 
@@ -743,3 +727,20 @@ export async function getSimletSessionParticipants(simletId: number, sessionId: 
   let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
   return await session.getParticipants();
 }
+export async function activateSession(simletId: number, sessionId: number, current_user_id: number, activate: any): Promise<Session> {
+   const session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+   if(activate) {
+      if(session.session_active) {
+        throw new ValidationError('Session is already active');
+      } else {
+        return await session.activate();
+      }
+   } else {
+      if(session.session_active) {
+        return await session.desactivate();
+      } else {
+        throw new ValidationError('Session is already desactive');
+      }
+    }
+}
+

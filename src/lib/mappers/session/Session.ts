@@ -203,7 +203,7 @@ export class Session {
         session.allocated_activities = await Promise.all(activities.map(async (activity: any) => {
             return await ActivityToClass(activity.activity_id, current_user_id, true, activity);
         }));
-        if(!session.session_active) {
+        if(session.session_active) {
             throw new ValidationError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
         }
         return session;
@@ -431,7 +431,7 @@ export class Session {
      * @throws {AuthentificationError} When user lacks edit permissions
      * @throws {ValidationError} When session cannot be activated or is already active
      */
-    async activate(): Promise<void> {
+    async activate(): Promise<Session> {
         this.canEdit();
         if(!this.session_can_be_manually_activated) {
             throw new ValidationError(`Session with ID ${this.session_id} cannot be activated. Please check the session's experimental method and conditions.`);
@@ -439,12 +439,17 @@ export class Session {
         if(this.session_active) {
             throw new ValidationError(`Session with ID ${this.session_id} is already active.`);
         }
+        let activities = await this.getActivities();
+        activities.forEach(async (activity: Activity) => {
+            await activity.activate(true);
+        });
         this.session_active = true;
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
             throw new ValidationError(`Session with ID ${this.session_id} not found for activation`);
         }
         await session.update({ session_active: true });
+        return this;
     }
 
     /**
@@ -457,7 +462,7 @@ export class Session {
      * @throws {AuthentificationError} When user lacks edit permissions
      * @throws {ValidationError} When session cannot be deactivated or is already inactive
      */
-    async deactivate(): Promise<void> {
+    async desactivate(): Promise<Session> {
         this.canEdit();
         if(!this.session_can_be_manually_activated) {
             throw new ValidationError(`Session with ID ${this.session_id} cannot be deactivated. Please check the session's experimental method and conditions.`);
@@ -465,12 +470,17 @@ export class Session {
         if(!this.session_active) {
             throw new ValidationError(`Session with ID ${this.session_id} is already inactive.`);
         }
+        let activities = await this.getActivities();
+        activities.forEach(async (activity: Activity) => {
+            await activity.activate(false);
+        });
         this.session_active = false;
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
             throw new ValidationError(`Session with ID ${this.session_id} not found for deactivation`);
         }
         await session.update({ session_active: false });
+        return this;
     }
 
     /**

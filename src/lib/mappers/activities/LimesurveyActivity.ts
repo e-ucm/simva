@@ -115,6 +115,10 @@ export class LimesurveyActivity extends Activity {
 		return {};
 	}
 
+	async activate(activate: boolean): Promise<void> {
+		await super.activate(activate);
+    }
+
 	canBeOpened(): boolean {
 		return true;
 	}

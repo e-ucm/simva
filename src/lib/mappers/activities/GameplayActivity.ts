@@ -110,6 +110,10 @@ export class GamePlayActivity extends Activity {
 		return super.getUtils(username);
 	}
 
+	async activate(activate: boolean): Promise<void> {
+		await super.activate(activate);
+    }
+
 	/**
 	 * Retrieves detailed information about this gameplay activity.
 	 * Currently returns placeholder data structure for game sessions and scores.

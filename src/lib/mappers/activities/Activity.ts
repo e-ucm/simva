@@ -325,6 +325,14 @@ export class Activity {
 		await activity.destroy();
 	}
 
+	async activate(activate: boolean): Promise<void> {
+		if(activate) {
+			logger.info("Activity activated");
+		} else {
+			logger.info("Activity desactivated");
+		}
+    }
+
 	/**
 	 * Determines if this activity can be opened/launched.
 	 * Base implementation returns false. Should be overridden by openable activity types.

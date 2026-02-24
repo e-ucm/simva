@@ -39,7 +39,8 @@ import {
   getSessionPermissionsForUser,
   patchSessionPermissionsForUser,
   deleteSessionPermissionsForUser,
-  getSimletSessionParticipants
+  getSimletSessionParticipants,
+  activateSimletSession
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -124,6 +125,7 @@ router.get("/:simlet_id/sessions/:session_id", getSimletSession);
 router.patch("/:simlet_id/sessions/:session_id", patchSimletSession);
 router.delete("/:simlet_id/sessions/:session_id", deleteSimletSession);
 router.get("/:simlet_id/sessions/:session_id/participants", getSimletSessionParticipants);
+router.post("/:simlet_id/sessions/:session_id/activate", activateSimletSession);
 
 //session permissions endpoints
 router.get("/:simlet_id/sessions/:session_id/permissions", getSessionPermissions);

@@ -1027,6 +1027,24 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
+  /simlets/{simletid}/sessions/{sessionid}/activate:
+    post:
+      tags:
+        - teachers
+      summary: gets the list of activities for the selected test
+      operationId: activateSimletSession
+      description: |
+        Activate or desactivate the current session
+      responses:
+        '200':
+          description: the current session
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/test'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
   /simlets/{simletid}/sessions/{sessionid}/activities:
     get:
       tags:

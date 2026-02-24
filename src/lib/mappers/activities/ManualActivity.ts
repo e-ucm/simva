@@ -93,6 +93,10 @@ export class ManualActivity extends Activity {
 		};
 	}
 
+	async activate(activate: boolean): Promise<void> {
+		await super.activate(activate);
+    }
+
 	canBeOpened(): boolean {
 		return this.manual_ressource_url !== undefined && this.manual_ressource_url !== '';
 	}

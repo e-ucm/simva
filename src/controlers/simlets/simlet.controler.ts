@@ -404,6 +404,27 @@ export async function getSessionActivities(
   }
 }
 
+
+export async function activateSimletSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let activate = Boolean(req.body.activate);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, userId: currentUser?.user_id, activate} , "Creating session for simlet ID and user ID");
+    const session = await simletService.activateSession(simletId, sessionId, currentUser!.user_id as number, activate);
+    logger.debug({session} , "Session created for simlet ID and user ID");
+    res.json(session.toJSON());
+  } catch (err) {
+    next(err);
+  }
+}
+
+
 export async function createSimletSession(
   req: AuthenticatedRequest,
   res: Response,
@@ -489,7 +510,7 @@ export async function getSimletSchedule(
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting schedule for simlet ID and user ID");
     const schedule = await simletService.getSimletSchedule(simletId, currentUser!.user_id as number);
     logger.debug({schedule} , "Schedule retrieved for simlet ID and user ID");
-    res.json(schedule);
+    res.json(schedule.toJSON());
   } catch (err) {
     next(err);
   }
