@@ -84,11 +84,10 @@ export class Allocator {
      * 
      * @static
      * @async
-     * @param {string} username - The username to get utilities for
      * @returns {Promise<object>} Object containing utility functions
      * @description Returns allocator-specific utility functions. Base implementation returns empty object.
      */
-    static async getUtils(username : string){
+    static async getUtils(){
         return {};
     }
 

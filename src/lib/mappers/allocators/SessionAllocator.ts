@@ -50,12 +50,11 @@ export class SessionAllocator extends Allocator {
      * 
      * @static
      * @async
-     * @param {string} username - The username to get utilities for
      * @returns {Promise<object>} Object containing session allocation utility functions
      * @description Returns functions for session allocation with date conflict prevention.
      */
-    static async getUtils(username : string){
-        return {};
+    static async getUtils(){
+        return super.getUtils();
     }
 
     async getDetails(){

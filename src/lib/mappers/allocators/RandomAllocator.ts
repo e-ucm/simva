@@ -54,12 +54,11 @@ export class RandomAllocator extends Allocator {
      * 
      * @static
      * @async
-     * @param {string} username - The username to get utilities for
      * @returns {Promise<object>} Object containing random allocation utility functions
      * @description Returns functions for performing random allocation operations.
      */
-    static async getUtils(username : string){
-        return {};
+    static async getUtils(){
+        return super.getUtils();
     }
 
     /**

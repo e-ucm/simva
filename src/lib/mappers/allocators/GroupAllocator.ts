@@ -50,12 +50,11 @@ export class GroupAllocator extends Allocator {
      * 
      * @static
      * @async
-     * @param {string} username - The username to get utilities for
      * @returns {Promise<object>} Object containing group allocation utility functions
      * @description Returns functions for performing group-based allocation operations.
      */
-    static async getUtils(username : string){
-        return {};
+    static async getUtils(){
+        return super.getUtils();
     }
 
     async getDetails(){

@@ -106,8 +106,8 @@ export class GamePlayActivity extends Activity {
 		return 'An activity to track gameplay sessions and scores.';
 	}
 
-	static async getUtils(username : string) : Promise<any> {
-		return super.getUtils(username);
+	static async getUtils(): Promise<object> {
+		return super.getUtils();
 	}
 
 	async activate(activate: boolean): Promise<void> {

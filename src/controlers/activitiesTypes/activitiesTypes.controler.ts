@@ -45,23 +45,33 @@ export async function getActivityTypes(
 ) {
   try {
     let currentUser = req.user?.sql;
+    // Parse query types into an array (supports: ?type=a,b,c or ?type=a&type=b)
+    let types: string[] | undefined;
+    if (req.query.type) {
+      if (Array.isArray(req.query.type)) {
+        types = req.query.type.map(t => String(t));
+      } else {
+        types = String(req.query.type).split(',').map(t => t.trim()).filter(t => t.length > 0);
+      }
+    }
+
     switch(currentUser?.role) {
       case 'admin':
-        if(req.query.type) {
-          const activityType = await activitiesTypesservice.getActivityTypes(String(req.query.type));
+        if(types && types.length > 0) {
+          const activityType = await activitiesTypesservice.getActivityTypes(types);
           if (!activityType) {
             throw new NotFoundError("Activity type not found");
           }
-          return res.json(activityType);
+          return res.json(activityType.map(t => t.toJSON()));
         } else {
-          const activityTypes = await activitiesTypesservice.getActivityTypes(currentUser?.username || "");
-          return res.json(activityTypes);
+          const activityTypes = await activitiesTypesservice.getActivityTypes();
+          return res.json(activityTypes.map(t => t.toJSON()));
         }
       case 'teacher':
       case 'student':
         if(currentUser.user_id) {
-          const activityTypes = await activitiesTypesservice.getActivityTypes(currentUser?.username || "");
-          return res.json(activityTypes);
+          const activityTypes = await activitiesTypesservice.getActivityTypes();
+          return res.json(activityTypes.map(t => t.toJSON()));
         }
         break;
       default:

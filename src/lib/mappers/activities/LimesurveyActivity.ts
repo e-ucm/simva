@@ -88,8 +88,8 @@ export class LimesurveyActivity extends Activity {
 		return 'An activity integrated with LimeSurvey for surveys and questionnaires.';
 	}
 
-	static async getUtils(username : string) : Promise<any> {
-		let utils = await super.getUtils(username) as any;
+	static async getUtils(): Promise<object> {
+		let utils = await super.getUtils() as any;
 		let isOnline = await limeSurveyClient.isOnline();
 		utils = { ...utils, url: config.limesurvey.url, isOnline };
 		if(config.limesurvey.useNewVersion) {

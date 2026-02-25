@@ -45,27 +45,36 @@ export async function getAllocatorTypes(
   next: NextFunction
 ) {
   try {
+     // Parse query types into an array (supports: ?type=a,b,c or ?type=a&type=b)
+    let types: string[] | undefined;
+    if (req.query.type) {
+      if (Array.isArray(req.query.type)) {
+        types = req.query.type.map(t => String(t));
+      } else {
+        types = String(req.query.type).split(',').map(t => t.trim()).filter(t => t.length > 0);
+      }
+    }
     let currentUser = req.user?.sql;
     switch(currentUser?.role) {
       case 'admin':
-        if(req.query.type) {
-          const allocatorType = await allocatorTypesservice.getAllocatorTypes();
+        if(types && types.length > 0) {
+          const allocatorType = await allocatorTypesservice.getAllocatorTypes(types);
           if (!allocatorType) {
             throw new NotFoundError("Allocator type not found");
           }
           logger.debug({allocatorType});
-          res.json(allocatorType);
+          res.json(allocatorType.map(t => t.toJSON()));
         } else {
           const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
           logger.debug({allocatorTypes});
-          res.json(allocatorTypes);
+          res.json(allocatorTypes.map(t => t.toJSON()));
         }
       case 'teacher':
       case 'student':
         if(currentUser.user_id) {
           const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
           logger.debug({allocatorTypes});
-          res.json(allocatorTypes);
+          res.json(allocatorTypes.map(t => t.toJSON()));
         }
         break;
       default:

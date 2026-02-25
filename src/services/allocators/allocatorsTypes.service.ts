@@ -9,35 +9,12 @@
  * - RandomAllocator: Randomly assigns participants to conditions
  * 
  * @module services/allocators/allocatorsTypes
- * @requires @/lib/mappers/allocators/Allocator
- * @requires @/lib/mappers/allocators/SessionAllocator
- * @requires @/lib/mappers/allocators/RandomAllocator
- * @requires @/lib/mappers/allocators/GroupAllocator
- * @requires @/lib/logger
+ * @requires @/lib/mappers/allocators/AllocatorType
  */
 
-import { Allocator } from "@/lib/mappers/allocators/Allocator";
-import { SessionAllocator } from "@/lib/mappers/allocators/SessionAllocator";
-import { RandomAllocator } from "@/lib/mappers/allocators/RandomAllocator";
-import { GroupAllocator } from "@/lib/mappers/allocators/GroupAllocator";
-import { logger } from "@/lib/logger";
+import { AllocatorType } from "@/lib/mappers/allocators/AllocatorType";
 
-/**
- * Represents metadata about an allocator type.
- * Contains type identification, display information, and utility functions.
- * 
- * @class AllocatorType
- * @property {string | undefined} type - Unique identifier for the allocator type
- * @property {string | undefined} name - Human-readable name for display
- * @property {string | undefined} description - Description of the allocation strategy
- * @property {any} utils - Type-specific utility functions and configuration
- */
-class AllocatorType {
-	type: string | undefined;
-	name: string | undefined;
-	description: string | undefined;
-	utils: any;
-}
+export { AllocatorType };
 
 /**
  * Retrieves all available allocator types with their metadata and utilities.
@@ -52,11 +29,11 @@ class AllocatorType {
  * 
  * @example
  * ```typescript
- * const allocatorTypes = await getAllocatorTypes();
+ * const allocatorTypes = await getAllocatorTypes(['base', 'group', 'session', 'random']);
  * allocatorTypes.forEach(type => {
- *   logger.info(`${type.name}: ${type.description}`);
+ *   logger.info(`${type.allocator_name}: ${type.allocator_description}`);
  *   // Access type-specific utilities
- *   logger.info(type.utils);
+ *   logger.info(type.allocator_utils);
  * });
  * ```
  * 
@@ -65,28 +42,28 @@ class AllocatorType {
  * // Example response structure:
  * [
  *   {
- *     type: "base",
- *     name: "Base Allocator",
- *     description: "Base allocator implementation",
- *     utils: { ... }
+ *     allocator_type: "base",
+ *     allocator_name: "Base Allocator",
+ *     allocator_description: "Base allocator implementation",
+ *     allocator_utils: { ... }
  *   },
  *   {
- *     type: "group", 
- *     name: "Group Allocator",
- *     description: "Assigns participants based on group membership",
- *     utils: { ... }
+ *     allocator_type: "group", 
+ *     allocator_name: "Group Allocator",
+ *     allocator_description: "Assigns participants based on group membership",
+ *     allocator_utils: { ... }
  *   },
  *   {
- *     type: "session",
- *     name: "Session Allocator", 
- *     description: "Assigns participants to specific sessions",
- *     utils: { ... }
+ *     allocator_type: "session",
+ *     allocator_name: "Session Allocator", 
+ *     allocator_description: "Assigns participants to specific sessions",
+ *     allocator_utils: { ... }
  *   },
  *   {
- *     type: "random",
- *     name: "Random Allocator",
- *     description: "Randomly assigns participants to conditions",
- *     utils: { ... }
+ *     allocator_type: "random",
+ *     allocator_name: "Random Allocator",
+ *     allocator_description: "Randomly assigns participants to conditions",
+ *     allocator_utils: { ... }
  *   }
  * ]
  * ```
@@ -105,23 +82,10 @@ class AllocatorType {
  * ```typescript
  * const types = await getAllocatorTypes();
  * types.forEach(type => {
- *   logger.info(`${type.name}: ${type.description}`);
+ *   logger.info(`${type.allocator_name}: ${type.allocator_description}`);
  * });
  * ```
  */
-export async function getAllocatorTypes(): Promise<AllocatorType[]> {
-	let types = [ Allocator, GroupAllocator, SessionAllocator, RandomAllocator ];
-	let allocatortypes : AllocatorType[] = [];
-	for (let i = 0; i < types.length; i++) {
-		let allocatortype : AllocatorType = {
-			type : types[i].getType(),
-			name : types[i].getName(),
-			description : types[i].getDescription(),
-			utils : await types[i].getUtils("")	
-		};
-		logger.debug(`Loaded allocator type: ${allocatortype.type}`);
-		allocatortypes.push(allocatortype);
-	}
-	logger.debug({allocatortypes});
-	return allocatortypes;
+export async function getAllocatorTypes(types?: string[]): Promise<AllocatorType[]> {
+	return AllocatorType.getAll(types);
 }

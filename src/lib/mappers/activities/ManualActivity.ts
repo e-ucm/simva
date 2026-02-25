@@ -82,8 +82,8 @@ export class ManualActivity extends Activity {
 		return 'An activity that requires manual completion and grading.';
 	}
 
-	static async getUtils(username : string){
-		return super.getUtils(username);
+	static async getUtils(){
+		return super.getUtils();
 	}
 
 	async getDetails(){

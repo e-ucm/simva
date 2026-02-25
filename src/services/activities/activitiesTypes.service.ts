@@ -8,35 +8,12 @@
  * - ManualActivity: Custom activities defined by instructors
  * 
  * @module services/activities/activitiesTypes
- * @requires @/lib/mappers/activities/Activity
- * @requires @/lib/mappers/activities/GameplayActivity
- * @requires @/lib/mappers/activities/LimesurveyActivity
- * @requires @/lib/mappers/activities/ManualActivity
+ * @requires @/lib/mappers/activities/ActivityType
  */
 
-import { GamePlayActivity } from "@/lib/mappers/activities/GameplayActivity";
-import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
-import { ManualActivity } from "@/lib/mappers/activities/ManualActivity";
-import { logger } from "@/lib/logger";
+import { ActivityType } from "@/lib/mappers/activities/ActivityType";
 
-/**
- * Represents metadata about an activity type.
- * Contains type identification, display information, and utility functions.
- * 
- * @class ActivityType
- * @property {string | undefined} type - Unique identifier for the activity type
- * @property {string | undefined} name - Human-readable name for display
- * @property {string | undefined} description - Description of the activity type
- * @property {any} utils - Type-specific utility functions and configuration
- */
-class ActivityType {
-	type: string | undefined;
-	name: string | undefined;
-	description: string | undefined;
-	utils: any;
-}
-
-let activitytypes : ActivityType[] = [];
+export { ActivityType };
 
 /**
  * Retrieves all available activity types with their metadata and utilities.
@@ -45,18 +22,18 @@ let activitytypes : ActivityType[] = [];
  * 
  * @async
  * @function getActivityTypes
- * @param {string} user - Username or identifier for user-specific configurations
+ * @param {string[]} types - Array of activity type identifiers to retrieve
  * @returns {Promise<ActivityType[]>} Array of activity type objects with metadata
  * 
  * @throws {Error} If activity type utilities cannot be loaded
  * 
  * @example
  * ```typescript
- * const types = await getActivityTypes('teacher123');
+ * const types = await getActivityTypes(['gameplay', 'limesurvey']);
  * types.forEach(type => {
- *   logger.info(`${type.name}: ${type.description}`);
+ *   logger.info(`${type.activity_name}: ${type.activity_description}`);
  *   // Access type-specific utilities
- *   logger.info(type.utils);
+ *   logger.info(type.activity_utils);
  * });
  * ```
  * 
@@ -65,38 +42,26 @@ let activitytypes : ActivityType[] = [];
  * // Example response structure:
  * [
  *   {
- *     type: "gameplay",
- *     name: "Gameplay Activity",
- *     description: "Interactive games and simulations",
- *     utils: { ... }
+ *     activity_type: "gameplay",
+ *     activity_name: "Gameplay Activity",
+ *     activity_description: "Interactive games and simulations",
+ *     activity_utils: { ... }
  *   },
  *   {
- *     type: "limesurvey", 
- *     name: "LimeSurvey Activity",
- *     description: "Survey and questionnaire activities",
- *     utils: { ... }
+ *     activity_type: "limesurvey", 
+ *     activity_name: "LimeSurvey Activity",
+ *     activity_description: "Survey and questionnaire activities",
+ *     activity_utils: { ... }
  *   },
  *   {
- *     type: "manual",
- *     name: "Manual Activity", 
- *     description: "Custom activities defined by instructors",
- *     utils: { ... }
+ *     activity_type: "manual",
+ *     activity_name: "Manual Activity", 
+ *     activity_description: "Custom activities defined by instructors",
+ *     activity_utils: { ... }
  *   }
  * ]
  * ```
  */
-export async function getActivityTypes(user : string) : Promise<ActivityType[]> {
-	let types = [ GamePlayActivity, LimesurveyActivity, ManualActivity ];
-	let activitytypes : ActivityType[] = [];
-
-	for (let i = 0; i < types.length; i++) {
-		let activitytype : ActivityType = {
-			type : types[i].getType(),
-			name : types[i].getName(),
-			description : types[i].getDescription(),
-			utils : await types[i].getUtils(user)	
-		};
-		activitytypes.push(activitytype);
-	}
-	return activitytypes;
+export async function getActivityTypes(types?: string[]) : Promise<ActivityType[]> {
+	return ActivityType.getAll(types);
 }
