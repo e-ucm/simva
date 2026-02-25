@@ -65,6 +65,7 @@ paths:
     get:
       tags:
         - admins
+        - teachers
       summary: gets the list of users.
       operationId: getUsers
       description: |
@@ -838,6 +839,71 @@ paths:
           description: 'Study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
+  /simlets/{simletid}/groups/{groupId}:
+    post:
+      tags:
+        - admins
+        - teachers
+      summary: Add a group to a study
+      description: Add a group to a study by study ID and group ID
+      parameters:
+        - name: simletid
+          in: path
+          required: true
+          description: Study ID
+          schema:
+            type: integer
+            example: 1
+        - name: groupId
+          in: path
+          required: true
+          description: Group ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '201':
+          description: Group added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - admins
+        - teachers
+      summary: Remove a group from a study
+      description: Remove a group from a study by study ID and group ID 
+      parameters:
+        - name: simletid
+          in: path
+          required: true
+          description: Study ID
+          schema:
+            type: integer
+            example: 1
+        - name: groupId
+          in: path
+          required: true
+          description: Group ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Group removed successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /simlets/{simletid}/sessions:
     get:
       tags:

@@ -41,11 +41,13 @@ export async function getUsers(
     }
     let username = req.query.username as string | undefined;
     //logger.debug({currentUser, searchString, limit, offset, username}, "Getting users with query parameters");
-  
     if(username) {
       const user = await userService.getUserByUsername(username);
       return res.json(user);
     } else {
+      if(currentUser?.role !== 'admin') {
+        throw new AuthentificationError("Only admins can access the list of users");
+      }
       const users = await userService.getAllUsers(limit, offset, searchString);
       return res.json(users);
     }

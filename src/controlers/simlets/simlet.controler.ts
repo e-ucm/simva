@@ -634,7 +634,7 @@ export async function createSimletPermissions (
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    let body = req.body
+    let body = req.body;
     let currentUser = req.user?.sql;
     logger.debug({simletId, userId: currentUser?.user_id, body} , "Creating permissions for simlet ID and user ID");
     const permissions = await simletService.createSimletPermissions(simletId, currentUser!.user_id as number, body);
