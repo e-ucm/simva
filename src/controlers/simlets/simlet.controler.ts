@@ -452,9 +452,9 @@ export async function allocateToSessionSimlet(
     let body = req.body;
     let currentUser = req.user?.sql;
     logger.debug({simletId, userId: currentUser?.user_id, body});
-    await simletService.allocateToSessionSimlet(simletId, sessionId, currentUser!.user_id as number, objectId);
+    const allocator = await simletService.allocateToSessionSimlet(simletId, sessionId, currentUser!.user_id as number, objectId);
     logger.debug("Session allocated for simlet ID and user ID");
-    res.status(204).send();
+    res.json(allocator.toJSON());
   } catch (err) {
     next(err);
   }
@@ -512,6 +512,45 @@ export async function createSessionActivity(
     const activity = await simletService.addSessionActivities(simletId, sessionId, currentUser!.user_id as number, body);
     logger.debug({activity} , "Activity added for session ID and user ID");
     res.json(activity.toJSON());
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateSessionActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    const activityId = parseInt(req.params.activity_id as string);
+    let body = req.body;
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, sessionId, activityId, userId: currentUser?.user_id, body} , "Updating activity for session");
+    const activity = await simletService.updateSessionActivity(simletId, sessionId, activityId, currentUser!.user_id as number, body);
+    logger.debug({activity} , "Activity updated");
+    res.json(activity.toJSON());
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteSessionActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    const activityId = parseInt(req.params.activity_id as string);
+    let currentUser = req.user?.sql;
+    logger.debug({simletId, sessionId, activityId, userId: currentUser?.user_id} , "Deleting activity from session");
+    await simletService.deleteSessionActivity(simletId, sessionId, activityId, currentUser!.user_id as number);
+    logger.debug({activityId} , "Activity deleted");
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

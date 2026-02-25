@@ -25,6 +25,8 @@ import {
   getSimletSession,
   getSessionActivities,
   createSessionActivity,
+  updateSessionActivity,
+  deleteSessionActivity,
   createSimletSession,
   patchSimletSession,
   deleteSimletSession,
@@ -141,8 +143,8 @@ router.delete("/:simlet_id/sessions/:session_id/permissions/:user_id", deleteSes
 // Activity list endpoints
 router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
 router.post("/:simlet_id/sessions/:session_id/activities", createSessionActivity);
-//router.patch("/:simlet_id/sessions/:session_id/activities/:activity_id", updateActivity);
-//router.delete("/:simlet_id/sessions/:session_id/activities/:activity_id", deleteActivity);
+router.patch("/:simlet_id/sessions/:session_id/activities/:activity_id", updateSessionActivity);
+router.delete("/:simlet_id/sessions/:session_id/activities/:activity_id", deleteSessionActivity);
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/groups", getSimletGroups);

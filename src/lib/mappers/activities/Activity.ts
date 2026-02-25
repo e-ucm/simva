@@ -299,7 +299,26 @@ export class Activity {
 		if (!activity) {
 			throw new NotFoundError(`Activity with ID ${this.activity_id} not found`);
 		}
-		await activity.update(data);
+		// Map frontend field names to database field names
+		const mappedData: any = {};
+		if (data.name !== undefined) {
+			mappedData.activity_name = data.name;
+		}
+		if (data.activity_name !== undefined) {
+			mappedData.activity_name = data.activity_name;
+		}
+		if (data.activity_trace_storage !== undefined) {
+			mappedData.activity_trace_storage = data.activity_trace_storage;
+		}
+		if (data.activity_description !== undefined) {
+			mappedData.activity_description = data.activity_description;
+		}
+		if (data.activity_can_be_restarted !== undefined) {
+			mappedData.activity_can_be_restarted = data.activity_can_be_restarted;
+		}
+		if (Object.keys(mappedData).length > 0) {
+			await activity.update(mappedData);
+		}
 	}
 
 	/**

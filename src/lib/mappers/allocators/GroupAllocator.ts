@@ -87,7 +87,7 @@ export class GroupAllocator extends Allocator {
             foundGroupUsers: foundGroup?.map((u: any) => ({ user_id: u.user_id, username: u.username, group_id: u.group_id })) ?? []
         }, 'GroupAllocator.allocate foundGroup query result');
         if(!foundGroup || foundGroup.length === 0) {
-            throw new NotFoundError("Group not found");
+            return;
         }
         let groupParticipantsToUpdate = await db.Tables.ExperimentalParticipants.findAll({ where: { group_id: group_id, allocator_id : this.allocator_id } })
         logger.debug({ 

@@ -744,9 +744,12 @@ export async function activateSession(simletId: number, sessionId: number, curre
     }
 }
 
-export async function allocateToSessionSimlet(simletId: number, sessionId: number, current_user_id: number, id: number) : Promise<void> {
+export async function allocateToSessionSimlet(simletId: number, sessionId: number, current_user_id: number, id: number) : Promise<Allocator> {
   const simlet = await Simlet.getFromDbData(simletId, current_user_id);
   await simlet.allocateToSession(sessionId, id);
+  // Return updated allocator with fresh allocation data
+  const allocator = await simlet.getAllocator();
+  return allocator;
 }
 
 export async function addSimletGroups(simletId: number, groupId: number, current_user_id: number): Promise<Simlet> {
@@ -759,4 +762,46 @@ export async function deleteSimletGroup(simletId: number, groupId: number, curre
   const simlet = await Simlet.getFromDbData(simletId, current_user_id);
   await simlet.removeGroup(groupId);
   return simlet;
+}
+
+/**
+ * Updates an activity within a session.
+ * Modifies activity properties such as name, configuration, etc.
+ * 
+ * @async
+ * @function updateSessionActivity
+ * @param {number} simletId - The ID of the parent simlet
+ * @param {number} sessionId - The ID of the session containing the activity
+ * @param {number} activityId - The ID of the activity to update
+ * @param {number} current_user_id - The ID of the user updating the activity
+ * @param {Object} body - Update data containing new activity properties
+ * @returns {Promise<Activity>} The updated activity instance
+ */
+export async function updateSessionActivity(simletId: number, sessionId: number, activityId: number, current_user_id: number, body: any): Promise<Activity> {
+  // First verify the session exists and user has access
+  await Session.getFromDbData(simletId, sessionId, current_user_id);
+  // Get the activity and update it
+  let activity = await Activity.getFromDbData(activityId, current_user_id, false);
+  await activity.patch(body);
+  // Return refreshed activity
+  return Activity.getFromDbData(activityId, current_user_id, false);
+}
+
+/**
+ * Deletes an activity from a session.
+ * 
+ * @async
+ * @function deleteSessionActivity
+ * @param {number} simletId - The ID of the parent simlet
+ * @param {number} sessionId - The ID of the session containing the activity
+ * @param {number} activityId - The ID of the activity to delete
+ * @param {number} current_user_id - The ID of the user deleting the activity
+ * @returns {Promise<void>}
+ */
+export async function deleteSessionActivity(simletId: number, sessionId: number, activityId: number, current_user_id: number): Promise<void> {
+  // First verify the session exists and user has access
+  await Session.getFromDbData(simletId, sessionId, current_user_id);
+  // Get the activity and delete it
+  let activity = await Activity.getFromDbData(activityId, current_user_id, false);
+  await activity.remove();
 }

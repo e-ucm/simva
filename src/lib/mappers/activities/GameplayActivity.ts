@@ -225,6 +225,53 @@ export class GamePlayActivity extends Activity {
 		return super.getSuspension(participants_id);
 	}
 
+	/**
+	 * Patches the gameplay activity with provided data.
+	 * Updates both base activity fields and gameplay-specific fields.
+	 * 
+	 * @async
+	 * @method patch
+	 * @param {any} data - Data object containing fields to update
+	 * @returns {Promise<void>}
+	 */
+	async patch(data: any): Promise<void> {
+		// First, update base activity fields
+		await super.patch(data);
+		
+		// Now update gameplay-specific fields
+		const gameplayData: any = {};
+		if (data.game_backup !== undefined) {
+			gameplayData.game_backup = data.game_backup;
+		}
+		if (data.game_scorm_xapi !== undefined) {
+			gameplayData.game_scorm_xapi = data.game_scorm_xapi;
+		}
+		if (data.game_url !== undefined) {
+			gameplayData.game_url = data.game_url;
+		}
+		if (data.game_uri !== undefined) {
+			gameplayData.game_url = data.game_uri;
+		}
+		if (data.category_id !== undefined) {
+			gameplayData.category_id = data.category_id;
+		}
+		if (data.subject_area_id !== undefined) {
+			gameplayData.subject_area_id = data.subject_area_id;
+		}
+		if (data.game_type !== undefined) {
+			gameplayData.game_type = data.game_type;
+		}
+		
+		if (Object.keys(gameplayData).length > 0) {
+			const gameplayActivity = await db.Tables.GamePlayActivities.findOne({ 
+				where: { activity_id: this.activity_id } 
+			});
+			if (gameplayActivity) {
+				await gameplayActivity.update(gameplayData);
+			}
+		}
+	}
+
 	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
 		if(!this.game_scorm_xapi){
 			return super.sendXAPITraceForActivity(username, verb, timestamp, resultScore, reasonExtension);

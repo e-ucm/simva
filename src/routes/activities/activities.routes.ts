@@ -12,7 +12,8 @@ import {
   setInitializedForActivity,
   setMultiCompletionForActivity,
   setProgressForActivity,
-  setSuspensionForActivity
+  setSuspensionForActivity,
+  updateActivity
 } from "@/controlers/activities/activities.controlers";
 import {
   getStatementsLRSForActivity,

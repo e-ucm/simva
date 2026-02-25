@@ -109,3 +109,9 @@ export async function getSuspensionForActivity(activityId: number, current_user_
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.getSuspension(participants_id);
 }
+
+export async function updateActivity(activityId: number, current_user_id: number, allocated: boolean, data: any): Promise<Activity> {
+    let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
+    await activity.patch(data);
+    return Activity.getFromDbData(activityId, current_user_id, allocated);
+}

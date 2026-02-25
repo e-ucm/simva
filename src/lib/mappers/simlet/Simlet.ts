@@ -289,19 +289,31 @@ export class Simlet {
 
     async allocateGroupToDefaut(group_id: number) {
         let allocator = await this.getAllocator();
-            switch(allocator.allocator_type) {
-                case Allocator.getType():
-                    let groupParticipants =await db.Tables.GroupParticipants.findAll({where : { group_id}})
-                    groupParticipants.forEach(async (participant) => {
-                       await allocator.allocate(this.sessions[0], participant.participant_id); 
-                    });
-                    break;
-                case GroupAllocator.getType():
-                    await allocator.allocate(this.sessions[0], group_id);
-                    break;
-                default:
-                    throw new ValidationError("Method not implemented for this unknwown type.");
+        let sessionId = this.sessions && this.sessions.length > 0 ? this.sessions[0] : null;
+        if (!sessionId) {
+            // If no sessions exist, try to fetch the first session from DB
+            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id });
+            if (sessionIds.length > 0) {
+                sessionId = sessionIds[0].session_id;
+                this.sessions = sessionIds.map((row: any) => row.session_id);
             }
+        }
+        if (!sessionId) {
+            throw new NotFoundError("No sessions found to allocate group to");
+        }
+        switch(allocator.allocator_type) {
+            case Allocator.getType():
+                let groupParticipants = await db.Tables.GroupParticipants.findAll({where : { group_id}})
+                for (const participant of groupParticipants) {
+                    await allocator.allocate(sessionId, participant.participant_id);
+                }
+                break;
+            case GroupAllocator.getType():
+                await allocator.allocate(sessionId, group_id);
+                break;
+            default:
+                throw new ValidationError("Method not implemented for this unknwown type.");
+        }
     }
 
     async allocateToSession(sessionId: number, id: number) : Promise<void> {

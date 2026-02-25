@@ -391,3 +391,26 @@ export async function getSuspensionForActivity(
     next(err);
   }
 }
+
+export async function updateActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    let currentUser = req.user?.sql;
+    const activityId = parseInt(req.params.activity_id as string);
+    const data = req.body;
+    switch(currentUser?.role) {
+      case "teacher":
+        const activity = await activitiesService.updateActivity(activityId, currentUser!.user_id as number, false, data);
+        return res.json(activity.toJSON());
+      case "student":
+        throw new AuthentificationError("Students cannot update activities");
+      default:
+        throw new AuthentificationError("User role not recognized");
+    }
+  } catch (err) {
+    next(err);
+  }
+}
