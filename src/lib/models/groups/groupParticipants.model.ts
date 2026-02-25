@@ -49,18 +49,20 @@ export function GroupParticipantsFactory(
     group_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      allowNull: false,
     },
     participant_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      allowNull: false,
     },
-  },
-  {
+  }, {
     sequelize,
+    modelName: "GroupParticipants",
     tableName: "ParticipantGroups_participants",
     timestamps: false,
     freezeTableName: true,
   });
 
   return GroupParticipants;
-};
+}

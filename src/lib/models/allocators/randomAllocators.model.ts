@@ -48,7 +48,7 @@ export function RandomAllocatorsFactory(
   sequelize: Sequelize,
   DataTypes: typeof import("sequelize").DataTypes
 ) {
-  RandomAllocators.init({
+    RandomAllocators.init({
     allocator_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -65,7 +65,7 @@ export function RandomAllocatorsFactory(
     },
   }, {
     sequelize,
-    modelName: "RandomAllocators",
+      modelName: "RandomAllocators",
     tableName: "Random_Allocators",
     timestamps: false,
   });

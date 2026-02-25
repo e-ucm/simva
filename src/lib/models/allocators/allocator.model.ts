@@ -23,7 +23,6 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  */
 export class Allocator extends Model {
   declare allocator_id: number;
-  declare mongo_id: string | null;
   declare allocator_type: "default" | "group" | "random";
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -42,8 +41,7 @@ export class Allocator extends Model {
  * ```typescript
  * const Allocator = AllocatorFactory(sequelize, DataTypes);
  * const allocator = await Allocator.create({
- *   allocator_type: 'random',
- *   mongo_id: 'external_id_123'
+ *   allocator_type: 'random'
  * });
  * ```
  */
@@ -55,18 +53,14 @@ export function AllocatorFactory(
     allocator_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      allowNull: false,
       autoIncrement: true,
-    },
-    mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
+      unique: true,
     },
     allocator_type: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        isIn: [["default", "group", "random"]],
-      },
+      validate: { isIn: [["default", "group", "random"]] },
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -84,6 +78,5 @@ export function AllocatorFactory(
     tableName: "Allocators",
     timestamps: true,
   });
-
   return Allocator;
 }

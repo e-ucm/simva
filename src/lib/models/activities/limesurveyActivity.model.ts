@@ -15,6 +15,8 @@ export function LimesurveyActivityFactory(
     activity_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      allowNull: false,
+      unique: true,
     },
     survey_id: {
       type: DataTypes.INTEGER,
@@ -27,14 +29,14 @@ export function LimesurveyActivityFactory(
     survey_lrsset: {
       type: DataTypes.INTEGER,
       allowNull: true,
-    }
-  },
-  {
+    },
+  }, {
     sequelize,
+    modelName: "LimesurveyActivity",
     tableName: "Limesurvey_Activities",
     timestamps: false,
     freezeTableName: true,
   });
 
   return LimesurveyActivity;
-};
+}

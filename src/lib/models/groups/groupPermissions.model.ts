@@ -21,7 +21,7 @@ import { Sequelize, Model } from "sequelize";
 export class GroupPermissions extends Model {
   declare group_id: number;
   declare user_id: number;
-  declare permission: "WRITE" | "READ";
+    declare permission: "READ" | "WRITE";
 }
 
 /**
@@ -48,29 +48,31 @@ export function GroupPermissionsFactory(
   sequelize: Sequelize,
   DataTypes: typeof import("sequelize").DataTypes
 ) {
-  GroupPermissions.init({
-    group_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-    },
-    user_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-    },
-    permission: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      validate: {
-        isIn: [["READ", "WRITE"]],
+    GroupPermissions.init({
+      group_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        allowNull: false,
       },
-    },
-  },
-  {
-    sequelize,
-    tableName: "ParticipantGroups_permissions",
-    timestamps: false,
-    freezeTableName: true,
-  });
+      user_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        allowNull: false,
+      },
+      permission: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          isIn: [["READ", "WRITE"]],
+        },
+      },
+    }, {
+      sequelize,
+      modelName: "GroupPermissions",
+      tableName: "ParticipantGroups_permissions",
+      timestamps: false,
+      freezeTableName: true,
+    });
 
   return GroupPermissions;
 };

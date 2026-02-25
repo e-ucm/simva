@@ -26,7 +26,7 @@ export class Group extends Model {
   declare group_id: number;
   declare group_name: string;
   declare group_use_new_generation: boolean;
-  declare group_owner_id: number | null;
+  declare group_owner_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -58,7 +58,9 @@ export function GroupFactory(
     group_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      allowNull: false,
       autoIncrement: true,
+      unique: true,
     },
     group_name: {
       type: DataTypes.STRING,
@@ -72,21 +74,22 @@ export function GroupFactory(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    createdAt:{
+    createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
-    updatedAt:{
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
-    }
-  },
-  {
+      defaultValue: DataTypes.NOW,
+    },
+  }, {
     sequelize,
+    modelName: "Group",
     tableName: "ParticipantGroups",
     timestamps: true,
-    freezeTableName: true,
   });
 
   return Group;
-};
+}

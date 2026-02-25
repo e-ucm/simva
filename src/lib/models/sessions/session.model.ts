@@ -31,16 +31,16 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class Session extends Model {
   declare simlet_id: number;
   declare session_id: number;
-  declare mongo_id: string | null;
   declare session_name: string;
   declare session_description: string;
-  declare createdAt: Date;
-  declare updatedAt: Date;
   declare session_experimental_method: string | null;
+  declare session_can_be_manually_activated: boolean;
   declare session_active: boolean | null;
   declare session_start_date: Date | null;
   declare session_end_date: Date | null;
   declare session_supervisor_id: number;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -75,11 +75,9 @@ export function SessionFactory(
     session_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      allowNull: false,
       autoIncrement: true,
-    },
-    mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
+      unique: true,
     },
     session_name: {
       type: DataTypes.STRING,
@@ -89,17 +87,14 @@ export function SessionFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false
-    },
     session_experimental_method: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    session_can_be_manually_activated: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
     },
     session_active: {
       type: DataTypes.BOOLEAN,
@@ -116,6 +111,16 @@ export function SessionFactory(
     session_supervisor_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   }, {
     sequelize,

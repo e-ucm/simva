@@ -72,78 +72,79 @@ export function ActivityFactory(
   sequelize: Sequelize,
   DataTypes: typeof import("sequelize").DataTypes
 ) {
-  Activity.init({
-    session_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    activity_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    activity_order: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    activity_name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    activity_type: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isIn: [["default", "manual", "limesurvey", "gameplay", "lti_tool"]],
+    Activity.init({
+      session_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
-    },
-    activity_presignedUrl: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    activity_generated_at: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    activity_expire_on_seconds: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    activity_trace_storage: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-    },
-    activity_description: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    activity_comply_with_GDPR: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-    },
-    activity_can_be_restarted: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-    },
-    createdAt:{
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    updatedAt:{
-      type: DataTypes.DATE,
-      allowNull: false,
-    }
-  },
-  {
-    sequelize,
-    tableName: "Activities",
-    timestamps: true,
-    freezeTableName: true,
-  });
+      activity_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        allowNull: false,
+        autoIncrement: true,
+        unique: true,
+      },
+      mongo_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      activity_order: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      activity_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      activity_type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: { isIn: [["default", "manual", "limesurvey", "gameplay", "lti_tool"]] },
+      },
+      activity_presignedUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      activity_generated_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      activity_expire_on_seconds: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      activity_trace_storage: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      activity_description: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      activity_comply_with_GDPR: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      activity_can_be_restarted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    }, {
+      sequelize,
+      modelName: "Activity",
+      tableName: "Activities",
+      timestamps: true,
+    });
 
   return Activity;
-};
+}

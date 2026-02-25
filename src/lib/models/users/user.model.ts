@@ -20,9 +20,9 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class User extends Model {
   declare user_id: number;
   declare username: string;
-  declare email: string;
   declare isToken: boolean;
   declare token: string | null;
+  declare email: string;
   declare role: string;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -51,16 +51,14 @@ export function UserFactory(
     user_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      allowNull: false,
       autoIncrement: true,
+      unique: true,
     },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
     },
     isToken: {
       type: DataTypes.BOOLEAN,
@@ -70,25 +68,31 @@ export function UserFactory(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     role: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    createdAt:{
+    createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
-    updatedAt:{
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
-    }
-  },
-  {
+      defaultValue: DataTypes.NOW,
+    },
+  }, {
     sequelize,
+    modelName: "User",
     tableName: "Users",
     timestamps: true,
     freezeTableName: true,
   });
 
   return User;
-};
+}
