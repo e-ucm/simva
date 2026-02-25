@@ -76,8 +76,12 @@ async function shutdown(signal: string) {
  * // Logs: 🚀 SIMVA API running on http://localhost:3000
  * ```
  */
+// server.ts
+import { runMigrations } from "@/lib/migrate";
+
 async function start() {
   await db.sequelize.authenticate();
+  await runMigrations();
 
   server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 SIMVA API running on 0.0.0.0:${PORT} => external : ${config.api.url}`);
@@ -90,6 +94,6 @@ async function start() {
 }
 
 start().catch(err => {
-  logger.error('Failed to start server', err);
+  logger.error(err, 'Failed to start server');
   process.exit(1);
 });

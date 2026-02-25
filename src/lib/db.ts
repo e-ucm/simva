@@ -57,8 +57,8 @@ if (!globalForDb.db) {
   });
 
   globalForDb.db = {
-    Sequelize,
-    sequelize,
+    Sequelize: Sequelize,
+    sequelize: sequelize,
     Tables: initializeModels(sequelize, DataTypes),
     Functions: initFunctions(sequelize),
     Views: views,
