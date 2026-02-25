@@ -242,6 +242,24 @@ class MinioClient {
         
         return new Map(results.map(r => [r.path, r.exists]));
     }
+    async removeFile(oldFilesTxt: string) {
+        this.ensureInitialized();
+        logger.debug({ oldFilesTxt }, 'Minio: removeFile');
+        await this.#minio!.removeObject(this.#opts.bucket, oldFilesTxt);
+    }
+    async putFile(newFilesTxt: string, content: string) {
+        this.ensureInitialized();
+        logger.debug({ newFilesTxt }, 'Minio: putFile');
+        await this.#minio!.putObject(this.#opts.bucket, newFilesTxt, content);
+    }
+
+    async renameFile(oldPath: string, newPath: string) {
+        this.ensureInitialized();
+        logger.debug({ oldPath, newPath }, 'Minio: renameFile');
+        const content = await this.getFile(oldPath);
+        await this.putFile(newPath, content);
+        await this.removeFile(oldPath);
+    }
 }
 
 // Singleton instance with default config

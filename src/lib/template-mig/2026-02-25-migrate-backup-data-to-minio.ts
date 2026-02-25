@@ -11,6 +11,7 @@ export async function up({ context }: { context: QueryInterface }) {
     logger.info({ results, count: results.length }, 'Found activities with mongo_id');
     let fileExists = await minioClient.fileExists('state/state.json');
     logger.info({ fileExists }, 'Minio: Checking if backup file exists');
+    //throw new Error('This migration is a no-op placeholder. Please implement the logic to migrate backup data to Minio if needed.');
 }
 
 export async function down({ context }: { context: QueryInterface }) {
