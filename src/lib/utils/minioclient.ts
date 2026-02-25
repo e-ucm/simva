@@ -125,11 +125,16 @@ class MinioClient {
     async fileExists(path: string): Promise<boolean> {
         this.ensureInitialized();
         logger.debug({ path }, 'Minio: fileExists');
-        
         const stream = this.#minio!.listObjectsV2(this.#opts.bucket, path);
         const iterator = stream[Symbol.asyncIterator]();
         const { done } = await iterator.next();
-        return !done;
+        const exists = !done;
+        if (!exists) {
+            logger.warn({ path }, 'Minio: file not found');
+        } else {
+            logger.debug({ path }, 'Minio: file exists');
+        }
+        return exists;
     }
 
     /**
@@ -245,7 +250,7 @@ class MinioClient {
     async removeFile(oldFilesTxt: string) {
         this.ensureInitialized();
         logger.debug({ oldFilesTxt }, 'Minio: removeFile');
-        await this.#minio!.removeObject(this.#opts.bucket, oldFilesTxt);
+        await this.#minio!.removeObject(this.#opts.bucket, oldFilesTxt, {forceDelete: true});
     }
     async putFile(newFilesTxt: string, content: string) {
         this.ensureInitialized();
@@ -255,10 +260,12 @@ class MinioClient {
 
     async renameFile(oldPath: string, newPath: string) {
         this.ensureInitialized();
-        logger.debug({ oldPath, newPath }, 'Minio: renameFile');
-        const content = await this.getFile(oldPath);
-        await this.putFile(newPath, content);
-        await this.removeFile(oldPath);
+        if(await this.fileExists(oldPath)) {
+            logger.debug({ oldPath, newPath }, 'Minio: renameFile');
+            const content = await this.getFile(oldPath);
+            await this.putFile(newPath, content);
+            await this.removeFile(oldPath);
+        }
     }
 }
 
