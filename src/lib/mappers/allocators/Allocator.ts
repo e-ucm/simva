@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
-import { GroupAllocator } from "./GroupAllocator";
+import { Allocation } from "./Allocation";
 
 /**
  * Base Allocator mapper class for managing participant allocation to sessions.
@@ -36,6 +36,8 @@ export class Allocator {
      * Timestamp when the allocator was last updated
      */
     updatedAt: Date;
+
+    allocation: Allocation[] = [];
 
     static async getFromDbData(allocator_id: number) : Promise<Allocator> {
         let allocator = await db.Tables.Allocators.findOne({ where: { allocator_id } });
@@ -118,6 +120,8 @@ export class Allocator {
 
     async init() : Promise<void> {
         // Base initialization logic can be added here if needed in the future
+        this.allocation = await Allocation.getAllFromDbData(this.allocator_id, this.allocator_type);
+        logger.debug({ allocator_id: this.allocator_id, allocationCount: this.allocation.length, allocation: this.allocation }, 'Allocator initialized with allocations');
     }
     
     async update(data: Partial<Allocator>) {
@@ -131,39 +135,73 @@ export class Allocator {
     }
 
     async allocate(sessionId: number, object_id: number | number[]) {
-        if(typeof object_id !== typeof Number) {
+        logger.debug({ allocator_id: this.allocator_id, sessionId, object_id }, 'Allocator.allocate started');
+        if(typeof object_id !== 'number') {
+            logger.debug({ object_id, type: typeof object_id }, 'Allocator.allocate invalid object_id type');
             throw new ValidationError("Not valid");
         }
         if(this.allocator_type !== Allocator.getType()) {
+            logger.debug({ allocator_type: this.allocator_type, expected: Allocator.getType() }, 'Allocator.allocate type mismatch');
             throw new ValidationError("Not valid");
         }
         let foundParticipant = await db.Functions.runViewQuery(db.Views.AllocatedParticipants.byAllocatorId, { allocator_id:this.allocator_id, user_id: object_id });
-        if(!foundParticipant) {
+        logger.debug({ foundParticipantCount: foundParticipant?.length ?? 0 }, 'Allocator.allocate foundParticipant query result');
+        if(!foundParticipant || foundParticipant.length === 0) {
             throw new NotFoundError("participant not found");
         }
         let groupId = foundParticipant[0].group_id as number;
         let participantToUpdate = await db.Tables.ExperimentalParticipants.findOne({ where: { group_id : groupId, participant_id : object_id, allocator_id : this.allocator_id } })
+        logger.debug({ participantExists: !!participantToUpdate, groupId }, 'Allocator.allocate participant lookup');
         if(!participantToUpdate) {
+            logger.debug({ groupId, object_id, sessionId }, 'Allocator.allocate creating new participant');
             await db.Tables.ExperimentalParticipants.create({ group_id : groupId, participant_id : object_id, allocator_id : this.allocator_id, session_id: sessionId });
+            logger.debug({ sessionId, object_id }, 'Allocator.allocate created participant');
         } else {
-            if(participantToUpdate.session_id == sessionId) {
+            if(participantToUpdate.session_id === sessionId) {
+                logger.debug({ sessionId }, 'Allocator.allocate already allocated to session, skipping');
                 return;
             }
-            await participantToUpdate.update({session_id : sessionId});
+            // session_id is part of the composite primary key, so we must delete and recreate
+            const oldSessionId = participantToUpdate.session_id;
+            const participantData = {
+                allocator_id: participantToUpdate.allocator_id,
+                group_id: participantToUpdate.group_id,
+                participant_id: participantToUpdate.participant_id,
+                session_id: sessionId
+            };
+            logger.debug({ sessionId, object_id, oldSessionId }, 'Allocator.allocate updating participant (delete+create)');
+            await participantToUpdate.destroy();
+            await db.Tables.ExperimentalParticipants.create(participantData);
+            logger.debug({ sessionId, object_id, oldSessionId }, 'Allocator.allocate updated participant');
         }
     }
 
     async allocateToDefault(defaultSession: number) {
+        logger.debug({ allocator_id: this.allocator_id, defaultSession }, 'Allocator.allocateToDefault started');
         let founds = await db.Functions.runViewQuery(db.Views.AllocatedParticipants.byAllocatorId, { allocator_id:this.allocator_id });
+        logger.debug({ foundUsersCount: founds?.length ?? 0 }, 'Allocator.allocateToDefault found users');
         let allocateParticipantsToUpdate = await db.Tables.ExperimentalParticipants.findAll({ where: { allocator_id : this.allocator_id } })
-        if(!allocateParticipantsToUpdate) {
-            founds.forEach(async (user) => {
-                await db.Tables.ExperimentalParticipants.create({ group_id: user.group_id, participant_id : user.user_id, allocator_id : this.allocator_id, session_id: defaultSession });
-            })
+        logger.debug({ existingParticipantsCount: allocateParticipantsToUpdate.length }, 'Allocator.allocateToDefault existing participants');
+        if(allocateParticipantsToUpdate.length === 0) {
+            logger.debug({ usersToCreate: founds?.length ?? 0, defaultSession }, 'Allocator.allocateToDefault creating participants');
+            await Promise.all(founds.map((user) =>
+                db.Tables.ExperimentalParticipants.create({ group_id: user.group_id, participant_id : user.user_id, allocator_id : this.allocator_id, session_id: defaultSession })
+            ));
+            logger.debug({ defaultSession }, 'Allocator.allocateToDefault created participants');
         } else {
-            allocateParticipantsToUpdate.forEach(async (user) => {
-                await db.Tables.ExperimentalParticipants.update({session_id: defaultSession }, { where : { group_id: user.group_id, participant_id : user.participant_id, allocator_id : this.allocator_id}});
-            })
+            // session_id is part of the composite primary key, so we must delete and recreate
+            logger.debug({ usersToUpdate: allocateParticipantsToUpdate.length, defaultSession }, 'Allocator.allocateToDefault updating participants (delete+create)');
+            await Promise.all(allocateParticipantsToUpdate.map(async (user) => {
+                const participantData = {
+                    allocator_id: user.allocator_id,
+                    group_id: user.group_id,
+                    participant_id: user.participant_id,
+                    session_id: defaultSession
+                };
+                await user.destroy();
+                await db.Tables.ExperimentalParticipants.create(participantData);
+            }));
+            logger.debug({ defaultSession }, 'Allocator.allocateToDefault updated participants');
         }
     }
 
@@ -172,10 +210,16 @@ export class Allocator {
     }
 
     toJSON(): object {
+        // For group allocator, merge into single map {session_id: group_id, ...}
+        const allocations = this.allocator_type === 'group'
+            ? Object.assign({}, ...this.allocation.map(a => a.toJSON()))
+            : this.allocation.map(allocation => allocation.toJSON());
+        
         return {
             allocator_type: this.allocator_type,
             createdAt: this.createdAt,
-            updatedAt: this.updatedAt
+            updatedAt: this.updatedAt,
+            allocations
         }
     }
 }

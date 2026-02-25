@@ -633,7 +633,7 @@ export async function patchSimletPermissionsForUser (
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const userId = parseInt(req.params.user_id as string);
-    let body = req.body
+    let body = req.body;
     let currentUser = req.user?.sql;
     logger.debug({simletId, userId: currentUser?.user_id, body} , "Patching permissions for simlet ID and user ID");
     const permissions = await simletService.patchSimletPermissionsForUser(simletId, userId, currentUser!.user_id as number, body);

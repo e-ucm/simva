@@ -746,7 +746,7 @@ export async function activateSession(simletId: number, sessionId: number, curre
 
 export async function allocateToSessionSimlet(simletId: number, sessionId: number, current_user_id: number, id: number) : Promise<void> {
   const simlet = await Simlet.getFromDbData(simletId, current_user_id);
-  simlet.allocateToSession(sessionId, id);
+  await simlet.allocateToSession(sessionId, id);
 }
 
 export async function addSimletGroups(simletId: number, groupId: number, current_user_id: number): Promise<Simlet> {

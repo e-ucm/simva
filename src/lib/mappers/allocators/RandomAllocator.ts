@@ -84,7 +84,7 @@ export class RandomAllocator extends Allocator {
     }
 
     async init() : Promise<void> {
-        super.init();
+        this.allocation = [];
         this.percentages = await RandomPercentages.getAllFromDbData(this.allocator_id);
         // Additional initialization logic for RandomAllocator can be added here if needed in the future
     }
@@ -189,10 +189,15 @@ export class RandomAllocator extends Allocator {
                     });
 
                     if (participant) {
-                        await participant.update({
-                            session_id: targetSessionId,
+                        // session_id and group_id are part of the composite primary key, so we must delete and recreate
+                        const participantData = {
+                            allocator_id: this.allocator_id,
+                            participant_id: user.user_id,
                             group_id: user.group_id,
-                        });
+                            session_id: targetSessionId,
+                        };
+                        await participant.destroy();
+                        await db.Tables.ExperimentalParticipants.create(participantData);
                         return;
                     }
 

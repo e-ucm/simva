@@ -268,7 +268,7 @@ paths:
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/groupId'
-    put:
+    patch:
       tags:
         - teachers
       summary: updates the group
@@ -1045,6 +1045,25 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
+  /simlets/{simletid}/sessions/{sessionid}/allocate/{id}:
+    post:
+      tags:
+        - teachers
+      summary: allocates a participant or group to a session
+      operationId: allocateToSessionSimlet
+      description: |
+        Allocates participants to the selected session using the configured allocator.
+      responses:
+        '200':
+          description: allocation applied
+        '400':
+          description: 'invalid input, object invalid'
+        '404':
+          description: 'Not found'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/id'
   /simlets/{simletid}/sessions/{sessionid}/activities:
     get:
       tags:
@@ -1113,7 +1132,7 @@ paths:
           description: 'Study not found'
       parameters:
         - $ref: '#/components/parameters/studyId'
-    put:
+    patch:
       tags:
         - teachers
       summary: set the allocator to the study
@@ -1699,7 +1718,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
-  /activities/{id}/suspend:
+  /activities/{id}/suspension:
     post:
       tags:
         - teachers
@@ -1792,7 +1811,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
-  /activities/{id}/multicompletion:
+  /activities/{id}/completion/multi:
     post:
       tags:
         - teachers
@@ -2293,7 +2312,7 @@ paths:
         - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
-  /activities/{id}/extensions/{extensionId}:
+  /activities/{id}/extension/{extension_id}:
     get:
       tags:
         - teachers
@@ -2313,6 +2332,12 @@ paths:
         '501':
           description: 'Not implemented'
       parameters:
+        - name: extension_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Extension identifier
         - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'

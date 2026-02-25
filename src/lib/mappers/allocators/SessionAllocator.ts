@@ -67,7 +67,7 @@ export class SessionAllocator extends Allocator {
     }
 
     async init() : Promise<void> {
-        super.init();
+        this.allocation = [];
         // Additional initialization logic for SessionAllocator can be added here if needed in the future
     }
 
