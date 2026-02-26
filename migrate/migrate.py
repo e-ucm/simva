@@ -1,7 +1,7 @@
 import os
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 
 def convert_iso_to_mysql_datetime_format(date):
@@ -469,7 +469,7 @@ for session in sessions:
 
 # Adding Activities into Activities table
 activities_sql = """
-INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, activity_presignedUrl, activity_generated_at, activity_expire_on_seconds, activity_trace_storage, activity_description, activity_comply_with_GDPR, activity_can_be_restarted)
+INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, activity_presignedUrl, activity_presignedUrl_generated_at, activity_presignedUrl_expire_at, activity_trace_storage, activity_description, activity_comply_with_GDPR, activity_can_be_restarted)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
@@ -488,7 +488,11 @@ activities_values = [
         a["type"],
         a.get("extra_data", {}).get("minio_trace", {}).get("presignedUrl"), 
         convert_iso_to_mysql_datetime_format(a.get("extra_data", {}).get("minio_trace", {}).get("generated_at")),
-        a.get("extra_data", {}).get("minio_trace", {}).get("expire_on_sec"), 
+        convert_iso_to_mysql_datetime_format((
+            (datetime.fromisoformat(a.get("extra_data", {}).get("minio_trace", {}).get("generated_at").replace("Z", "+00:00"))
+            + timedelta(seconds=a.get("extra_data", {}).get("minio_trace", {}).get("expire_on_sec", 0)))
+            .isoformat()
+        ) if a.get("extra_data", {}).get("minio_trace", {}).get("generated_at") else None),
         a.get("extra_data", {}).get("config", {}).get("trace_storage","false") == "true", 
         "",
         a.get("comply_with_GDPR", "false") == "true",
