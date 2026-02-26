@@ -139,8 +139,8 @@ with open(MONGO_BACKUP_FOLDER + "/groups.json", "r") as f:
 
 # Adding Group into Groups table
 groups_sql = """
-INSERT INTO ParticipantGroups (mongo_id, group_name, createdAt, group_use_new_generation, group_owner_id)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO ParticipantGroups (mongo_id, group_name, group_sandbox, createdAt, group_use_new_generation, group_owner_id)
+VALUES (?, ?, ?, ?, ?, ?)
 """
 
 filtered_groups = [
@@ -151,7 +151,8 @@ filtered_groups = [
 groups_values = [
     (
         u["_id"]["$oid"], 
-        u["name"], 
+        u["name"],
+        False,
         convert_iso_to_mysql_datetime_format(u["created"]["$date"]),
         True if u["version"] == "1" else False,
         mongo_user_to_mysql_id[u["owners"][0]]
@@ -275,8 +276,8 @@ with open(MONGO_BACKUP_FOLDER + "/studies.json", "r") as f:
 
 #adding simlets into simlets table
 simlets_sql = """
-INSERT INTO SIMLETs (mongo_id, simlet_name, createdAt, simlet_description, allocator_id, simlet_coordinator_id)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO SIMLETs (mongo_id, simlet_name, simlet_archived, createdAt, simlet_description, allocator_id, simlet_coordinator_id)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 """
 
 filtered_simlets = [
@@ -288,6 +289,7 @@ simlets_values = [
     (
         s["_id"]["$oid"], 
         s["name"], 
+        s.get("archived", False),
         convert_iso_to_mysql_datetime_format(s.get("created", {}).get("$date", None)),
         "",
         mongo_allocator_to_mysql_id[s["allocator"]],
@@ -676,27 +678,6 @@ sqlite_con.commit()
 
 print("Inserted:")
 print("  Experimental_Participants:", len(allocation_values))
-
-
-print("---------------------")
-print("Adding SIMLET_Sandbox")
-print("---------------------")
-simlets_sandbox_sql = """
-UPDATE SIMLETs SET simlet_sandbox_session_id = ? WHERE simlet_id = ?
-"""
-simlets_sandbox_values = [
-    (
-        mongo_simlet_to_mysql_id[s["_id"]["$oid"]],
-        mongo_session_to_mysql_id[s.get("sandbox")]
-    )
-    for s in filtered_simlets if s.get("sandbox", None) is not None
-]
-print(simlets_sandbox_values)
-cursor.executemany(simlets_sandbox_sql, simlets_sandbox_values)
-sqlite_con.commit()
-
-print("Update:")
-print("  SIMLET_Sandbox:", len(simlets_sandbox_values))
 
 print("Migration done!")
 cursor.close()

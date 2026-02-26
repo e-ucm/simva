@@ -132,7 +132,6 @@ SELECT
     sim.createdAt,
     sim.updatedAt,
     sim.simlet_description,
-    sim.simlet_objective,
     shlink.short_url,
     sim.allocator_id
 FROM SIMLETs sim
@@ -145,18 +144,20 @@ CREATE VIEW v_simlet_tags AS
 SELECT
     tag.simlet_id,
     tag.tag_id,
-    tag_list.simlet_tag_name
+    tag_list.tag_type,
+    tag_list.tag_name
 FROM SIMLETs_tags tag
-LEFT JOIN SIMLETs_tags_list tag_list ON tag_list.simlet_tag_id = tag.tag_id;
+LEFT JOIN tags_list tag_list ON tag_list.tag_id = tag.tag_id;
 
 DROP VIEW IF EXISTS v_session_tags;
 CREATE VIEW v_session_tags AS
 SELECT
     tag.session_id,
     tag.tag_id,
-    tag_list.session_tag_name
+    tag_list.tag_type,
+    tag_list.tag_name
 FROM Sessions_tags tag
-LEFT JOIN Sessions_tags_list tag_list ON tag_list.session_tag_id = tag.tag_id;
+LEFT JOIN tags_list tag_list ON tag_list.tag_id = tag.tag_id;
 
 DROP VIEW IF EXISTS v_complete_sessions_users_permissions;
 CREATE VIEW v_complete_sessions_users_permissions AS
@@ -215,6 +216,7 @@ SELECT
     u.username
 FROM ParticipantGroups g
 JOIN Users u ON u.user_id = g.group_owner_id
+WHERE g.group_sandbox IS NOT TRUE
 UNION ALL
 SELECT
     p.group_id,
@@ -240,6 +242,7 @@ SELECT
 FROM ParticipantGroups g
 LEFT JOIN Users u ON u.user_id = g.group_owner_id
 LEFT JOIN vv_group_total_permissions up ON g.group_id = up.group_id
+WHERE g.group_sandbox IS NOT TRUE
 GROUP BY up.user_id, up.username, up.permission, g.group_id;
 
 DROP VIEW IF EXISTS v_complete_group_participants;

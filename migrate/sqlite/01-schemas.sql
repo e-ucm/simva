@@ -2,9 +2,8 @@ CREATE TABLE IF NOT EXISTS "SIMLETs" (
 	"simlet_id" INTEGER NOT NULL UNIQUE,
 	"mongo_id" VARCHAR,
 	"simlet_name" VARCHAR NOT NULL,
-	"simlet_sandbox_session_id" INTEGER,
+	"simlet_archived" BOOLEAN NOT NULL,
 	"simlet_description" VARCHAR NOT NULL,
-	"simlet_objective" VARCHAR,
 	"simlet_coordinator_id" INTEGER NOT NULL,
 	"allocator_id" INTEGER NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
@@ -12,8 +11,6 @@ CREATE TABLE IF NOT EXISTS "SIMLETs" (
 	PRIMARY KEY("simlet_id"),
 	FOREIGN KEY ("allocator_id") REFERENCES "Allocators"("allocator_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY ("simlet_sandbox_session_id") REFERENCES "Sessions"("session_id")
-	ON UPDATE CASCADE ON DELETE SET NULL,
 	FOREIGN KEY ("simlet_coordinator_id") REFERENCES "Users"("user_id")
 	ON UPDATE CASCADE ON DELETE SET NULL
 );
@@ -62,12 +59,15 @@ CREATE TABLE IF NOT EXISTS "Sessions" (
 	"session_start_date" DATETIME,
 	"session_end_date" DATETIME,
 	"session_supervisor_id" INTEGER NOT NULL,
+	"session_sandbox_user_id" INTEGER,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("session_id"),
 	FOREIGN KEY ("simlet_id") REFERENCES "SIMLETs"("simlet_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY ("session_supervisor_id") REFERENCES "Users"("user_id")
+	ON UPDATE CASCADE ON DELETE SET NULL,
+	FOREIGN KEY ("session_sandbox_user_id") REFERENCES "Users"("user_id")
 	ON UPDATE CASCADE ON DELETE SET NULL
 );
 
@@ -119,9 +119,9 @@ CREATE TABLE IF NOT EXISTS "GamePlay_Activities" (
 	PRIMARY KEY("activity_id"),
 	FOREIGN KEY ("activity_id") REFERENCES "Activities"("activity_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY ("subject_area_id") REFERENCES "Subject_area_list"("subject_area_id")
+	FOREIGN KEY ("subject_area_id") REFERENCES "tags_list"("tag_id")
 	ON UPDATE CASCADE ON DELETE RESTRICT,
-	FOREIGN KEY ("category_id") REFERENCES "Category_list"("category_id")
+	FOREIGN KEY ("category_id") REFERENCES "tags_list"("tag_id")
 	ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
@@ -183,6 +183,7 @@ CREATE TABLE IF NOT EXISTS "ParticipantGroups" (
 	"group_name" VARCHAR NOT NULL,
 	"group_use_new_generation" BOOLEAN NOT NULL,
 	"group_owner_id" INTEGER NOT NULL,
+	"group_sandbox" BOOLEAN NOT NULL,
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("group_id"),
@@ -253,7 +254,7 @@ CREATE TABLE IF NOT EXISTS "SIMLETs_tags" (
 	PRIMARY KEY("simlet_id", "tag_id"),
 	FOREIGN KEY ("simlet_id") REFERENCES "SIMLETs"("simlet_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY ("tag_id") REFERENCES "SIMLETs_tags_list"("simlet_tag_id")
+	FOREIGN KEY ("tag_id") REFERENCES "tags_list"("tag_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
 );
 
@@ -263,7 +264,7 @@ CREATE TABLE IF NOT EXISTS "Sessions_tags" (
 	"session_id" INTEGER NOT NULL,
 	"tag_id" INTEGER NOT NULL,
 	PRIMARY KEY("session_id", "tag_id"),
-	FOREIGN KEY ("tag_id") REFERENCES "Sessions_tags_list"("session_tag_id")
+	FOREIGN KEY ("tag_id") REFERENCES "tags_list"("tag_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY ("session_id") REFERENCES "Sessions"("session_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
@@ -366,22 +367,15 @@ CREATE TABLE IF NOT EXISTS "Limesurvey_Activities_Template" (
 
 CREATE INDEX IF NOT EXISTS "Limesurvey_Activities_Template_index_0"
 ON "Limesurvey_Activities_Template" ("activity_template_id");
-CREATE TABLE IF NOT EXISTS "SIMLETs_tags_list" (
-	"simlet_tag_id" INTEGER NOT NULL UNIQUE,
-	"simlet_tag_name" VARCHAR NOT NULL,
-	PRIMARY KEY("simlet_tag_id")
+CREATE TABLE IF NOT EXISTS "tags_list" (
+	"tag_id" INTEGER NOT NULL UNIQUE,
+	"tag_type" VARCHAR NOT NULL CHECK(tag_type IN ("mode", "school", "game", "subject_area", "category", "session_custom", "simlet_custom")),
+	"tag_name" VARCHAR NOT NULL,
+	PRIMARY KEY("tag_id")
 );
 
-CREATE INDEX IF NOT EXISTS "SIMLETs_tags_list_index_0"
-ON "SIMLETs_tags_list" ("simlet_tag_id");
-CREATE TABLE IF NOT EXISTS "Sessions_tags_list" (
-	"session_tag_id" INTEGER NOT NULL UNIQUE,
-	"session_tag_name" VARCHAR NOT NULL,
-	PRIMARY KEY("session_tag_id")
-);
-
-CREATE INDEX IF NOT EXISTS "sessions_tags_list_index_0"
-ON "Sessions_tags_list" ("session_tag_id");
+CREATE INDEX IF NOT EXISTS "tags_list_index_0"
+ON "tags_list" ("tag_id");
 CREATE TABLE IF NOT EXISTS "Activities_template_permissions" (
 	"activity_template_id" INTEGER NOT NULL,
 	"user_id" INTEGER NOT NULL,
@@ -395,19 +389,3 @@ CREATE TABLE IF NOT EXISTS "Activities_template_permissions" (
 
 CREATE INDEX IF NOT EXISTS "Sessions_permission_index_0"
 ON "Activities_template_permissions" ("session_id", "user_id");
-CREATE TABLE IF NOT EXISTS "Subject_area_list" (
-	"subject_area_id" INTEGER NOT NULL UNIQUE,
-	"subject_area_name" VARCHAR NOT NULL,
-	PRIMARY KEY("subject_area_id")
-);
-
-CREATE INDEX IF NOT EXISTS "sessions_tags_list_index_0"
-ON "Subject_area_list" ("subject_area_id");
-CREATE TABLE IF NOT EXISTS "Category_list" (
-	"category_id" INTEGER NOT NULL UNIQUE,
-	"category_name" VARCHAR NOT NULL,
-	PRIMARY KEY("category_id")
-);
-
-CREATE INDEX IF NOT EXISTS "sessions_tags_list_index_0"
-ON "Category_list" ("category_id");
