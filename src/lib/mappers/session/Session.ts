@@ -26,6 +26,8 @@ export class Session {
      */
     session_id: number;
     
+    session_order?: number;
+
     /**
      * ID of the current session user
      */
@@ -114,6 +116,7 @@ export class Session {
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission || "";
         this.allocated_user = allocated_user;
+        this.session_order = data.session_order;
         if(this.allocated_user) {
             this.allocated_user_id = data.allocated_user_id;
             this.allocated_username = data.allocated_username || "";
@@ -506,6 +509,7 @@ export class Session {
         return {
             session_id: this.session_id,
             simlet_id: this.simlet_id,
+            session_order: this.session_order,
             current_user_id: this.current_user_id,
             current_user_username: this.current_user_username,
             current_user_permission: this.current_user_permission,

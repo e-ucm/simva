@@ -7,6 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT session_id
         FROM Sessions
         WHERE simlet_id = :simlet_id
+        ORDER BY session_order
         `,
         params: {
             simlet_id: {

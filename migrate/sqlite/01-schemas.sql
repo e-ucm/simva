@@ -52,6 +52,7 @@ ON "SIMLETs_shlinks" ("simlet_id");
 CREATE TABLE IF NOT EXISTS "Sessions" (
 	"simlet_id" INTEGER NOT NULL,
 	"session_id" INTEGER NOT NULL UNIQUE,
+	"session_order" INTEGER NOT NULL,
 	"mongo_id" VARCHAR,
 	"session_name" VARCHAR NOT NULL,
 	"session_description" VARCHAR NOT NULL,

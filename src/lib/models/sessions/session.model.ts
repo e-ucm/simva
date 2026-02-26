@@ -31,6 +31,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class Session extends Model {
   declare simlet_id: number;
   declare session_id: number;
+  declare session_order: number;
   declare session_name: string;
   declare session_description: string;
   declare session_experimental_method: string | null;
@@ -78,6 +79,10 @@ export function SessionFactory(
       allowNull: false,
       autoIncrement: true,
       unique: true,
+    },
+    session_order: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     session_name: {
       type: DataTypes.STRING,

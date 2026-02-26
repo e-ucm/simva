@@ -394,10 +394,19 @@ with open(MONGO_BACKUP_FOLDER + "/tests.json", "r") as f:
             obj = json.loads(line)
             sessions.append(obj)
 
+session_order_by_mongo_id = {}
+for simlet in simlets:
+    for index, session_ref in enumerate(simlet.get("tests", [])):
+        session_mongo_id = get_mongo_oid(session_ref)
+        if session_mongo_id is not None:
+            session_order_by_mongo_id[session_mongo_id] = index+1
+
+print(session_order_by_mongo_id)
+
 # Adding Sessions into sesions table
 sessions_sql = """
-INSERT INTO Sessions (simlet_id, mongo_id, session_name, session_description, session_active, session_supervisor_id, session_can_be_manually_activated)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Sessions (simlet_id, mongo_id, session_name, session_order, session_description, session_active, session_supervisor_id, session_can_be_manually_activated)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 filtered_sessions = [
@@ -412,11 +421,12 @@ sessions_values = [
         mongo_simlet_to_mysql_id[s["study"]],
         s["_id"]["$oid"],
         s["name"],
+        session_order_by_mongo_id.get(s["_id"]["$oid"], 0),
         "",
         False,
         mongo_simlet_owners_to_mysql_id[s["study"]],
         True
-        )
+    )
     for s in filtered_sessions
 ]
 
