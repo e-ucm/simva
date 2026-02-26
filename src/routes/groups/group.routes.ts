@@ -50,6 +50,9 @@ import {
  * ```
  */
 const router = Router();
+// Validators
+import { addValidations } from '@/lib/utils/validator';
+addValidations('/groups', router);
 
 // Base group operations
 router.get("/", getGroups);

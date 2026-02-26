@@ -31,6 +31,9 @@ import {
  * ```
  */
 const router = Router();
+// Validators
+import { addValidations } from '@/lib/utils/validator';
+addValidations('/users', router);
 
 // Base user operations
 router.get("/", getUsers);

@@ -53,6 +53,10 @@ import {
  */
 const router = Router();
 
+// Validators
+import { addValidations } from '@/lib/utils/validator';
+addValidations('/activities', router);
+
 //router.get("/", getActivities);
 //router.post("/", createActivity);
 //router.get("/:activity_id/export", exportActivity);

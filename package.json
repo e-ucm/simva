@@ -25,6 +25,7 @@
     "axios": "^1.13.2",
     "bloom-filters": "^3.0.4",
     "express": "^5.2.1",
+    "express-validator": "^7.3.1",
     "js-tracker": "github:e-ucm/js-tracker#v1.1.2",
     "jsonwebtoken": "^9.0.3",
     "kafkajs": "^2.2.4",

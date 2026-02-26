@@ -19,6 +19,9 @@ import {
  * ``` 
  */
 const router = Router();
+// Validators
+import { addValidations } from '@/lib/utils/validator';
+addValidations('/activitytypes', router);
 
 // Base activity type operations
 router.get("/", getActivityTypes);

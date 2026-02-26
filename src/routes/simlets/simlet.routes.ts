@@ -104,6 +104,9 @@ import {
  * ```
  */
 const router = Router();
+// Validators
+import { addValidations } from '@/lib/utils/validator';
+addValidations('/simlets', router);
 
 // Collection endpoints (should come before parameterized routes)
 router.get("/", getAllSimlets);
