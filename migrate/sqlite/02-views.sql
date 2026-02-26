@@ -346,3 +346,15 @@ SELECT
     g.*
 FROM SIMLETs_groups sg
 LEFT JOIN v_complete_groups_users_permissions g ON sg.group_id = g.group_id;
+
+DROP VIEW IF EXISTS v_activities_by_survey_id;
+CREATE VIEW v_activities_by_survey_id AS
+SELECT
+    s.simlet_id,
+    s.session_id,
+    a.activity_id,
+    la.survey_id
+FROM Activities a
+JOIN Sessions s ON a.session_id = s.session_id
+JOIN LimeSurvey_Activities la ON a.activity_id = la.activity_id
+WHERE la.survey_id IS NOT NULL;

@@ -112,7 +112,25 @@ const queries: Record<string, QueryTemplate> = {
         example: 123,
       },
     },
-  }
+  },
+
+  bySurveyId: {
+        description: "Get all Activities for a certain Survey ID",
+        sql: `
+        SELECT *
+        FROM v_activities_by_survey_id
+        WHERE survey_id = :survey_id
+        ORDER BY activity_order
+        `,
+        params: {
+            survey_id: {
+                type: "number",
+                required: true,
+                description: "Survey Identifier",
+                example: 1
+            },
+        },
+    },
 };
 
 export default queries;

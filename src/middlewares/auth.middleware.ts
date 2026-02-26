@@ -215,6 +215,16 @@ export class Authenticator {
    * app.get('/protected', Authenticator.auth, handler);
    * ```
    */
+
+  static isPublicEndpoint(path: string): boolean {
+    const publicEndpoints = [
+      '/health',
+      '/limesurvey-completion-webhooks'
+    ];
+    
+    return publicEndpoints.some(endpoint => path === endpoint || path.startsWith(endpoint));
+  }
+
   static auth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!this.initialized) {
@@ -222,14 +232,8 @@ export class Authenticator {
         }
         
         // Skip authentication for public endpoints
-        const publicEndpoints = [
-          '/health'
-        ];
-        
         const requestPath = req.path;
-        const isPublicEndpoint = publicEndpoints.some(endpoint => requestPath === endpoint || requestPath.startsWith(endpoint));
-        
-        if (isPublicEndpoint) {
+        if (this.isPublicEndpoint(requestPath)) {
           logger.debug(`[AUTH] Public endpoint ${req.method} ${req.path} - skipping authentication`);
           return this.optional(req, res, next);
         }
@@ -300,9 +304,10 @@ export class Authenticator {
       
       logger.debug(`[ROLE] Checking authorization for ${method.toUpperCase()} ${url}`);
 
-      // Allow health endpoints for any role
-      if (url.startsWith('/health')) {
-        logger.debug('[ROLE] Health endpoint access allowed');
+      // Skip authentication for public endpoints
+      const requestPath = req.path;
+      if (this.isPublicEndpoint(requestPath)) {
+        logger.debug('[ROLE] Public endpoint access allowed');
         return next();
       }
       

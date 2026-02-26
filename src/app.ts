@@ -27,6 +27,7 @@ import { errorMiddleware } from '@/middlewares/error.middleware';
 import { auth, roleAllowed } from "@/middlewares/auth.middleware";
 import { logger } from '@/lib/logger';
 import { checkDatabaseConnection } from '@/lib/db';
+import { limesurveyWebhookHandler, verifyHookdeckSignature } from '@/lib/utils/limesurveyWebhook';
 
 /**
  * Main Express application instance for SIMVA API.
@@ -47,8 +48,11 @@ app.use((req: Request, _: Response, next : NextFunction) => {
   logger.info(`${req.method} at ${req.originalUrl} with body ${req.body}`);
   next();
 })
+
 app.use(auth);
 app.use(roleAllowed);
+
+app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, limesurveyWebhookHandler);
 
 // Health check endpoint
 app.get('/health', async (_req: Request, res: Response) => {
