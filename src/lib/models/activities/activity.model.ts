@@ -38,8 +38,8 @@ export class Activity extends Model {
   declare activity_name: string;
   declare activity_type: "default" | "manual" | "limesurvey" | "gameplay" | "lti_tool";
   declare activity_presignedUrl: string | null;
-  declare activity_generated_at: Date | null;
-  declare activity_expire_on_seconds: number | null;
+  declare activity_presignedUrl_generated_at: Date | null;
+  declare activity_presignedUrl_expire_at: Date | null;
   declare activity_trace_storage: boolean;
   declare activity_description: string;
   declare activity_comply_with_GDPR: boolean;
@@ -84,10 +84,6 @@ export function ActivityFactory(
         autoIncrement: true,
         unique: true,
       },
-      mongo_id: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
       activity_order: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -105,12 +101,12 @@ export function ActivityFactory(
         type: DataTypes.STRING,
         allowNull: true,
       },
-      activity_generated_at: {
+      activity_presignedUrl_generated_at: {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      activity_expire_on_seconds: {
-        type: DataTypes.INTEGER,
+      activity_presignedUrl_expire_at: {
+        type: DataTypes.DATE,
         allowNull: true,
       },
       activity_trace_storage: {
