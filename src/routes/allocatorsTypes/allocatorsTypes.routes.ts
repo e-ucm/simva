@@ -17,9 +17,6 @@ import { getAllocatorTypes } from "@/controlers/allocatorTypes/allocatorTypes.co
  * ``` 
  */
 const router = Router();
-// Validators
-import { addValidations } from '@/lib/utils/validator';
-addValidations('/allocatortypes', router);
 
 // Base allocator type operations
 router.get("/", getAllocatorTypes);
