@@ -17,6 +17,7 @@
  */
 
 import express, { NextFunction, Request, Response } from 'express';
+import * as OpenApiValidator from 'express-openapi-validator';
 import userRoutes from '@/routes/users/user.routes';
 import groupRoutes from '@/routes/groups/group.routes';
 import simletRoutes from '@/routes/simlets/simlet.routes';
@@ -28,6 +29,7 @@ import { auth, roleAllowed } from "@/middlewares/auth.middleware";
 import { logger } from '@/lib/logger';
 import { checkDatabaseConnection } from '@/lib/db';
 import { limesurveyWebhookHandler, verifyHookdeckSignature } from '@/lib/utils/limesurveyWebhook';
+import { config } from '@/lib/config';
 
 /**
  * Main Express application instance for SIMVA API.
@@ -51,6 +53,14 @@ app.use((req: Request, _: Response, next : NextFunction) => {
 
 app.use(auth);
 app.use(roleAllowed);
+
+app.use(
+  OpenApiValidator.middleware({
+    apiSpec: `${config.appFolder}/api.yaml`,
+    validateRequests: true, // (default)
+    validateResponses: true, // false by default
+  }),
+);
 
 app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, limesurveyWebhookHandler);
 
