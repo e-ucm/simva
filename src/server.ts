@@ -26,10 +26,13 @@ const PORT = config.api.port;
 
 let server: Server | null = null;
 
+let isShuttingDown = false;
 /**
  * Gracefully shutdown the server
  */
 async function shutdown(signal: string) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
   logger.info(`${signal} received, shutting down gracefully`);
   
   if (server) {
