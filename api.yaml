@@ -78,7 +78,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/user'
+                  $ref: '#/components/schemas/userMapper'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -95,7 +95,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/userBody'
+              $ref: '#/components/schemas/user'
       parameters:
         - $ref: '#/components/parameters/username'
       responses:
@@ -104,7 +104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user'
+                $ref: '#/components/schemas/userMapper'
         '400':
           description: 'invalid input, object invalid'
   /users/me:
@@ -123,7 +123,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user'
+                $ref: '#/components/schemas/userMapper'
         '400':
           description: 'invalid input'
   /users/link:
@@ -181,7 +181,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user'
+                $ref: '#/components/schemas/userMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -217,7 +217,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/group'
+                  $ref: '#/components/schemas/groupMapper'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -235,7 +235,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/group'
+                $ref: '#/components/schemas/groupMapper'
         '400':
           description: 'invalid input, object invalid'
         '409':
@@ -244,7 +244,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/add_group_body'
+              $ref: '#/components/schemas/groupCreation'
         required: true
   /groups/{id}:
     get:
@@ -262,7 +262,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/group'
+                $ref: '#/components/schemas/groupMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -277,7 +277,11 @@ paths:
       description: Updates an existing group
       responses:
         '200':
-          description: item created
+          description: item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupMapper'
         '401':
           description: 'Teacher does not own the group'
         '400':
@@ -321,7 +325,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/study'
+                  $ref: '#/components/schemas/simletMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -390,7 +394,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/user'
+              $ref: '#/components/schemas/userCreation'
         required: true
   /groups/count:
     get:
@@ -427,12 +431,6 @@ paths:
           description: item deleted
         '400':
           description: 'invalid input, object invalid'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/user'
-        required: true
   /groups/{group_id}/permissions:
     get:
       tags:
@@ -450,7 +448,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/user_permission'
+                  $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -477,7 +475,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -509,7 +507,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -531,7 +529,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/user_permission'
+              $ref: '#/components/schemas/userPermissionMapper'
         required: true
     delete:
       tags:
@@ -579,7 +577,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/study'
+                  $ref: '#/components/schemas/simletMapper'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -587,17 +585,17 @@ paths:
     post:
       tags:
         - teachers
-      summary: adds an study for the current teacher
-      operationId: addStudy
+      summary: adds an simlet for the current teacher
+      operationId: addSimlet
       description: |
-        Creates a new study for the current teacher.
+        Creates a new simlet for the current teacher.
       responses:
         '200':
-          description: study created
+          description: simlet created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/study'
+                $ref: '#/components/schemas/simletMapper'
         '400':
           description: 'invalid input, object invalid'
         '409':
@@ -607,23 +605,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/add_study_body'
-        description: Study to be created
+              $ref: '#/components/schemas/simletCreation'
+        description: Simlet to be created
   /simlets/import:
     post:
         tags:
           - teachers
-        summary: adds an study for the current teacher
-        operationId: addStudyFromImport
+        summary: adds an simlet for the current teacher
+        operationId: addSimletFromImport
         description: |
-          Creates a new study for the current teacher.
+          Creates a new simlet for the current teacher.
         responses:
           '200':
-            description: study created
+            description: simlet created
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/study'
+                  $ref: '#/components/schemas/simletMapper'
           '400':
             description: 'invalid input, object invalid'
           '409':
@@ -634,93 +632,97 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/upload_file'
-          description: Study to be created
+          description: Simlet to be created
   /simlets/{simletid}:
     get:
       tags:
         - admins
         - teachers
-      summary: gets the study with the given ID
-      operationId: getStudy
+      summary: gets the simlet with the given ID
+      operationId: getSimlet
       description: |
-        Obtains the requested study
+        Obtains the requested simlet
       responses:
         '200':
-          description: study object
+          description: simlet object
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/study'
+                $ref: '#/components/schemas/simletMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
-    put:
+        - $ref: '#/components/parameters/simletId'
+    patch:
       tags:
         - teachers
-      summary: updates the study
+      summary: updates the simlet
       operationId: patchSimlet
-      description: Updates an existing stidy
+      description: Updates an existing simlet
       responses:
         '200':
-          description: item created
+          description: item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/simletMapper'
         '401':
           description: 'Teacher does not own the class'
         '400':
           description: 'invalid input'
         '404':
-          description: 'Requested study does not exist'
+          description: 'Requested simlet does not exist'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/study'
-        description: study to be modified
+              $ref: '#/components/schemas/simlet'
+        description: simlet to be modified
     delete:
       tags:
         - teachers
-      summary: Deletes the study with the given ID
+      summary: Deletes the simlet with the given ID
       operationId: deleteSimlet
       description: |
-        Deleted the designed study
+        Deleted the designed simlet
       responses:
         '200':
-          description: Study deleted
+          description: Simlet deleted
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/export:
     get:
       tags:
         - admins
         - teachers
-      summary: gets the study export with the given ID
-      operationId: getStudyExport
+      summary: gets the simlet export with the given ID
+      operationId: getSimletExport
       description: |
-        Obtains the requested study Export
+        Obtains the requested simlet Export
       responses:
         '200':
-          description: study object
+          description: simlet object
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/study'
+                $ref: '#/components/schemas/simletMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/events:
     get:
-      summary: send Server Side Events to Client for this study
+      summary: send Server Side Events to Client for this simlet
       operationId: GetEvent
       description: |
         send Server Side Events to Client
@@ -732,12 +734,12 @@ paths:
         '401':
           description: 'One or both of the JWT are not valid'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/events/getPresignedUrl:
     get:
       tags:
         - teachers
-      summary: get getPresignedUrl for Server Side Events to Client for this study
+      summary: get getPresignedUrl for Server Side Events to Client for this simlet
       operationId: getEventsPresignedUrl
       description: |
         get getPresignedUrl Server Side Events to Client
@@ -749,7 +751,7 @@ paths:
         '401':
           description: 'One or both of the JWT are not valid'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule:
     get:
       tags:
@@ -759,32 +761,24 @@ paths:
       operationId: getSchedule
       description: |
         Obtains the list of scheduled activities for the current
-        student and study, and its completion status. Hides the
-        current used test to the user.
+        student and simlet, and its completion status. Hides the
+        current used session to the user.
       responses:
         '200':
           description: The list of scheduled activities in order.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  next:
-                    type: string
-                    description: "The next activity ID"
-                activities: 
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/activity'
+                $ref: '#/components/schemas/scheduleMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule/events:
     get:
-      summary: send Server Side Events to Client for this study
+      summary: send Server Side Events to Client for this simlet
       operationId: GetEvent
       description: |
         send Server Side Events to Client
@@ -796,13 +790,13 @@ paths:
         '401':
           description: 'One or both of the JWT are not valid'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule/events/getPresignedUrl:
     get:
       tags:
         - teachers
         - students
-      summary: get getPresignedUrl for Server Side Events to Client for this study
+      summary: get getPresignedUrl for Server Side Events to Client for this simlet
       operationId: getScheduleEventsPresignedUrl
       description: |
         get getPresignedUrl Server Side Events to Client
@@ -814,16 +808,16 @@ paths:
         '401':
           description: 'One or both of the JWT are not valid'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/groups:
     get:
       tags:
         - admins
         - teachers
-      summary: gets the assigned groups to the study
+      summary: gets the assigned groups to the simlet
       operationId: getSimletGroups
       description: |
-        Obtains the list of groups assigned to the study
+        Obtains the list of groups assigned to the simlet
       responses:
         '200':
           description: list of groups assigned
@@ -832,25 +826,25 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/group'
+                  $ref: '#/components/schemas/groupMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Study not found'
+          description: 'Simlet not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/groups/{groupId}:
     post:
       tags:
         - admins
         - teachers
-      summary: Add a group to a study
-      description: Add a group to a study by study ID and group ID
+      summary: Add a group to a simlet
+      description: Add a group to a simlet by simlet ID and group ID
       parameters:
         - name: simletid
           in: path
           required: true
-          description: Study ID
+          description: Simlet ID
           schema:
             type: integer
             example: 1
@@ -867,7 +861,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Group'
+                $ref: '#/components/schemas/groupMapper'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -878,13 +872,13 @@ paths:
       tags:
         - admins
         - teachers
-      summary: Remove a group from a study
-      description: Remove a group from a study by study ID and group ID 
+      summary: Remove a group from a simlet
+      description: Remove a group from a simlet by simlet ID and group ID 
       parameters:
         - name: simletid
           in: path
           required: true
-          description: Study ID
+          description: Simlet ID
           schema:
             type: integer
             example: 1
@@ -908,57 +902,57 @@ paths:
     get:
       tags:
         - teachers
-      summary: gets the tests from a study
+      summary: gets the sessions from a simlet
       operationId: getSimletSessions
       description: |
-        Obtains the list of tests assigned to the study
+        Obtains the list of sessions assigned to the simlet
       responses:
         '200':
-          description: list of tests assigned
+          description: list of sessions assigned
           content:
             application/json:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/test'
+                  $ref: '#/components/schemas/sessionMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Study not found'
+          description: 'Simlet not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
     post:
       tags:
         - teachers
-      summary: adds a test to the study
+      summary: adds a session to the simlet
       operationId: createSimletSession
       description: |
-        Adds a test for the current group
+        Adds a session for the current group
       responses:
         '200':
-          description: test created
+          description: session created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/test'
+                $ref: '#/components/schemas/sessionMapper'
         '400':
           description: 'invalid input, object invalid'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/test'
+              $ref: '#/components/schemas/sessionCreation'
         required: true
   /simlets/{simletid}/participants:
     get:
       tags:
         - teachers
-      summary: gets the list of participants for this study
+      summary: gets the list of participants for this simlet
       operationId: getSimletParticipants
       description: |
-        Obtains the list of participants of the study
+        Obtains the list of participants of the simlet
       responses:
         '200':
           description: list of participants
@@ -967,28 +961,28 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/simlet_participant'
+                  $ref: '#/components/schemas/participantMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'study not found'
+          description: 'simlet not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/sessions/{sessionid}:
     get:
       tags:
         - teachers
-      summary: gets the test with the given ID
-      operationId: getTest
+      summary: gets the session with the given ID
+      operationId: getSession
       description: |
-        Obtains the requested test
+        Obtains the requested session
       responses:
         '200':
-          description: test object
+          description: session object
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/test'
+                $ref: '#/components/schemas/sessionMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -996,41 +990,13 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
-    put:
-      tags:
-        - teachers
-      summary: updates the test
-      operationId: updateTest
-      description: Updates an existing test
-      responses:
-        '200':
-          description: item updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/test'
-        '401':
-          description: 'Teacher does not own the class'
-        '400':
-          description: 'invalid input'
-        '404':
-          description: 'Requested study does not exist'
-      parameters:
-        - $ref: '#/components/parameters/simletId'
-        - $ref: '#/components/parameters/sessionId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/test'
-        description: test to be modified
     patch:
-      summary: Modifies the test.
+      summary: Modifies the session.
       tags:
         - teachers
-      operationId: patchTest
+      operationId: patchSession
       description: |
-        Modifies the test
+        Modifies the session
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1038,27 +1004,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/test'
+              $ref: '#/components/schemas/session'
       responses:
         '200':
-          description: Test updated
+          description: Session updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/test'
-        '401':
-          description: 'Teacher does not own the class'
+                $ref: '#/components/schemas/sessionMapper'
         '400':
-          description: 'invalid input'
-        '404':
-          description: 'Requested study does not exist'
+          description: 'invalid input, object invalid'
     delete:
       tags:
         - teachers
-      summary: deletes the test with the given ID
-      operationId: deleteTest
+      summary: deletes the session with the given ID
+      operationId: deleteSession
       description: |
-        Deleted the selected test
+        Deleted the selected session
       responses:
         '200':
           description: success
@@ -1085,7 +1047,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/simlet_participant'
+                  $ref: '#/components/schemas/participantMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1097,7 +1059,7 @@ paths:
     post:
       tags:
         - teachers
-      summary: gets the list of activities for the selected test
+      summary: gets the list of activities for the selected session
       operationId: activateSimletSession
       description: |
         Activate or desactivate the current session
@@ -1107,7 +1069,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/test'
+                  $ref: '#/components/schemas/sessionMapper'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1134,27 +1096,27 @@ paths:
     get:
       tags:
         - teachers
-      summary: gets the list of activities for the selected test
-      operationId: getTestActivities
+      summary: gets the list of activities for the selected session
+      operationId: getSessionActivities
       description: |
-        Obtains the list of activities for the selected test
+        Obtains the list of activities for the selected session
       responses:
         '200':
-          description: the list of activities for this test
+          description: the list of activities for this session
           content:
             application/json:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/activity'
+                  $ref: '#/components/schemas/activityMapper'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
     post:
       tags:
         - teachers
-      summary: adds a Activity to a test
-      operationId: addActivityToTest
+      summary: adds a Activity to a session
+      operationId: addActivityToSession
       description: |
         Creates a new activity for the current teacher.
       responses:
@@ -1163,7 +1125,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activity'
+                $ref: '#/components/schemas/activityMapper'
         '400':
           description: 'invalid input, object invalid'
         '409':
@@ -1176,52 +1138,52 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/activity'
+              $ref: '#/components/schemas/activityCreation'
   /simlets/{simletid}/allocator:
     get:
       tags:
         - teachers
-      summary: gets the allocator from a study
+      summary: gets the allocator from a simlet
       operationId: getAllocatorFromSimlet
       description: |
-        Obtains the allocator used by the study
+        Obtains the allocator used by the simlet
       responses:
         '200':
           description: the allocator object
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/allocator'
+                $ref: '#/components/schemas/allocatorMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Study not found'
+          description: 'Simlet not found'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
     patch:
       tags:
         - teachers
-      summary: set the allocator to the study
+      summary: set the allocator to the simlet
       operationId: updateSimletAllocator
       description: |
-        Updates the allocator from the study
+        Updates the allocator from the simlet
       responses:
         '200':
           description: updated correctly
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/allocator'
+                $ref: '#/components/schemas/allocatorMapper'
         '400':
           description: 'invalid input, object invalid'
       parameters:
-        - $ref: '#/components/parameters/studyId'
+        - $ref: '#/components/parameters/simletId'
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/allocator'
-        description: study to be modified
+        description: simlet to be modified
   /simlets/{simletid}/permissions:
     get:
       tags:
@@ -1239,7 +1201,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/user_permission'
+                  $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1260,7 +1222,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1271,7 +1233,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/user_permission'
+              $ref: '#/components/schemas/userPermissionCreation'
         required: true
   /simlets/{simletid}/permissions/{user_id}:
     get:
@@ -1288,7 +1250,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1315,7 +1277,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1332,7 +1294,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/user_permission'
+              $ref: '#/components/schemas/userPermissionMapper'
         required: true
     delete:
       tags:
@@ -1374,7 +1336,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/user_permission'
+                  $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1396,7 +1358,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1408,7 +1370,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/user_permission'
+              $ref: '#/components/schemas/userPermissionMapper'
         required: true
   /simlets/{simletid}/sessions/{sessionid}/permissions/{user_id}:
     get:
@@ -1425,7 +1387,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1453,7 +1415,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/user_permission'
+                $ref: '#/components/schemas/userPermissionMapper'
         '400':
           description: 'invalid input, object invalid'
         '404':
@@ -1471,7 +1433,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/user_permission'
+              $ref: '#/components/schemas/userPermissionMapper'
         required: true
     delete:
       tags:
@@ -1514,7 +1476,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/activity'
+                  $ref: '#/components/schemas/activityMapper'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -1532,7 +1494,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activity'
+                $ref: '#/components/schemas/activityMapper'
         '400':
           description: 'invalid input, object invalid'
         '409':
@@ -1542,7 +1504,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/activity'
+              $ref: '#/components/schemas/activityCreation'
         description: Activity to be created
   /activities/{id}:
     get:
@@ -1559,36 +1521,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activity'
+                $ref: '#/components/schemas/activityMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
           description: 'Not found'
       parameters:
         - $ref: '#/components/parameters/sessionId'
-    put:
-      tags:
-        - teachers
-      summary: updates the test
-      operationId: updateActivity
-      description: Updates an existing test
-      responses:
-        '200':
-          description: item updated
-        '401':
-          description: 'Teacher does not own the class'
-        '400':
-          description: 'invalid input'
-        '404':
-          description: 'Requested study does not exist'
-      parameters:
-        - $ref: '#/components/parameters/studyId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/activity'
-        description: activity to be modified
     patch:
       summary: Modifies the activity.
       tags:
@@ -1602,14 +1541,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/activityBody'
+              $ref: '#/components/schemas/activity'
       responses:
         '200':
           description: Activity updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activity'
+                $ref: '#/components/schemas/activityMapper'
         '400':
           description: 'invalid input, object invalid'
     delete:
@@ -1643,7 +1582,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activity'
+                $ref: '#/components/schemas/activityMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1953,15 +1892,15 @@ paths:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
-  /activities/{id}/test:
+  /activities/{id}/session:
     post:
       tags:
         - teachers
         - students
-      summary: testing endpoint for uadventure testing
-      operationId: setTest
+      summary: sessioning endpoint for uadventure sessioning
+      operationId: setSession
       description: |
-        Testing endpoint
+        Sessioning endpoint
       responses:
         '200':
           description: if it is openable or not
@@ -2054,6 +1993,27 @@ paths:
           description: 'Not found'
         '409':
           description: 'Conflict in statementId'
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/user'
+    delete:
+      tags:
+        - teachers
+        - students
+        - lrsmanagers
+      summary: delete the agent profile for the activity
+      operationId: deleteAgentProfile
+      description: |
+        delete the agent profile object of the activity for a student
+      responses:
+        '200':
+          description: the agent profile has been deleted
+        '400':
+          description: 'ID is not a valid ObjectId'
+        '404':
+          description: 'Not found'
+        '501':
+          description: 'Not implemented'
       parameters:
         - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
@@ -2886,8 +2846,8 @@ components:
       name: id
       required: true
       schema:
-        type: string
-        example: "5d07a0767c1405004bc702af"
+        type: integer
+        example: 1234567890
       description: The group ID
     username:
       name: username
@@ -2903,16 +2863,16 @@ components:
       name: simletid
       required: true
       schema:
-        type: string
-        example: "5d07a0767c1405004bc702af"
+        type: integer
+        example: 1234567890
       description: The SIMLET ID
     sessionId:
       in: path
       name: sessionid
       required: true
       schema:
-        type: string
-        example: "5d07a0767c1405004bc702at"
+        type: integer
+        example: 1234567890
       description: The session ID
     searchString:
       in: query
@@ -2961,8 +2921,8 @@ components:
       name: id
       required: true
       schema:
-        type: string
-        example: "5d07a0767c1405004bc702af"
+        type: integer
+        example: 1234567890
       description: The activity ID
     type:
       in: query
@@ -3027,76 +2987,42 @@ components:
         type: string
         example: "5d07a0767c1405004bc702b2"
       description: The lti platform ID
-  properties:
-    username:
-      type: string
-      example: "username_unique"
-    email:
-      type: string
-      example: "email"
-    password:
-      type: string
-      example: "Pass12345"
-    role:
-      type: string
-      description: |
-        The role for the user to have. Some
-        examples include teacher, student 
-        teaching-assistant or researcher
-      enum:
-       - "norole"
-       - "student"
-       - "teacher"
-       - "teaching-assistant"
-       - "researcher"
-       - "admin"
-    external_entity:
-      type: array
-      items:
-        type: object
-        properties:
-          domain:
-            type: string
-            example: keycloak
-          id:
-            type: string
-            example: whateveruuidusedthere_12321
-    id:
-      type: string
-      example: ObjectId("5d07a0767c1405004bc702af")
-    name:
-      type: string
-      example: "Test group for School"
-    owners:
-      type: array
-      items:
-        type: string
-        example: ObjectId("5d07a0767c1405004bc702af")
-    participants:
-      type: array
-      items:
-        type: string
-        example: ObjectId("5d07a0767c1405004bc702af")
-    link:
-      type: object
-    created:
+  
       type: string
       format: date-time
       example: "2017-07-21T17:32:28Z"
   schemas:
-    user:
+    upload_file:
       type: object
       required:
-        - username
-        - email
-        - role
+        - file
       properties:
-        user_id:
-          type: integer
-          example: 123
+        file:
+          type: string
+          format: binary
+    events:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: eventname
+          description: |
+            The event name.
+    user:
+      type: object
+      properties:
         username:
           type: string
           example: "username_unique"
+        isToken:
+          type: boolean
+          example: false
+        token:
+          type: string
+          nullable: true
+          example: "user"
         email:
           type: string
           example: "email@example.com"
@@ -3114,183 +3040,202 @@ components:
            - "researcher"
            - "admin"
            - "lrsmanager"
-        isToken:
-          type: boolean
-          example: false
-        token:
-          type: string
-          example: "user"
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    userBody:
+    userCreation:
+      allOf:
+        - $ref: '#/components/schemas/user'
+        - type: object
+          properties:
+            password:
+              type: string
+              example: "Pass12345"
+          required:
+            - email
+            - role
+            - isToken
+    userMapper:
+      allOf:
+        - $ref: '#/components/schemas/user'
+        - type: object
+          properties:
+            user_id:
+              type: integer
+              example: 123
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+    userPermission:
       type: object
       properties:
         username:
           type: string
-          example: "username_unique"
-        email:
+          example: "teacher1"
+        permission:
           type: string
-          example: "email"
-        role:
-          type: string
-          description: |
-            The role for the user to have. Some
-            examples include teacher, student 
-            teaching-assistant or researcher
-          enum:
-           - "norole"
-           - "student"
-           - "teacher"
-           - "teaching-assistant"
-           - "researcher"
-           - "admin"
-        external_entity:
-          type: array
-          items:
-            type: object
-            properties:
-              domain:
-                type: string
-                example: keycloak
-              id:
-                type: string
-                example: whateveruuidusedthere_12321
+          example: "READ_WRITE"
+    userPermissionCreation:
+      allOf:
+      - $ref: '#/components/schemas/userPermission'
+      - type: object
+        required:
+        - username
+        - permission
+    userPermissionMapper:
+      allOf:
+      - $ref: '#/components/schemas/userPermission'
+      - type: object
+        properties:
+          user_id:
+            type: integer
+            example: 456
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
     group:
       type: object
-      required:
-        - group_id
-        - group_name
-        - group_use_new_generation
       properties:
-        group_id:
-          type: integer
-          example: 123
         group_name:
           type: string
-          example: "Test group for School"
+          example: "Session group for School"
         group_use_new_generation:
           type: boolean
           example: true
-        participants:
-          type: array
-          items:
-            type: object
-            properties:
-              user_id:
+    groupCreation:
+      allOf:
+      - $ref: '#/components/schemas/group'
+      - type: object
+        required:
+        - group_name
+        - group_use_new_generation
+    groupMapper:
+      allOf:
+      - $ref: '#/components/schemas/group'
+      - type: object
+        properties:
+          group_id:
+            type: integer
+            example: 123
+          participants:
+              type: array
+              items:
                 type: integer
-              username:
-                type: string
-          nullable: true
-        group_owner_user_id:
-          type: integer
-          example: 456
-        group_owner_username:
-          type: string
-          example: "teacher1"
-        createdAt:
-          type: string
-          format: date-time
-          example: "2017-07-21T17:32:28Z"
-        updatedAt:
-          type: string
-          format: date-time
-          example: "2017-07-21T17:32:28Z"
-    study:
+                example: 123
+          group_owner_user_id:
+            type: integer
+            example: 456
+          group_owner_username:
+            type: string
+            example: "teacher1"
+          createdAt:
+            type: string
+            format: date-time
+            example: "2017-07-21T17:32:28Z"
+          updatedAt:
+            type: string
+            format: date-time
+            example: "2017-07-21T17:32:28Z"
+    simlet:
       type: object
-      required:
-        - simlet_id
-        - simlet_name
       properties:
-        simlet_id:
-          type: integer
-          example: 123
         simlet_name:
           type: string
           example: "Survey for SG validation"
         simlet_description:
           type: string
-          example: "A comprehensive study for serious game validation"
-        current_user_id:
-          type: integer
-          example: 456
-        current_user_username:
-          type: string
-          example: "researcher1"
-        current_user_permission:
-          type: string
-          example: "READ_WRITE"
-        allocator_id:
-          type: integer
-          example: 789
-          nullable: true
-        sessions:
-          type: array
-          items:
-            type: object
-            properties:
-              session_id:
+          example: "A comprehensive simlet for serious game validation"
+      simletCreation:
+        allOf:
+        - $ref: '#/components/schemas/simlet'
+        - type: object
+          required:
+          - simlet_name
+          - simlet_description
+      simletMapper:
+        allOf:
+        - $ref: '#/components/schemas/simlet'
+        - type: object
+          properties:        
+            simlet_id:
+              type: integer
+              example: 123
+            allocator_id:
+              type: integer
+              example: 789
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+            current_user_id:
+              type: integer
+              example: 456
+            current_user_username:
+              type: string
+              example: "researcher1"
+            current_user_permission:
+              type: string
+              example: "READ_WRITE"
+            sessions:
+              type: array
+              items:
                 type: integer
-              session_name:
-                type: string
-          nullable: true
-        groups:
-          type: array
-          items:
-            type: object
-            properties:
-              group_id:
+            groups:
+              type: array
+              items:
                 type: integer
-              group_name:
+            tags:
+              type: array
+              items:
                 type: string
-          nullable: true
-        tags:
-          type: array
-          items:
-            type: object
-            properties:
-              tag_id:
-                type: integer
-              name:
-                type: string
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    test:
+    # Simlet and session participants
+    participantMapper:
+      allOf:
+      - $ref: '#/components/schemas/userMapper'
+      - type: object
+        properties:
+          simlet_id:
+            type: integer
+            example: 123
+          session_id:
+            type: integer
+            example: 201
+          allocated_group:
+            type: string
+            example: "control"
+          allocation_date:
+            type: string
+            format: date-time
+    scheduleMapper:
       type: object
-      required:
-        - session_id
-        - simlet_id
       properties:
-        session_id:
-          type: integer
-          example: 201
-        simlet_id:
+        next:
+          type: string
+          description: "The next activity ID"
+        simletId:
           type: integer
           example: 123
-        current_user_id:
+        sessionId:
           type: integer
-          example: 456
-        current_user_username:
-          type: string
-          example: "researcher1"
-        current_user_permission:
-          type: string
-          example: "READ_WRITE"
+          example: 201
+        activities: 
+          type: array
+          items:
+            $ref: '#/components/schemas/activityMapper'
+    session:
+      type: object
+      properties:
         session_name:
           type: string
-          example: "Test A for my study"
+          example: "Session A for my simlet"
         session_description:
           type: string
-          example: "Pre-test session for baseline measurement"
+          example: "Pre-session session for baseline measurement"
         session_experimental_method:
           type: string
           example: "control"
@@ -3308,46 +3253,53 @@ components:
           type: string
           format: date-time
           nullable: true
-        activities:
-          type: array
-          items:
-            type: object
-            properties:
-              activity_id:
-                type: integer
-              activity_name:
-                type: string
-          nullable: true
-        tags:
-          type: array
-          items:
-            type: object
-            properties:
-              tag_id:
-                type: integer
-              name:
-                type: string
-          nullable: true
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    activity:
+    sessionCreation:
+      allOf:
+      - $ref: '#/components/schemas/session'
+      - type: object
+        required:
+        - session_name
+        - session_description
+        - session_experimental_method
+        - session_can_be_manually_activated
+        - session_active
+    sessionMapper:
+      allOf:
+      - $ref: '#/components/schemas/session'
+      - type: object
+        properties:
+          session_id:
+            type: integer
+            example: 201
+          simlet_id:
+            type: integer
+            example: 123
+          current_user_id:
+            type: integer
+            example: 456
+          current_user_username:
+            type: string
+            example: "researcher1"
+          current_user_permission:
+            type: string
+            example: "READ_WRITE"
+          activities:
+            type: array
+            items:
+              type: integer
+          tags:
+            type: array
+            items:
+              type: integer
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+    noTypedActivity:
       type: object
-      required:
-        - activity_id
-        - session_id
-        - activity_type
-        - activity_name
       properties:
-        session_id:
-          type: integer
-          example: 201
-        activity_id:
-          type: integer
-          example: 301
         activity_name:
           type: string
           example: "Pre-survey activity"
@@ -3355,79 +3307,150 @@ components:
           type: string
           enum: ["default", "manual", "limesurvey", "gameplay", "lti_tool"]
           example: "limesurvey"
-        activity_order:
-          type: integer
-          example: 1
-        trace_storage:
+        activity_trace_storage:
           type: boolean
           example: true
-        restart:
-          type: boolean
-          example: false
-          description: "Whether the activity can be restarted"
-        description:
+        activity_description:
           type: string
           example: "Survey for validation"
-        activity_open_date:
-          type: string
-          format: date-time
-          nullable: true
-        activity_close_date:
-          type: string
-          format: date-time
-          nullable: true
-        activity_url:
-          type: string
-          nullable: true
-          example: "https://example.com/activity"
-        activity_extra_data:
-          type: string
-          nullable: true
-          description: "JSON string containing extra configuration data"
-        start_completion_policy:
-          type: string
-          nullable: true
-        end_completion_policy:
-          type: string
-          nullable: true
-        lrs_user:
-          type: string
-          nullable: true
-        lrs_password:
-          type: string
-          nullable: true
+        activity_comply_with_GDPR:
+          type: boolean
+          example: true
+          description: "Whether the activity complies with GDPR regulations. Has to be true if the activity collects data."
         activity_can_be_restarted:
           type: boolean
           example: false
-        activity_allow_anonymous_lrs_read:
-          type: boolean
-          example: false
-        activity_can_check_completion_status:
-          type: boolean
-          example: true
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-    activityBody:
+          description: "Whether the activity can be restarted"
+    noTypedActivityCreation:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivity'
+      - type: object
+        required:
+        - activity_name
+        - activity_type
+    noTypedActivityMapper:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivity'
+      - type: object
+        properties:
+          activity_order:
+            type: integer
+            example: 1
+          session_id:
+            type: integer
+            example: 201
+          activity_id:
+            type: integer
+            example: 301
+          activity_presignedUrl:
+            type: string
+            nullable: true
+            example: "https://example.com/presigned-url"
+          activity_presignedUrl_generated_at:
+            type: string
+            format: date-time
+            nullable: true
+          activity_presignedUrl_expires_at:
+            type: string
+            format: date-time
+            nullable: true
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
+    limesurveyActivity:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivity'
+      - type: object
+        properties:
+          survey_id:
+            type: integer
+            example: 789
+          survey_language:
+            type: string
+            example: "en"
+    limesurveyActivityCreation:
+      allOf:
+      - $ref: '#/components/schemas/limesurveyActivity'
+      - $ref: '#/components/schemas/noTypedActivityCreation'
+      - type: object
+        required:
+        - survey_id
+        - survey_language
+    manualActivity:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivity'
+      - type: object
+        properties:
+          manual_user_managed:
+            type: boolean
+            example: true
+          manual_ressource_type:
+            type: string
+            enum: ["WEB", "DESKTOP_FILE"]
+            example: "WEB"
+          manual_ressource_url:
+            type: string
+            example: "https://example.com/manual-activity-resource"
+    manualActivityCreation:
+      allOf:
+      - $ref: '#/components/schemas/manualActivity'
+      - $ref: '#/components/schemas/noTypedActivityCreation'
+      - type: object
+        required:
+        - manual_user_managed
+        - manual_ressource_type
+        - manual_ressource_url
+    gameplayActivity:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivity'
+      - type: object
+        properties:
+          game_backup:
+            type: boolean
+            example: false
+          game_scorm_xapi:
+            type: boolean
+            example: false
+          game_type:
+            type: string
+            enum: ["WEB", "DESKTOP_FILE"]
+            example: "WEB"
+          game_url:
+            type: string
+            example: "https://example.com/gameplay-activity-resource"
+          category_id:
+            type: integer
+            example: 5
+          subject_area_id:
+            type: integer
+            example: 3
+    gameplayActivityCreation:
+      allOf:
+      - $ref: '#/components/schemas/gameplayActivity'
+      - $ref: '#/components/schemas/noTypedActivityCreation'
+      - type: object
+        required:
+        - game_type
+        - game_url
+    activity:
+      oneOf:
+      - $ref: '#/components/schemas/limesurveyActivity'
+      - $ref: '#/components/schemas/manualActivity'
+      - $ref: '#/components/schemas/gameplayActivity'
+    activityCreation:
+      oneOf:
+      - $ref: '#/components/schemas/limesurveyActivityCreation'
+      - $ref: '#/components/schemas/manualActivityCreation'
+      - $ref: '#/components/schemas/gameplayActivityCreation'
+    activityMapper:
+      allOf:
+      - $ref: '#/components/schemas/activity'
+      - $ref: '#/components/schemas/noTypedActivityMapper'
+        activity_type:
       type: object
-      properties:
-        id:
-          type: string
-          example: ObjectId("5d07a0767c1405004bc702af")
-        name:
-          type: string
-          example: "Survey for validation"
-        type:
-          type: string
-          example: "survey, gameplay, etc..."
-    activity_type:
-      type: object
-      required:
-        - name
-        - type
       properties:
         name:
           type: string
@@ -3441,11 +3464,37 @@ components:
         utils:
           type: object
           additionalProperties: true
+    allocator:
+      type: object
+      properties:
+        allocator_type:
+          type: string
+          example: "random"
+    allocatorCreation:
+      allOf:
+      - $ref: '#/components/schemas/allocator'
+      - type: object
+        required:
+        - allocator_type
+    allocatorMapper:
+      allOf:
+      - $ref: '#/components/schemas/allocator'
+      - type: object
+        properties:
+          allocator_id:
+            type: integer
+            example: 401
+          simlet_id:
+            type: integer
+            example: 123  
+          createdAt:
+            type: string
+            format: date-time
+          updatedAt:
+            type: string
+            format: date-time
     allocator_type:
       type: object
-      required:
-        - name
-        - type
       properties:
         name:
           type: string
@@ -3455,48 +3504,19 @@ components:
           example: "group"
         description:
           type: string
-          example: "This allocator allows you to select to which test branch is each group assigned."
+          example: "This allocator allows you to select to which session branch is each group assigned."
         utils:
           type: object
           additionalProperties: true
-    allocator:
-      type: object
-      required:
-        - allocator_id
-        - simlet_id
-        - allocator_type
-      properties:
-        allocator_id:
-          type: integer
-          example: 401
-        simlet_id:
-          type: integer
-          example: 123
-        allocator_type:
-          type: string
-          example: "random"
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
     lti_tool:
       type: object
-      required:
-        - name
-        - description
-        - url
-        - jwks_uri
-        - login_uri
-        - redirect_uri
       properties:
         id:
           type: string
           example: ObjectId("5d07a0767c1405004bc702b2")
         name:
           type: string
-          example: "Test tool"
+          example: "Session tool"
         description:
           type: string
           example: "This is a test tool used for testing"
@@ -3519,13 +3539,6 @@ components:
           type: object
     lti_platform:
       type: object
-      required:
-        - url
-        - name
-        - clientId
-        - authenticationEndpoint
-        - accesstokenEndpoint
-        - authConfig
       properties:
         id:
           type: string
@@ -3555,13 +3568,6 @@ components:
           type: object
     lti_context:
       type: object
-      required:
-        - org
-        - type
-        - label
-        - title
-        - sourcedId
-        - history
       properties:
         id:
           type: string
@@ -3586,74 +3592,6 @@ components:
         history:
           type: string
           example: "A comma-separated list of URL-encoded context ID values representing previous copies of the context"
-    upload_file:
-      type: object
-      required:
-        - file
-      properties:
-        file:
-          type: string
-          format: binary
-      x-swagger-mongoose:
-        exclude-schema: true
-    events:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          example: eventname
-          description: |
-            The event name.
-      x-swagger-mongoose:
-        exclude-schema: true
-    add_group_body:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          example: Name of the group
-        random_participants:
-          type: integer
-          description: |
-            The amount of codes to be created
-            randomly when the group is created
-          example: 30
-      x-swagger-mongoose:
-        exclude-schema: true
-    add_study_body:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          example: Name of the Study
-      x-swagger-mongoose:
-        exclude-schema: true
-    add_study_to_group_body:
-      required:
-      - study
-      type: object
-      properties:
-        study:
-          type: string
-          example: 5d07a0767c1405004bc702af
-      x-swagger-mongoose:
-        exclude-schema: true
-    add_group_to_study_body:
-      required:
-      - group
-      type: object
-      properties:
-        group:
-          type: string
-          example: 5d07a0767c1405004bc702af
-      x-swagger-mongoose:
-        exclude-schema: true
     lti_status:
       required:
       - tool
@@ -3666,8 +3604,6 @@ components:
         password:
           type: boolean
           example: false
-      x-swagger-mongoose:
-        exclude-schema: true
     link_accounts:
       required:
       - main
@@ -3682,191 +3618,7 @@ components:
           example: JWT of the secondary account
         domain:
           type: string
-          example: moodle_12321
-      x-swagger-mongoose:
-        exclude-schema: true
-    # Activity Type Schemas based on mappers
-    gameplay_activity:
-      allOf:
-        - $ref: '#/components/schemas/activity'
-        - type: object
-          properties:
-            backup:
-              type: boolean
-              example: false
-            scorm_xapi_by_game:
-              type: boolean
-              example: false
-            category_id:
-              type: integer
-              example: 5
-            subject_area_id:
-              type: integer
-              example: 3
-            game_type:
-              type: string
-              example: "adventure"
-            game_url:
-              type: string
-              example: "https://game.example.com/play"
-    limesurvey_activity:
-      allOf:
-        - $ref: '#/components/schemas/activity'
-        - type: object
-          properties:
-            survey_id:
-              type: integer
-              example: 123456
-            language:
-              type: string
-              example: "en"
-            lrsset:
-              type: integer
-              example: 1
-    manual_activity:
-      allOf:
-        - $ref: '#/components/schemas/activity'
-        - type: object
-          properties:
-            user_managed:
-              type: boolean
-              example: false
-            ressource_type:
-              type: string
-              example: "document"
-            ressource_url:
-              type: string
-              example: "https://example.com/resource.pdf"
-    # Group and User related schemas
-    group_participant:
-      type: object
-      required:
-        - group_id
-        - participant_id
-        - username
-      properties:
-        group_id:
-          type: integer
-          example: 123
-        participant_id:
-          type: integer
-          example: 456
-        username:
-          type: string
-          example: "student1"
-        token:
-          type: string
-          example: "abc123token"
-        isToken:
-          type: boolean
-          example: false
-        role:
-          type: string
-          example: "student"
-        email:
-          type: string
-          example: "student1@example.com"
-    user_permission:
-      type: object
-      required:
-        - username
-        - permission
-      properties:
-        username:
-          type: string
-          example: "teacher1"
-        permission:
-          type: string
-          example: "READ_WRITE"
-    # Allocator type schemas
-    random_allocator:
-      allOf:
-        - $ref: '#/components/schemas/allocator'
-        - type: object
-          properties:
-            name:
-              type: string
-              example: "Random Allocator"
-            description:
-              type: string
-              example: "An allocator that randomly assigns users to sessions."
-    group_allocator:
-      allOf:
-        - $ref: '#/components/schemas/allocator'
-        - type: object
-          properties:
-            name:
-              type: string
-              example: "Group Allocator"
-            description:
-              type: string
-              example: "This allocator allows you to select to which test branch is each group assigned."
-    session_allocator:
-      allOf:
-        - $ref: '#/components/schemas/allocator'
-        - type: object
-          properties:
-            name:
-              type: string
-              example: "Session Allocator"
-            description:
-              type: string
-              example: "Allocates participants to specific sessions based on session parameters."
-    # Study and session participants
-    simlet_participant:
-      type: object
-      required:
-        - simlet_id
-        - user_id
-      properties:
-        simlet_id:
-          type: integer
-          example: 123
-        user_id:
-          type: integer
-          example: 456
-        username:
-          type: string
-          example: "student1"
-        email:
-          type: string
-          example: "student1@example.com"
-        role:
-          type: string
-          example: "student"
-        allocated_group:
-          type: string
-          example: "control"
-        allocation_date:
-          type: string
-          format: date-time
-    simlet_group:
-      type: object
-      required:
-        - simlet_id
-        - group_id
-      properties:
-        simlet_id:
-          type: integer
-          example: 123
-        group_id:
-          type: integer
-          example: 456
-        group_name:
-          type: string
-          example: "Control Group A"
-        use_new_generation:
-          type: boolean
-          example: true
-        participant_count:
-          type: integer
-          example: 25
-        assigned_date:
-          type: string
-          format: date-time
-        permission:
-          type: string
-          example: "READ"
+          example: moodle_12321    
 #    lti_claims:
 #      type: object
 #      example: |
@@ -3896,5 +3648,3 @@ components:
 #              "name": "SIMVA e-UCM"
 #            }
 #        }'
-#      x-swagger-mongoose:
-#        exclude-schema: true
