@@ -14,7 +14,8 @@ export async function runMigrations() {
     storage: new SequelizeStorage({ sequelize: db.sequelize }),
     logger: logger,
   });
-
+  
+  logger.info("Running migrations...");
   await umzug.up();
   logger.info("Migrations executed");
 }

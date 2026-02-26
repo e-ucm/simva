@@ -41,5 +41,4 @@ export async function up({ context }: { context: QueryInterface }) {
 }
 
 export async function down({ context }: { context: QueryInterface }) {
-
 }

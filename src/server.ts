@@ -82,6 +82,13 @@ import { runMigrations } from "@/lib/migrate";
 async function start() {
   await db.sequelize.authenticate();
   await runMigrations();
+  try {
+    await db.Functions.runSqlFile(config.db.view_complete_path);
+    logger.debug('Database views initialized successfully');
+  } catch (err) {
+    logger.error({err}, 'Error initializing database views:', (err as Error).message);
+    throw err;
+  }
 
   server = app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 SIMVA API running on 0.0.0.0:${PORT} => external : ${config.api.url}`);
