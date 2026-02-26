@@ -46,7 +46,6 @@ paths:
           description: 'invalid input, object invalid'
         '401':
           description: 'One or both of the JWT are not valid'
-        required: true
   /limesurvey-completion-webhooks:
     post:
       summary: get completion from limesurvey
@@ -60,7 +59,6 @@ paths:
           description: 'invalid input, object invalid'
         '401':
           description: 'One or both of the JWT are not valid'
-        required: true
   /users:
     get:
       tags:
@@ -145,7 +143,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/link_accounts'
-        required: true
   /users/events:
     post:
       summary: Receives the events of the SSO to sync the users
@@ -165,7 +162,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/events'
-        required: true
   /users/{username}:
     patch:
       tags:
@@ -198,7 +194,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/user'
-        required: true
   /groups:
     get:
       tags:
@@ -245,7 +240,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/groupCreation'
-        required: true
   /groups/{id}:
     get:
       tags:
@@ -266,7 +260,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/groupId'
     patch:
@@ -395,7 +389,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/userCreation'
-        required: true
   /groups/count:
     get:
       tags:
@@ -530,7 +523,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/userPermissionMapper'
-        required: true
     delete:
       tags:
         - admins
@@ -601,7 +593,7 @@ paths:
         '409':
           description: an existing item already exists
       requestBody:
-        required: true
+        # required: true removed, not valid in responses
         content:
           application/json:
             schema:
@@ -652,7 +644,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/simletId'
     patch:
@@ -695,7 +687,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/export:
@@ -717,7 +709,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/events:
@@ -773,7 +765,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule/events:
@@ -944,7 +936,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/sessionCreation'
-        required: true
+        # required: true removed, not valid in responses
   /simlets/{simletid}/participants:
     get:
       tags:
@@ -986,7 +978,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1027,7 +1019,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1087,7 +1079,7 @@ paths:
         '400':
           description: 'invalid input, object invalid'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1257,12 +1249,7 @@ paths:
           description: 'simlet or user not found'
       parameters:
         - $ref: '#/components/parameters/simletId'
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID of the user
+        - $ref: '#/components/parameters/userId'
     patch:
       tags:
         - admins
@@ -1284,11 +1271,7 @@ paths:
           description: 'simlet or user not found'
       parameters:
         - $ref: '#/components/parameters/simletId'
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/userId'
           description: ID of the user
       requestBody:
         content:
@@ -1313,12 +1296,7 @@ paths:
           description: 'simlet or user not found'
       parameters:
         - $ref: '#/components/parameters/simletId'
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID of the user
+        - $ref: '#/components/parameters/userId'
   /simlets/{simletid}/sessions/{sessionid}/permissions:
     get:
       tags:
@@ -1395,12 +1373,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID of the user
+        - $ref: '#/components/parameters/userId'
     patch:
       tags:
         - admins
@@ -1423,12 +1396,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID of the user
+        - $ref: '#/components/parameters/userId'
       requestBody:
         content:
           application/json:
@@ -1453,12 +1421,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID of the user
+        - $ref: '#/components/parameters/userId'
   /activities:
     get:
       tags:
@@ -1525,9 +1488,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
     patch:
       summary: Modifies the activity.
       tags:
@@ -1536,7 +1499,7 @@ paths:
       description: |
         Modifies the activity
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
       requestBody:
         content:
           application/json:
@@ -1564,9 +1527,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
   /activities/{id}/export:
     get:
       tags:
@@ -1586,7 +1549,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/sessionId'
   /activities/{id}/surveyowner:
@@ -1604,7 +1567,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{id}/surveylanguages:
@@ -1622,7 +1585,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{id}/usersurveylist:
@@ -1640,9 +1603,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
   /activities/{id}/openable:
     get:
       tags:
@@ -1663,9 +1626,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
   /activities/{id}/open:
     get:
       tags:
@@ -1682,7 +1645,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/sessionId'
   /activities/{id}/target:
@@ -1701,9 +1664,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
   /activities/{id}/progress:
     get:
       tags:
@@ -1719,9 +1682,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
   /activities/{id}/suspension:
     post:
@@ -1738,9 +1701,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/initialized:
     get:
@@ -1757,9 +1720,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
     post:
       tags:
@@ -1775,9 +1738,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/completion:
     get:
@@ -1794,9 +1757,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
     post:
       tags:
@@ -1812,9 +1775,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/completion/multi:
     post:
@@ -1830,9 +1793,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
   /activities/{id}/result:
     get:
       tags:
@@ -1848,9 +1811,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
     post:
@@ -1867,9 +1830,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/hasresult:
     get:
@@ -1887,7 +1850,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1907,9 +1870,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/time'
         - $ref: '#/components/parameters/user'
   /activities/{id}/presignedurl:
@@ -1926,7 +1889,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1947,7 +1910,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
@@ -1969,11 +1932,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '409':
           description: 'Conflict in statementId'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
     put:
       tags:
@@ -1990,11 +1953,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '409':
           description: 'Conflict in statementId'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
     delete:
       tags:
@@ -2011,11 +1974,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/agents:
     get:
@@ -2033,12 +1996,12 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/user'
         - $ref: '#/components/parameters/type'
   /activities/{id}/agents/profile:
     get:
@@ -2056,12 +2019,12 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/user'
         - $ref: '#/components/parameters/type'
     post:
       tags:
@@ -2078,9 +2041,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
     put:
       tags:
@@ -2097,11 +2060,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
     delete:
       tags:
@@ -2118,11 +2081,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/activities:
     get:
@@ -2140,12 +2103,12 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/user'
         - $ref: '#/components/parameters/type'
   /activities/{id}/activities/profile:
     get:
@@ -2163,12 +2126,12 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/user'
         - $ref: '#/components/parameters/type'
     post:
       tags:
@@ -2185,7 +2148,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/user'
@@ -2204,11 +2167,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
     delete:
       tags:
@@ -2225,11 +2188,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/activities/status:
     get:
@@ -2247,7 +2210,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
@@ -2269,9 +2232,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
     put:
       tags:
@@ -2288,11 +2251,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
     delete:
       tags:
@@ -2309,11 +2272,11 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
   /activities/{id}/about:
     get:
@@ -2331,12 +2294,12 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/users'
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/user'
         - $ref: '#/components/parameters/type'
   /activities/{id}/extension/{extension_id}:
     get:
@@ -2354,7 +2317,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
         '501':
           description: 'Not implemented'
       parameters:
@@ -2364,7 +2327,7 @@ paths:
           schema:
             type: string
           description: Extension identifier
-        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
   /activitytypes:
@@ -2388,7 +2351,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
   /allocatortypes:
     get:
       tags:
@@ -2410,7 +2373,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
   /lti:
     get:
       tags:
@@ -2657,7 +2620,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/ltiToolId'
     put:
@@ -2694,7 +2657,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/ltiToolId'
   /lti/platforms:
@@ -2760,9 +2723,9 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
-        - $ref: '#/components/parameters/ltiToolId'
+        - $ref: '#/components/parameters/ltiPlatformId'
     put:
       tags:
         - teachers
@@ -2788,7 +2751,7 @@ paths:
       tags:
         - teachers
       summary: Deletes the lti platform with the given ID
-      operationId: deleteLtiTool
+      operationId: deleteLtiPlatform
       description: |
         Deletes the designed lti platform
       responses:
@@ -2797,7 +2760,7 @@ paths:
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
-          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
       parameters:
         - $ref: '#/components/parameters/ltiPlatformId'
   /uploads:
@@ -2841,6 +2804,22 @@ components:
             read: Grants read access
             write: Grants write access
   parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        example: 1234567890
+      description: The ID of the resource
+    userId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        example: 1234567890
+      description: The user ID
     groupId:
       in: path
       name: id
@@ -2987,10 +2966,15 @@ components:
         type: string
         example: "5d07a0767c1405004bc702b2"
       description: The lti platform ID
-  
-      type: string
-      format: date-time
-      example: "2017-07-21T17:32:28Z"
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+    BadRequest:
+      description: Bad request
+    NotFound:
+      description: Resource not found
+    InternalServerError:
+      description: Internal server error
   schemas:
     upload_file:
       type: object
@@ -3148,14 +3132,14 @@ components:
         simlet_description:
           type: string
           example: "A comprehensive simlet for serious game validation"
-      simletCreation:
+    simletCreation:
         allOf:
         - $ref: '#/components/schemas/simlet'
         - type: object
           required:
           - simlet_name
           - simlet_description
-      simletMapper:
+    simletMapper:
         allOf:
         - $ref: '#/components/schemas/simlet'
         - type: object
@@ -3449,7 +3433,7 @@ components:
       allOf:
       - $ref: '#/components/schemas/activity'
       - $ref: '#/components/schemas/noTypedActivityMapper'
-        activity_type:
+    activity_type:
       type: object
       properties:
         name:
