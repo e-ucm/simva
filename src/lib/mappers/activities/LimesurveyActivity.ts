@@ -146,32 +146,32 @@ export class LimesurveyActivity extends Activity {
 		return super.getInitialized(participants_id);
 	}
 
-	async setInitialized(initialized: boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setInitialized(initialized, participants_id);
+	async setInitialized(initialized: boolean, participant_id: number): Promise<ActivityCompletion> {
+		return super.setInitialized(initialized, participant_id);
 	}
 
 	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number>> {
 		return super.getProgress(participants_id);
 	}
 	
-	async setProgress(progress: number, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setProgress(progress, participants_id);
+	async setProgress(progress: number, participant_id: number): Promise<ActivityCompletion> {
+		return super.setProgress(progress, participant_id);
 	}
 
 	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		return super.getCompletion(participants_id);
 	}
 
-	async setCompletion(completed: boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setCompletion(completed, participants_id);
+	async setCompletion(completed: boolean, participant_id: number): Promise<ActivityCompletion> {
+		return super.setCompletion(completed, participant_id);
 	}
 
 	async setMultiCompletion(status : boolean): Promise<ActivityCompletion[]> {
 		return super.setMultiCompletion(status);
 	}
 
-	async setSuspension(status : boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setSuspension(status, participants_id);
+	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
+		return super.setSuspension(status, participant_id);
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
@@ -180,6 +180,14 @@ export class LimesurveyActivity extends Activity {
 
 	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
 		return super.sendXAPITraceForActivity(username, verb, timestamp, resultScore, reasonExtension);
+	}
+	
+	async generatePresignedFileUrl(): Promise<string> {
+		return super.generatePresignedFileUrl();
+	}
+
+	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string | null>> {
+		return super.getResults(type, participants_id);
 	}
 	
 	/**

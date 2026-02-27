@@ -2381,6 +2381,10 @@ paths:
       responses:
         '200':
           description: the presigned minio url of the activity data result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityPresignedUrlMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -3735,7 +3739,7 @@ components:
         (if logged in student , user is not needed)
       schema:
         type: string
-        format: 'user1,user2,user3'
+        example: 'user1,user2,user3'
     type:
       in: query
       name: type
@@ -3745,7 +3749,7 @@ components:
       required: false
       schema:
         type: string
-        format: 'backup'
+        example: 'results'
     time:
       in: query
       name: time
@@ -4128,6 +4132,13 @@ components:
                   allocated_token: 
                     type: string
                     example: "abc123"
+    
+    activityPresignedUrlMapper:
+      type: object
+      properties:
+        url:
+          type: string
+          example: "https://example.com/presigned-url"
     session:
       type: object
       properties:
@@ -4412,7 +4423,7 @@ components:
       type: object
       description: Key/value object to store the result data of the activity (e.g., score, completion status, etc.)
       additionalProperties:
-        type: object
+        type: string
     allocator:
       type: object
       properties:

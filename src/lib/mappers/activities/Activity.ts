@@ -682,8 +682,8 @@ export class Activity {
 		return new ActivityMappingResult(new Map<number, boolean>());
 	}
 
-	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string>> {
-		return new ActivityMappingResult(new Map<number, string>());
+	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string|null>> {
+		return new ActivityMappingResult(new Map<number, string|null>());
 	}
 
 	/**
@@ -697,10 +697,10 @@ export class Activity {
 	 */
 	async setResult(type: string, result: any, participant_id: number): Promise<void> {
 		switch(type) {
-			case 'backup':
+			case 'results':
 				await minioClient.putFile(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`, result);
 				break;
-			case 'xapi':
+			case 'traces':
 				await this.sendStatementsLRSForActivity(participant_id, result);
 				break;
 			default:
@@ -714,23 +714,25 @@ export class Activity {
 	 * 
 	 * @async
 	 * @method generatePresignedFileUrl
-	 * @returns {Promise<void>} Promise that resolves when presigned URL is generated
+	 * @returns {Promise<string>} Promise that resolves to the generated presigned URL
 	 */
-	async generatePresignedFileUrl(): Promise<any> {
-		let path = `${config.minio.outputs_dir}/${this.activity_id}/${config.minio.traces_file}`;
+	async generatePresignedFileUrl(): Promise<string> {
+		let path = `${config.minio.outputsDir}/${this.activity_id}/${config.minio.tracesFile}`;
 		logger.info(path);
+		if(this.activity_presignedUrl && this.activity_presignedUrl_expired_at) {
+			let expirationDate = this.activity_presignedUrl_expired_at;
+			if (expirationDate > new Date()) {
+				logger.info("Presigned URL is still valid, returning existing URL");
+				return this.activity_presignedUrl!;
+			}
+		}
 		if (await minioClient.fileExists(path)) {
-			let presignedUrl = null;	
-			let time_before_expiration=config.minio.presigned_url_expiration_time_in_second;
-			presignedUrl = await minioClient.getPresignedUrl(path, time_before_expiration);
-			const now=new Date().toISOString();
-			return {
-				url: presignedUrl,
-				generated_at: now,
-				expire_on_seconds: time_before_expiration
-			};
+			let presignedUrl = null;
+			presignedUrl = await minioClient.getPresignedUrl(path, config.minio.presigned_url_expiration_time_in_second);
+			await this.patch({ activity_presignedUrl: presignedUrl, activity_presignedUrl_generated_at: new Date(), activity_presignedUrl_expired_at: new Date(Date.now() + config.minio.presigned_url_expiration_time_in_second * 1000) });
+			return presignedUrl;
 		} else {
-			throw `Error the file ${path} don't exist in minio`;
+			throw new NotFoundError(`Error the file ${path} don't exist in minio`);
 		}
 	}
 

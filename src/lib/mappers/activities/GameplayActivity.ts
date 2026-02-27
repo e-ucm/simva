@@ -6,6 +6,7 @@ import { config } from "@/lib/config";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 import { minioClient } from "@/lib/utils/minioclient";
 import { BadRequestError, ValidationError } from "@/lib/errors/appErrors";
+import ms from "ms";
 
 /**
  * Gameplay Activity mapper class extending base Activity.
@@ -230,7 +231,7 @@ export class GamePlayActivity extends Activity {
 	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
 		let resultMap = new Map<number, boolean>();
 		switch(type) {
-			case 'backup':
+			case 'results':
 				for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
 					if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
 						resultMap.set(participant_id, true);
@@ -245,13 +246,24 @@ export class GamePlayActivity extends Activity {
 		return new ActivityMappingResult(resultMap);
 	}
 
-	async getResult(type: string, participants_id?: number[]): Promise<ActivityMappingResult<any>> {
+	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string | null>> {
 		let resultMap = new Map<number, string | null>();
-		for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
-			if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
-				resultMap.set(participant_id, await minioClient.getPresignedUrl(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`, config.minio.presignedUrlExpirationSeconds));
-			} else {
-				resultMap.set(participant_id, null);
+		let participantIds: number[] = await this.getAllCurrentParticipantsId(participants_id);
+		logger.debug(`Getting results for activity ${this.activity_id} and participants ${participantIds}`);
+		for (const participant_id of participantIds) {
+			switch(type) {
+				case 'results':
+					let file=`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`;
+					logger.debug(`Checking if file exists: ${file}`);
+					if(await minioClient.fileExists(file)) {
+						resultMap.set(participant_id, await minioClient.getPresignedUrl(file, config.minio.presignedUrlExpirationSeconds));
+					} else {
+						resultMap.set(participant_id, null);
+					}
+					break;
+				default:
+					resultMap.set(participant_id, null);
+					break;
 			}
 		}
 		return new ActivityMappingResult(resultMap);
@@ -259,19 +271,21 @@ export class GamePlayActivity extends Activity {
 
 	async setResult(type: string, result: any, participant_id: number): Promise<void> {
 		switch(type) {
-			case 'backup':
+			case 'results':
 				if(!this.game_backup) {
 					throw new ValidationError('Game backup is not enabled for this activity');
 				}
-				await super.setResult(type, result, participant_id);
 				break;
-			case 'xapi':
-				await super.setResult(type, result, participant_id);
+			case 'traces':
 				break;
 			default:
 				throw new BadRequestError(`Unsupported result type: ${type}`);
 		}
-		
+		await super.setResult(type, result, participant_id);
+	}
+
+	async generatePresignedFileUrl(): Promise<string> {
+		return super.generatePresignedFileUrl();
 	}
 
 	/**

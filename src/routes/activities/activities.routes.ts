@@ -16,6 +16,7 @@ import {
   getResultsForActivity,
   setResultForActivity,
   hasResultsForActivity,
+  getPresignedUrlForActivity,
   updateActivity
 } from "@/controlers/activities/activities.controlers";
 import {
@@ -79,7 +80,7 @@ router.post("/:activity_id/progress", setProgressForActivity);
 router.post("/:activity_id/completion", setCompletionForActivity);
 router.post("/:activity_id/suspension", setSuspensionForActivity);
 router.post("/:activity_id/completion/multi", setMultiCompletionForActivity);
-//router.get("/:activity_id/presignedurl", getPresignedUrlForActivity);
+router.get("/:activity_id/presignedurl", getPresignedUrlForActivity);
 router.get("/:activity_id/result", getResultsForActivity);
 router.post("/:activity_id/result", setResultForActivity);
 router.get("/:activity_id/hasResult", hasResultsForActivity);

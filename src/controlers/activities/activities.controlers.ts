@@ -19,7 +19,7 @@ import { logger } from "@/lib/logger";
 
 
 function parseParticipantsId(participantsIdQuery: unknown): number[] | undefined {
-  logger.debug(parseParticipantsId, "Received participants_id query param:");
+  logger.debug(participantsIdQuery, "Received participants_id query param:");
   if (participantsIdQuery === undefined || participantsIdQuery === null) {
     return undefined;
   }
@@ -32,7 +32,7 @@ function parseParticipantsId(participantsIdQuery: unknown): number[] | undefined
     .flatMap((value) => String(value).split(","))
     .map((value) => value.trim())
     .filter((value) => value.length > 0);
-
+  logger.debug(tokens, "Parsed tokens from query param:");
   if (tokens.length === 0) {
     return undefined;
   }
@@ -68,14 +68,15 @@ export async function getActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     switch(currentUser?.role) {
       case "teacher":
-        const activity = await activitiesService.getActivity(activityId, currentUser!.user_id as number, false);
+        const activity = await activitiesService.getActivity(activityId, currentUserId, false);
         return res.json(activity.toJSON());
       case "student":
-        const allocatedActivity = await activitiesService.getActivity(activityId, currentUser!.user_id as number, true);
+        const allocatedActivity = await activitiesService.getActivity(activityId, currentUserId, true);
         return res.json(allocatedActivity.toJSON());  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
@@ -91,18 +92,19 @@ export async function isActivityAccessible(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
 
     switch(currentUser?.role) {
       case "teacher":
-        const accessible = await activitiesService.isActivityAccessible(activityId, currentUser!.user_id as number, false);
+        const accessible = await activitiesService.isActivityAccessible(activityId, currentUserId, false);
         logger.debug(accessible);
         return res.json({ openable: accessible });
       case "student":
-        const allocatedAccessible = await activitiesService.isActivityAccessible(activityId, currentUser!.user_id as number, true);
+        const allocatedAccessible = await activitiesService.isActivityAccessible(activityId, currentUserId, true);
         logger.debug(allocatedAccessible);
-        return res.json({ openable: allocatedAccessible });  
+        return res.json({ openable: allocatedAccessible });
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -117,9 +119,9 @@ export async function openTargetForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    let currentUserId: number = currentUser!.user_id as number;
+    const currentUserId: number = currentUser!.user_id as number;
     const targetUrl = await activitiesService.getUserTargetForActivity(activityId, currentUserId, true);
     logger.debug(`Redirecting to target URL: ${targetUrl}`);
     return res.redirect(targetUrl); 
@@ -134,16 +136,17 @@ export async function getTargetForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    const participants_id = parseParticipantsId(req.query.participants_id);
     switch(currentUser?.role) {
       case "teacher":
-        const target = await activitiesService.getTargetForActivity(activityId, currentUser!.user_id as number, false, participants_id);
+        const participants_id = parseParticipantsId(req.query.users);
+        const target = await activitiesService.getTargetForActivity(activityId, currentUserId, false, participants_id);
         logger.debug(target.toJSON());
         return res.json(target.toJSON());
       case "student":
-        const allocatedTarget = await activitiesService.getTargetForActivity(activityId, currentUser!.user_id as number, true, participants_id);
+        const allocatedTarget = await activitiesService.getTargetForActivity(activityId, currentUserId, true, [currentUserId]);
         logger.debug(allocatedTarget.toJSON());
         return res.json(allocatedTarget.toJSON());  
       default:
@@ -160,16 +163,17 @@ export async function getProgressForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    const participants_id = parseParticipantsId(req.query.participants_id);
     switch(currentUser?.role) {
       case "teacher":
-        const progress = await activitiesService.getProgressForActivity(activityId, currentUser!.user_id as number, false, participants_id);
+        const participants_id = parseParticipantsId(req.query.users);
+        const progress = await activitiesService.getProgressForActivity(activityId, currentUserId, false, participants_id);
         logger.debug(progress.toJSON());
         return res.json(progress.toJSON());
       case "student":
-        const allocatedProgress = await activitiesService.getProgressForActivity(activityId, currentUser!.user_id as number, true, participants_id);
+        const allocatedProgress = await activitiesService.getProgressForActivity(activityId, currentUserId, true, [currentUserId]);
         logger.debug(allocatedProgress.toJSON());
         return res.json(allocatedProgress.toJSON());  
       default:
@@ -186,20 +190,21 @@ export async function setProgressForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const progress = req.body.progress as number;
     switch(currentUser?.role) {
       case "teacher":
-        let participant_id: number = req.query.participant_id ? parseInt(req.query.participant_id as string) : NaN;
+        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
         if (isNaN(participant_id)) {
-          throw new ValidationError("Query param participant_id must be a numeric ID");
+          throw new ValidationError("Query param user must be a numeric ID");
         }
-        const result = await activitiesService.setProgressForActivity(activityId, currentUser!.user_id as number, false, progress, participant_id);
+        const result = await activitiesService.setProgressForActivity(activityId, currentUserId, false, progress, participant_id);
         logger.debug(result.toJSON());
         return res.json(result.toJSON());
       case "student":
-        const allocatedResult = await activitiesService.setProgressForActivity(activityId, currentUser!.user_id as number, true, progress, currentUser!.user_id as number);
+        const allocatedResult = await activitiesService.setProgressForActivity(activityId, currentUserId, true, progress, currentUserId);
         logger.debug(allocatedResult.toJSON());
         return res.json(allocatedResult.toJSON());  
       default:
@@ -216,16 +221,17 @@ export async function getInitializedForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    const participants_id = parseParticipantsId(req.query.participants_id);
     switch(currentUser?.role) {
       case "teacher":
-        const initialized = await activitiesService.getInitializedForActivity(activityId, currentUser!.user_id as number, false, participants_id);
+        const participants_id = parseParticipantsId(req.query.users);
+        const initialized = await activitiesService.getInitializedForActivity(activityId, currentUserId, false, participants_id);
         logger.debug(initialized.toJSON());
         return res.json(initialized.toJSON());
       case "student":
-        const allocatedInitialized = await activitiesService.getInitializedForActivity(activityId, currentUser!.user_id as number, true, participants_id);
+        const allocatedInitialized = await activitiesService.getInitializedForActivity(activityId, currentUserId, true, [currentUserId]);
         logger.debug(allocatedInitialized.toJSON());
         return res.json(allocatedInitialized.toJSON());  
       default:
@@ -242,20 +248,21 @@ export async function setInitializedForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const initialized = req.body.initialized as boolean;
     switch(currentUser?.role) {
       case "teacher":
-        let participant_id: number = req.query.participant_id ? parseInt(req.query.participant_id as string) : NaN;
+        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
         if (isNaN(participant_id)) {
-          throw new ValidationError("Query param participant_id must be a numeric ID");
+          throw new ValidationError("Query param user must be a numeric ID");
         }
-        const result = await activitiesService.setInitializedForActivity(activityId, currentUser!.user_id as number, false, initialized, participant_id);
+        const result = await activitiesService.setInitializedForActivity(activityId, currentUserId, false, initialized, participant_id);
         logger.debug(result.toJSON());
         return res.json(result.toJSON());
       case "student":
-        const allocatedResult = await activitiesService.setInitializedForActivity(activityId, currentUser!.user_id as number, true, initialized, currentUser!.user_id as number);
+        const allocatedResult = await activitiesService.setInitializedForActivity(activityId, currentUserId, true, initialized, currentUserId);
         logger.debug(allocatedResult.toJSON());
         return res.json(allocatedResult.toJSON());  
       default:
@@ -274,7 +281,7 @@ export async function getCompletionForActivity(
   try {
     let currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const participants_id = parseParticipantsId(req.query.participants_id);
+    const participants_id = parseParticipantsId(req.query.users);
     switch(currentUser?.role) {
       case "teacher":
         const completion = await activitiesService.getCompletionForActivity(activityId, currentUser!.user_id as number, false, participants_id);
@@ -298,20 +305,21 @@ export async function setCompletionForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const completed = req.body.completed as boolean;
     switch(currentUser?.role) {
       case "teacher":
-         let participant_id: number = req.query.participant_id ? parseInt(req.query.participant_id as string) : NaN;
+         let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
         if (isNaN(participant_id)) {
-          throw new ValidationError("Query param participant_id must be a numeric ID");
+          throw new ValidationError("Query param user must be a numeric ID");
         }
-        const result = await activitiesService.setCompletionForActivity(activityId, currentUser!.user_id as number, false, completed, participant_id);
+        const result = await activitiesService.setCompletionForActivity(activityId, currentUserId, false, completed, participant_id);
         logger.debug(result.toJSON());
         return res.json(result.toJSON());
       case "student":
-        const allocatedResult = await activitiesService.setCompletionForActivity(activityId, currentUser!.user_id as number, true, completed, currentUser!.user_id as number);
+        const allocatedResult = await activitiesService.setCompletionForActivity(activityId, currentUserId, true, completed, currentUserId);
         logger.debug(allocatedResult.toJSON());
         return res.json(allocatedResult.toJSON());  
       default:
@@ -328,18 +336,15 @@ export async function setMultiCompletionForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const status = req.body.status as boolean;
     switch(currentUser?.role) {
       case "teacher":
-        const result = await activitiesService.setMultiCompletionForActivity(activityId, currentUser!.user_id as number, false, status);
+        const result = await activitiesService.setMultiCompletionForActivity(activityId, currentUserId, false, status);
         logger.debug(result.map((r) => r.toJSON()));
         return res.json(result.map((r) => r.toJSON()));
-      case "student":
-        const allocatedResult = await activitiesService.setMultiCompletionForActivity(activityId, currentUser!.user_id as number, true, status);
-        logger.debug(allocatedResult.map((r) => r.toJSON()));
-        return res.json(allocatedResult.map((r) => r.toJSON()));  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
@@ -354,20 +359,21 @@ export async function setSuspensionForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const status = req.body.status as boolean;
     switch(currentUser?.role) {
       case "teacher":
-        let participant_id: number = req.query.participant_id ? parseInt(req.query.participant_id as string) : NaN;
+        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
         if (isNaN(participant_id)) {
-          throw new ValidationError("Query param participant_id must be a numeric ID");
+          throw new ValidationError("Query param user must be a numeric ID");
         }
-        const result = await activitiesService.setSuspensionForActivity(activityId, currentUser!.user_id as number, false, status, participant_id);
+        const result = await activitiesService.setSuspensionForActivity(activityId, currentUserId, false, status, participant_id);
         logger.debug(result.toJSON());
         return res.json(result.toJSON());
       case "student":
-        const allocatedResult = await activitiesService.setSuspensionForActivity(activityId, currentUser!.user_id as number, true, status, currentUser!.user_id as number);
+        const allocatedResult = await activitiesService.setSuspensionForActivity(activityId, currentUserId, true, status, currentUserId);
         logger.debug(allocatedResult.toJSON());
         return res.json(allocatedResult.toJSON());  
       default:
@@ -384,16 +390,17 @@ export async function getSuspensionForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    const participants_id = parseParticipantsId(req.query.participants_id);
+    const participants_id = parseParticipantsId(req.query.users);
     switch(currentUser?.role) {
       case "teacher":
-        const suspension = await activitiesService.getSuspensionForActivity(activityId, currentUser!.user_id as number, false, participants_id);
+        const suspension = await activitiesService.getSuspensionForActivity(activityId, currentUserId, false, participants_id);
         logger.debug(suspension.toJSON());
         return res.json(suspension.toJSON());
       case "student":
-        const allocatedSuspension = await activitiesService.getSuspensionForActivity(activityId, currentUser!.user_id as number, true, participants_id);
+        const allocatedSuspension = await activitiesService.getSuspensionForActivity(activityId, currentUserId, true, participants_id);
         logger.debug(allocatedSuspension.toJSON());
         return res.json(allocatedSuspension.toJSON());  
       default:
@@ -414,16 +421,21 @@ export async function hasResultsForActivity(
     const activityId = parseInt(req.params.activity_id as string);
     let type = req.query.type as string;
     if (!type) {
-      type = "backup";
+      type = "results";
     }
-    const participants_id = parseParticipantsId(req.query.participants_id);
+    if(type !== "results" && type !== "traces") {
+      throw new ValidationError("Query param type must be either 'results' or 'traces'");
+    }
+    const currentUserId: number = currentUser!.user_id as number;
     switch(currentUser?.role) {
       case "teacher":
-        const hasResults = await activitiesService.hasResultsForActivity(activityId, currentUser!.user_id as number, false, type, participants_id);
+        const participants_id = parseParticipantsId(req.query.users);
+        logger.debug(participants_id, "Parsed participants_id from query param:");
+        const hasResults = await activitiesService.hasResultsForActivity(activityId, currentUserId, false, type, participants_id);
         logger.debug(hasResults.toJSON());
         return res.json(hasResults.toJSON());
       case "student":
-        const allocatedHasResults = await activitiesService.hasResultsForActivity(activityId, currentUser!.user_id as number, true, type, participants_id);
+        const allocatedHasResults = await activitiesService.hasResultsForActivity(activityId, currentUserId, true, type, [currentUserId]);
         logger.debug(allocatedHasResults.toJSON());
         return res.json(allocatedHasResults.toJSON());  
       default:
@@ -440,24 +452,48 @@ export async function setResultForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    const type = req.query.type as string;
+    let type = req.query.type as string;
+    if(!type) {
+      type = "results";
+    }
+    if(type !== "results" && type !== "traces") {
+      throw new ValidationError("Query param type must be either 'results' or 'traces'");
+    }
     const result = req.body.result;
     switch(currentUser?.role) {
       case "teacher":
-        let participant_id: number = req.query.participant_id ? parseInt(req.query.participant_id as string) : NaN;
+        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
         if (isNaN(participant_id)) {
-          throw new ValidationError("Query param participant_id must be a numeric ID");
+          throw new ValidationError("Query param user must be a numeric ID");
         }
-        await activitiesService.setResultForActivity(activityId, currentUser!.user_id as number, false, type, result, participant_id);
+        await activitiesService.setResultForActivity(activityId, currentUserId, false, type, result, participant_id);
         return res.status(204).send();
       case "student":
-        await activitiesService.setResultForActivity(activityId, currentUser!.user_id as number, true, type, result, currentUser!.user_id as number);
+        await activitiesService.setResultForActivity(activityId, currentUserId, true, type, result, currentUserId);
         return res.status(204).send();  
       default:
         throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
     }
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getPresignedUrlForActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
+    const activityId = parseInt(req.params.activity_id as string);
+    const url = await activitiesService.getPresignedUrlForActivity(activityId, currentUserId, false);
+    logger.debug(url);
+    return res.json({ url: url });
   } catch (err) {
     next(err);
   }
@@ -469,17 +505,24 @@ export async function getResultsForActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const type = req.query.type as string;
-    const participants_id = parseParticipantsId(req.query.participants_id);
+    let type = req.query.type as string;
+    if(!type) {
+      type = "results";
+    }
+    if(type !== "results" && type !== "traces") {
+      throw new ValidationError("Query param type must be either 'results' or 'traces'");
+    }
+    const currentUserId: number = currentUser!.user_id as number;
     switch(currentUser?.role) {
       case "teacher":
-        const results = await activitiesService.getResultsForActivity(activityId, currentUser!.user_id as number, false, type, participants_id);
+        const participants_id = parseParticipantsId(req.query.users);
+        const results = await activitiesService.getResultsForActivity(activityId, currentUserId, false, type, participants_id);
         logger.debug(results.toJSON());
         return res.json(results.toJSON());
       case "student":
-        const allocatedResults = await activitiesService.getResultsForActivity(activityId, currentUser!.user_id as number, true, type, participants_id);
+        const allocatedResults = await activitiesService.getResultsForActivity(activityId, currentUserId, true, type, [currentUserId]);
         logger.debug(allocatedResults.toJSON());
         return res.json(allocatedResults.toJSON());  
       default:
@@ -496,12 +539,13 @@ export async function updateActivity(
   next: NextFunction
 ) {
   try {
-    let currentUser = req.user?.sql;
+    const currentUser = req.user?.sql;
+    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const data = req.body;
     switch(currentUser?.role) {
       case "teacher":
-        const activity = await activitiesService.updateActivity(activityId, currentUser!.user_id as number, false, data);
+        const activity = await activitiesService.updateActivity(activityId, currentUserId, false, data);
         return res.json(activity.toJSON());
       case "student":
         throw new AuthentificationError("Students cannot update activities");

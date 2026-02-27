@@ -130,3 +130,8 @@ export async function updateActivity(activityId: number, current_user_id: number
     await activity.patch(data);
     return Activity.getFromDbData(activityId, current_user_id, allocated);
 }
+
+export async function getPresignedUrlForActivity(activityId: number, current_user_id: number, allocated: boolean): Promise<string> {
+    let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
+    return activity.generatePresignedFileUrl();
+}

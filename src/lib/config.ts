@@ -15,6 +15,7 @@
  * @requires path
  */
 
+import ms, { StringValue } from 'ms';
 import path from 'path';
 
 /**
@@ -120,7 +121,7 @@ config.minio.tracesTopic = process.env.MINIO_TRACES_TOPIC || 'traces';
 config.minio.stateDir = process.env.MINIO_STATE_DIR || 'state';
 config.minio.outputsDir = process.env.MINIO_OUTPUTS_DIR || 'outputs';
 config.minio.tracesFile = process.env.MINIO_TRACES_FILE || 'traces.json';
-config.minio.presignedUrlFileExpirationTime = process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME || '1h';
+config.minio.presignedUrlFileExpirationTime = ms((process.env.MINIO_PRESIGNED_URL_FILE_EXPIRATION_TIME as StringValue) || ('1h' as StringValue))/1000;
 
 // Kafka configuration
 config.kafka = {};
