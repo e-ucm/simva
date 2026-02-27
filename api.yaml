@@ -33,6 +33,8 @@ paths:
       responses:
         '200':
           description: Service is healthy
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /events:
     get:
       summary: send Server Side Events to Client
@@ -43,9 +45,13 @@ paths:
         '200':
           description: Event processed
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /limesurvey-completion-webhooks:
     post:
       summary: get completion from limesurvey
@@ -56,9 +62,13 @@ paths:
         '200':
           description: completion from limesurvey
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /users:
     get:
       tags:
@@ -77,6 +87,16 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/userMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -104,7 +124,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/userMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /users/me:
     get:
       tags:
@@ -123,7 +153,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/userMapper'
         '400':
-          description: 'invalid input'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /users/link:
     post:
       summary: Links the secondary account to the main one
@@ -132,12 +168,20 @@ paths:
         Receives two valid JWT tokens and adds to the main
         account, as an external_entity, the secondary account
       responses:
-        '200':
-          description: Accounts linked
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       requestBody:
         content:
           application/json:
@@ -151,12 +195,20 @@ paths:
         Receives the SSO events and updates the users, both creating
         the users and updating their roles and permissions 
       responses:
-        '200':
-          description: Event processed
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       requestBody:
         content:
           application/json:
@@ -179,9 +231,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/userMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/username'
       requestBody:
@@ -208,6 +268,16 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/groupMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -228,9 +298,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/groupMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       requestBody:
         content:
           application/json:
@@ -254,9 +332,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/groupMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
     patch:
@@ -272,10 +354,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/groupMapper'
-        '401':
-          description: 'Teacher does not own the group'
         '400':
-          description: 'invalid input'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
       requestBody:
@@ -293,10 +383,14 @@ paths:
       responses:
         '200':
           description: deleted group
-        '401':
-          description: 'Teacher does not own the group'
         '400':
-          description: 'invalid input'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
   /groups/{groupid}/simlets:
@@ -317,9 +411,13 @@ paths:
                 items: 
                   $ref: '#/components/schemas/simletMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'Group not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
   /tasklist:
@@ -342,7 +440,17 @@ paths:
                     type: string
                     example: "Task added successfully"
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /groups/{groupid}/participants:
     get:
       tags:
@@ -361,9 +469,13 @@ paths:
                 items: 
                   $ref: '#/components/schemas/participantMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'Group not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
     post:
@@ -377,9 +489,17 @@ paths:
         '200':
           description: item created
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       requestBody:
         content:
           application/json:
@@ -408,7 +528,13 @@ paths:
                     type: integer
                     example: 42
         '400':
-          description: 'invalid input'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /groups/{groupid}/participants/{userid}:
     delete:
       tags:
@@ -421,7 +547,13 @@ paths:
         '200':
           description: item deleted
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
         - $ref: '#/components/parameters/userId'
@@ -444,9 +576,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'group not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
   /groups/{groupid}/permissions/{userid}:
@@ -466,9 +602,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'group or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
         - $ref: '#/components/parameters/userId'
@@ -488,9 +628,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'group or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
         - $ref: '#/components/parameters/userId'
@@ -511,9 +659,13 @@ paths:
         '200':
           description: permissions deleted
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'group or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/groupId'
         - $ref: '#/components/parameters/userId'
@@ -536,6 +688,14 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/simletMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -555,9 +715,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/simletMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       requestBody:
         # required: true removed, not valid in responses
         content:
@@ -581,9 +749,17 @@ paths:
                 schema:
                   $ref: '#/components/schemas/simletMapper'
           '400':
-            description: 'invalid input, object invalid'
+            $ref: '#/components/responses/BadRequestError'
+          '401':
+            $ref: '#/components/responses/AuthentificationError'
+          '404':
+            $ref: '#/components/responses/NotFoundError'
+          '406':
+            $ref: '#/components/responses/ValidationError'
           '409':
-            description: an existing item already exists
+            $ref: '#/components/responses/ConflictError'
+          '500':
+            $ref: '#/components/responses/InternalServerError'
         requestBody:
           required: true
           content:
@@ -607,9 +783,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/simletMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
     patch:
@@ -625,12 +805,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/simletMapper'
-        '401':
-          description: 'Teacher does not own the class'
         '400':
-          description: 'invalid input'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'Requested simlet does not exist'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
       requestBody:
@@ -647,12 +833,14 @@ paths:
       description: |
         Deleted the designed simlet
       responses:
-        '200':
-          description: Simlet deleted
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/export:
@@ -672,9 +860,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/simletMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/events:
@@ -687,9 +879,13 @@ paths:
         '200':
           description: Event processed
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/events/getPresignedUrl:
@@ -704,9 +900,13 @@ paths:
         '200':
           description: Event processed
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule:
@@ -728,9 +928,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/scheduleMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule/events:
@@ -743,9 +947,13 @@ paths:
         '200':
           description: presigned URL
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule/events/getPresignedUrl:
@@ -761,9 +969,13 @@ paths:
         '200':
           description: presigned URL
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
         '401':
-          description: 'One or both of the JWT are not valid'
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/groups:
@@ -785,9 +997,13 @@ paths:
                 items: 
                   $ref: '#/components/schemas/groupMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'Simlet not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/groups/{groupid}:
@@ -808,9 +1024,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/groupMapper'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -826,9 +1048,11 @@ paths:
         '200':
           description: Group removed successfully
         '400':
-          $ref: '#/components/responses/BadRequest'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /simlets/{simletid}/sessions:
@@ -849,9 +1073,13 @@ paths:
                 items: 
                   $ref: '#/components/schemas/sessionMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'Simlet not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
     post:
@@ -869,7 +1097,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/sessionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
       requestBody:
@@ -896,9 +1134,13 @@ paths:
                 items: 
                   $ref: '#/components/schemas/participantMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'simlet not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/sessions/{sessionid}:
@@ -917,9 +1159,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/sessionMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -946,7 +1192,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/sessionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       tags:
         - teachers
@@ -958,9 +1214,13 @@ paths:
         '200':
           description: success
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -982,9 +1242,13 @@ paths:
                 items: 
                   $ref: '#/components/schemas/participantMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'session not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1003,6 +1267,18 @@ paths:
             application/json:
               schema:
                   $ref: '#/components/schemas/sessionMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1018,9 +1294,17 @@ paths:
         '200':
           description: allocation applied
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1042,6 +1326,14 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/activityMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1060,9 +1352,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1088,9 +1388,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/allocatorMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'Simlet not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
     patch:
@@ -1108,7 +1412,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/allocatorMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
       requestBody:
@@ -1136,9 +1450,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'simlet not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
     post:
@@ -1157,9 +1475,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'simlet not found'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
       requestBody:
@@ -1185,9 +1511,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'simlet or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/userId'
@@ -1207,9 +1537,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'simlet or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/userId'
@@ -1231,9 +1569,13 @@ paths:
         '200':
           description: permissions deleted
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'simlet or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/userId'
@@ -1256,9 +1598,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'session not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1278,9 +1624,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'session not found'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1307,9 +1661,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'session or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1330,9 +1688,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/userPermissionMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'session or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1355,9 +1721,13 @@ paths:
         '200':
           description: permissions deleted
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          description: 'session or user not found'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
@@ -1380,6 +1750,14 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/activityMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -1399,9 +1777,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
@@ -1426,9 +1812,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
     patch:
@@ -1453,7 +1843,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityMapper'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       tags:
         - teachers
@@ -1465,9 +1865,13 @@ paths:
         '200':
           description: activity deleted
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/export:
@@ -1487,9 +1891,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/surveyowner:
@@ -1505,9 +1913,17 @@ paths:
         '200':
           description: Survey Updated
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/surveylanguages:
@@ -1523,9 +1939,13 @@ paths:
         '200':
           description: Survey Languages List
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/usersurveylist:
@@ -1541,9 +1961,13 @@ paths:
         '200':
           description: Survey List
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/openable:
@@ -1564,9 +1988,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityOpenableMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/open:
@@ -1583,9 +2011,13 @@ paths:
         '307':
           description: redirects to the valid landing
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/target:
@@ -1606,9 +2038,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityTargetMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/progress:
@@ -1628,9 +2064,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityProgressMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1651,9 +2091,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activitySuspensionMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -1674,9 +2122,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityInitializedMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1696,9 +2148,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityInitializedMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -1719,9 +2179,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityCompletionMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1741,9 +2205,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityCompletionMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -1763,9 +2235,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityCompletionMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/result:
@@ -1785,9 +2265,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityResultMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1808,9 +2292,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityResultMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -1832,9 +2324,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/activityHasResultMapper'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1852,9 +2348,17 @@ paths:
         '200':
           description: the session of the activity
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/time'
@@ -1871,9 +2375,13 @@ paths:
         '200':
           description: the presigned minio url of the activity data result
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1892,11 +2400,15 @@ paths:
         '200':
           description: the result of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -1914,11 +2426,17 @@ paths:
         '200':
           description: the traces has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: 'Conflict in statementId'
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -1935,11 +2453,17 @@ paths:
         '200':
           description: the traces has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: 'Conflict in statementId'
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -1957,11 +2481,15 @@ paths:
         '200':
           description: the agents of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -1980,11 +2508,15 @@ paths:
         '200':
           description: the agent profile of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2002,9 +2534,19 @@ paths:
         '200':
           description: the agent profile has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2021,11 +2563,19 @@ paths:
         '200':
           description: the agent profile has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2042,11 +2592,15 @@ paths:
         '200':
           description: the agent profile has been deleted
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2064,11 +2618,15 @@ paths:
         '200':
           description: the activities of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2087,11 +2645,15 @@ paths:
         '200':
           description: the activities profile of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2109,9 +2671,19 @@ paths:
         '200':
           description: the activities profile has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2128,11 +2700,19 @@ paths:
         '200':
           description: the activities profile has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2149,11 +2729,15 @@ paths:
         '200':
           description: the activities profile has been deleted
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2171,11 +2755,15 @@ paths:
         '200':
           description: the activities status of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
@@ -2193,9 +2781,19 @@ paths:
         '200':
           description: the activities status has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2212,11 +2810,19 @@ paths:
         '200':
           description: the activities status has been stocked
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2233,11 +2839,15 @@ paths:
         '200':
           description: the activities status has been deleted
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2255,11 +2865,15 @@ paths:
         '200':
           description: the LRS Information of the activity of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
@@ -2278,11 +2892,15 @@ paths:
         '200':
           description: the LRS extension Information of the activity of the students required
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
         '501':
-          description: 'Not implemented'
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/extensionId'
@@ -2305,9 +2923,17 @@ paths:
                 items: 
                   $ref: '#/components/schemas/activity_type'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /allocatortypes:
     get:
       tags:
@@ -2327,9 +2953,17 @@ paths:
                 items: 
                   $ref: '#/components/schemas/allocator_type'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /lti:
     get:
       tags:
@@ -2350,6 +2984,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/lti_status'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
   /lti/claims:
     get:
       tags:
@@ -2370,6 +3014,16 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/lti_login_hint'
         - $ref: '#/components/parameters/lti_message_hint'
@@ -2392,6 +3046,20 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/lti_login_hint'
         - $ref: '#/components/parameters/lti_message_hint'
@@ -2412,6 +3080,16 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/contextId'
   /lti/context/{id}/lineitems/{lineitem}/:
@@ -2431,6 +3109,16 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/contextId'
         - $ref: '#/components/parameters/lineItem'
@@ -2450,6 +3138,20 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/contextId'
         - $ref: '#/components/parameters/lineItem'
@@ -2470,6 +3172,16 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/contextId'
         - $ref: '#/components/parameters/lineItem'
@@ -2490,6 +3202,20 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/contextId'
         - $ref: '#/components/parameters/lineItem'
@@ -2511,6 +3237,16 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/contextId'
   /lti/tools:
@@ -2530,6 +3266,16 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/lti_tool'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -2549,9 +3295,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/lti_tool'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       requestBody:
         content:
           application/json:
@@ -2574,9 +3330,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/lti_tool'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/ltiToolId'
     put:
@@ -2588,10 +3350,20 @@ paths:
       responses:
         '200':
           description: item created
-        '401':
-          description: 'Teacher does not own the group'
         '400':
-          description: 'invalid input'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/ltiToolId'
       requestBody:
@@ -2611,9 +3383,15 @@ paths:
         '200':
           description: LTI tool deleted
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/ltiToolId'
   /lti/platforms:
@@ -2633,6 +3411,16 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/lti_platform'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
@@ -2652,9 +3440,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/lti_platform'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       requestBody:
         content:
           application/json:
@@ -2677,9 +3475,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/lti_platform'
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/ltiPlatformId'
     put:
@@ -2691,10 +3495,20 @@ paths:
       responses:
         '200':
           description: item created
-        '401':
-          description: 'Teacher does not own the group'
         '400':
-          description: 'invalid input'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/ltiPlatformId'
       requestBody:
@@ -2714,9 +3528,15 @@ paths:
         '200':
           description: LTI platform deleted
         '400':
-          description: 'ID is not a valid ObjectId'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/ltiPlatformId'
   /uploads:
@@ -2735,9 +3555,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/lti_tool'
         '400':
-          description: 'invalid input, object invalid'
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '409':
-          description: an existing item already exists
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
       requestBody:
         content:
           multipart/form-data:
@@ -2949,15 +3779,65 @@ components:
         type: string
         format: 'token1'
   responses:
-    UnauthorizedError:
-      description: Access token is missing or invalid
-    BadRequest:
-      description: Bad request
-    NotFound:
-      description: Resource not found
+    AuthentificationError:
+      description: Authentification error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    BadRequestError:
+      description: Bad request error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    ConflictError:
+      description: Conflict error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    NotFoundError:
+      description: Requested resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
     InternalServerError:
       description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    NotImplementedError:
+      description: Not implemented method
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
   schemas:
+    error:
+      description: An error occurred
+      type: object
+      properties:
+        type:
+          type: string
+          example: "Error"
+        message:
+          type: string
+          example: "An error occurred"
+        stack:
+          type: string
+          example: "Error: An error occurred at ... "
+        name:
+          type: string
+          example: "Error"
     upload_file:
       type: object
       required:
