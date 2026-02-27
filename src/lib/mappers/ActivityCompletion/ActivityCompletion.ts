@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { NotFoundError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
 export class ActivityCompletion {
@@ -58,7 +59,7 @@ export class ActivityCompletion {
             where: { activity_id: activity_id, participant_id: participant_id }
         });
         if (!data) {
-            throw new Error(`No activity completion record found for activity_id ${activity_id} and participant_id ${participant_id}`);
+            throw new NotFoundError(`No activity completion record found for activity_id ${activity_id} and participant_id ${participant_id}`);
         }
         logger.debug(data, `getFromDbData: Retrieved activity completion data for activity_id ${activity_id} and participant_id ${participant_id}`);
         return new ActivityCompletion(data);

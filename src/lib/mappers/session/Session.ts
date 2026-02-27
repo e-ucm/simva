@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, ConflictError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
@@ -207,7 +207,7 @@ export class Session {
             return await ActivityToClass(activity.activity_id, current_user_id, true, activity);
         }));
         if(session.session_active) {
-            throw new ValidationError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
+            throw new ConflictError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
         }
         return session;
     }
@@ -232,7 +232,7 @@ export class Session {
     static async createFromDbData(sessionData: Partial<InstanceType<typeof db.Tables.Sessions>>): Promise<Session> {
         let sessioncount = await db.Tables.Sessions.count({where: {session_name: sessionData.session_name}});
         if(sessioncount > 0){
-            throw new ValidationError(`Session name ${sessionData.session_name} is already taken. Please choose a different name.`);
+            throw new ConflictError(`Session name ${sessionData.session_name} is already taken. Please choose a different name.`);
         }
         let session = await db.Tables.Sessions.create(sessionData);
         return Session.getFromDbData(session.simlet_id, session.session_id, session.session_supervisor_id);
@@ -437,7 +437,7 @@ export class Session {
     async activate(): Promise<Session> {
         this.canEdit();
         if(!this.session_can_be_manually_activated) {
-            throw new ValidationError(`Session with ID ${this.session_id} cannot be activated. Please check the session's experimental method and conditions.`);
+            throw new ConflictError(`Session with ID ${this.session_id} cannot be activated. Please check the session's experimental method and conditions.`);
         }
         if(this.session_active) {
             throw new ValidationError(`Session with ID ${this.session_id} is already active.`);
@@ -449,7 +449,7 @@ export class Session {
         this.session_active = true;
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
-            throw new ValidationError(`Session with ID ${this.session_id} not found for activation`);
+            throw new NotFoundError(`Session with ID ${this.session_id} not found for activation`);
         }
         await session.update({ session_active: true });
         return this;
@@ -468,7 +468,7 @@ export class Session {
     async desactivate(): Promise<Session> {
         this.canEdit();
         if(!this.session_can_be_manually_activated) {
-            throw new ValidationError(`Session with ID ${this.session_id} cannot be deactivated. Please check the session's experimental method and conditions.`);
+            throw new ConflictError(`Session with ID ${this.session_id} cannot be deactivated. Please check the session's experimental method and conditions.`);
         }
         if(!this.session_active) {
             throw new ValidationError(`Session with ID ${this.session_id} is already inactive.`);

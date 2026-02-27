@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, ConflictError, NotFoundError, NotImplementedError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
@@ -136,7 +136,7 @@ export class Simlet {
     static async createSimlet(simletData: any): Promise<Simlet> {
         logger.debug({simletData} , "Creating simlet with data");
         if(await db.Tables.Simlets.count({where : {simlet_name : simletData.simlet_name}}) > 0){
-            throw new ValidationError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
+            throw new ConflictError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
         }
         const allocator = await db.Tables.Allocators.create({ allocator_type: simletData.allocator_type || "default" });
         logger.debug({allocator} , "Allocator created");
@@ -312,7 +312,7 @@ export class Simlet {
                 await allocator.allocate(sessionId, group_id);
                 break;
             default:
-                throw new ValidationError("Method not implemented for this unknwown type.");
+                throw new NotImplementedError("Method not implemented for this unknwown type.");
         }
     }
 
@@ -340,7 +340,7 @@ export class Simlet {
                 allocator.allocateToDefault(this.sessions[0]);
                 break;
             default:
-                throw new ValidationError("Method not implemented for this unknwown type.");
+                throw new NotImplementedError("Method not implemented for this unknwown type.");
         }
       return allocator;
     }

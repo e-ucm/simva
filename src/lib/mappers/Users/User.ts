@@ -259,7 +259,7 @@ export class User {
       }
 
       if (!selectedRole || !selectedRole.name || !selectedRole.id) {
-          throw new Error(`Role ${role} not found in Keycloak`);
+          throw new NotFoundError(`Role ${role} not found in Keycloak`);
       }
 
       logger.info('KeyCloak -> Adding Role to User');

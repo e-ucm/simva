@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { config } from "@/lib/config";
 import { keycloakClient, KeycloakUser } from "@/lib/utils/keycloakclient";
-import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
+import { BadRequestError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * Group Participant mapper class representing a participant within a group.
@@ -80,7 +80,7 @@ export class GroupParticipant {
     static async getFromDbData(group_id : number, user_id: number) : Promise<GroupParticipant> {
         let participant = await db.Functions.runViewQuery(db.Views.GroupParticipant.byGroupIdAndUserId, {group_id: group_id, user_id : user_id});
         if (!participant || participant.length === 0) {
-            throw new ValidationError(`Participant with ID ${user_id} not found in group ${group_id}`);
+            throw new NotFoundError(`Participant with ID ${user_id} not found in group ${group_id}`);
         }
         return new GroupParticipant(participant[0]);
     }
@@ -95,7 +95,7 @@ export class GroupParticipant {
         if (isTokenUser) {
             const tokenValue = body?.token || body?.username;
             if (!tokenValue) {
-                throw new ValidationError("Token is required when isToken is true");
+                throw new BadRequestError("Token is required when isToken is true");
             }
             participantData.token = tokenValue;
             participantData.username = is_new_generation ? `${group_id}_${tokenValue}` : tokenValue;

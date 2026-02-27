@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { ValidationError } from "@/lib/errors/appErrors";
+import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -72,7 +72,7 @@ export class SimletGroup {
     static async getFromDbData(simlet_id: number, group_id: number) : Promise<SimletGroup> {
         let simletGroupData = await db.Tables.SimletGroups.findOne({ where: { simlet_id, group_id } });
         if (!simletGroupData) {
-            throw new ValidationError(`SimletGroup with simlet_id ${simlet_id} and group_id ${group_id} not found`);
+            throw new NotFoundError(`SimletGroup with simlet_id ${simlet_id} and group_id ${group_id} not found`);
         }
         const simletGroup = new SimletGroup(simletGroupData);
         await simletGroup.init();
@@ -82,7 +82,7 @@ export class SimletGroup {
     async delete(): Promise<void> {
         let simletGroup = await db.Tables.SimletGroups.findOne({ where: { simlet_id: this.simlet_id, group_id: this.group_id } });
         if (!simletGroup) {
-            throw new ValidationError(`SimletGroup with simlet_id ${this.simlet_id} and group_id ${this.group_id} not found`);
+            throw new NotFoundError(`SimletGroup with simlet_id ${this.simlet_id} and group_id ${this.group_id} not found`);
         }
         await simletGroup.destroy();
     }

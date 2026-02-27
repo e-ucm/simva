@@ -16,7 +16,7 @@ import { Request, Response, NextFunction } from "express";
 import * as simletService from "@/services/simlets/simlet.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
-import { ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * Retrieves simlets from the database.
@@ -61,7 +61,7 @@ export async function getAllSimlets(
           res.json(simlets.map(s => s.toJSON()));
           break;  
       default:
-        throw new ValidationError("Invalid user role");
+        throw new AuthentificationError("Invalid user role");
     }
   } catch (err) {
     next(err);

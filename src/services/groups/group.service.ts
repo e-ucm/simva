@@ -17,6 +17,7 @@ import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 import { logger } from "@/lib/logger";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
+import { AuthentificationError } from "@/lib/errors/appErrors";
 
 /**
  * Retrieves all groups accessible to a specific user.
@@ -126,7 +127,6 @@ export async function updateGroup(groupId: number, current_user_id: number, body
  * @param {number} current_user_id - The ID of the user performing the deletion
  * @returns {Promise<void>} No return value on successful deletion
  * @throws {NotFoundError} If group doesn't exist or user lacks access
- * @throws {ValidationError} If group cannot be deleted due to constraints
  * 
  * @example
  * ```typescript
@@ -195,7 +195,7 @@ export async function createGroupParticipant(groupId: number, current_user_id: n
  * @param {boolean} keycloakDelete - Whether to also delete from Keycloak
  * @returns {Promise<void>} No return value on successful deletion
  * @throws {NotFoundError} If group or participant doesn't exist
- * @throws {ValidationError} If user lacks permission to remove participant
+ * @throws {AuthentificationError} If user lacks permission to remove participant
  * 
  * @example
  * ```typescript
@@ -218,6 +218,7 @@ export async function deleteGroupParticipant(groupId: number, participant_id: nu
  * @param {number} current_user_id - The ID of the user creating the group
  * @returns {Promise<Group>} The newly created group object
  * @throws {ValidationError} If group data is invalid
+ * @throws {AuthentificationError} If user lacks permission to create group
  * @throws {Error} If database creation fails
  * 
  * @example
@@ -244,7 +245,7 @@ export async function createGroup(body: any, useNewGeneration: boolean, current_
  * @param {number} current_user_id - The ID of the user performing the action
  * @returns {Promise<void>} No return value on successful deletion
  * @throws {NotFoundError} If group or user doesn't exist
- * @throws {ValidationError} If current user lacks admin rights
+ * @throws {AuthentificationError} If current user lacks admin rights
  * 
  * @example
  * ```typescript
@@ -268,7 +269,7 @@ export async function deleteGroupPermissionsForUser(groupId: number, userId: num
  * @param {Object} body - Permission data containing new rights/roles
  * @returns {Promise<UserPermission>} The updated permission object
  * @throws {NotFoundError} If group or user doesn't exist
- * @throws {ValidationError} If permission data is invalid
+ * @throws {AuthentificationError} If permission data is invalid or user lacks permission
  * 
  * @example
  * ```typescript
@@ -294,7 +295,7 @@ export async function patchGroupPermissionsForUser(groupId: number, userId: numb
  * @param {number} current_user_id - The ID of the user requesting permission info
  * @returns {Promise<UserPermission>} The user's permission object for the group
  * @throws {NotFoundError} If group or user doesn't exist
- * @throws {ValidationError} If current user lacks access to view permissions
+ * @throws {AuthentificationError} If current user lacks access to view permissions
  * 
  * @example
  * ```typescript

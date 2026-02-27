@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, BadRequestError, ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * User Permission mapper class representing user access permissions.
@@ -56,7 +56,7 @@ export class SingleUserPermission {
                 const groupPermissions = await db.Functions.runViewQuery(db.Views.Group.directPermissionsByGroupId, { group_id: object_id, user_id: user_id });
                 return new SingleUserPermission(object_type, object_id, groupPermissions, current_user_id);
             default:
-                throw new Error(`Unsupported object type: ${object_type}`);
+                throw new BadRequestError(`Unsupported object type: ${object_type}`);
         }
     }
 
@@ -67,7 +67,7 @@ export class SingleUserPermission {
      * @method update
      * @param {string} permission - New permission level to set
      * @returns {Promise<SingleUserPermission>} Promise resolving to the updated instance
-     * @throws {Error} When object_type is not supported
+     * @throws {BadRequestError} When object_type is not supported
      */
     async update(permission: string) : Promise<SingleUserPermission> {
         this.canEdit();
@@ -82,7 +82,7 @@ export class SingleUserPermission {
                 await db.Tables.GroupPermissions.update({ permission }, { where: { group_id: this.object_id, user_id: this.user_id } });
                 break;
             default:
-                throw new Error(`Unsupported object type: ${this.object_type}`);
+                throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
         }
         this.permission = permission;
         return this;
@@ -94,7 +94,7 @@ export class SingleUserPermission {
      * @async
      * @method delete
      * @returns {Promise<boolean>} Promise resolving to true when deletion is successful
-     * @throws {Error} When object_type is not supported
+     * @throws {BadRequestError} When object_type is not supported
      */
     async delete() : Promise<boolean> {
         this.canDelete();
@@ -109,7 +109,7 @@ export class SingleUserPermission {
                 await db.Tables.GroupPermissions.destroy({ where: { group_id: this.object_id, user_id: this.user_id } });
                 break;
             default:
-                throw new Error(`Unsupported object type: ${this.object_type}`);
+                throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
         }
         return true;
     }
@@ -118,14 +118,14 @@ export class SingleUserPermission {
         if(this.user_id != this.current_user_id) {
             return true;
         }
-        throw new ValidationError('User does not have permission to edit');
+        throw new AuthentificationError('User does not have permission to edit');
     }
 
     canDelete(): boolean {
         if(this.user_id != this.current_user_id) {
             return true;
         }
-        throw new ValidationError('User does not have permission to delete');
+        throw new AuthentificationError('User does not have permission to delete');
     }
 
     /**

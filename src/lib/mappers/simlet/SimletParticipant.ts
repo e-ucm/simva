@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { BadRequestError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -90,7 +91,7 @@ export class SimletParticipant {
               { session_id: object_id }
             );
         } else {
-            throw new Error(`Invalid type: ${type}`);
+            throw new BadRequestError(`Invalid type: ${type}`);
         }
         logger.debug({allocated} , "Participants data from view");
         return allocated.map((participant: any) => new SimletParticipant(participant));

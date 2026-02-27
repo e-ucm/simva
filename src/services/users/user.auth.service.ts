@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { logger } from "@/lib/logger";
 import { config } from "@/lib/config";
 import { KeycloakKeyManager } from "@/lib/keycloakKeyManager";
+import { AuthentificationError } from "@/lib/errors/appErrors";
 
 /**
  * @fileoverview Authentication service for user JWT validation and Keycloak integration.
@@ -63,25 +64,25 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       // First, try to decode structurally
       const decodedPayloadOnly = jwt.decode(token);
       if (!decodedPayloadOnly || typeof decodedPayloadOnly !== 'object') {
-        return reject(new Error('JWT validation failed'));
+        return reject(new AuthentificationError('JWT validation failed'));
       }
       jwtPayload = { sso: decodedPayloadOnly as any, jwt: token, sql: {} };
       // Enforce expiration if present
       if (typeof jwtPayload.sso.exp === 'number') {
         const now = Math.floor(Date.now() / 1000);
         if (jwtPayload.sso.exp < now) {
-          return reject(new Error('Token has expired'));
+          return reject(new AuthentificationError('Token has expired'));
         }
       }
 
       // Determine username from common claims
       jwtPayload.sql.username = jwtPayload.sso.preferred_username || jwtPayload.sso.username || jwtPayload.sso.sub;
       if (!jwtPayload.sql.username) {
-        return reject(new Error('Token missing required user identification'));
+        return reject(new AuthentificationError('Token missing required user identification'));
       }
       jwtPayload.sql.email = jwtPayload.sso.email;
       if (!jwtPayload.sql.email) {
-        return reject(new Error('Email missing required user identification'));
+        return reject(new AuthentificationError('Email missing required user identification'));
       }
       // Attempt verification for integrity, but do not fail if signature mismatch
       try {
@@ -129,7 +130,7 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       resolve(jwtPayload);
     } catch (error) {
       logger.error({ error }, 'JWT validation error:');
-      reject(new Error('JWT validation failed'));
+      reject(new AuthentificationError('JWT validation failed'));
     }
   });
 }

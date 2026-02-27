@@ -1,5 +1,5 @@
 import { Response, NextFunction } from "express";
-import { ValidationError } from "@/lib/errors/appErrors";
+import { BadRequestError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import * as groupService from "@/services/groups/group.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
@@ -54,7 +54,7 @@ export async function getGroups(
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
  * @throws {NotFoundError} If group with the specified ID doesn't exist
- * @throws {ValidationError} If group ID is invalid
+ * @throws {BadRequestError} If group ID is invalid
  * 
  * @example
  * // GET /groups/123
@@ -68,7 +68,7 @@ export async function getGroupById(
   try {
     const groupId = parseInt(req.params.id as string);
     if (isNaN(groupId) || groupId <= 0) {
-      throw new ValidationError("Invalid group ID");
+      throw new BadRequestError("Invalid group ID");
     }
 
     const group = await groupService.getGroup(groupId, req.user!.sql.user_id as number);
@@ -117,7 +117,7 @@ export async function createGroup(
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
  * @throws {NotFoundError} If group with the specified ID doesn't exist
- * @throws {ValidationError} If group ID is invalid
+ * @throws {BadRequestError} If group ID is invalid
  * 
  * @example
  * // PUT /groups/123
@@ -133,7 +133,7 @@ export async function updateGroup(
     const currentUser = req.user?.sql;
     const groupId = parseInt(req.params.id as string);
     if (isNaN(groupId) || groupId <= 0) {
-      throw new ValidationError("Invalid group ID");
+      throw new BadRequestError("Invalid group ID");
     }
     const group = await groupService.updateGroup(groupId, currentUser!.user_id as number, req.body);
     res.json(group.toJSON());
@@ -151,7 +151,7 @@ export async function updateGroup(
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
  * @throws {NotFoundError} If group with the specified ID doesn't exist
- * @throws {ValidationError} If group ID is invalid
+ * @throws {BadRequestError} If group ID is invalid
  * 
  * @example
  * // DELETE /groups/123
@@ -165,7 +165,7 @@ export async function deleteGroup(
   try {
     const groupId = parseInt(req.params.id as string);
     if (isNaN(groupId) || groupId <= 0) {
-      throw new ValidationError("Invalid group ID");
+      throw new BadRequestError("Invalid group ID");
     }
     const currentUser = req.user?.sql;
     await groupService.deleteGroup(groupId, currentUser!.user_id as number);
@@ -183,7 +183,7 @@ export async function getGroupParticipants(
   try {
     const groupId = parseInt(req.params.id as string);
     if (isNaN(groupId) || groupId <= 0) {
-      throw new ValidationError("Invalid group ID");
+      throw new BadRequestError("Invalid group ID");
     }
     let currentUser = req.user?.sql;
     const participants = await groupService.getGroupParticipants(groupId, currentUser!.user_id as number);
@@ -216,7 +216,7 @@ export async function createGroupParticipant(
   try {
     const groupId = parseInt(req.params.id as string);
     if (isNaN(groupId) || groupId <= 0) {
-      throw new ValidationError("Invalid group ID");
+      throw new BadRequestError("Invalid group ID");
     }
     let currentUser = req.user?.sql;
     let currentUserId = currentUser!.user_id as unknown as string;
@@ -236,12 +236,12 @@ export async function deleteGroupParticipant(
   try {
     const groupId = parseInt(req.params.id as string);
     if (isNaN(groupId) || groupId <= 0) {
-      throw new ValidationError("Invalid group ID");
+      throw new BadRequestError("Invalid group ID");
     }
     let currentUser = req.user?.sql;
     let participantId = parseInt(req.params.participant_id as string);
     if (isNaN(participantId) || participantId <= 0) {
-      throw new ValidationError("Invalid participant ID");
+      throw new BadRequestError("Invalid participant ID");
     }
     const keycloakDelete = req.query.keycloakDelete || false;
     await groupService.deleteGroupParticipant(groupId, participantId, currentUser!.user_id as number, keycloakDelete as boolean);

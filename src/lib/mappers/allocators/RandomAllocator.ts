@@ -139,11 +139,11 @@ export class RandomAllocator extends Allocator {
 
     async allocateRandomly(sessionsId: number[], groups_id: number[]) {
         if (!Array.isArray(sessionsId) || sessionsId.length === 0) {
-            throw new ValidationError("sessionsId must be a non-empty array");
+            throw new NotFoundError("sessionsId must be a non-empty array");
         }
 
         if (!Array.isArray(groups_id) || groups_id.length === 0) {
-            throw new ValidationError("groups_id must be a non-empty array");
+            throw new NotFoundError("groups_id must be a non-empty array");
         }
 
         if (this.allocator_type !== RandomAllocator.getType()) {

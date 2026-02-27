@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { logger } from "@/lib/logger";
+import { BadRequestError } from "@/lib/errors/appErrors";
 
 /**
  * User Permission mapper class representing user access permissions.
@@ -54,7 +55,7 @@ export class UserPermission {
      * @param {number} object_id - ID of the object to get permissions for
      * @returns {Promise<UserPermission>} Promise that resolves to UserPermission instance
      * 
-     * @throws {Error} If unsupported object type is provided
+     * @throws {BadRequestError} If unsupported object type is provided
      * 
      * @example
      * ```typescript
@@ -73,7 +74,7 @@ export class UserPermission {
             const groupPermissions = await db.Functions.runViewQuery(db.Views.Group.directPermissionsByGroupId, { group_id: object_id });
             return new UserPermission(object_type, object_id, groupPermissions, current_user_id);
         default:
-            throw new Error(`Unsupported object type: ${object_type}`);
+            throw new BadRequestError(`Unsupported object type: ${object_type}`);
         }
     }
 
@@ -131,7 +132,7 @@ export class UserPermission {
      * @param {string} permission - The permission level to grant (e.g., 'READ', 'WRITE')
      * @returns {Promise<SingleUserPermission[]>} Promise that resolves to updated permissions array
      * 
-     * @throws {Error} If unsupported object type is provided
+     * @throws {BadRequestError} If unsupported object type is provided
      * 
      * @description Creates a new permission record in the appropriate database table
      * based on object type and adds it to the local permissions array.
@@ -154,7 +155,7 @@ export class UserPermission {
                 await db.Tables.GroupPermissions.create({ group_id: this.object_id, user_id, permission });
                 break;
             default:
-                throw new Error(`Unsupported object type: ${this.object_type}`);
+                throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
         }
         this.permissions.push(new SingleUserPermission(this.object_type, this.object_id, { user_id, permission }, this.current_user_id));
         return this.permissions;
@@ -169,7 +170,7 @@ export class UserPermission {
      * @param {string} permission - The permission level to remove (e.g., 'READ', 'WRITE')
      * @returns {Promise<SingleUserPermission[]>} Promise that resolves to updated permissions array
      * 
-     * @throws {Error} If unsupported object type is provided
+     * @throws {BadRequestError} If unsupported object type is provided
      * 
      * @description Deletes the permission record from the appropriate database table
      * and removes it from the local permissions array.
@@ -192,7 +193,7 @@ export class UserPermission {
                 await db.Tables.GroupPermissions.destroy({ where: { group_id: this.object_id, user_id, permission } });
                 break;
             default:
-                throw new Error(`Unsupported object type: ${this.object_type}`);
+                throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
         }
         this.permissions = this.permissions.filter(p => !(p.user_id === user_id && p.permission === permission));
         return this.permissions;
@@ -210,7 +211,7 @@ export class UserPermission {
                 await db.Tables.GroupPermissions.create({ group_id: this.object_id, user_id: body.user_id, permission: body.permission });
                 break;
             default:
-                throw new Error(`Unsupported object type: ${this.object_type}`);
+                throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
         }
         return this;
     }
@@ -222,7 +223,7 @@ export class UserPermission {
      * @async
      * @method deleteAllPermissions
      * @returns {Promise<void>} Promise that resolves when all permissions are deleted
-     * @throws {Error} When object_type is not supported
+     * @throws {BadRequestError} When object_type is not supported
      */
     async deleteAllPermissions(): Promise<void> {
         switch (this.object_type) {
@@ -236,7 +237,7 @@ export class UserPermission {
                 await db.Tables.GroupPermissions.destroy({ where: { group_id: this.object_id } });
                 break;
             default:
-                throw new Error(`Unsupported object type: ${this.object_type}`);
+                throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
         }
     }
 

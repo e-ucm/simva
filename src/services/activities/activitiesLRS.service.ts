@@ -1,8 +1,8 @@
-import { NotFoundError } from "@/lib/errors/appErrors";
+import { NotFoundError, NotImplementedError } from "@/lib/errors/appErrors";
 import { Activity } from "@/lib/mappers/activities/Activity";
 
 export function getStatementsLRSForActivity(currentUserid: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export async function sendStatementsLRSForActivity(currentUserId: number, activityId: number, body: any, lrsmanagerUserId: number): Promise<number[]> {
@@ -19,53 +19,53 @@ export async function sendStatementsLRSForActivity(currentUserId: number, activi
 }
 
 export function getAgentsLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function getAgentsProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function postAgentsProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function updateAgentsProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function deleteAgentsProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function getActivitiesLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function getActivitiesProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function postActivitiesProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function updateActivitiesProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function deleteActivitiesProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function getActivitiesStateLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function postActivitiesStateLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }
 
 export function updateActivitiesStateLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotFoundError("Endpoint not implemented yet");
+    throw new NotImplementedError("Endpoint not implemented yet");
 }

@@ -1,6 +1,6 @@
 import { config } from "@/lib/config";
 import { db } from "@/lib/db";
-import { AuthentificationError, NotFoundError } from "@/lib/errors/appErrors";
+import { AuthentificationError, NotFoundError, NotImplementedError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { minioClient } from "@/lib/utils/minioclient";
 import { JSScormTracker } from "js-tracker";
@@ -686,7 +686,7 @@ export class Activity {
 	 * @returns {void}
 	 */
 	async setResult(result: any, participants_id?: number[]): Promise<void> {
-		throw new Error("setResult method not implemented for this activity type");
+		throw new NotImplementedError("setResult method not implemented for this activity type");
 	}
 
 	/**

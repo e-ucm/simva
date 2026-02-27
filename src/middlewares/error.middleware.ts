@@ -52,7 +52,7 @@ export function errorMiddleware(
   }
 
   // For generic errors, return the error message in development/test, generic message in production
-  const message = process.env.NODE_ENV === 'production' ? "Internal server error" : (err.message || "Internal server error");
+  //const message = process.env.NODE_ENV === 'production' ? "Internal server error" : (err.message || "Internal server error");
   res.status(err.status || 500).json({
     message: err.message,
     errors: err.errors,

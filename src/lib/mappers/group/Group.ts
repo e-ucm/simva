@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, ConflictError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
@@ -132,7 +132,7 @@ export class Group {
         }
         let count = await db.Tables.Group.count({where: {group_name: newGroupName }});
         if(count > 0) {
-            throw new ValidationError("Group name must be unique");
+            throw new ConflictError("Group name must be unique");
         }
         body.group_owner_user_id = current_user_id;
         body.group_use_new_generation = useNewGeneration;
@@ -231,7 +231,7 @@ export class Group {
      * @param {Partial<GroupParticipant>} body - Participant data for creation
      * @returns {Promise<GroupParticipant>} Promise resolving to the created participant
      * @throws {AuthentificationError} When user lacks edit permissions
-     * @throws {ValidationError} When participant data is invalid
+     * @throws {NotFoundError} When participant data is invalid
      * 
      * @example
      * ```typescript
@@ -390,7 +390,7 @@ export class Group {
      * @returns {Promise<SingleUserPermission>} Promise resolving to updated permission object
      * @throws {AuthentificationError} When user lacks edit permissions
      * @throws {NotFoundError} When user permissions are not found
-     * @throws {ValidationError} When permission data is invalid
+     * @throws {BadRequestError} When permission data is invalid
      * 
      * @example
      * ```typescript

@@ -2,14 +2,14 @@
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { NextFunction, Response } from "express";
 import * as activitiesService from "@/services/activities/activitiesLRS.service";
-import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, BadRequestError, NotFoundError, NotImplementedError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { User } from "@/lib/mappers/Users/User";
 
 export function getStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");    
+        throw new NotImplementedError("Endpoint not implemented yet");    
     } catch (err) {
         next(err);
     }
@@ -20,11 +20,11 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
         let currentUser = req.user?.sql;
         const activityId = parseInt(req.params.activity_id as string);
         if(isNaN(activityId)) {
-            throw new ValidationError("Invalid activity ID");
+            throw new BadRequestError("Invalid activity ID");
         }
         let body = req.body;
         if(!body || typeof body !== "object") {
-            throw new ValidationError("Invalid request body");
+            throw new BadRequestError("Invalid request body");
         }
         let postuser = req.query["user"] as string;
         let currentUserId = currentUser!.user_id as number;
@@ -46,7 +46,7 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
                 ids = await activitiesService.sendStatementsLRSForActivity(currentUserId, activityId, body, currentUserId);
                 break;
             default:
-                throw new ValidationError("User role not recognized");
+                throw new AuthentificationError("User role not recognized");
         }
         return res.status(201).json({ ids });
     } catch (err) {
@@ -56,7 +56,7 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
 
 export function putStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -64,7 +64,7 @@ export function putStatementsLRSForActivity(req: AuthenticatedRequest, res: Resp
 
 export function getAgentsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -72,7 +72,7 @@ export function getAgentsLRSForActivity(req: AuthenticatedRequest, res: Response
 
 export function getAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -80,7 +80,7 @@ export function getAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: R
 
 export function postAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -88,7 +88,7 @@ export function postAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: 
 
 export function updateAgentsProfileLRSForActivity(req: AuthenticatedRequest, res:  Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -96,7 +96,7 @@ export function updateAgentsProfileLRSForActivity(req: AuthenticatedRequest, res
 
 export function deleteAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -104,7 +104,7 @@ export function deleteAgentsProfileLRSForActivity(req: AuthenticatedRequest, res
 
 export function getActivitiesLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -112,7 +112,7 @@ export function getActivitiesLRSForActivity(req: AuthenticatedRequest, res: Resp
 
 export function getActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -120,7 +120,7 @@ export function getActivitiesProfileLRSForActivity(req: AuthenticatedRequest, re
 
 export function postActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -128,7 +128,7 @@ export function postActivitiesProfileLRSForActivity(req: AuthenticatedRequest, r
 
 export function updateActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -136,7 +136,7 @@ export function updateActivitiesProfileLRSForActivity(req: AuthenticatedRequest,
 
 export function deleteActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -144,7 +144,7 @@ export function deleteActivitiesProfileLRSForActivity(req: AuthenticatedRequest,
 
 export function getActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -152,7 +152,7 @@ export function getActivitiesStateLRSForActivity(req: AuthenticatedRequest, res:
 
 export function postActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }   
@@ -160,7 +160,7 @@ export function postActivitiesStateLRSForActivity(req: AuthenticatedRequest, res
 
 export function updateActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -168,7 +168,7 @@ export function updateActivitiesStateLRSForActivity(req: AuthenticatedRequest, r
 
 export function deleteActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -176,7 +176,7 @@ export function deleteActivitiesStateLRSForActivity(req: AuthenticatedRequest, r
 
 export function getAboutLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }
@@ -184,7 +184,7 @@ export function getAboutLRSForActivity(req: AuthenticatedRequest, res: Response,
 
  export function getExtensionLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        throw new NotFoundError("Endpoint not implemented yet");
+        throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {
         next(err);
     }

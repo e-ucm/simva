@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { BadRequestError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
 // Allocator type constants to avoid circular dependency imports
@@ -25,7 +26,7 @@ export class Allocation {
                 this.object_id = data.participant_id;
                 break;
             default:
-                throw new Error(`Unknown object type: ${object_type}`);
+                throw new BadRequestError(`Unknown object type: ${object_type}`);
         }
         logger.debug({ object_type, session_id: this.session_id, object_id: this.object_id }, 'Allocation instance created');
     }

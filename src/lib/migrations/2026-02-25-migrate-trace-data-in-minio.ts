@@ -120,7 +120,6 @@ export async function up({ context }: { context: QueryInterface }) {
     } else {
       logger.warn(`No states found in ${stateFilePath} or states has unexpected format, skipping activityId update`);
     }
-    //throw new Error('Migration completed. Please verify the changes and remove this error to finalize the migration.');
 }
 
 export async function down({ context }: { context: QueryInterface }) {
