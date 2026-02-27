@@ -1,6 +1,6 @@
 import { config } from "@/lib/config";
 import { db } from "@/lib/db";
-import { AuthentificationError, NotFoundError, NotImplementedError } from "@/lib/errors/appErrors";
+import { AuthentificationError, BadRequestError, NotFoundError, NotImplementedError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { minioClient } from "@/lib/utils/minioclient";
 import { JSScormTracker } from "js-tracker";
@@ -448,16 +448,16 @@ export class Activity {
 	 * @async
 	 * @method setInitialized
 	 * @param {boolean} initialized - Initialized status to set
-	 * @param {number[]} participants_id - Array of participant IDs
-	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when initialized status is set
+	 * @param {number} participant_id - Participant ID to set initialized status for
+	 * @returns {Promise<ActivityCompletion>} Promise that resolves when initialized status is set
 	 */
-	async setInitialized(initialized: boolean, participants_id?: number[]): Promise<ActivityCompletion[]>{
-		let progressData = await this.getCurrentCompletionData(participants_id);
+	async setInitialized(initialized: boolean, participant_id: number): Promise<ActivityCompletion>{
+		let progressData = await this.getCurrentCompletionData([participant_id]);
 		for (const cd of progressData) {
 			await cd.update({ activity_initialized: initialized });
 			cd.activity_initialized = initialized; // Update local instance to reflect change
 		}
-		return progressData;
+		return progressData[0];
 	}
 
 	/**
@@ -485,16 +485,16 @@ export class Activity {
 	 * @async
 	 * @method setProgress
 	 * @param {number} progress - Progress value to set (0-100)
-	 * @param {number[]} participants_id - Array of participant IDs
-	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when progress is set
+	 * @param {number} participant_id - Participant ID to set progress for
+	 * @returns {Promise<ActivityCompletion>} Promise that resolves when progress is set
 	 */
-	async setProgress(progress: number, participants_id?: number[]): Promise<ActivityCompletion[]>{
-		let progressData = await this.getCurrentCompletionData(participants_id);
+	async setProgress(progress: number, participant_id: number): Promise<ActivityCompletion>{
+		let progressData = await this.getCurrentCompletionData([participant_id]);
 		for (const cd of progressData) {
 			await cd.update({ activity_progress: progress });
 			cd.activity_progress = progress; // Update local instance to reflect change
 		}
-		return progressData;
+		return progressData[0];
 	}
 
 		/**
@@ -522,16 +522,16 @@ export class Activity {
 	 * @async
 	 * @method setCompletion
 	 * @param {boolean} completed - Completion status to set
-	 * @param {number[]} participants_id - Array of participant IDs
-	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when completion is set
+	 * @param {number} participant_id - Participant ID to set completion for
+	 * @returns {Promise<ActivityCompletion>} Promise that resolves when completion is set
 	 */
-	async setCompletion(completed: boolean, participants_id?: number[]): Promise<ActivityCompletion[]>{
-		let data = await this.getCurrentCompletionData(participants_id);
+	async setCompletion(completed: boolean, participant_id: number): Promise<ActivityCompletion>{
+		let data = await this.getCurrentCompletionData([participant_id]);
 		for (const cd of data) {
 			await cd.update({ activity_completed: completed });
 			cd.activity_completed = completed; // Update local instance to reflect change
 		}
-		return data;
+		return data[0];
 	} 
 	
 	/**
@@ -544,7 +544,13 @@ export class Activity {
 	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when multi-completion is set
 	 */
 	async setMultiCompletion(status : boolean): Promise<ActivityCompletion[]> {
-		return await this.setCompletion(status);
+		let participants_id = await this.getAllCurrentParticipantsId();
+		let completionData : ActivityCompletion[]= [];
+		for (const participant_id of participants_id) {
+			let data = await this.setCompletion(status, participant_id);
+			completionData.push(data);
+		}	
+		return completionData;
 	}
 
 	/**
@@ -554,16 +560,16 @@ export class Activity {
 	 * @async
 	 * @method setSuspension
 	 * @param {boolean} status - Suspension status to set
-	 * @param {number[]} participants_id - Array of participant IDs to set suspension for
-	 * @returns {Promise<ActivityCompletion[]>} Promise that resolves when suspension status is set
+	 * @param {number} participant_id - Participant ID to set suspension for
+	 * @returns {Promise<ActivityCompletion>} Promise that resolves when suspension status is set
 	 */
-	async setSuspension(status : boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		let completionData = await this.getCurrentCompletionData(participants_id);
+	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
+		let completionData = await this.getCurrentCompletionData([participant_id]);
 		for (const cd of completionData) {
 			await cd.update({ activity_suspended: status });
 			cd.activity_suspended = status; // Update local instance to reflect change
 		}
-		return completionData;
+		return completionData[0];
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
@@ -672,8 +678,8 @@ export class Activity {
 	 * @param {number[]} participants_id - Array of participant IDs
 	 * @returns {Promise<boolean>} Promise resolving to true if participants have results
 	 */
-	async hasResults(type: string, participants_id?: number[]): Promise<boolean>{
-		return false;
+	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
+		return new ActivityMappingResult(new Map<number, boolean>());
 	}
 
 	/**
@@ -682,53 +688,22 @@ export class Activity {
 	 * 
 	 * @method setResult
 	 * @param {any} result - Result value to set
-	 * @param {number[]} participants_id -  Array of participant IDs to set results for
+	 * @param {number} participant_id -  Participant ID to set result for
 	 * @returns {void}
 	 */
-	async setResult(result: any, participants_id?: number[]): Promise<void> {
-		throw new NotImplementedError("setResult method not implemented for this activity type");
+	async setResult(type: string, result: any, participant_id: number): Promise<void> {
+		switch(type) {
+			case 'backup':
+				await minioClient.putFile(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`, result);
+				break;
+			case 'xapi':
+				await this.sendStatementsLRSForActivity(participant_id, result);
+				break;
+			default:
+				throw new BadRequestError(`Unsupported result type: ${type}`);
+		}
 	}
 
-	/**
-	 * Saves content to a file for this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method saveToFile
-	 * @param {string} filename - Name of the file to save
-	 * @param {string} content - Content to save to the file
-	 * @returns {Promise<void>} Promise that resolves when file is saved
-	 */
-	async saveToFile(filename: string, content: string): Promise<void>{
-		return;
-	}
-
-	/**
-	 * Reads content from a file for this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method readFromFile
-	 * @param {string} filename - Name of the file to read
-	 * @returns {Promise<string | null>} Promise resolving to file content or null if not found
-	 */
-	async readFromFile(filename : string): Promise<string | null> {
-		return null;
-	}
-
-	/**
-	 * Checks if a local file exists for this activity.
-	 * Stub implementation - to be implemented by subclasses.
-	 * 
-	 * @async
-	 * @method localFileExists
-	 * @param {string} filename - Name of the file to check
-	 * @returns {Promise<boolean>} Promise resolving to true if file exists, false otherwise
-	 */
-	async localFileExists(filename: string): Promise<boolean> {
-		return false;
-	}
-	
 	/**
 	 * Generates a presigned URL for file access.
 	 * Currently commented out - stub implementation for future MinIO integration.
@@ -743,8 +718,8 @@ export class Activity {
 		if (await minioClient.fileExists(path)) {
 			let presignedUrl = null;	
 			let time_before_expiration=config.minio.presigned_url_expiration_time_in_second;
-			presignedUrl = await minioClient.getPresignedFileUrl(this.activity_id as unknown as string);
-			const now=new Date().toJSON();
+			presignedUrl = await minioClient.getPresignedUrl(path, time_before_expiration);
+			const now=new Date().toISOString();
 			return {
 				url: presignedUrl,
 				generated_at: now,
@@ -753,44 +728,6 @@ export class Activity {
 		} else {
 			throw `Error the file ${path} don't exist in minio`;
 		}
-	}
-	
-	/**
-	 * Retrieve file content from Minio client.
-	 * @param {string} file - File path
-	 * @returns {Promise<string>}
-	 */
-	/**
-	 * Retrieves a file from MinIO client.
-	 * Currently commented out - stub implementation for future MinIO integration.
-	 * 
-	 * @async
-	 * @method getFile
-	 * @param {string} file - File path to retrieve
-	 * @returns {Promise<string>} Promise that resolves to the file content
-	 */
-	async getFile(file : string): Promise<string> {
-		const objectStream = await minioClient.getObject(config.minio.bucket, file) as any;
-		objectStream.setEncoding('utf-8');
-		let content = '';
-		for await (const chunk of objectStream) {
-			content += chunk;
-		}
-		return content;
-	}
-	/**
-	 * Gets a presigned URL for file access with expiration time.
-	 * Currently commented out - stub implementation for future MinIO integration.
-	 * 
-	 * @async
-	 * @method getPresignedUrl
-	 * @returns {Promise<string>} Promise resolving to the presigned URL
-	 */
-	async getPresignedUrl(): Promise<string> {
-		logger.info("Minio : getPresignedUrl");
-		const presignedUrl = await minioClient.getPresignedFileUrl(this.activity_id as unknown as string);
-		logger.info(presignedUrl);
-		return presignedUrl;
 	}
 
 	/**

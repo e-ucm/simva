@@ -4,6 +4,8 @@ import { logger } from "@/lib/logger";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { config } from "@/lib/config";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
+import { minioClient } from "@/lib/utils/minioclient";
+import { BadRequestError, ValidationError } from "@/lib/errors/appErrors";
 
 /**
  * Gameplay Activity mapper class extending base Activity.
@@ -223,6 +225,47 @@ export class GamePlayActivity extends Activity {
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		return super.getSuspension(participants_id);
+	}
+
+	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
+		let resultMap = new Map<number, boolean>();
+		for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
+			if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
+				resultMap.set(participant_id, true);
+			} else {
+				resultMap.set(participant_id, false);
+			}
+		}
+		return new ActivityMappingResult(resultMap);
+	}
+
+	async getResult(type: string, participants_id?: number[]): Promise<ActivityMappingResult<any>> {
+		let resultMap = new Map<number, string | null>();
+		for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
+			if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
+				resultMap.set(participant_id, await minioClient.getPresignedUrl(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`, config.minio.presignedUrlExpirationSeconds));
+			} else {
+				resultMap.set(participant_id, null);
+			}
+		}
+		return new ActivityMappingResult(resultMap);
+	}
+
+	async setResult(type: string, result: any, participant_id: number): Promise<void> {
+		switch(type) {
+			case 'backup':
+				if(!this.game_backup) {
+					throw new ValidationError('Game backup is not enabled for this activity');
+				}
+				await super.setResult(type, result, participant_id);
+				break;
+			case 'xapi':
+				await super.setResult(type, result, participant_id);
+				break;
+			default:
+				throw new BadRequestError(`Unsupported result type: ${type}`);
+		}
+		
 	}
 
 	/**

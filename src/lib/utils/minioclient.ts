@@ -138,22 +138,6 @@ class MinioClient {
     }
 
     /**
-     * Get presigned URL for activity traces file
-     * @param activityId - The activity ID
-     * @returns Promise resolving to presigned URL or empty string if file doesn't exist
-     */
-    async getPresignedFileUrl(activityId: string): Promise<string> {
-        this.ensureInitialized();
-
-        const path = `${this.#opts.outputsDir}/${activityId}/${this.#opts.tracesFile}`;
-        logger.info({ activityId, path }, 'Minio: getPresignedFileUrl');
-        if (await this.fileExists(path)) {
-            return this.getPresignedUrl(path);
-        }
-        return '';
-    }
-
-    /**
      * Generate a presigned URL for an object
      * @param path - Object path
      * @param expirySeconds - Optional custom expiry time in seconds
