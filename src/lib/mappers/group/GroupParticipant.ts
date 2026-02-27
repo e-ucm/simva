@@ -64,7 +64,7 @@ export class GroupParticipant {
         this.user_id = data.user_id;
         this.username = data.username;
         this.token = data.token;
-        this.isToken = data.isToken;
+        this.isToken = Boolean(data.isToken);
         this.role = data.role;
         this.email = data.email;
     }
