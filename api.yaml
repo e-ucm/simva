@@ -32,7 +32,14 @@ paths:
         Simple health check endpoint to verify that the API is running
       responses:
         '200':
-          description: Service is healthy
+          $ref: '#/components/responses/HealthCheckSuccess'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    head:
+      summary: Health check (HEAD)
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthCheckSuccess'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /events:
@@ -3779,6 +3786,12 @@ components:
         type: string
         format: 'token1'
   responses:
+    HealthCheckSuccess:
+      description: Health check successful
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/health_check_response'
     AuthentificationError:
       description: Authentification error
       content:
@@ -3822,6 +3835,18 @@ components:
           schema:
             $ref: '#/components/schemas/error'
   schemas:
+    health_check_response:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+        db:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "ok"
     error:
       description: An error occurred
       type: object
