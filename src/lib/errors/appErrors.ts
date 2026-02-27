@@ -86,3 +86,44 @@ export class ValidationError extends Error {
     this.name = "ValidationError";
   }
 }
+
+/**
+ * Custom error class for handling conflict errors.
+ * Extends the standard Error class and sets the error name to "ConflictError".
+ * 
+ * @class ConflictError
+ * @extends {Error}
+ * @example
+ * throw new ConflictError("Resource already exists");
+ */ 
+export class ConflictError extends Error {
+  /**
+   * Creates a new ConflictError instance.
+   * @param message - The error message describing the conflict issue
+   */
+  constructor(message: string) {
+    super(message);
+    this.name = "ConflictError";
+  }
+}
+
+
+/**
+ * Custom error class for handling not implemented errors.
+ * Extends the standard Error class and sets the error name to "NotImplementedError".
+ * 
+ * @class NotImplementedError
+ * @extends {Error}
+ * @example
+ * throw new NotImplementedError("This method is not implemented yet");
+ */
+export class NotImplementedError extends Error {
+  /**
+   * Creates a new NotImplementedError instance.
+   * @param message - The error message describing the not implemented method
+   */
+  constructor(message: string) {
+    super(message);
+    this.name = "NotImplementedError";
+  }
+}

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { logger } from "@/lib/logger";
-import { NotFoundError, BadRequestError, AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
+import { NotFoundError, BadRequestError, AuthentificationError, ValidationError, ConflictError, NotImplementedError} from "@/lib/errors/appErrors";
 
 /**
  * Express error handling middleware.
@@ -36,11 +36,19 @@ export function errorMiddleware(
   }
   
   if (err instanceof ValidationError) {
-    return res.status(400).json({ message: err.message });
+    return res.status(406).json({ message: err.message });
+  }
+
+  if(err instanceof ConflictError) {
+    return res.status(409).json({ message: err.message });
   }
   
   if (err instanceof AuthentificationError) {
     return res.status(401).json({ message: err.message });
+  }
+
+  if(err instanceof NotImplementedError) {
+    return res.status(501).json({ message: err.message });
   }
 
   // For generic errors, return the error message in development/test, generic message in production
