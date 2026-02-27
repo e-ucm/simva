@@ -99,7 +99,7 @@ ON "Activities" ("activity_id");
 CREATE TABLE IF NOT EXISTS "Limesurvey_Activities" (
 	"activity_id" INTEGER NOT NULL UNIQUE,
 	"survey_id" INTEGER NOT NULL,
-	"suvey_language" VARCHAR NOT NULL,
+	"survey_language" VARCHAR NOT NULL,
 	"survey_lrsset" INTEGER,
 	PRIMARY KEY("activity_id"),
 	FOREIGN KEY ("activity_id") REFERENCES "Activities"("activity_id")

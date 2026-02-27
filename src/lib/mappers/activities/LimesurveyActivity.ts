@@ -27,7 +27,7 @@ export class LimesurveyActivity extends Activity {
 	 * Language code for the survey (e.g., 'en', 'es')
 	 * @default ''
 	 */
-	suvey_language: string='';
+	survey_language: string='';
 	
 	/**
 	 * Learning Record Store (LRS) set identifier for xAPI data
@@ -46,7 +46,7 @@ export class LimesurveyActivity extends Activity {
 		super(allocated, data);
 		// Assign limesurvey-specific properties if provided in data
 		this.survey_id = data.survey_id ?? -1;
-		this.suvey_language = data.suvey_language ?? '';
+		this.survey_language = data.survey_language ?? '';
 		this.survey_lrsset = data.survey_lrsset ?? -1;
 	}
 	
@@ -69,7 +69,7 @@ export class LimesurveyActivity extends Activity {
 		
 		if (limesurveyData) {
 			instance.survey_id = limesurveyData.survey_id ?? -1;
-			instance.suvey_language = limesurveyData.suvey_language ?? '';
+			instance.survey_language = limesurveyData.survey_language ?? '';
 			instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
 		}
 		
@@ -136,7 +136,7 @@ export class LimesurveyActivity extends Activity {
 		let targetMap = new Map<number, string>();
 		const usernames = await this.getAllCurrentParticipantsUsername(participants_id);
 		for (let i = 0; i < participants_id.length; i++) {
-			targetMap.set(participants_id[i], `${config.limesurvey.external_url}/${this.survey_id}?token=${usernames.get(participants_id[i])}&lang=${this.suvey_language}`);
+			targetMap.set(participants_id[i], `${config.limesurvey.external_url}/${this.survey_id}?token=${usernames.get(participants_id[i])}&lang=${this.survey_language}`);
 		}
 		logger.debug(targetMap.toString());
 		return new ActivityMappingResult(targetMap);
@@ -195,7 +195,7 @@ export class LimesurveyActivity extends Activity {
 			...super.toJSON(),
 			activity_type : LimesurveyActivity.getType(),
 			survey_id: this.survey_id,
-			suvey_language: this.suvey_language,
+			survey_language: this.survey_language,
 			survey_lrsset: this.survey_lrsset
 		};
 	}
