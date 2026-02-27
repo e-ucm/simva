@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
+import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 
 /**
  * Group Allocator mapper class extending base Allocator.
@@ -166,6 +167,7 @@ export class GroupAllocator extends Allocator {
                     old_session_id: oldSessionId,
                     new_session_id: newParticipant.session_id
                 }, 'GroupAllocator.allocate participant recreated with new session');
+                await ActivityCompletion.createAllFromSession(newParticipant.session_id, [participant.participant_id]);
                 return newParticipant;
             }));
             logger.debug({ sessionId, group_id, updatedCount: updateResults.length }, 'GroupAllocator.allocate updated participants');

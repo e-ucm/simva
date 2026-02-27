@@ -29,6 +29,51 @@ export class ActivityCompletion {
 
     activity_completed : boolean;
 
+    static async createAllFromSession(sessionId: number, participants_id: number[]) : Promise<ActivityCompletion[]> {
+        const activity = await db.Tables.Activities.findAll({ where: { session_id: sessionId } });
+        if (!activity || activity.length === 0) {
+            throw new NotFoundError(`No activity found for session_id ${sessionId}`);
+        }
+        let completions: ActivityCompletion[] = [];
+        for (const act of activity) {
+            const actCompletions = await this.createAll(act.activity_id, participants_id);
+            completions = completions.concat(actCompletions);
+        }
+        return completions;
+    }
+
+    static async createAll(activity_id: number, participant_ids: number[]): Promise<ActivityCompletion[]> {
+        const completions: ActivityCompletion[] = [];
+        for (const participant_id of participant_ids) {
+            const completion = await this.create(activity_id, participant_id);
+            completions.push(completion);
+        }
+        return completions;
+    }
+
+    static async create(activity_id: number, participant_id: number): Promise<ActivityCompletion> {
+        let existingRecord = await db.Tables.ActivityCompletion.findOne({
+            where: {
+                activity_id,
+                participant_id
+            }
+        });
+        if (existingRecord) {
+            logger.debug(existingRecord, `create: Activity completion record already exists for activity_id ${activity_id} and participant_id ${participant_id}`);
+            return new ActivityCompletion(existingRecord);
+        }
+        const newRecord = await db.Tables.ActivityCompletion.create({
+            activity_id,
+            participant_id,
+            activity_initialized: false,
+            activity_completed: false,
+            activity_suspended: false,
+        });
+        logger.debug(newRecord, `create: Created new activity completion record for activity_id ${activity_id} and participant_id ${participant_id}`);
+        return new ActivityCompletion(newRecord);
+    }
+
+
     static async getAllIdsFromDbData(activity_id: number): Promise<number[]> {
         const data = await db.Tables.ActivityCompletion.findAll({
             where: { activity_id: activity_id },

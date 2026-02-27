@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
+import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 
 /**
  * Session Allocator mapper class extending base Allocator.
@@ -91,7 +92,7 @@ export class SessionAllocator extends Allocator {
                 })
             )
         );
-
+        await ActivityCompletion.createAllFromSession(sessionId, groupParticipantsToCreate.map((user: any) => user.user_id));
     }
 
 }

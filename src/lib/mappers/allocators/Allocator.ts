@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Allocation } from "./Allocation";
+import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 
 /**
  * Base Allocator mapper class for managing participant allocation to sessions.
@@ -200,6 +201,7 @@ export class Allocator {
                 };
                 await user.destroy();
                 await db.Tables.ExperimentalParticipants.create(participantData);
+                await ActivityCompletion.createAllFromSession(defaultSession, [user.participant_id]);
             }));
             logger.debug({ defaultSession }, 'Allocator.allocateToDefault updated participants');
         }

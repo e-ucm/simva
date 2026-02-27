@@ -3,6 +3,7 @@ import { RandomPercentages } from "@/lib/mappers/allocators/RandomPercentages";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 
 /**
  * Random Allocator mapper class extending base Allocator.
@@ -207,6 +208,8 @@ export class RandomAllocator extends Allocator {
                         group_id: user.group_id,
                         session_id: targetSessionId,
                     });
+
+                    await ActivityCompletion.createAllFromSession(targetSessionId, [user.user_id]);
                 });
             })
         );
