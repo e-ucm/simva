@@ -334,7 +334,6 @@ SELECT
     s.createdAt,
     s.updatedAt,
     s.simlet_description,
-    s.simlet_objective,
     shlink.short_url,
     s.allocator_id
 FROM v_complete_allocation_participants ap

@@ -21,7 +21,7 @@ export class SessionScheduler {
         this.url = `${config.externalUrl}/scheduler/${this.simlet}`;
         if(session.allocated_activities && session.allocated_activities.length > 0) {
             for(const activity of session.allocated_activities) {
-                this.activities[activity.activity_id] = activity;
+                this.activities.push(activity);
                 if(!this.next) {
                     if(!activity.activity_completed) {
                         this.next = activity.activity_id;
@@ -36,7 +36,7 @@ export class SessionScheduler {
             simlet: this.simlet,
             session: this.session,
             url: this.url,
-            activities: this.activities,
+            activities: this.activities.map(a => a.toJSON()),
             next: this.next
         }
     }

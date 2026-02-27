@@ -3181,18 +3181,48 @@ components:
       type: object
       properties:
         next:
-          type: string
+          type: integer
+          example: 301
           description: "The next activity ID"
-        simletId:
+        simlet:
           type: integer
           example: 123
-        sessionId:
+        session:
           type: integer
           example: 201
+        url:
+          type: string
+          example: "https://simva.test/simlets/123/sessions/201/activities/301/start"
         activities: 
           type: array
           items:
-            $ref: '#/components/schemas/activityMapper'
+            allOf:
+              - $ref: '#/components/schemas/activityMapper'
+              - type: object
+                properties:
+                  session_active:
+                    type: boolean
+                    example: true
+                  session_start_date:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  session_end_date:
+                    type: string
+                    format: date-time
+                    nullable: true 
+                  allocated_user_id:
+                    type: integer
+                    example: 456
+                  allocated_username:
+                    type: string
+                    example: "participant1"
+                  allocated_isToken:
+                    type: boolean
+                    example: false
+                  allocated_token: 
+                    type: string
+                    example: "abc123"
     session:
       type: object
       properties:

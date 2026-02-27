@@ -126,13 +126,13 @@ export class Activity {
 			this.allocated_user_id = data.allocated_user_id ?? data.participant_id;
 			this.allocated_username = data.allocated_username ?? data.participant_username;
 			this.allocated_token = data.allocated_token ?? data.participant_token;
-			this.session_active = data.session_active;
+			this.session_active = Boolean(data.session_active);
 			this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
 			this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
 			this.allocated_activity_result = new ActivityCompletion(data);
 		} else {
 			this.activity_description = data.activity_description || ""; // Default to empty string if not provided
-			this.activity_comply_with_GDPR = data.activity_comply_with_GDPR || false;
+			this.activity_comply_with_GDPR = Boolean(data.activity_comply_with_GDPR) || false;
 			this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
 			this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
 			this.activity_presignedUrl = data.activity_presignedUrl || "";
@@ -822,7 +822,10 @@ export class Activity {
 				session_active: this.session_active,
 				session_start_date: this.session_start_date,
 				session_end_date: this.session_end_date,
-				allocated_activity_result: this.allocated_activity_result?.toJSON()
+				allocated_user_id: this.allocated_user_id,
+				allocated_username: this.allocated_username,
+				allocated_isToken: this.allocated_isToken,
+				allocated_token: this.allocated_token
 			};
 		} else {
 			return {
