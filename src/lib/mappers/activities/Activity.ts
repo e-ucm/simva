@@ -682,6 +682,10 @@ export class Activity {
 		return new ActivityMappingResult(new Map<number, boolean>());
 	}
 
+	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string>> {
+		return new ActivityMappingResult(new Map<number, string>());
+	}
+
 	/**
 	 * Sets a result for a participant in this activity.
 	 * Stub implementation - to be implemented by subclasses.

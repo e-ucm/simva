@@ -69,9 +69,9 @@ export async function getProgressForActivity(activityId: number, current_user_id
     return activity.getProgress(participants_id);
 }
 
-export async function setProgressForActivity(activityId: number, current_user_id: number, allocated: boolean, progress: number, participants_id?: number[]): Promise<ActivityCompletion[]> {
+export async function setProgressForActivity(activityId: number, current_user_id: number, allocated: boolean, progress: number, participant_id: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
-    return activity.setProgress(progress, participants_id);
+    return activity.setProgress(progress, participant_id);
 }
 
 
@@ -80,9 +80,9 @@ export async function getInitializedForActivity(activityId: number, current_user
     return activity.getInitialized(participants_id);
 }
 
-export async function setInitializedForActivity(activityId: number, current_user_id: number, allocated: boolean, initialized: boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
+export async function setInitializedForActivity(activityId: number, current_user_id: number, allocated: boolean, initialized: boolean, participant_id: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
-    return activity.setInitialized(initialized, participants_id);
+    return activity.setInitialized(initialized, participant_id);
 }
 
 export async function getCompletionForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
@@ -90,9 +90,9 @@ export async function getCompletionForActivity(activityId: number, current_user_
     return activity.getCompletion(participants_id);
 }
 
-export async function setCompletionForActivity(activityId: number, current_user_id: number, allocated: boolean, completed: boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
+export async function setCompletionForActivity(activityId: number, current_user_id: number, allocated: boolean, completed: boolean, participant_id: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
-    return activity.setCompletion(completed, participants_id);
+    return activity.setCompletion(completed, participant_id);
 }
 
 export async function setMultiCompletionForActivity(activityId: number, current_user_id: number, allocated: boolean, status: boolean): Promise<ActivityCompletion[]> {
@@ -100,14 +100,29 @@ export async function setMultiCompletionForActivity(activityId: number, current_
     return activity.setMultiCompletion(status);
 }
 
-export async function setSuspensionForActivity(activityId: number, current_user_id: number, allocated: boolean, status: boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
+export async function setSuspensionForActivity(activityId: number, current_user_id: number, allocated: boolean, status: boolean, participant_id: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
-    return activity.setSuspension(status, participants_id);
+    return activity.setSuspension(status, participant_id);
 }
 
 export async function getSuspensionForActivity(activityId: number, current_user_id: number, allocated: boolean, participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
     let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
     return activity.getSuspension(participants_id);
+}
+
+export async function hasResultsForActivity(activityId: number, current_user_id: number, allocated: boolean, type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
+    let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
+    return activity.hasResults(type, participants_id);
+}
+
+export async function setResultForActivity(activityId: number, current_user_id: number, allocated: boolean, type: string, result: any, participant_id: number): Promise<void> {
+    let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
+    return activity.setResult(type, result, participant_id);
+}
+
+export async function getResultsForActivity(activityId: number, current_user_id: number, allocated: boolean, type: string, participants_id?: number[]): Promise<ActivityMappingResult<any>> {
+    let activity = await Activity.getFromDbData(activityId, current_user_id, allocated);
+    return activity.getResults(type, participants_id);
 }
 
 export async function updateActivity(activityId: number, current_user_id: number, allocated: boolean, data: any): Promise<Activity> {

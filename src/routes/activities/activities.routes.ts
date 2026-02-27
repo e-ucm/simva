@@ -13,6 +13,9 @@ import {
   setMultiCompletionForActivity,
   setProgressForActivity,
   setSuspensionForActivity,
+  getResultsForActivity,
+  setResultForActivity,
+  hasResultsForActivity,
   updateActivity
 } from "@/controlers/activities/activities.controlers";
 import {
@@ -62,7 +65,6 @@ const router = Router();
 //router.get("/:activity_id/usersurveylist", getUserSurveyListForActivity);
 //router.patch("/:activity_id/surveyowner", setSurveyOwnerForActivity);
 
-
 // Base activity type operations
 router.get("/:activity_id", getActivity);
 router.get("/:activity_id/openable", isActivityAccessible);
@@ -78,9 +80,9 @@ router.post("/:activity_id/completion", setCompletionForActivity);
 router.post("/:activity_id/suspension", setSuspensionForActivity);
 router.post("/:activity_id/completion/multi", setMultiCompletionForActivity);
 //router.get("/:activity_id/presignedurl", getPresignedUrlForActivity);
-//router.get("/:activity_id/result", getResultForActivity);
-//router.post("/:activity_id/result", setResultForActivity);
-//router.get("/:activity_id/hasResult", hasResultForActivity);
+router.get("/:activity_id/result", getResultsForActivity);
+router.post("/:activity_id/result", setResultForActivity);
+router.get("/:activity_id/hasResult", hasResultsForActivity);
 
 
 ///////////////////////////////////////////

@@ -195,32 +195,32 @@ export class GamePlayActivity extends Activity {
 		return super.getInitialized(participants_id);
 	}
 
-	async setInitialized(initialized: boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setInitialized(initialized, participants_id);
+	async setInitialized(initialized: boolean, participant_id: number): Promise<ActivityCompletion> {
+		return super.setInitialized(initialized, participant_id);
 	}
 
 	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number>> {
 		return super.getProgress(participants_id);
 	}
 	
-	async setProgress(progress: number, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setProgress(progress, participants_id);
+	async setProgress(progress: number, participant_id: number): Promise<ActivityCompletion> {
+		return super.setProgress(progress, participant_id);
 	}
 
 	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		return super.getCompletion(participants_id);
 	}
 
-	async setCompletion(completed: boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setCompletion(completed, participants_id);
+	async setCompletion(completed: boolean, participant_id: number): Promise<ActivityCompletion> {
+		return super.setCompletion(completed, participant_id);
 	}
 
 	async setMultiCompletion(status : boolean): Promise<ActivityCompletion[]> {
 		return super.setMultiCompletion(status);
 	}
 
-	async setSuspension(status : boolean, participants_id?: number[]): Promise<ActivityCompletion[]> {
-		return super.setSuspension(status, participants_id);
+	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
+		return super.setSuspension(status, participant_id);
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
@@ -229,12 +229,18 @@ export class GamePlayActivity extends Activity {
 
 	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
 		let resultMap = new Map<number, boolean>();
-		for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
-			if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
-				resultMap.set(participant_id, true);
-			} else {
-				resultMap.set(participant_id, false);
-			}
+		switch(type) {
+			case 'backup':
+				for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
+					if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
+						resultMap.set(participant_id, true);
+					} else {
+						resultMap.set(participant_id, false);
+					}
+				}
+				break;
+			default:
+				break;
 		}
 		return new ActivityMappingResult(resultMap);
 	}
