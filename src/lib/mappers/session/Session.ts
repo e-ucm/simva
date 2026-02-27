@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
@@ -183,7 +183,7 @@ export class Session {
             { session_id, current_user_id, simlet_id }
        );
         if(session.length === 0){
-            throw new ValidationError(`Session with ID ${session_id} not found for user ID ${current_user_id}.`);
+            throw new NotFoundError(`Session with ID ${session_id} not found for user ID ${current_user_id}.`);
         } else if(session.length > 1) {
             logger.warn(`Multiple sessions found with ID ${session_id} for user ID ${current_user_id}. Using the first one.`);
         }
@@ -198,7 +198,7 @@ export class Session {
             { current_user_id, simlet_id }
         );
         if(activities.length === 0){
-            throw new ValidationError(`Allocated session with SIMLET ID ${simlet_id} not found for user ID ${current_user_id}.`);
+            throw new NotFoundError(`Allocated session with SIMLET ID ${simlet_id} not found for user ID ${current_user_id}.`);
         }
         logger.debug({activities} , "Scheduled sessions data from view");
         const session = new Session(activities[0], true);
@@ -305,13 +305,13 @@ export class Session {
      * @param {any} body - Object containing fields to update
      * @returns {Promise<Session>} The updated Session instance
      * @throws {AuthentificationError} When user lacks edit permissions
-     * @throws {ValidationError} When session is not found
+     * @throws {NotFoundError} When session is not found
      */
     async update(body: any): Promise<Session> {
         this.canEdit();
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
-            throw new ValidationError(`Session with ID ${this.session_id} not found for update`);
+            throw new NotFoundError(`Session with ID ${this.session_id} not found for update`);
         }
         await session.update(body);
         Object.assign(this, body);
@@ -326,13 +326,13 @@ export class Session {
      * @method delete
      * @returns {Promise<void>} Promise that resolves when deletion is complete
      * @throws {AuthentificationError} When user lacks delete permissions
-     * @throws {ValidationError} When session is not found
+     * @throws {NotFoundError} When session is not found
      */
     async delete(): Promise<void> {
         this.canDelete();
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
-            throw new ValidationError(`Session with ID ${this.session_id} not found for deletion`);
+            throw new NotFoundError(`Session with ID ${this.session_id} not found for deletion`);
         }
         await session.destroy();
     }
@@ -480,7 +480,7 @@ export class Session {
         this.session_active = false;
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
-            throw new ValidationError(`Session with ID ${this.session_id} not found for deactivation`);
+            throw new NotFoundError(`Session with ID ${this.session_id} not found for deactivation`);
         }
         await session.update({ session_active: false });
         return this;

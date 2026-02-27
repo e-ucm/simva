@@ -155,7 +155,7 @@ export class Simlet {
         );
         logger.debug({result} , "getSimletBySimletIdAndUserId results");
         if(result.length === 0){
-            throw new ValidationError(`Simlet with ID ${simlet_id} not found for user ID ${current_user_id}.`);
+            throw new NotFoundError(`Simlet with ID ${simlet_id} not found for user ID ${current_user_id}.`);
         } else if(result.length > 1){
             logger.warn(`Multiple simlets found with ID ${simlet_id} for user ID ${current_user_id}. Using the first one.`);
         }

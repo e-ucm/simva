@@ -112,7 +112,7 @@ export class Group {
         if(groups.length === 0) {
             throw new NotFoundError(`Group with ID ${group_id} not found for user ${current_user_id}`);
         } else if (groups.length > 1) {
-            throw new Error(`Multiple groups found with ID ${group_id} for user ${current_user_id}`);
+            logger.warn(`Multiple groups found with ID ${group_id} for user ${current_user_id}`);
         }
         logger.debug({ groupData: groups[0] }, `Group data retrieved for group ID ${group_id} and user ID ${current_user_id}`);
         const group = new Group(groups[0]);
