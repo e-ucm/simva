@@ -92,12 +92,12 @@ export class Activity {
 	/**
 	 * Timestamp when presigned URL was generated (optional)
 	 */
-	activity_generated_at?: Date;
+	activity_presignedUrl_generated_at?: Date;
 	
 	/**
 	 * Expiration time for presigned URL in seconds (optional)
 	 */
-	activity_expire_on_seconds?: number;
+	activity_presignedUrl_expired_at?: Date;
 
 	/**
 	 * Whether this activity complies with GDPR requirements
@@ -136,8 +136,8 @@ export class Activity {
 			this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
 			this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
 			this.activity_presignedUrl = data.activity_presignedUrl || "";
-			this.activity_generated_at = data.activity_generated_at ? new Date(data.activity_generated_at) : undefined;
-			this.activity_expire_on_seconds = data.activity_expire_on_seconds || -1;
+			this.activity_presignedUrl_generated_at = data.activity_presignedUrl_generated_at ? new Date(data.activity_presignedUrl_generated_at) : undefined;
+			this.activity_presignedUrl_expired_at = data.activity_presignedUrl_expired_at ? new Date(data.activity_presignedUrl_expired_at) : undefined;
 			this.current_user_id = data.current_user_id;
 			this.current_user_username = data.current_user_username;
 			this.current_user_permission = data.current_user_permission;
@@ -812,8 +812,8 @@ export class Activity {
 			createdAt: this.createdAt,
 			updatedAt: this.updatedAt,
 			activity_presignedUrl: this.activity_presignedUrl,
-			activity_generated_at: this.activity_generated_at,
-			activity_expire_on_seconds: this.activity_expire_on_seconds,
+			activity_presignedUrl_generated_at: this.activity_presignedUrl_generated_at,
+			activity_presignedUrl_expired_at: this.activity_presignedUrl_expired_at,
 			activity_comply_with_GDPR: this.activity_comply_with_GDPR
 		};
 		if(this.allocated_user) {

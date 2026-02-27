@@ -131,9 +131,9 @@ export class Session {
         this.session_description = data.session_description || "";
         this.createdAt = new Date(data.createdAt);
         this.updatedAt = new Date(data.updatedAt);
-        this.session_experimental_method = data.session_experimental_method;
-        this.session_can_be_manually_activated = data.session_can_be_manually_activated;
-        this.session_active = data.session_active;
+        this.session_experimental_method = data.session_experimental_method || "";
+        this.session_can_be_manually_activated = Boolean(data.session_can_be_manually_activated);
+        this.session_active = Boolean(data.session_active);
         this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
         this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
     }
@@ -506,24 +506,46 @@ export class Session {
      * @returns {object} JSON object representing the session with all its properties
      */
     toJSON(): object {
-        return {
-            session_id: this.session_id,
-            simlet_id: this.simlet_id,
-            session_order: this.session_order,
-            current_user_id: this.current_user_id,
-            current_user_username: this.current_user_username,
-            current_user_permission: this.current_user_permission,
-            session_name: this.session_name,
-            session_description: this.session_description,
-            session_experimental_method: this.session_experimental_method,
-            session_can_be_manually_activated: this.session_can_be_manually_activated,
-            session_active: this.session_active,
-            session_start_date: this.session_start_date,
-            session_end_date: this.session_end_date,
-            activities: this.activities,
-            tags: this.tags,
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt,
-        };
+        if(this.allocated_user) {
+            return {
+                session_id: this.session_id,
+                simlet_id: this.simlet_id,
+                session_order: this.session_order,
+                allocated_user_id: this.allocated_user_id,
+                allocated_username: this.allocated_username,
+                allocated_isToken: this.allocated_isToken,
+                allocated_token: this.allocated_token,
+                allocated_session_id: this.allocated_session_id,
+                session_name: this.session_name,
+                session_description: this.session_description,
+                session_experimental_method: this.session_experimental_method,
+                session_can_be_manually_activated: this.session_can_be_manually_activated,
+                session_active: this.session_active,
+                session_start_date: this.session_start_date,
+                session_end_date: this.session_end_date,
+                createdAt: this.createdAt,
+                updatedAt: this.updatedAt,
+            };
+        } else {
+            return {
+                session_id: this.session_id,
+                simlet_id: this.simlet_id,
+                session_order: this.session_order,
+                current_user_id: this.current_user_id,
+                current_user_username: this.current_user_username,
+                current_user_permission: this.current_user_permission,
+                session_name: this.session_name,
+                session_description: this.session_description,
+                session_experimental_method: this.session_experimental_method,
+                session_can_be_manually_activated: this.session_can_be_manually_activated,
+                session_active: this.session_active,
+                session_start_date: this.session_start_date,
+                session_end_date: this.session_end_date,
+                activities: this.activities,
+                tags: this.tags,
+                createdAt: this.createdAt,
+                updatedAt: this.updatedAt,
+            };
+        }   
     }
 }

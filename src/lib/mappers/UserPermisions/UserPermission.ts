@@ -247,8 +247,6 @@ export class UserPermission {
      * @returns {object} JSON object containing array of permission mappings
      */
     toJSON(): object {
-        return {
-            permissions: this.permissions.map(p => p.toJSON())
-        };
+        return this.permissions.map(p => p.toJSON());
     }
 }

@@ -2896,6 +2896,14 @@ components:
         type: boolean
       description: |
         If true, the new generation of groups will be used
+    token:
+      in: query
+      name: token
+      description: |
+        the jwt token to authenticate the user for which the information is required for testing purposes
+      schema:
+        type: string
+        format: 'token1'
   responses:
     UnauthorizedError:
       description: Access token is missing or invalid
@@ -3268,6 +3276,9 @@ components:
             type: string
             format: date-time
             nullable: true
+          allocated_user:
+            type: boolean
+            example: false
           createdAt:
             type: string
             format: date-time

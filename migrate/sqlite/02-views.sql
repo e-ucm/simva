@@ -144,8 +144,8 @@ CREATE VIEW v_simlet_tags AS
 SELECT
     tag.simlet_id,
     tag.tag_id,
-    tag_list.tag_type,
-    tag_list.tag_name
+    tag_list.tag_type as simlet_tag_type,
+    tag_list.tag_name as simlet_tag_name
 FROM SIMLETs_tags tag
 LEFT JOIN tags_list tag_list ON tag_list.tag_id = tag.tag_id;
 
@@ -154,8 +154,8 @@ CREATE VIEW v_session_tags AS
 SELECT
     tag.session_id,
     tag.tag_id,
-    tag_list.tag_type,
-    tag_list.tag_name
+    tag_list.tag_type as session_tag_type,
+    tag_list.tag_name as session_tag_name
 FROM Sessions_tags tag
 LEFT JOIN tags_list tag_list ON tag_list.tag_id = tag.tag_id;
 
