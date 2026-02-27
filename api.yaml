@@ -1562,7 +1562,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/activityOpenableMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1601,6 +1601,10 @@ paths:
       responses:
         '200':
           description: the target URI of the activity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityTargetMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1618,7 +1622,11 @@ paths:
         Obtains the progress status of the activity
       responses:
         '200':
-          description: if it is openable or not
+          description: the progress status of the activity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityProgressMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1637,7 +1645,11 @@ paths:
         Set the suspend status of the activity for a student
       responses:
         '200':
-          description: if it is openable or not
+          description: if it is suspended or not
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activitySuspensionMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1657,6 +1669,10 @@ paths:
       responses:
         '200':
           description: if it is initialized or not
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityInitializedMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1675,6 +1691,10 @@ paths:
       responses:
         '200':
           description: set the initialized status of the activity for a student
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityInitializedMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1694,6 +1714,10 @@ paths:
       responses:
         '200':
           description: if it is openable or not
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityCompletionMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1712,6 +1736,10 @@ paths:
       responses:
         '200':
           description: if it is openable or not
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityCompletionMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1730,6 +1758,10 @@ paths:
       responses:
         '200':
           description: if it is openable or not
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityCompletionMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1748,6 +1780,10 @@ paths:
       responses:
         '200':
           description: the result of the students required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityResultMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1767,6 +1803,10 @@ paths:
       responses:
         '200':
           description: if it is openable or not
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityResultMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1787,6 +1827,10 @@ paths:
       responses:
         '200':
           description: true or false depending on if has or not results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityHasResultMapper'
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -1806,7 +1850,7 @@ paths:
         Sessioning endpoint
       responses:
         '200':
-          description: if it is openable or not
+          description: the session of the activity
         '400':
           description: 'ID is not a valid ObjectId'
         '404':
@@ -3361,17 +3405,17 @@ components:
         - game_type
         - game_url
     activity:
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/limesurveyActivity'
       - $ref: '#/components/schemas/manualActivity'
       - $ref: '#/components/schemas/gameplayActivity'
     activityCreation:
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/limesurveyActivityCreation'
       - $ref: '#/components/schemas/manualActivityCreation'
       - $ref: '#/components/schemas/gameplayActivityCreation'
     activityMapper:
-      allOf:
+      anyOf:
       - $ref: '#/components/schemas/activity'
       - $ref: '#/components/schemas/noTypedActivityMapper'
     activity_type:
@@ -3389,6 +3433,51 @@ components:
         utils:
           type: object
           additionalProperties: true
+    activityInitializedMapper:
+      type: object
+      description: Key/value object to store the initialization data of the simlet
+      additionalProperties:
+        type: boolean
+        nullable: true
+    activityProgressMapper:
+      type: object
+      description: Key/value object to store the progress data of the activity
+      additionalProperties:
+        type: number
+        nullable: true
+    activityCompletionMapper:
+      type: object
+      description: Key/value object to store the completion data of the activity
+      additionalProperties:
+        type: boolean
+        nullable: true
+    activitySuspensionMapper:
+      type: object
+      description: Key/value object to store the suspension data of the activity
+      additionalProperties:
+        type: boolean
+        nullable: true
+    activityHasResultMapper:
+      type: object
+      description: Key/value object to store the has result data of the activity
+      additionalProperties:
+        type: boolean
+    activityOpenableMapper:
+      type: object
+      properties:
+        openable:
+          type: boolean
+          example: true
+    activityTargetMapper:
+      type: object
+      description: Key/value object to store the target data of the activity (e.g., url of the resource to open)
+      additionalProperties:
+        type: string
+    activityResultMapper:
+      type: object
+      description: Key/value object to store the result data of the activity (e.g., score, completion status, etc.)
+      additionalProperties:
+        type: object
     allocator:
       type: object
       properties:
