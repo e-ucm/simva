@@ -23,28 +23,28 @@ import { logger } from "@/lib/logger";
  * const allocator = AllocatorToClass({ allocator_type: 'random', allocator_id: 456 });
  * // Returns a RandomAllocator instance
  */
-export async function AllocatorToClass(allocator: any) : Promise<Allocator> {
+export async function AllocatorToClass(allocator: any, current_user_id: number) : Promise<Allocator> {
     logger.debug({allocator}, allocator.allocator_type);
     switch (allocator.allocator_type) {
         case SessionAllocator.getType():
-            let sessionAllocator = new SessionAllocator(allocator);
+            let sessionAllocator = new SessionAllocator(allocator, current_user_id);
             await sessionAllocator.init();
             return sessionAllocator;
         case RandomAllocator.getType():
-            let randomAllocator = new RandomAllocator(allocator);
+            let randomAllocator = new RandomAllocator(allocator, current_user_id);
             await randomAllocator.init();
             return randomAllocator;
         case GroupAllocator.getType():
-            let groupAllocator = new GroupAllocator(allocator);
+            let groupAllocator = new GroupAllocator(allocator, current_user_id);
             await groupAllocator.init();
             return groupAllocator;
         case Allocator.getType():
-            let baseAllocator = new Allocator(allocator);
+            let baseAllocator = new Allocator(allocator, current_user_id);
             await baseAllocator.init();
             return baseAllocator;
         default:
             logger.warn(`Unknown allocator type: ${allocator.allocator_type}, returning default Allocator instance.`);
-            let defaultAllocator = new Allocator(allocator);
+            let defaultAllocator = new Allocator(allocator, current_user_id);
             await defaultAllocator.init();
             return defaultAllocator;
     }

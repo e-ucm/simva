@@ -6,6 +6,7 @@ import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { SimletParticipant } from "../simlet/SimletParticipant";
+import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -288,6 +289,16 @@ export class Session {
         return Activity.getFromDbData(activity.activity_id, this.current_user_id as number, false);
      }
 
+    async addParticipantsToAllActivities(participants_id: number[]) : Promise<ActivityCompletion[]> {
+        let completions: ActivityCompletion[] = [];
+        for (const act of this.activities || []) {
+            let activity = await Activity.getFromDbData(act, this.current_user_id!, false);
+            let actCompletions = await activity.addParticipants(participants_id);
+            completions = completions.concat(actCompletions);
+        }
+        return completions;
+    }
+    
     /**
      * Checks if the current user can edit this session.
      * 

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
-import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
+import { Session } from "../session/Session";
 
 /**
  * Session Allocator mapper class extending base Allocator.
@@ -62,8 +62,8 @@ export class SessionAllocator extends Allocator {
         return {};
     }
 
-    constructor(data: any) {
-        super(data);
+    constructor(data: any, current_user_id : number) {
+        super(data, current_user_id);
         // Additional initialization for SessionAllocator if needed
     }
 
@@ -92,7 +92,7 @@ export class SessionAllocator extends Allocator {
                 })
             )
         );
-        await ActivityCompletion.createAllFromSession(sessionId, groupParticipantsToCreate.map((user: any) => user.user_id));
+        let session = await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id);
+        await session.addParticipantsToAllActivities(groupParticipantsToCreate.map((user: any) => user.user_id));
     }
-
 }

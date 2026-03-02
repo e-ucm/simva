@@ -3,7 +3,7 @@ import { RandomPercentages } from "@/lib/mappers/allocators/RandomPercentages";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
+import { Session } from "../session/Session";
 
 /**
  * Random Allocator mapper class extending base Allocator.
@@ -79,8 +79,8 @@ export class RandomAllocator extends Allocator {
      * @param {any} data - Raw data object containing allocator properties
      * @description Initializes random allocator with parent class constructor.
      */
-    constructor(data: any) {
-        super(data);
+    constructor(data: any, current_user_id : number) {
+        super(data, current_user_id);
         // Additional initialization for RandomAllocator if needed
     }
 
@@ -209,7 +209,8 @@ export class RandomAllocator extends Allocator {
                         session_id: targetSessionId,
                     });
 
-                    await ActivityCompletion.createAllFromSession(targetSessionId, [user.user_id]);
+                    let session = await Session.getFromDbData(this.simlet_id, targetSessionId, this.current_user_id);
+                    await session.addParticipantsToAllActivities([user.user_id]);
                 });
             })
         );

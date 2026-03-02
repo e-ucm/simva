@@ -117,21 +117,13 @@ export class GamePlayActivity extends Activity {
 		await super.activate(activate);
     }
 
-	/**
-	 * Retrieves detailed information about this gameplay activity.
-	 * Currently returns placeholder data structure for game sessions and scores.
-	 * 
-	 * @async
-	 * @method getDetails
-	 * @returns {Promise<object>} Promise resolving to object with gameSessions and scores arrays
-	 * @override
-	 */
-	async getDetails(): Promise<object>{
-		return {
-			gameSessions: [], // Fetch game sessions related to this activity
-			scores: [] // Fetch scores related to this activity
-		};
+	async addParticipants(participants_id: number[]): Promise<ActivityCompletion[]> {
+		return super.addParticipants(participants_id);
 	}
+
+	async removeParticipants(participants_id: number[]): Promise<void> {
+		super.removeParticipants(participants_id);
+	}	
 
 	canBeOpened(): boolean {
 		return this.game_url !== undefined && this.game_url !== '';

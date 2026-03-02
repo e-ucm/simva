@@ -367,7 +367,16 @@ export class Activity {
 	 */
 	canBeOpened(): boolean {
 		return false;
-	} 
+	}
+
+	async addParticipants(participants_id: number[]): Promise<ActivityCompletion[]> {
+		logger.debug(`Adding participants with IDs ${participants_id} to activity with ID ${this.activity_id}`);
+		return await ActivityCompletion.createAll(this.activity_id, participants_id);
+	}
+
+	async removeParticipants(participants_id: number[]): Promise<void> {
+		logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
+	}
 
 	async getAllCurrentParticipantsId(participants_id?: number[]): Promise<number[]> {
 		if(this.allocated_user) {

@@ -29,19 +29,6 @@ export class ActivityCompletion {
 
     activity_completed : boolean;
 
-    static async createAllFromSession(sessionId: number, participants_id: number[]) : Promise<ActivityCompletion[]> {
-        const activity = await db.Tables.Activities.findAll({ where: { session_id: sessionId } });
-        if (!activity || activity.length === 0) {
-            throw new NotFoundError(`No activity found for session_id ${sessionId}`);
-        }
-        let completions: ActivityCompletion[] = [];
-        for (const act of activity) {
-            const actCompletions = await this.createAll(act.activity_id, participants_id);
-            completions = completions.concat(actCompletions);
-        }
-        return completions;
-    }
-
     static async createAll(activity_id: number, participant_ids: number[]): Promise<ActivityCompletion[]> {
         const completions: ActivityCompletion[] = [];
         for (const participant_id of participant_ids) {

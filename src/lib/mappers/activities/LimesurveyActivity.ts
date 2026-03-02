@@ -105,6 +105,19 @@ export class LimesurveyActivity extends Activity {
 		return utils;
 	}
 
+	async addParticipants(participants_id: number[]): Promise<ActivityCompletion[]> {
+		let usernamesMap = await this.getAllCurrentParticipantsUsername(participants_id);
+		await limeSurveyClient.addParticipants(this.survey_id, usernamesMap ? Array.from(usernamesMap.values()) : []);
+		return super.addParticipants(participants_id);
+	}
+
+	async removeParticipants(participants_id: number[]): Promise<void> {
+		super.removeParticipants(participants_id);
+		logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
+		let usernamesMap = await this.getAllCurrentParticipantsUsername(participants_id);
+		await limeSurveyClient.deleteParticipants(this.survey_id, usernamesMap ? Array.from(usernamesMap.values()) : []);
+	}
+
 	static async getSurveys(): Promise<Survey[]> {
 		return await limeSurveyClient.getSurveyList();
 	}

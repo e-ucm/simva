@@ -86,13 +86,6 @@ export class ManualActivity extends Activity {
 		return super.getUtils();
 	}
 
-	async getDetails(){
-		return {
-			completionStatus: false, // Fetch completion status
-			grade: null // Fetch grade if available
-		};
-	}
-
 	async activate(activate: boolean): Promise<void> {
 		await super.activate(activate);
     }
@@ -113,6 +106,14 @@ export class ManualActivity extends Activity {
 		}
 		logger.debug(targetMap.toString());
 		return new ActivityMappingResult(targetMap);
+	}
+	
+	async addParticipants(participants_id: number[]): Promise<ActivityCompletion[]> {
+		return super.addParticipants(participants_id);
+	}
+
+	async removeParticipants(participants_id: number[]): Promise<void> {
+		super.removeParticipants(participants_id);
 	}
 
 	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {

@@ -138,8 +138,7 @@ export class Simlet {
         if(await db.Tables.Simlets.count({where : {simlet_name : simletData.simlet_name}}) > 0){
             throw new ConflictError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
         }
-        const allocator = await db.Tables.Allocators.create({ allocator_type: simletData.allocator_type || "default" });
-        logger.debug({allocator} , "Allocator created");
+        let allocator = await Allocator.createAllocator(simletData.allocator_type);
         simletData.allocator_id = allocator.allocator_id;
         if(simletData.simlet_description === undefined){
             simletData.simlet_description = "";
@@ -284,7 +283,7 @@ export class Simlet {
     }
 
     async getAllocator(): Promise<Allocator> {
-      return await Allocator.getFromDbData(this.allocator_id);
+      return await Allocator.getFromDbData(this.allocator_id, this.current_user_id);
     }
 
     async allocateGroupToDefaut(group_id: number) {
@@ -324,7 +323,7 @@ export class Simlet {
 
     async updateAllocator(data: Partial<Allocator>) : Promise<Allocator> {
       this.canEdit();
-      let allocator = await Allocator.getFromDbData(this.allocator_id);
+      let allocator = await Allocator.getFromDbData(this.allocator_id, this.current_user_id);
       allocator.update(data);
       switch(allocator.allocator_type) {
             case SessionAllocator.getType():

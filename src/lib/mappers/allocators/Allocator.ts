@@ -3,6 +3,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Allocation } from "./Allocation";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
+import { Session } from "../session/Session";
 
 /**
  * Base Allocator mapper class for managing participant allocation to sessions.
@@ -22,6 +23,8 @@ export class Allocator {
      * Unique identifier for this allocator
      */
     allocator_id: number;
+
+    current_user_id: number;
     
     /**
      * Type of allocator (e.g., 'random', 'group', 'session')
@@ -40,13 +43,20 @@ export class Allocator {
 
     allocation: Allocation[] = [];
 
-    static async getFromDbData(allocator_id: number) : Promise<Allocator> {
+    static async createAllocator(current_user_id: number, allocator_type : string = Allocator.getType()) : Promise<Allocator> {
+        const allocator = await db.Tables.Allocators.create({ allocator_type });
+        logger.debug({allocator} , "Allocator created");
+        let { AllocatorToClass } = await import("@/lib/mappers/allocators/AllocatorToClass");
+        return await AllocatorToClass(allocator, current_user_id);
+    }
+
+    static async getFromDbData(allocator_id: number, current_user_id : number) : Promise<Allocator> {
         let allocator = await db.Tables.Allocators.findOne({ where: { allocator_id } });
         if(!allocator){
            throw new NotFoundError(`Allocator with ID ${allocator_id} not found.`);
         }
         let { AllocatorToClass } = await import("@/lib/mappers/allocators/AllocatorToClass");
-        return AllocatorToClass(allocator);
+        return AllocatorToClass(allocator, current_user_id);
     }
 
     /**
@@ -111,7 +121,8 @@ export class Allocator {
      * @param {any} data - Raw data object containing allocator properties
      * @description Initializes allocator properties from provided data object.
      */
-    constructor(data: any) {
+    constructor(data: any, current_user_id: number) {
+        this.current_user_id = current_user_id;
         this.simlet_id = data.simlet_id;
         this.allocator_id = data.allocator_id;
         this.allocator_type = data.allocator_type;
@@ -129,7 +140,8 @@ export class Allocator {
         let allocator = await db.Tables.Allocators.findOne({where : {allocator_id : this.allocator_id}});
         if(allocator) {
             await allocator.update(data);
-            return Allocator.getFromDbData(this.allocator_id);
+            Object.assign(this, data);
+            return this;
         } else {
             throw new NotFoundError("allocator not found");
         }
@@ -201,7 +213,8 @@ export class Allocator {
                 };
                 await user.destroy();
                 await db.Tables.ExperimentalParticipants.create(participantData);
-                await ActivityCompletion.createAllFromSession(defaultSession, [user.participant_id]);
+                let session = await Session.getFromDbData(this.simlet_id, defaultSession, this.current_user_id);
+                await session.addParticipantsToAllActivities([user.participant_id]);
             }));
             logger.debug({ defaultSession }, 'Allocator.allocateToDefault updated participants');
         }
