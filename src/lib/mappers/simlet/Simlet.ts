@@ -387,6 +387,19 @@ export class Simlet {
         return await permission.delete();
     }
 
+    async export(withData: boolean): Promise<object> {
+        let simletData: any = this.toJSON();
+        simletData.sessions = await Promise.all(this.sessions.map(async (sessionId) => {
+            let session = await this.getSession(sessionId);
+            return await session.export(withData);
+        }));
+        simletData.groups = await Promise.all(this.groups.map(async (groupId) => {
+            let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+            return await group.export(withData);
+        }));
+        return simletData;
+    }
+
     toJSON(): object {
         return {
             simlet_id: this.simlet_id,

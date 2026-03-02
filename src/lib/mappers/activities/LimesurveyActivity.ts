@@ -2,7 +2,7 @@ import { Activity } from "@/lib/mappers/activities/Activity";
 import { db } from "@/lib/db";
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
-import { limeSurveyClient } from "@/lib/utils/limesurveyclient";
+import { limeSurveyClient, Survey, SurveyLanguages } from "@/lib/utils/limesurveyclient";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 import { User } from "../Users/User";
@@ -29,6 +29,8 @@ export class LimesurveyActivity extends Activity {
 	 */
 	survey_language: string='';
 	
+	survey_languages: SurveyLanguages = { default: '', list: [] };
+
 	/**
 	 * Learning Record Store (LRS) set identifier for xAPI data
 	 * @default -1
@@ -71,6 +73,7 @@ export class LimesurveyActivity extends Activity {
 			instance.survey_id = limesurveyData.survey_id ?? -1;
 			instance.survey_language = limesurveyData.survey_language ?? '';
 			instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
+			instance.survey_languages = await limeSurveyClient.getSurveyLanguages(instance.survey_id);
 		}
 		
 		return instance;
@@ -93,26 +96,21 @@ export class LimesurveyActivity extends Activity {
 		let isOnline = await limeSurveyClient.isOnline();
 		utils = { ...utils, url: config.limesurvey.url, isOnline };
 		if(config.limesurvey.useNewVersion) {
-			utils.editurl= config.limesurvey.external_url + "/surveyAdministration/view?surveyid=" ;
+			utils.editurl= config.limesurvey.external_url + "/surveyAdministration/view?surveyid={{surveyId}}" ;
 			utils.newurl= config.limesurvey.external_url + "/surveyAdministration/newSurvey" ;
 		} else {
-			utils.editurl= config.limesurvey.external_url + "/admin/survey/sa/view/surveyid/" ;
+			utils.editurl= config.limesurvey.external_url + "/admin/survey/sa/view/surveyid/{{surveyId}}" ;
 			utils.newurl= config.limesurvey.external_url + "/admin/survey/sa/newsurvey" ;
 		}
 		return utils;
 	}
 
-	/**
-	 * Retrieves detailed information about this LimeSurvey activity.
-	 * Currently returns empty object - placeholder for future implementation.
-	 * 
-	 * @async
-	 * @method getDetails
-	 * @returns {Promise<object>} Promise resolving to activity details object
-	 * @override
-	 */
-	async getDetails(): Promise<object>{
-		return {};
+	static async getSurveys(): Promise<Survey[]> {
+		return await limeSurveyClient.getSurveyList();
+	}
+
+	async getSurveyLanguages(): Promise<SurveyLanguages> {
+		return await limeSurveyClient.getSurveyLanguages(this.survey_id);
 	}
 
 	async activate(activate: boolean): Promise<void> {
@@ -204,6 +202,7 @@ export class LimesurveyActivity extends Activity {
 			activity_type : LimesurveyActivity.getType(),
 			survey_id: this.survey_id,
 			survey_language: this.survey_language,
+			survey_languages: this.survey_languages,
 			survey_lrsset: this.survey_lrsset
 		};
 	}

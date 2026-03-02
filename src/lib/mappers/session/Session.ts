@@ -16,6 +16,27 @@ import { SimletParticipant } from "../simlet/SimletParticipant";
  * Sessions are the organizational units that contain multiple activities in sequence.
  */
 export class Session {
+    export(withData: boolean): Promise<object> {
+        let session = {
+            session_id: this.session_id,
+            simlet_id: this.simlet_id,
+            session_order: this.session_order,
+            current_user_id: this.current_user_id,
+            current_user_username: this.current_user_username,
+            current_user_permission: this.current_user_permission,
+            session_name: this.session_name,
+            session_description: this.session_description,
+            session_experimental_method: this.session_experimental_method,
+            session_can_be_manually_activated: this.session_can_be_manually_activated,
+            session_start_date: this.session_start_date,
+            session_end_date: this.session_end_date,
+        } as any;
+        if(withData) {
+            session["activities"] = this.activities;
+            session["tags"] = this.tags;
+        }
+        return session;
+    }
     /**
      * ID of the simlet (study) this session belongs to
      */

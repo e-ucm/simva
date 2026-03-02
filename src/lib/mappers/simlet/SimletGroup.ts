@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
+import { Group } from "../group/Group";
+import { GroupParticipant } from "../group/GroupParticipant";
 
 /**
  * Simlet Group mapper class representing a group assignment within a study (simlet).
@@ -89,6 +91,10 @@ export class SimletGroup {
 
     printInfo(): void {
         logger.debug({ SimletGroup : this }, `SimletGroup information - Simlet ID: ${this.simlet_id}, Group ID: ${this.group_id}, Group Name: ${this.group_name}`);
+    }
+
+    async export(withData: boolean): Promise<object> {
+        throw new Error("Export functionality not implemented for SimletGroup yet");
     }
 
     toJSON(): object {

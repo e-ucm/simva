@@ -796,3 +796,21 @@ export async function deleteSessionPermissionsForUser (
     next(err);
   }
 }
+
+export async function exportSimlet(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const currentUser = req.user?.sql;
+    const currentUserId = currentUser?.user_id!;
+    logger.debug({simletId, userId: currentUserId} , "Exporting simlet for simlet ID and user ID");
+    const exportData = await simletService.exportSimlet(simletId, currentUserId);
+    logger.debug({exportData} , "Simlet exported for simlet ID and user ID");
+    res.json(exportData);
+  } catch (err) {
+    next(err);
+  }
+}

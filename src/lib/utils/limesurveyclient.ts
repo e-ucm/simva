@@ -24,14 +24,14 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 // Interfaces
 // ============================================================================
 
-interface LimeSurveyOptions extends AxiosRequestConfig {
+export interface LimeSurveyOptions extends AxiosRequestConfig {
     url?: string;
     method?: string;
     headers?: Record<string, string>;
     data?: any;
 }
 
-interface Survey {
+export interface Survey {
     sid?: number | string;
     name?: string;
     description?: string;
@@ -39,23 +39,23 @@ interface Survey {
     [key: string]: any;
 }
 
-interface Participant {
+export interface Participant {
     email: string;
     firstname: string;
     lastname: string;
     token: string;
 }
 
-interface SurveyLanguages {
+export interface SurveyLanguages {
     default: string;
     list: string[];
 }
 
-interface OwnershipResult {
+export interface OwnershipResult {
     isOwner: boolean;
 }
 
-interface LimeSurveyResponse {
+export interface LimeSurveyResponse {
     result?: any;
     error?: any;
     id?: number;
@@ -230,6 +230,41 @@ export class LimeSurveyClient {
     }
 
     // ========================================================================
+    // User Management
+    // ========================================================================
+    /**
+     * Get user by username
+     */
+    async getUser(username: string): Promise<any> {
+        this.log('LimeSurveyClient.getUser -> Started');
+        
+        await this.ensureAuthenticated();
+        const result = await this.request('list_users', [this.sessionKey, null, username]);
+        
+        this.log('LimeSurveyClient.getUser -> Completed');
+        return result;
+    }
+
+    /**
+     * Get user ID by username
+     */
+    async getUserIdByUsername(username: string): Promise<number> {
+        this.log('LimeSurveyClient.getUserIdByUsername -> Started');
+        
+        await this.ensureAuthenticated();
+        const users = await this.request<any[]>('list_users', [this.sessionKey]);
+        
+        const user = users.find(u => u.users_name === username);
+        
+        if (!user) {
+            throw { message: 'User not found in Limesurvey' };
+        }
+        
+        this.log('LimeSurveyClient.getUserIdByUsername -> Completed');
+        return user.uid;
+    }
+
+    // ========================================================================
     // Survey Management
     // ========================================================================
 
@@ -243,15 +278,6 @@ export class LimeSurveyClient {
         
         // Import survey
         const surveyId = await this.request<number>('import_survey', [this.sessionKey, surveyData, 'lss']);
-        
-        // Configure survey settings
-        await this.updateActivatedSurveySettings(surveyId);
-        
-        // Activate survey
-        await this.activateSurvey(surveyId);
-        
-        // Activate tokens
-        await this.activateTokens(surveyId);
         
         this.log(`LimeSurveyClient.createSurvey -> Completed with ID: ${surveyId}`);
         return surveyId;
@@ -273,15 +299,6 @@ export class LimeSurveyClient {
         ]);
         
         const newSurveyId = typeof result === 'object' ? result.newsid : result;
-        
-        // Configure survey settings
-        await this.updateActivatedSurveySettings(newSurveyId);
-        
-        // Activate survey
-        await this.activateSurvey(newSurveyId);
-        
-        // Activate tokens
-        await this.activateTokens(newSurveyId);
         
         this.log(`LimeSurveyClient.cloneSurvey -> Completed with ID: ${newSurveyId}`);
         return newSurveyId;
@@ -357,20 +374,7 @@ export class LimeSurveyClient {
         this.log('LimeSurveyClient.getSurveysFromUser -> Completed');
         return result;
     }
-
-    /**
-     * Check if user owns a specific survey
-     */
-    async isUserOwnerOfSurvey(surveyId: number | string, username: string): Promise<OwnershipResult> {
-        this.log('LimeSurveyClient.isUserOwnerOfSurvey -> Started');
-        
-        const surveys = await this.getSurveysFromUser(username);
-        const isOwner = surveys.some(s => s.sid == surveyId);
-        
-        this.log('LimeSurveyClient.isUserOwnerOfSurvey -> Completed');
-        return { isOwner };
-    }
-
+    
     /**
      * Get survey languages
      */
@@ -398,6 +402,9 @@ export class LimeSurveyClient {
         return languages;
     }
 
+    // ========================================================================
+    // Survey Activation Management
+    // ========================================================================
     /**
      * Activate a survey
      */
@@ -444,23 +451,6 @@ export class LimeSurveyClient {
     }
 
     /**
-     * Set survey owner
-     */
-    async setSurveyOwner(surveyId: number, userId: number): Promise<any> {
-        this.log('LimeSurveyClient.setSurveyOwner -> Started');
-        
-        await this.ensureAuthenticated();
-        const result = await this.request('set_survey_properties', [
-            this.sessionKey,
-            surveyId,
-            { owner_id: userId }
-        ]);
-        
-        this.log('LimeSurveyClient.setSurveyOwner -> Completed');
-        return result;
-    }
-
-    /**
      * Set LRS endpoint for activity tracking
      */
     async setActivityLRSEndpoint(surveyId: number | string, lrsEndpoint: string): Promise<any> {
@@ -478,46 +468,25 @@ export class LimeSurveyClient {
         return result;
     }
 
-    // ========================================================================
-    // User Management
-    // ========================================================================
+    async activateSurveyAndTokens(surveyId: number | string, lrsEndpoint: string): Promise<void> {
+        this.log(`LimeSurveyClient.activateSurveyAndTokens -> Starting activation for survey: ${surveyId}`);
+        // Configure survey settings
+        await this.updateActivatedSurveySettings(surveyId);
+        
+        // Activate survey
+        await this.activateSurvey(surveyId);
+        
+        // Activate tokens
+        await this.activateTokens(surveyId);
 
-    /**
-     * Get user by username
-     */
-    async getUser(username: string): Promise<any> {
-        this.log('LimeSurveyClient.getUser -> Started');
-        
-        await this.ensureAuthenticated();
-        const result = await this.request('list_users', [this.sessionKey, null, username]);
-        
-        this.log('LimeSurveyClient.getUser -> Completed');
-        return result;
-    }
-
-    /**
-     * Get user ID by username
-     */
-    async getUserIdByUsername(username: string): Promise<number> {
-        this.log('LimeSurveyClient.getUserIdByUsername -> Started');
-        
-        await this.ensureAuthenticated();
-        const users = await this.request<any[]>('list_users', [this.sessionKey]);
-        
-        const user = users.find(u => u.users_name === username);
-        
-        if (!user) {
-            throw { message: 'User not found in Limesurvey' };
-        }
-        
-        this.log('LimeSurveyClient.getUserIdByUsername -> Completed');
-        return user.uid;
+        // Set LRS endpoint for activity tracking
+        await this.setActivityLRSEndpoint(surveyId, lrsEndpoint);
+        this.log(`LimeSurveyClient.activateSurveyAndTokens -> Survey activated: ${surveyId}`);
     }
 
     // ========================================================================
     // Participant Management
     // ========================================================================
-
     /**
      * List participants of a survey
      */
@@ -591,6 +560,39 @@ export class LimeSurveyClient {
         ]);
         
         this.log(`LimeSurveyClient.deleteParticipants -> Completed: ${surveyId}`);
+        return result;
+    }
+
+    // ========================================================================
+    // Survey Ownership Management
+    // ========================================================================
+    /**
+     * Check if user owns a specific survey
+     */
+    async isUserOwnerOfSurvey(surveyId: number | string, username: string): Promise<OwnershipResult> {
+        this.log('LimeSurveyClient.isUserOwnerOfSurvey -> Started');
+        
+        const surveys = await this.getSurveysFromUser(username);
+        const isOwner = surveys.some(s => s.sid == surveyId);
+        
+        this.log('LimeSurveyClient.isUserOwnerOfSurvey -> Completed');
+        return { isOwner };
+    }
+
+    /**
+     * Set survey owner
+     */
+    async setSurveyOwner(surveyId: number, userId: number): Promise<any> {
+        this.log('LimeSurveyClient.setSurveyOwner -> Started');
+        
+        await this.ensureAuthenticated();
+        const result = await this.request('set_survey_properties', [
+            this.sessionKey,
+            surveyId,
+            { owner_id: userId }
+        ]);
+        
+        this.log('LimeSurveyClient.setSurveyOwner -> Completed');
         return result;
     }
 
@@ -853,45 +855,6 @@ export class LimeSurveyClient {
         
         this.log('LimeSurveyClient.tokenHasCompleted -> Completed: false');
         return false;
-    }
-
-    /**
-     * Get class responses as CSV filtered by classroom tokens
-     */
-    async getClassResponses(surveyId: number | string, classroom: { codes: string[] }): Promise<string> {
-        this.log('LimeSurveyClient.getClassResponses -> Started');
-        
-        await this.ensureAuthenticated();
-        
-        const result = await this.request<string>('export_responses', [
-            this.sessionKey,
-            surveyId,
-            'csv',
-            null,
-            'complete',
-            'code',
-            'short'
-        ]);
-        
-        if (!result || result.length === 0) {
-            return '';
-        }
-        
-        const csv = Buffer.from(result, 'base64').toString().split(/\r?\n|\r/);
-        let content = '';
-        
-        for (let i = 1; i < csv.length; i++) {
-            const line = csv[i].split(',');
-            if (line.length > 1) {
-                const token = line[4]?.replace(/'/g, '');
-                if (token && classroom.codes.includes(token)) {
-                    content += csv[i] + '\n';
-                }
-            }
-        }
-        
-        this.log('LimeSurveyClient.getClassResponses -> Completed');
-        return content;
     }
 }
 

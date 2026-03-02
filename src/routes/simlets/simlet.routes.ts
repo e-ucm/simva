@@ -45,7 +45,8 @@ import {
   activateSimletSession,
   allocateToSessionSimlet,
   addSimletGroup,
-  deleteSimletGroup
+  deleteSimletGroup, 
+  exportSimlet
 } from "@/controlers/simlets/simlet.controler";
 
 /**
@@ -109,7 +110,7 @@ const router = Router();
 router.get("/", getAllSimlets);
 router.post("/", createSimlet);
 //router.post('/import', importSimlet);
-//router.get('/:simlet_id/export', exportSimlet);
+router.get('/:simlet_id/export', exportSimlet);
 
 // Individual resource endpoints
 router.get("/:simlet_id", getSimletById);

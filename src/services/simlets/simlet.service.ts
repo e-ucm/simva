@@ -805,3 +805,9 @@ export async function deleteSessionActivity(simletId: number, sessionId: number,
   let activity = await Activity.getFromDbData(activityId, current_user_id, false);
   await activity.remove();
 }
+
+export async function exportSimlet(simletId: number, currentUserId: number, withData: boolean = false) : Promise<string> {
+  let simlet = await Simlet.getFromDbData(simletId, currentUserId);
+  let exported = await simlet.export(withData);
+  return JSON.stringify(exported);
+}
