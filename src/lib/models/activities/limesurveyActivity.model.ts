@@ -5,6 +5,8 @@ export class LimesurveyActivity extends Model {
   declare survey_id: number;
   declare survey_language: string;
   declare survey_lrsset: number | null;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export function LimesurveyActivityFactory(
@@ -30,11 +32,21 @@ export function LimesurveyActivityFactory(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "LimesurveyActivity",
     tableName: "Limesurvey_Activities",
-    timestamps: false,
+    timestamps: true,
     freezeTableName: true,
   });
 

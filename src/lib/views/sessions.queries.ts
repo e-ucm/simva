@@ -21,7 +21,7 @@ const queries: Record<string, QueryTemplate> = {
   tagsBySessionId: {
     description: "Get all tags of a Session by its ID",
     sql: `
-      SELECT session_tag_name
+      SELECT tag_name
       FROM v_session_tags
       WHERE session_id = :session_id
     `,

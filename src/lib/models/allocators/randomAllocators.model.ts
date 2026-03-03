@@ -14,14 +14,16 @@ import { Sequelize, Model } from "sequelize";
  * @class RandomAllocators
  * @extends Model
  * 
- * @property {number} allocator_id - Foreign key to the allocator (composite primary key)
+ * @property {number} group_id - Foreign key to participant group (composite primary key)
  * @property {number} session_id - Foreign key to the session (composite primary key)
  * @property {number} allocator_percentage - Allocation percentage for this session (0-100)
  */
 export class RandomAllocators extends Model {
-  declare allocator_id: number;
+  declare group_id: number;
   declare session_id: number;
   declare allocator_percentage: number;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -37,7 +39,7 @@ export class RandomAllocators extends Model {
  * ```typescript
  * const RandomAllocators = RandomAllocatorsFactory(sequelize, DataTypes);
  * await RandomAllocators.create({
- *   allocator_id: 1,
+ *   group_id: 1,
  *   session_id: 2,
  *   allocator_percentage: 50.0
  * });
@@ -49,7 +51,7 @@ export function RandomAllocatorsFactory(
   DataTypes: typeof import("sequelize").DataTypes
 ) {
     RandomAllocators.init({
-    allocator_id: {
+    group_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       allowNull: false,
@@ -63,11 +65,21 @@ export function RandomAllocatorsFactory(
       type: DataTypes.DECIMAL,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
-      modelName: "RandomAllocators",
+    modelName: "RandomAllocators",
     tableName: "Random_Allocators",
-    timestamps: false,
+    timestamps: true,
   });
 
   return RandomAllocators;

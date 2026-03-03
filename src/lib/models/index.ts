@@ -28,6 +28,7 @@ import { SimletShlinksFactory } from "@/lib/models/simlets/simletShlinks.model";
 import { SimletPermissionsFactory } from "@/lib/models/simlets/simletPermissions.model";
 import { SimletTagsFactory } from "@/lib/models/simlets/simletTags.model";
 import { SessionFactory } from "@/lib/models/sessions/session.model";
+import { SessionDatesFactory } from "@/lib/models/sessions/sessionDates.model";
 import { SessionPermissionsFactory } from "@/lib/models/sessions/sessionPermissions.model";
 import { SessionTagsFactory } from "@/lib/models/sessions/sessionTags.model";
 import { AllocatorFactory } from "@/lib/models/allocators/allocator.model";
@@ -38,10 +39,9 @@ import { ActivityTemplatePermissionsFactory } from "@/lib/models/templates/activ
 import { ManualTemplateActivityFactory } from "@/lib/models/templates/manualTemplateActivity.model";
 import { GameplayActivitiesTemplateFactory } from "@/lib/models/templates/gameplayActivitiesTemplate.model";
 import { LimesurveyActivitiesTemplateFactory } from "@/lib/models/templates/limesurveyActivitiesTemplate.model";
-import { SimletTagsListFactory } from "@/lib/models/tags/simletTagsList.model";
+import { ActivityTemplateTagsFactory } from "@/lib/models/templates/activityTemplateTags.model";
+import { ActivityTemplateTagsListFactory } from "@/lib/models/templates/activityTemplateTagsList.model";
 import { SessionTagsListFactory } from "@/lib/models/tags/sessionTagsList.model";
-import { SubjectAreaListFactory } from "@/lib/models/tags/subjectAreaList.model";
-import { CategoryListFactory } from "@/lib/models/tags/categoryList.model";
 
 /**
  * Initialize all SIMVA models with the provided Sequelize instance.
@@ -94,6 +94,7 @@ export function initializeModels(
     SimletPermissions: SimletPermissionsFactory(sequelize, DataTypes),
     SimletTags: SimletTagsFactory(sequelize, DataTypes),
     Sessions: SessionFactory(sequelize, DataTypes),
+    SessionDates: SessionDatesFactory(sequelize, DataTypes),
     SessionPermissions: SessionPermissionsFactory(sequelize, DataTypes),
     SessionTags: SessionTagsFactory(sequelize, DataTypes),
     Allocators: AllocatorFactory(sequelize, DataTypes),
@@ -104,9 +105,8 @@ export function initializeModels(
     ManualActivitiesTemplates: ManualTemplateActivityFactory(sequelize, DataTypes),
     GameplayActivitiesTemplates: GameplayActivitiesTemplateFactory(sequelize, DataTypes),
     LimesurveyActivitiesTemplates: LimesurveyActivitiesTemplateFactory(sequelize, DataTypes),
-    SimletTagsList: SimletTagsListFactory(sequelize, DataTypes),
+    ActivityTemplateTags: ActivityTemplateTagsFactory(sequelize, DataTypes),
+    ActivityTemplateTagsList: ActivityTemplateTagsListFactory(sequelize, DataTypes),
     SessionTagsList: SessionTagsListFactory(sequelize, DataTypes),
-    SubjectAreaList: SubjectAreaListFactory(sequelize, DataTypes),
-    CategoryList: CategoryListFactory(sequelize, DataTypes),
   };
 }

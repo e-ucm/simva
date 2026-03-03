@@ -4,6 +4,8 @@ import { Sequelize, Model } from "sequelize";
 export class SimletGroups extends Model {
   declare simlet_id: number;
   declare group_id: number;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export function SimletGroupsFactory(
@@ -21,11 +23,21 @@ export function SimletGroupsFactory(
       primaryKey: true,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "SimletGroups",
     tableName: "SIMLETs_groups",
-    timestamps: false,
+    timestamps: true,
   });
 
   return SimletGroups;

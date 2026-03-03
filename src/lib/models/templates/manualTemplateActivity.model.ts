@@ -25,6 +25,8 @@ export class ManualTemplateActivity extends Model {
   declare activity_template_id: number;
   declare manual_ressource_type: "EXTERNAL" | "WEB";
   declare manual_ressource_url: string;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -69,11 +71,21 @@ export function ManualTemplateActivityFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "ManualTemplateActivity",
     tableName: "Manual_Template_Activities",
-    timestamps: false,
+    timestamps: true,
   });
 
   return ManualTemplateActivity;

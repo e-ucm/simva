@@ -17,16 +17,18 @@ import { Sequelize, Model } from "sequelize";
  * 
  * @class ExperimentalParticipants
  * @extends Model
- * @property {number} allocator_id - Primary key: ID of the allocator strategy
+ * @property {number} simlet_id - Primary key: ID of the study (simlet)
  * @property {number} group_id - Primary key: ID of the participant's group
  * @property {number} participant_id - Primary key: ID of the participant
  * @property {number} session_id - The assigned session for this participant
  */
 export class ExperimentalParticipants extends Model {
-  declare allocator_id: number;
+  declare simlet_id: number;
   declare group_id: number;
   declare participant_id: number;
   declare session_id: number;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -44,7 +46,7 @@ export class ExperimentalParticipants extends Model {
  * 
  * // Assign a participant to a session
  * const assignment = await ExperimentalParticipants.create({
- *   allocator_id: 1,
+ *   simlet_id: 1,
  *   group_id: 10,
  *   participant_id: 123,
  *   session_id: 456
@@ -56,7 +58,7 @@ export function ExperimentalParticipantsFactory(
   DataTypes: typeof import("sequelize").DataTypes
 ) {
   ExperimentalParticipants.init({
-    allocator_id: {
+    simlet_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       allowNull: false,
@@ -73,14 +75,23 @@ export function ExperimentalParticipantsFactory(
     },
     session_id: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   }, {
     sequelize,
     modelName: "ExperimentalParticipants",
     tableName: "Experimental_Participants",
-    timestamps: false,
+    timestamps: true,
   });
 
   return ExperimentalParticipants;

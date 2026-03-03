@@ -4,7 +4,7 @@ const queries: Record<string, QueryTemplate> = {
     tagsBySimletId: {
     description: "Get all tags of a SIMLET by its ID",
     sql: `
-      SELECT simlet_tag_name
+      SELECT tag_name
       FROM v_simlet_tags
       WHERE simlet_id = :simlet_id
     `,
@@ -21,7 +21,7 @@ const queries: Record<string, QueryTemplate> = {
     description: "Get all groups of a SIMLET by its ID",
     sql: `
       SELECT group_id
-      FROM SIMLETs_groups
+      FROM ParticipantGroups
       WHERE simlet_id = :simlet_id
     `,
     params: {

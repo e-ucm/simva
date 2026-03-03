@@ -22,6 +22,8 @@ export class GroupPermissions extends Model {
   declare group_id: number;
   declare user_id: number;
     declare permission: "READ" | "WRITE";
+    declare createdAt: Date;
+    declare updatedAt: Date;
 }
 
 /**
@@ -66,11 +68,21 @@ export function GroupPermissionsFactory(
           isIn: [["READ", "WRITE"]],
         },
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     }, {
       sequelize,
       modelName: "GroupPermissions",
       tableName: "ParticipantGroups_permissions",
-      timestamps: false,
+      timestamps: true,
       freezeTableName: true,
     });
 

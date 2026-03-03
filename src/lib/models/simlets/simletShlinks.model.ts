@@ -4,12 +4,12 @@ export class SimletShlinks extends Model {
   declare simlet_id: number;
   declare short_url: string;
   declare short_code: string;
+  declare short_valid_date: Date | null;
+  declare short_expiration_date: Date | null;
+  declare short_title: string;
+  declare short_domain: string;
   declare createdAt: Date;
   declare updatedAt: Date;
-  declare valid_date: Date | null;
-  declare expiration_date: Date | null;
-  declare title: string;
-  declare domain: string;
 }
 
 export function SimletShlinksFactory(
@@ -30,29 +30,31 @@ export function SimletShlinksFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    short_valid_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    short_expiration_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    short_title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    short_domain: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
-    },
-    valid_date: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    expiration_date: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    domain: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   }, {
     sequelize,

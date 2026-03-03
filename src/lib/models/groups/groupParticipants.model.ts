@@ -21,6 +21,8 @@ import { Sequelize, Model } from "sequelize";
 export class GroupParticipants extends Model {
   declare group_id: number;
   declare participant_id: number;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -56,11 +58,21 @@ export function GroupParticipantsFactory(
       primaryKey: true,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "GroupParticipants",
     tableName: "ParticipantGroups_participants",
-    timestamps: false,
+    timestamps: true,
     freezeTableName: true,
   });
 

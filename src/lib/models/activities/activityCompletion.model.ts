@@ -4,13 +4,18 @@ export class ActivityCompletion extends Model {
   declare activity_id: number;
   declare participant_id: number;
     declare activity_initialized: boolean;
+    declare activity_initialization_date: Date | null;
     declare activity_progress: number | null;
     declare activity_completed: boolean;
     declare activity_completion_date: Date | null;
     declare activity_suspended: boolean;
-    declare activity_initialization_date: Date | null;
     declare activity_suspension_date: Date | null;
     declare activity_registration_id: string | null;
+    declare activity_result_presigned_url: string | null;
+    declare activity_result_presigned_url_generated_at: Date | null;
+    declare activity_result_presigned_url_expire_at: Date | null;
+    declare createdAt: Date;
+    declare updatedAt: Date;
 }
 
 export function ActivityCompletionFactory(
@@ -59,12 +64,34 @@ export function ActivityCompletionFactory(
       activity_registration_id: {
         type: DataTypes.STRING(50),
         allowNull: true,
+    },
+      activity_result_presigned_url: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      activity_result_presigned_url_generated_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      activity_result_presigned_url_expire_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
     }
   }, {
     sequelize,
     modelName: "ActivityCompletion",
     tableName: "Activities_completion",
-    timestamps: false,
+    timestamps: true,
   });
 
   return ActivityCompletion;

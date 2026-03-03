@@ -31,15 +31,14 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class Session extends Model {
   declare simlet_id: number;
   declare session_id: number;
+  declare mongo_id: string | null;
   declare session_order: number;
   declare session_name: string;
   declare session_description: string;
-  declare session_experimental_method: string | null;
+  declare session_status: "active" | "inactive" | "terminated";
   declare session_can_be_manually_activated: boolean;
-  declare session_active: boolean | null;
-  declare session_start_date: Date | null;
-  declare session_end_date: Date | null;
-  declare session_supervisor_id: number;
+  declare session_coordinator_id: number;
+  declare session_sandbox_user_id: number | null;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -80,6 +79,10 @@ export function SessionFactory(
       autoIncrement: true,
       unique: true,
     },
+    mongo_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     session_order: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -92,30 +95,23 @@ export function SessionFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    session_experimental_method: {
+    session_status: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
+      validate: { isIn: [["active", "inactive", "terminated"]] },
     },
     session_can_be_manually_activated: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
     },
-    session_active: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true,
-    },
-    session_start_date: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    session_end_date: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    session_supervisor_id: {
+    session_coordinator_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    session_sandbox_user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,

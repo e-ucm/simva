@@ -28,12 +28,11 @@ import { Sequelize, Model, Op } from "sequelize";
 export class Simlet extends Model {
   
   declare simlet_id: number;
+  declare mongo_id: string | null;
   declare simlet_name: string;
-  declare simlet_sandbox_session_id: number | null;
+  declare simlet_archived: boolean;
   declare simlet_description: string;
-  declare simlet_objective: string | null;
-  declare allocator_id: number;
-  declare simlet_coordinator_id: number;
+  declare simlet_supervisor_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -70,27 +69,23 @@ export function SimletFactory(
       autoIncrement: true,
       unique: true,
     },
+    mongo_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     simlet_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    simlet_sandbox_session_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+    simlet_archived: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     simlet_description: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    simlet_objective: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    allocator_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    simlet_coordinator_id: {
+    simlet_supervisor_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

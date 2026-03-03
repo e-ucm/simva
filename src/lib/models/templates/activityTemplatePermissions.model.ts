@@ -22,6 +22,8 @@ export class ActivityTemplatePermissions extends Model {
   declare activity_template_id: number;
   declare user_id: number;
   declare permission: "READ" | "WRITE";
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -66,11 +68,21 @@ export function ActivityTemplatePermissionsFactory(
         isIn: [["READ", "WRITE"]],
       },
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "ActivityTemplatePermissions",
     tableName: "Activities_template_permissions",
-    timestamps: false,
+    timestamps: true,
   });
 
   return ActivityTemplatePermissions;

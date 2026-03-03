@@ -5,8 +5,9 @@ const queries: Record<string, QueryTemplate> = {
         description: "Get all Groups for a certain Version and User ID",
         sql: `
         SELECT *
-        FROM v_complete_groups_users_permissions
+        FROM v_complete_groups_user_permissions
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
+        AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         `,
         params: {
@@ -21,6 +22,12 @@ const queries: Record<string, QueryTemplate> = {
                 required: false,
                 description: "Version flag indicating whether to use new generation",
                 example: true
+            },
+            simlet_id: {
+                type: "number",
+                required: false,
+                description: "Simlet Identifier to filter groups by simlet",
+                example: 1,
             },
             search: {
                 type: "string",
@@ -35,23 +42,24 @@ const queries: Record<string, QueryTemplate> = {
         description: "Get all Groups for a certain Version and User ID",
         sql: `
         SELECT *
-        FROM v_complete_groups_users_permissions
+        FROM v_complete_groups_user_permissions
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         LIMIT :limit OFFSET :offset
         `,
         params: {
-            current_user_id: {
-                type: "number",
-                required: true,
-                description: "User Identifier",
-                example: 123,
-            },
             version: {
                 type: "boolean",
                 required: false,
                 description: "Version flag indicating whether to use new generation",
                 example: true
+            },
+            simlet_id: {
+                type: "number",
+                required: false,
+                description: "Simlet Identifier to filter groups by simlet",
+                example: 1,
             },
             search: {
                 type: "string",
@@ -78,15 +86,16 @@ const queries: Record<string, QueryTemplate> = {
         description: "Get current Group for a certain Group ID and User ID",
         sql: `
         SELECT *
-        FROM v_complete_groups_users_permissions
+        FROM v_complete_groups_user_permissions
         WHERE current_user_id = :current_user_id AND group_id = :group_id
+        AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         `,
         params: {
-            current_user_id: {
+            simlet_id: {
                 type: "number",
-                required: true,
-                description: "User Identifier",
-                example: 123,
+                required: false,
+                description: "Simlet Identifier to filter groups by simlet",
+                example: 1,
             },
             group_id: {
                 type: "number",

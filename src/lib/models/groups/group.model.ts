@@ -15,6 +15,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @class Group
  * @extends Model
  * 
+ * @property {number} simlet_id - Foreign key to the parent simlet/study
  * @property {number} group_id - Primary key identifier for the group
  * @property {string} name - Display name of the group
  * @property {boolean} group_use_new_generation - Whether to use new generation features
@@ -23,10 +24,15 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {Date} updatedAt - Timestamp when the group was last updated
  */
 export class Group extends Model {
+  declare simlet_id: number;
   declare group_id: number;
+  declare mongo_id: string | null;
   declare group_name: string;
   declare group_use_new_generation: boolean;
   declare group_owner_id: number;
+  declare group_sandbox: boolean;
+  declare group_allocator_mongo_id: string | null;
+  declare group_allocator_type: "default" | "group" | "random";
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -55,12 +61,20 @@ export function GroupFactory(
   DataTypes: typeof import("sequelize").DataTypes
 ) {
   Group.init({
+    simlet_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     group_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       allowNull: false,
       autoIncrement: true,
       unique: true,
+    },
+    mongo_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     group_name: {
       type: DataTypes.STRING,
@@ -73,6 +87,19 @@ export function GroupFactory(
     group_owner_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    group_sandbox: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
+    group_allocator_mongo_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    group_allocator_type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { isIn: [["default", "group", "random"]] },
     },
     createdAt: {
       type: DataTypes.DATE,

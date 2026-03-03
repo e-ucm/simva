@@ -5,6 +5,8 @@ export class ManualActivity extends Model {
   declare manual_user_managed: boolean;
   declare manual_ressource_type: "WEB" | "EXTERNAL";
   declare manual_ressource_url: string;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export function ManualActivityFactory(
@@ -31,11 +33,21 @@ export function ManualActivityFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "ManualActivity",
     tableName: "Manual_Activities",
-    timestamps: false,
+    timestamps: true,
     freezeTableName: true,
   });
 

@@ -4,6 +4,8 @@ export class SimletPermissions extends Model {
   declare simlet_id: number;
   declare user_id: number;
   declare permission: "READ" | "WRITE";
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export function SimletPermissionsFactory(
@@ -28,11 +30,21 @@ export function SimletPermissionsFactory(
         isIn: [["READ", "WRITE"]],
       },
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "SimletPermissions",
     tableName: "SIMLETs_permissions",
-    timestamps: false,
+    timestamps: true,
   });
 
   return SimletPermissions;

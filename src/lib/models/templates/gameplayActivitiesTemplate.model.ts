@@ -29,6 +29,8 @@ export class GameplayActivitiesTemplate extends Model {
   declare subject_area_id: number | null;
   declare game_type: "WEB" | "DESKTOP";
   declare game_url: string;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -83,11 +85,21 @@ export function GameplayActivitiesTemplateFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "GameplayActivitiesTemplate",
     tableName: "GamePlay_Activities_Template",
-    timestamps: false,
+    timestamps: true,
   });
 
   return GameplayActivitiesTemplate;

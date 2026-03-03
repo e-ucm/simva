@@ -6,8 +6,8 @@ export class GameplayActivity extends Model {
   declare game_scorm_xapi: boolean;
   declare game_type: "WEB" | "DESKTOP";
   declare game_url: string;
-  declare category_id: number | null;
-  declare subject_area_id: number | null;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export function GameplayActivityFactory(
@@ -38,19 +38,21 @@ export function GameplayActivityFactory(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    category_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
-    subject_area_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   }, {
     sequelize,
     modelName: "GameplayActivity",
     tableName: "GamePlay_Activities",
-    timestamps: false,
+    timestamps: true,
     freezeTableName: true,
   });
 

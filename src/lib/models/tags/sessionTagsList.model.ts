@@ -14,12 +14,16 @@ import { Sequelize, Model } from "sequelize";
  * @class SessionTagsList
  * @extends Model
  * 
- * @property {number} session_tag_id - Primary key identifier for the session tag
- * @property {string} session_tag_name - Display name of the session tag
+ * @property {number} tag_id - Primary key identifier for the session tag
+ * @property {string} tag_name - Display name of the session tag
+ * @property {string} tag_color - Color code for visual distinction of the session tag
  */
 export class SessionTagsList extends Model {
-  declare session_tag_id: number;
-  declare session_tag_name: string;
+  declare tag_id: number;
+  declare tag_name: string;
+  declare tag_color: string;
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 /**
@@ -35,7 +39,8 @@ export class SessionTagsList extends Model {
  * ```typescript
  * const SessionTagsList = SessionTagsListFactory(sequelize, DataTypes);
  * await SessionTagsList.create({
- *   session_tag_name: 'collaborative-learning'
+ *   tag_name: 'collaborative-learning',
+ *   tag_color: '#FF5733'
  * });
  * ```
  */
@@ -45,20 +50,34 @@ export function SessionTagsListFactory(
   DataTypes: typeof import("sequelize").DataTypes
 ) {
   SessionTagsList.init({
-    session_tag_id: {
+    tag_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    session_tag_name: {
+    tag_name: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    tag_color: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   }, {
     sequelize,
     modelName: "SessionTagsList",
     tableName: "Sessions_tags_list",
-    timestamps: false,
+    timestamps: true,
   });
 
   return SessionTagsList;

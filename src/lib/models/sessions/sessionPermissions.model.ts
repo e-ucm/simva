@@ -4,6 +4,8 @@ export class SessionPermissions extends Model {
   declare session_id: number;
   declare user_id: number;
   declare permission: "READ" | "WRITE";
+  declare createdAt: Date;
+  declare updatedAt: Date;
 }
 
 export function SessionPermissionsFactory(
@@ -28,11 +30,21 @@ export function SessionPermissionsFactory(
         isIn: [["READ", "WRITE"]],
       },
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
     modelName: "SessionPermissions",
     tableName: "Sessions_permissions",
-    timestamps: false,
+    timestamps: true,
   });
 
   return SessionPermissions;
