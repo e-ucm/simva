@@ -193,6 +193,7 @@ SELECT
     g.group_id,
     g.group_name,
     g.createdAt,
+    g.updatedAt,
     g.group_use_new_generation,
     u.user_id as group_owner_user_id,
     u.username as group_owner_username
@@ -222,6 +223,17 @@ SELECT
     cgp.*
 FROM v_complete_group_participants cgp
 JOIN ParticipantGroups g ON g.group_id = cgp.group_id;
+
+DROP VIEW IF EXISTS v_complete_groups_user_permissions;
+CREATE VIEW v_complete_groups_user_permissions AS
+SELECT
+    up.user_id as current_user_id,
+    up.username as current_user_username,
+    up.permission as current_user_permission,
+    up.permission_type as current_user_permission_type,
+    cgp.*
+FROM v_complete_groups_simlets cgp
+LEFT JOIN vv_user_permissions up ON cgp.simlet_id = up.object_id AND up.object_type = "SIMLET";
 
 DROP VIEW IF EXISTS v_complete_allocation_participants;
 CREATE VIEW v_complete_allocation_participants AS

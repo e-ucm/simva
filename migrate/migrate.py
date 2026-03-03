@@ -227,11 +227,12 @@ allocator_id_to_type={}
 for a in filtered_allocators:
     allocator_id_to_type[a["_id"]["$oid"]]=a["type"]
 group_mongo_id_to_simlet_mysql_id={}
-group_mongo_id_to_allocator_mongo_id={}
+group_simlet_to_allocator_mongo_id={}  # Maps (group_mongo_id, simlet_mysql_id) -> allocator_mongo_id
 simlet_shlinks_values=[]
 for s in filtered_simlets:
     simlet_mongo_id=s["_id"]["$oid"]
     simlet_mysql_id=mongo_simlet_to_mysql_id[simlet_mongo_id]
+    allocator_mongo_id=s.get("allocator")
     if s.get("shlink",None) is not None:
         simlet_shlinks_values.append((
             simlet_mysql_id, 
@@ -244,24 +245,29 @@ for s in filtered_simlets:
             s.get("shlink",{}).get("domain")
         ))
     for group_mongo_id in s.get("groups", []):
-        group_mongo_id_to_simlet_mysql_id[group_mongo_id] = simlet_mysql_id
-        group_mongo_id_to_allocator_mongo_id[group_mongo_id] = s.get("allocator")
+        if group_mongo_id in group_mongo_id_to_simlet_mysql_id.keys():
+            group_mongo_id_to_simlet_mysql_id[group_mongo_id].add(simlet_mysql_id)
+        else:
+            group_mongo_id_to_simlet_mysql_id[group_mongo_id] = {simlet_mysql_id}
+        # Store allocator for this specific (group, simlet) pair
+        group_simlet_to_allocator_mongo_id[(group_mongo_id, simlet_mysql_id)] = allocator_mongo_id
 
-simlet_group_values = [
-    (
-        group_mongo_id_to_simlet_mysql_id.get(u["_id"]["$oid"], None),
-        u["_id"]["$oid"],
-        u["name"],
-        True if u["version"] == "1" else False,
-        mongo_user_to_mysql_id[u["owners"][0]],
-        False,
-        group_mongo_id_to_allocator_mongo_id[u["_id"]["$oid"]],
-        allocator_id_to_type[group_mongo_id_to_allocator_mongo_id[u["_id"]["$oid"]]],
-        convert_iso_to_mysql_datetime_format(u["created"]["$date"])
-    )
-    for u in filtered_groups 
-    if group_mongo_id_to_simlet_mysql_id.get(u["_id"]["$oid"], None) != None
-]
+simlet_group_values = []
+for u in filtered_groups:
+    group_mongo_id = u["_id"]["$oid"]
+    for simlet_id in group_mongo_id_to_simlet_mysql_id.get(group_mongo_id, []):
+        allocator_mongo_id = group_simlet_to_allocator_mongo_id.get((group_mongo_id, simlet_id))
+        simlet_group_values.append((
+            simlet_id,
+            group_mongo_id,
+            u["name"],
+            True if u["version"] == "1" else False,
+            mongo_user_to_mysql_id[u["owners"][0]],
+            False,
+            allocator_mongo_id,
+            allocator_id_to_type.get(allocator_mongo_id, "default"),
+            convert_iso_to_mysql_datetime_format(u["created"]["$date"])
+        ))
 print(simlet_shlinks_values)
 print(simlet_group_values)
 cursor.executemany(simlet_group_sql, simlet_group_values)
@@ -272,11 +278,18 @@ print("Inserted:")
 print("  SIMLETs_shlinks:", len(simlet_shlinks_values))
 print("  SIMLETs_groups:", len(simlet_group_values))
 
-#Dict to map Mongo Id to MySQL Id
-cursor.execute("SELECT group_id, mongo_id FROM ParticipantGroups WHERE mongo_id IS NOT NULL")
+#Dict to map (Mongo Id, simlet_id) to MySQL group_id
+cursor.execute("SELECT group_id, mongo_id, simlet_id FROM ParticipantGroups WHERE mongo_id IS NOT NULL")
 mysql_simlet_group_ids = cursor.fetchall()
-mongo_group_to_mysql_id = {mongo_id: group_id for group_id, mongo_id in mysql_simlet_group_ids}
-print(mongo_group_to_mysql_id)
+# Maps (mongo_id, simlet_id) -> group_id
+mongo_group_simlet_to_mysql_id = {(mongo_id, simlet_id): group_id for group_id, mongo_id, simlet_id in mysql_simlet_group_ids}
+# Also keep a mapping from mongo_id -> list of group_ids (for participants)
+mongo_group_to_mysql_ids = {}
+for group_id, mongo_id, simlet_id in mysql_simlet_group_ids:
+    if mongo_id not in mongo_group_to_mysql_ids:
+        mongo_group_to_mysql_ids[mongo_id] = []
+    mongo_group_to_mysql_ids[mongo_id].append(group_id)
+print(mongo_group_simlet_to_mysql_id)
 
 #adding groups participants
 print("Adding Groups Participants")
@@ -288,8 +301,10 @@ VALUES (?, ?)
 groups_participant_values=[]
 for g in filtered_groups:
     mongo_id=g["_id"]["$oid"]
-    for participant in g["participants"]:
-        groups_participant_values.append((mongo_group_to_mysql_id[mongo_id],mongo_user_to_mysql_id[participant]))
+    # Insert participants for all group_ids associated with this mongo_id
+    for group_id in mongo_group_to_mysql_ids.get(mongo_id, []):
+        for participant in g["participants"]:
+            groups_participant_values.append((group_id, mongo_user_to_mysql_id[participant]))
 print(groups_participant_values)
 
 cursor.executemany(groups_participant_sql, groups_participant_values)
@@ -607,9 +622,10 @@ for a in filtered_allocators:
                 if allocation_id in group_id_to_participants_ids[group_id]:
                     allocation_values.append((group_id_to_simlet_id[group_id], group_id, allocation_id, session_id))
         elif allocator_type == "group":
-            group_id=mongo_group_to_mysql_id[allocation_mongo_id]
-            for id in group_id_to_participants_ids.get(group_id, set()):
-                allocation_values.append((group_id_to_simlet_id[group_id], group_id, id, session_id))
+            # A mongo group can have multiple SQL group_ids (one per simlet)
+            for group_id in mongo_group_to_mysql_ids.get(allocation_mongo_id, []):
+                for participant_id in group_id_to_participants_ids.get(group_id, set()):
+                    allocation_values.append((group_id_to_simlet_id[group_id], group_id, participant_id, session_id))
         else:
             continue
 print(allocation_values)
