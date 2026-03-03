@@ -120,9 +120,61 @@ mysql_users_ids = cursor.fetchall()
 mongo_user_to_mysql_id = {username: user_id for user_id, username in mysql_users_ids}
 print(mongo_user_to_mysql_id)
 
-print("-------------")
-print("Adding Groups")
-print("-------------")
+print("---------------")
+print("Adding SIMLETS ")
+print("---------------")
+# Get SIMLETs from MySQL
+cursor.execute("SELECT mongo_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
+mysql_simlet_mongo_ids = cursor.fetchall()
+existing_simlet_mongo_db = set(id[0] for id in mysql_simlet_mongo_ids)  # extract string from tuple
+
+#Get simlets from Mongo Backup
+simlets=[]
+with open(MONGO_BACKUP_FOLDER + "/studies.json", "r") as f:
+    for line in f:
+        if line.strip():  # skip empty lines
+            obj = json.loads(line)
+            simlets.append(obj)
+
+#adding simlets into simlets table
+simlets_sql = """
+INSERT INTO SIMLETs (mongo_id, simlet_name, simlet_archived, simlet_description, simlet_supervisor_id, createdAt)
+VALUES (?, ?, ?, ?, ?, ?)
+"""
+
+filtered_simlets = [
+    ( s )
+    for s in simlets
+    if s["_id"]["$oid"] not in existing_simlet_mongo_db
+]
+simlets_values = [
+    (
+        s["_id"]["$oid"], 
+        s["name"], 
+        False,
+        "",
+        mongo_user_to_mysql_id[s["owners"][0]],
+        convert_iso_to_mysql_datetime_format(s.get("created", {}).get("$date", None))
+    )
+    for s in filtered_simlets
+]
+print(simlets_values)
+
+cursor.executemany(simlets_sql, simlets_values)
+sqlite_con.commit()
+
+print("Inserted:")
+print("  SIMLETs:", len(simlets_values))
+
+#Dict to map Mongo Id to MySQL Id
+cursor.execute("SELECT simlet_id, mongo_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
+mysql_simlet_ids = cursor.fetchall()
+mongo_simlet_to_mysql_id = {mongo_id: simlet_id for simlet_id, mongo_id in mysql_simlet_ids}
+print(mongo_simlet_to_mysql_id)
+
+print("--------------------")
+print("Adding SIMLET Groups")
+print("--------------------")
 
 # Get existing Groups from MySQL
 cursor.execute("SELECT mongo_id FROM ParticipantGroups WHERE mongo_id IS NOT NULL")
@@ -137,40 +189,93 @@ with open(MONGO_BACKUP_FOLDER + "/groups.json", "r") as f:
             obj = json.loads(line)
             groups.append(obj)
 
-# Adding Group into Groups table
-groups_sql = """
-INSERT INTO ParticipantGroups (mongo_id, group_name, group_sandbox, createdAt, group_use_new_generation, group_owner_id)
-VALUES (?, ?, ?, ?, ?, ?)
-"""
-
 filtered_groups = [
     ( g )
     for g in groups
     if g["_id"]["$oid"] not in existing_group_mongo_db
 ]
-groups_values = [
-    (
-        u["_id"]["$oid"], 
-        u["name"],
-        False,
-        convert_iso_to_mysql_datetime_format(u["created"]["$date"]),
-        True if u["version"] == "1" else False,
-        mongo_user_to_mysql_id[u["owners"][0]]
-    )
-    for u in filtered_groups
-]
-print(groups_values)
 
-cursor.executemany(groups_sql, groups_values)
+# Get existing Groups from MySQL
+cursor.execute("SELECT group_allocator_mongo_id FROM ParticipantGroups WHERE mongo_id IS NOT NULL")
+mysql_allocator_mongo_ids = cursor.fetchall()
+existing_allocator_mongo_db = set(id[0] for id in mysql_allocator_mongo_ids)  # extract string from tuple
+
+# Get allocators from Mongo Backup
+allocators=[]
+with open(MONGO_BACKUP_FOLDER + "/allocators.json", "r") as f:
+    for line in f:
+        if line.strip():  # skip empty lines
+            obj = json.loads(line)
+            allocators.append(obj)
+
+filtered_allocators = [
+    ( a )
+    for a in allocators
+    if a["_id"]["$oid"] not in existing_allocator_mongo_db
+]
+print("Adding SIMLETs groups and shlinks")
+# Adding Group into Groups table
+simlet_group_sql = """
+INSERT INTO ParticipantGroups (simlet_id, mongo_id, group_name, group_use_new_generation, group_owner_id, group_sandbox, group_allocator_mongo_id, group_allocator_type, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+"""
+simlet_shlinks_sql = """
+INSERT INTO SIMLETs_shlinks (simlet_id, short_url, short_code, createdAt, short_title, short_valid_date, short_expiration_date, short_domain )
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+"""
+allocator_id_to_type={}
+for a in filtered_allocators:
+    allocator_id_to_type[a["_id"]["$oid"]]=a["type"]
+group_mongo_id_to_simlet_mysql_id={}
+group_mongo_id_to_allocator_mongo_id={}
+simlet_shlinks_values=[]
+for s in filtered_simlets:
+    simlet_mongo_id=s["_id"]["$oid"]
+    simlet_mysql_id=mongo_simlet_to_mysql_id[simlet_mongo_id]
+    if s.get("shlink",None) is not None:
+        simlet_shlinks_values.append((
+            simlet_mysql_id, 
+            s.get("shlink",{}).get("shortUrl"), 
+            s.get("shlink",{}).get("shortCode"), 
+            convert_iso_to_mysql_datetime_format(s.get("shlink",{}).get("dateCreated")),
+            s.get("shlink",{}).get("title"),
+            s.get("shlink",{}).get("meta").get("validSince"),
+            s.get("shlink",{}).get("meta").get("validUntil"),
+            s.get("shlink",{}).get("domain")
+        ))
+    for group_mongo_id in s.get("groups", []):
+        group_mongo_id_to_simlet_mysql_id[group_mongo_id] = simlet_mysql_id
+        group_mongo_id_to_allocator_mongo_id[group_mongo_id] = s.get("allocator")
+
+simlet_group_values = [
+    (
+        group_mongo_id_to_simlet_mysql_id.get(u["_id"]["$oid"], None),
+        u["_id"]["$oid"],
+        u["name"],
+        True if u["version"] == "1" else False,
+        mongo_user_to_mysql_id[u["owners"][0]],
+        False,
+        group_mongo_id_to_allocator_mongo_id[u["_id"]["$oid"]],
+        allocator_id_to_type[group_mongo_id_to_allocator_mongo_id[u["_id"]["$oid"]]],
+        convert_iso_to_mysql_datetime_format(u["created"]["$date"])
+    )
+    for u in filtered_groups 
+    if group_mongo_id_to_simlet_mysql_id.get(u["_id"]["$oid"], None) != None
+]
+print(simlet_shlinks_values)
+print(simlet_group_values)
+cursor.executemany(simlet_group_sql, simlet_group_values)
+cursor.executemany(simlet_shlinks_sql, simlet_shlinks_values)
 sqlite_con.commit()
 
 print("Inserted:")
-print("  Groups:", len(groups_values))
+print("  SIMLETs_shlinks:", len(simlet_shlinks_values))
+print("  SIMLETs_groups:", len(simlet_group_values))
 
 #Dict to map Mongo Id to MySQL Id
 cursor.execute("SELECT group_id, mongo_id FROM ParticipantGroups WHERE mongo_id IS NOT NULL")
-mysql_groups_ids = cursor.fetchall()
-mongo_group_to_mysql_id = {mongo_id: group_id for group_id, mongo_id in mysql_groups_ids}
+mysql_simlet_group_ids = cursor.fetchall()
+mongo_group_to_mysql_id = {mongo_id: group_id for group_id, mongo_id in mysql_simlet_group_ids}
 print(mongo_group_to_mysql_id)
 
 #adding groups participants
@@ -192,163 +297,6 @@ sqlite_con.commit()
 
 print("Inserted:")
 print("  ParticipantGroups_participants:", len(groups_participant_values))
-
-#adding groups owners
-print("Adding Groups owners")
-groups_owners_sql = """
-INSERT INTO ParticipantGroups_permissions (group_id, user_id, permission)
-VALUES (?, ?, ?)
-"""
-groups_owners_values=[]
-for g in filtered_groups:
-    mongo_id=g["_id"]["$oid"]
-    owners=g["owners"]
-    owners.pop(0)
-    for owner in owners:
-        groups_owners_values.append((mongo_group_to_mysql_id[mongo_id],mongo_user_to_mysql_id[owner], "WRITE"))
-print(groups_owners_values)
-
-cursor.executemany(groups_owners_sql, groups_owners_values)
-sqlite_con.commit()
-
-print("Inserted:")
-print("  ParticipantGroups_permissions:", len(groups_owners_values))
-
-print("----------------")
-print("Adding Allocator")
-print("----------------")
-# Get existing Allocators from MySQL
-cursor.execute("SELECT mongo_id FROM Allocators WHERE mongo_id IS NOT NULL")
-mysql_allocator_mongo_ids = cursor.fetchall()
-existing_allocator_mongo_db = set(id[0] for id in mysql_allocator_mongo_ids)  # extract string from tuple
-
-# Get allocators from Mongo Backup
-allocators=[]
-with open(MONGO_BACKUP_FOLDER + "/allocators.json", "r") as f:
-    for line in f:
-        if line.strip():  # skip empty lines
-            obj = json.loads(line)
-            allocators.append(obj)
-
-#adding allocators into allocators table
-allocators_sql = """
-INSERT INTO Allocators (mongo_id, allocator_type)
-VALUES (?, ?)
-"""
-
-filtered_allocators = [
-    ( a )
-    for a in allocators
-    if a["_id"]["$oid"] not in existing_allocator_mongo_db
-]
-allocators_values = [
-    (a["_id"]["$oid"], a["type"])
-    for a in filtered_allocators
-]
-print(allocators_values)
-cursor.executemany(allocators_sql, allocators_values)
-sqlite_con.commit()
-
-print("Inserted:")
-print("  Allocators:", len(filtered_allocators))
-
-#Dict to map Mongo Id to MySQL Id
-cursor.execute("SELECT allocator_id, mongo_id FROM Allocators WHERE mongo_id IS NOT NULL")
-mysql_allocator_ids = cursor.fetchall()
-mongo_allocator_to_mysql_id = {mongo_id: allocator_id for allocator_id, mongo_id in mysql_allocator_ids}
-print(mongo_allocator_to_mysql_id)
-
-print("---------------")
-print("Adding SIMLETS ")
-print("---------------")
-# Get SIMLETs from MySQL
-cursor.execute("SELECT mongo_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
-mysql_simlet_mongo_ids = cursor.fetchall()
-existing_simlet_mongo_db = set(id[0] for id in mysql_simlet_mongo_ids)  # extract string from tuple
-
-#Get simlets from Mongo Backup
-simlets=[]
-with open(MONGO_BACKUP_FOLDER + "/studies.json", "r") as f:
-    for line in f:
-        if line.strip():  # skip empty lines
-            obj = json.loads(line)
-            simlets.append(obj)
-
-#adding simlets into simlets table
-simlets_sql = """
-INSERT INTO SIMLETs (mongo_id, simlet_name, simlet_archived, createdAt, simlet_description, allocator_id, simlet_coordinator_id)
-VALUES (?, ?, ?, ?, ?, ?, ?)
-"""
-
-filtered_simlets = [
-    ( s )
-    for s in simlets
-    if s["_id"]["$oid"] not in existing_simlet_mongo_db
-]
-simlets_values = [
-    (
-        s["_id"]["$oid"], 
-        s["name"], 
-        s.get("archived", False),
-        convert_iso_to_mysql_datetime_format(s.get("created", {}).get("$date", None)),
-        "",
-        mongo_allocator_to_mysql_id[s["allocator"]],
-        mongo_user_to_mysql_id[s["owners"][0]]
-    )
-    for s in filtered_simlets
-]
-print(simlets_values)
-
-cursor.executemany(simlets_sql, simlets_values)
-sqlite_con.commit()
-
-print("Inserted:")
-print("  SIMLETs:", len(simlets_values))
-
-#Dict to map Mongo Id to MySQL Id
-cursor.execute("SELECT simlet_id, mongo_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
-mysql_simlet_ids = cursor.fetchall()
-mongo_simlet_to_mysql_id = {mongo_id: simlet_id for simlet_id, mongo_id in mysql_simlet_ids}
-print(mongo_simlet_to_mysql_id)
-
-#adding SIMLETs Sessions, groups, coordinators and shlinks
-print("Adding SIMLETs groups and shlinks")
-simlet_group_sql = """
-INSERT INTO SIMLETs_groups (simlet_id, group_id)
-VALUES (?, ?)
-"""
-simlet_shlinks_sql = """
-INSERT INTO SIMLETs_shlinks (simlet_id, short_url, short_code, createdAt, short_title, short_valid_date, short_expiration_date, short_domain )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-"""
-
-simlet_group_values=[]
-simlet_shlinks_values=[]
-for s in filtered_simlets:
-    simlet_mongo_id=s["_id"]["$oid"]
-    simlet_mysql_id=mongo_simlet_to_mysql_id[simlet_mongo_id]
-    if s.get("shlink",None) is not None:
-        simlet_shlinks_values.append((
-            simlet_mysql_id, 
-            s.get("shlink",{}).get("shortUrl"), 
-            s.get("shlink",{}).get("shortCode"), 
-            convert_iso_to_mysql_datetime_format(s.get("shlink",{}).get("dateCreated")),
-            s.get("shlink",{}).get("title"),
-            s.get("shlink",{}).get("meta").get("validSince"),
-            s.get("shlink",{}).get("meta").get("validUntil"),
-            s.get("shlink",{}).get("domain")
-        ))
-    for group_mongo_id in s.get("groups", []):
-        simlet_group_values.append((simlet_mysql_id, mongo_group_to_mysql_id[group_mongo_id]))
-print(simlet_shlinks_values)
-print(simlet_group_values)
-cursor.executemany(simlet_group_sql, simlet_group_values)
-cursor.executemany(simlet_shlinks_sql, simlet_shlinks_values)
-sqlite_con.commit()
-
-print("Inserted:")
-print("  SIMLETs_shlinks:", len(simlet_shlinks_values))
-print("  SIMLETs_groups:", len(simlet_group_values))
 
 #adding SIMLETs coordinators, test supervisors and activities owners
 print("--------------------")
@@ -377,9 +325,9 @@ print("----------------")
 print("Adding sessions ")
 print("----------------")
 #Dict to map Mongo Id to MySQL Id
-cursor.execute("SELECT mongo_id, simlet_coordinator_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
+cursor.execute("SELECT mongo_id, simlet_supervisor_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
 mysql_simlet_owners_ids = cursor.fetchall()
-mongo_simlet_owners_to_mysql_id = {mongo_id: simlet_coordinator_id for mongo_id, simlet_coordinator_id in mysql_simlet_owners_ids}
+mongo_simlet_owners_to_mysql_id = {mongo_id: simlet_supervisor_id for mongo_id, simlet_supervisor_id in mysql_simlet_owners_ids}
 print(mongo_simlet_owners_to_mysql_id)
 
 # Get Sessions from MySQL
@@ -407,7 +355,7 @@ print(session_order_by_mongo_id)
 
 # Adding Sessions into sesions table
 sessions_sql = """
-INSERT INTO Sessions (simlet_id, mongo_id, session_name, session_order, session_description, session_active, session_supervisor_id, session_can_be_manually_activated)
+INSERT INTO Sessions (simlet_id, mongo_id, session_order, session_name, session_description, session_status, session_can_be_manually_activated, session_coordinator_id)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """
 
@@ -422,12 +370,12 @@ sessions_values = [
     (
         mongo_simlet_to_mysql_id[s["study"]],
         s["_id"]["$oid"],
-        s["name"],
         session_order_by_mongo_id.get(s["_id"]["$oid"], 0),
+        s["name"],
         "",
-        False,
-        mongo_simlet_owners_to_mysql_id[s["study"]],
-        True
+        "inactive",
+        True,
+        mongo_simlet_owners_to_mysql_id[s["study"]]
     )
     for s in filtered_sessions
 ]
@@ -469,8 +417,8 @@ for session in sessions:
 
 # Adding Activities into Activities table
 activities_sql = """
-INSERT INTO Activities (session_id, activity_order, mongo_id, activity_name, activity_type, activity_presignedUrl, activity_presignedUrl_generated_at, activity_presignedUrl_expire_at, activity_trace_storage, activity_description, activity_comply_with_GDPR, activity_can_be_restarted)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Activities (session_id, mongo_id, activity_order, activity_name, activity_type, activity_trace_storage, activity_description, activity_comply_with_GDPR, activity_can_be_restarted)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 filtered_activities = [
@@ -482,21 +430,14 @@ filtered_activities = [
 activities_values = [
     (
         mongo_session_to_mysql_id[a["test"]],
-        activity_order_by_mongo_id.get(a["_id"]["$oid"], 0),
         a["_id"]["$oid"],
+        activity_order_by_mongo_id.get(a["_id"]["$oid"], 0),
         a["name"],
         a["type"],
-        a.get("extra_data", {}).get("minio_trace", {}).get("presignedUrl"), 
-        convert_iso_to_mysql_datetime_format(a.get("extra_data", {}).get("minio_trace", {}).get("generated_at")),
-        convert_iso_to_mysql_datetime_format((
-            (datetime.fromisoformat(a.get("extra_data", {}).get("minio_trace", {}).get("generated_at").replace("Z", "+00:00"))
-            + timedelta(seconds=a.get("extra_data", {}).get("minio_trace", {}).get("expire_on_sec", 0)))
-            .isoformat()
-        ) if a.get("extra_data", {}).get("minio_trace", {}).get("generated_at") else None),
         a.get("extra_data", {}).get("config", {}).get("trace_storage","false") == "true", 
         "",
-        a.get("comply_with_GDPR", "false") == "true",
-        a.get("can_be_restarted", "false") == "true"
+        False,
+        False
     )
     for a in filtered_activities
 ]
@@ -543,7 +484,7 @@ print("  ManualActivities:", len(manual_activities_values))
 #adding Limesurvey Activities
 print("Adding Limesurvey Activities")
 limesurvey_activities_sql = """
-INSERT INTO Limesurvey_Activities (activity_id, survey_id, suvey_language, survey_lrsset)
+INSERT INTO Limesurvey_Activities (activity_id, survey_id, survey_language, survey_lrsset)
 VALUES (?, ?, ?, ?)
 """
 
@@ -623,59 +564,54 @@ print("-----------------")
 #adding Default and groups Allocators
 print("Adding Experimental_Participants")
 allocation_sql = """
-INSERT INTO Experimental_Participants (allocator_id, group_id, participant_id, session_id)
+INSERT INTO Experimental_Participants (simlet_id, group_id, participant_id, session_id)
 VALUES (?, ?, ?, ?)
+ON CONFLICT(simlet_id, group_id, participant_id)
+DO UPDATE SET
+    session_id = excluded.session_id,
+    updatedAt = datetime('now')
 """
-
-def get_group_ids(participant_id, pairs):
-    return {
-        group_id
-        for group_id, pid in pairs
-        if pid == participant_id
-    }
-
-def get_participants(group_id, pairs):
-    return {
-        participant_id
-        for gid, participant_id in pairs
-        if gid == group_id
-    }
+query = f"""
+    SELECT simlet_id, group_id, user_id
+    FROM vv_complete_groups_from_simlets
+"""
+print(query)
+cursor.execute(query)
+sql_participants_ids = cursor.fetchall()
+# Extract values from tuples
+group_id_to_simlet_id={
+    group_id: simlet_id
+    for simlet_id, group_id, participant_id in sql_participants_ids
+}
+print(group_id_to_simlet_id)
+group_id_to_participants_ids={
+    group_id: set(participant_id for simlet_id, group_id, participant_id in sql_participants_ids if simlet_id == group_id_to_simlet_id[group_id])
+    for group_id in group_id_to_simlet_id.keys()
+}
+print(group_id_to_participants_ids)
+participant_id_to_group_ids={
+    participant_id: group_id
+    for simlet_id, group_id, participant_id in sql_participants_ids
+}
+print(participant_id_to_group_ids)
 
 allocation_values=[]
 for a in filtered_allocators:
     allocator_mongo_id=a["_id"]["$oid"]
-    allocator_id=mongo_allocator_to_mysql_id[allocator_mongo_id]
     allocator_type=a["type"]
-    # Convert mongo group ids to mysql ids
-    # Create placeholders for SQL IN clause
-    query = f"""
-        SELECT group_id, user_id
-        FROM vv_complete_groups_from_allocator_and_simlets
-        WHERE allocator_id = ?
-    """
-    print(query)
-    print(allocator_id)
-    cursor.execute(query, [allocator_id])
-    sql_participants_ids = cursor.fetchall()
-    # Extract values from tuples
-    existing_sql_participants_ids = {
-            (group_id, participant_id)
-            for group_id, participant_id in sql_participants_ids
-    }
-    print(existing_sql_participants_ids)
     for allocation_mongo_id in a.get("extra_data", {}).get("allocations", {}):
         session_id = mongo_session_to_mysql_id[a.get("extra_data", {}).get("allocations", {})[allocation_mongo_id]]
         if allocator_type == "default":
             allocation_id=mongo_user_to_mysql_id[allocation_mongo_id]
-            for group_id in get_group_ids(allocation_id, existing_sql_participants_ids):
-                allocation_values.append((allocator_id, group_id, allocation_id, session_id))
+            for group_id in group_id_to_participants_ids:
+                if allocation_id in group_id_to_participants_ids[group_id]:
+                    allocation_values.append((group_id_to_simlet_id[group_id], group_id, allocation_id, session_id))
         elif allocator_type == "group":
             group_id=mongo_group_to_mysql_id[allocation_mongo_id]
-            for id in get_participants(group_id, existing_sql_participants_ids):
-                allocation_values.append((allocator_id, group_id, id, session_id))
+            for id in group_id_to_participants_ids.get(group_id, set()):
+                allocation_values.append((group_id_to_simlet_id[group_id], group_id, id, session_id))
         else:
             continue
-
 print(allocation_values)
 cursor.executemany(allocation_sql, allocation_values)
 sqlite_con.commit()

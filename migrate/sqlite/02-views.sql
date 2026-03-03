@@ -1,7 +1,7 @@
 DROP VIEW IF EXISTS vv_simlet_direct_permissions;
 CREATE VIEW vv_simlet_direct_permissions AS
 SELECT
-    s.simlet_coordinator_id as user_id,
+    s.simlet_supervisor_id as user_id,
     s.simlet_id,
 	'FULL' AS permission
 FROM SIMLETs s
@@ -26,7 +26,7 @@ JOIN Users u ON u.user_id = dp.user_id;
 DROP VIEW IF EXISTS vv_session_direct_permissions;
 CREATE VIEW vv_session_direct_permissions AS
 SELECT
-    s.session_supervisor_id as user_id,
+    s.session_coordinator_id as user_id,
     s.session_id,
 	'FULL' AS permission
 FROM Sessions s
@@ -129,35 +129,15 @@ SELECT
     up.permission_type as current_user_permission_type,
     sim.simlet_id,
     sim.simlet_name,
-    sim.createdAt,
-    sim.updatedAt,
     sim.simlet_description,
+    sim.simlet_archived,
     shlink.short_url,
-    sim.allocator_id
+    sim.createdAt,
+    sim.updatedAt
 FROM SIMLETs sim
 LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
 LEFT JOIN vv_user_permissions up ON sim.simlet_id = up.object_id AND up.object_type = "SIMLET"
 GROUP BY up.user_id, up.username, up.permission, sim.simlet_id;
-
-DROP VIEW IF EXISTS v_simlet_tags;
-CREATE VIEW v_simlet_tags AS
-SELECT
-    tag.simlet_id,
-    tag.tag_id,
-    tag_list.tag_type as simlet_tag_type,
-    tag_list.tag_name as simlet_tag_name
-FROM SIMLETs_tags tag
-LEFT JOIN tags_list tag_list ON tag_list.tag_id = tag.tag_id;
-
-DROP VIEW IF EXISTS v_session_tags;
-CREATE VIEW v_session_tags AS
-SELECT
-    tag.session_id,
-    tag.tag_id,
-    tag_list.tag_type as session_tag_type,
-    tag_list.tag_name as session_tag_name
-FROM Sessions_tags tag
-LEFT JOIN tags_list tag_list ON tag_list.tag_id = tag.tag_id;
 
 DROP VIEW IF EXISTS v_complete_sessions_users_permissions;
 CREATE VIEW v_complete_sessions_users_permissions AS
@@ -171,15 +151,16 @@ SELECT
     ses.session_order,
     ses.session_name,
     ses.session_description,
-    ses.createdAt,
-    ses.updatedAt,
-    ses.session_experimental_method,
-    ses.session_active,
+    ses.session_status,
     ses.session_can_be_manually_activated,
-    ses.session_start_date,
-    ses.session_end_date
+    ses.session_sandbox_user_id,
+    u.username as session_sandbox_username,
+    u.role as session_sandbox_user_role,
+    ses.createdAt,
+    ses.updatedAt
 FROM Sessions ses
 LEFT JOIN vv_user_permissions up ON ses.session_id = up.object_id AND up.object_type = "SESSION"
+LEFT JOIN Users u ON ses.session_sandbox_user_id = u.user_id
 GROUP BY ses.simlet_id, ses.session_id;
 
 DROP VIEW IF EXISTS v_complete_activities_users_permissions;
@@ -197,9 +178,6 @@ SELECT
     act.createdAt,
     act.updatedAt,
     act.activity_type,
-    act.activity_presignedUrl,
-    act.activity_presignedUrl_generated_at,
-    act.activity_presignedUrl_expire_at,
     act.activity_trace_storage,
     act.activity_description,
     act.activity_comply_with_GDPR,
@@ -207,32 +185,11 @@ SELECT
 FROM Activities act
 LEFT JOIN vv_user_permissions up ON act.activity_id = up.object_id AND up.object_type = "ACTIVITY";
 
-DROP VIEW IF EXISTS vv_group_total_permissions;
-CREATE VIEW vv_group_total_permissions AS
-SELECT
-    g.group_id,
-    u.user_id,
-    "FULL" AS permission,
-    u.username
-FROM ParticipantGroups g
-JOIN Users u ON u.user_id = g.group_owner_id
-WHERE g.group_sandbox IS NOT TRUE
-UNION ALL
-SELECT
-    p.group_id,
-    u.user_id,
-    p.permission,
-    u.username
-FROM ParticipantGroups_permissions p
-JOIN Users u ON u.user_id = p.user_id
-ORDER BY group_id, permission, user_id;
-
 DROP VIEW IF EXISTS v_complete_groups_users_permissions;
-CREATE VIEW v_complete_groups_users_permissions AS
+DROP VIEW IF EXISTS v_complete_groups_simlets;
+CREATE VIEW v_complete_groups_simlets AS
 SELECT 
-    up.user_id as current_user_id,
-    up.username as current_user_username,
-    up.permission as current_user_permission,
+    g.simlet_id,
     g.group_id,
     g.group_name,
     g.createdAt,
@@ -241,9 +198,7 @@ SELECT
     u.username as group_owner_username
 FROM ParticipantGroups g
 LEFT JOIN Users u ON u.user_id = g.group_owner_id
-LEFT JOIN vv_group_total_permissions up ON g.group_id = up.group_id
-WHERE g.group_sandbox IS NOT TRUE
-GROUP BY up.user_id, up.username, up.permission, g.group_id;
+WHERE g.group_sandbox IS NOT TRUE;
 
 DROP VIEW IF EXISTS v_complete_group_participants;
 CREATE VIEW v_complete_group_participants AS
@@ -256,24 +211,22 @@ SELECT
     u.email,
     u.role
 FROM ParticipantGroups_participants p
+JOIN ParticipantGroups g ON g.group_id = p.group_id
 JOIN Users u ON u.user_id = p.participant_id
 WHERE p.participant_id is not NULL;
 
-DROP VIEW IF EXISTS vv_complete_groups_from_allocator_and_simlets;
-CREATE VIEW vv_complete_groups_from_allocator_and_simlets AS
-SELECT
-    a.allocator_id,
-    pg.*
-FROM Allocators a
-JOIN SIMLETs s ON a.allocator_id = s.allocator_id
-JOIN SIMLETs_groups g ON s.simlet_id = g.simlet_id
-JOIN v_complete_group_participants pg ON pg.group_id = g.group_id;
+DROP VIEW IF EXISTS vv_complete_groups_from_simlets;
+CREATE VIEW vv_complete_groups_from_simlets AS
+SELECT 
+    g.simlet_id,
+    cgp.*
+FROM v_complete_group_participants cgp
+JOIN ParticipantGroups g ON g.group_id = cgp.group_id;
 
 DROP VIEW IF EXISTS v_complete_allocation_participants;
 CREATE VIEW v_complete_allocation_participants AS
 SELECT
-    s.simlet_id,
-    a.allocator_id,
+    a.simlet_id,
     a.session_id,
     a.group_id,
     u.user_id,
@@ -283,9 +236,8 @@ SELECT
     u.email,
     u.role
 FROM Experimental_Participants a
-JOIN SIMLETs s ON a.allocator_id = s.allocator_id
 JOIN Users u ON u.user_id = a.participant_id
-WHERE a.participant_id is not NULL;
+WHERE a.participant_id IS NOT NULL;
 
 DROP VIEW IF EXISTS v_complete_activity_allocation_participants;
 CREATE VIEW v_complete_activity_allocation_participants AS
@@ -297,10 +249,8 @@ SELECT
     ap.simlet_id,
     ap.session_id as allocated_session_id,
     s.session_can_be_manually_activated,
-    s.session_active,
+    s.session_status,
     s.session_order,
-    s.session_start_date,
-    s.session_end_date,
     act.activity_id,
     act.activity_order,
     act.activity_name,
@@ -334,20 +284,11 @@ SELECT
     s.createdAt,
     s.updatedAt,
     s.simlet_description,
-    shlink.short_url,
-    s.allocator_id
+    shlink.short_url
 FROM v_complete_allocation_participants ap
 LEFT JOIN SIMLETs s ON ap.simlet_id = s.simlet_id
 LEFT JOIN SIMLETs_shlinks shlink ON s.simlet_id = shlink.simlet_id
 WHERE s.simlet_id IS NOT NULL;
-
-DROP VIEW IF EXISTS v_complete_groups_simlets;
-CREATE VIEW v_complete_groups_simlets AS
-SELECT
-    sg.simlet_id,
-    g.*
-FROM SIMLETs_groups sg
-LEFT JOIN v_complete_groups_users_permissions g ON sg.group_id = g.group_id;
 
 DROP VIEW IF EXISTS v_activities_by_survey_id;
 CREATE VIEW v_activities_by_survey_id AS
@@ -360,3 +301,49 @@ FROM Activities a
 JOIN Sessions s ON a.session_id = s.session_id
 JOIN LimeSurvey_Activities la ON a.activity_id = la.activity_id
 WHERE la.survey_id IS NOT NULL;
+
+DROP VIEW IF EXISTS v_session_tags;
+CREATE VIEW v_session_tags AS
+SELECT
+    tag.session_id,
+    tag.tag_id,
+    tag_list.tag_name,
+    tag_list.tag_color,
+    tag_list.user_id as tag_creator_user_id,
+    u.username as tag_creator_username,
+    u.email as tag_creator_email,
+    u.role as tag_creator_role
+FROM Sessions_tags tag
+LEFT JOIN Sessions_tags_list tag_list ON tag_list.tag_id = tag.tag_id
+LEFT JOIN Users u ON tag_list.user_id = u.user_id;
+
+DROP VIEW IF EXISTS v_simlet_tags;
+CREATE VIEW v_simlet_tags AS
+SELECT DISTINCT
+    ses.simlet_id,
+    tags.tag_id,
+    tags.tag_name,
+    tags.tag_color,
+    tags.tag_creator_user_id,
+    tags.tag_creator_username,
+    tags.tag_creator_email,
+    tags.tag_creator_role
+FROM v_session_tags tags
+LEFT JOIN Sessions ses ON ses.session_id = tags.session_id
+GROUP BY ses.simlet_id, tags.tag_id;
+
+DROP VIEW IF EXISTS v_activity_template_tags;
+CREATE VIEW v_activity_template_tags AS
+SELECT
+    tag.activity_template_id,
+    tag.tag_id,
+    tag_list.tag_name,
+    tag_list.tag_color,
+    tag_list.public,
+    tag_list.user_id as tag_creator_user_id,
+    u.username  as tag_creator_username,
+    u.email as tag_creator_email,
+    u.role as tag_creator_role
+FROM Activities_template_tags tag
+LEFT JOIN Activities_template_tags_list tag_list ON tag_list.tag_id = tag.tag_id
+LEFT JOIN Users u ON tag_list.user_id = u.user_id;

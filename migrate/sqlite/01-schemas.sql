@@ -13,6 +13,24 @@
  * Note: This schema is intended for use with SQLite. Some features may not be compatible with other database systems.
  */
 
+-- Table: Users
+CREATE TABLE IF NOT EXISTS "Users" (
+	"user_id" INTEGER NOT NULL UNIQUE,
+	"mongo_id" VARCHAR,
+	"username" VARCHAR NOT NULL UNIQUE,
+	"isToken" BOOLEAN NOT NULL,
+	"token" VARCHAR,
+	"email" VARCHAR NOT NULL,
+	"role" VARCHAR NOT NULL,
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	PRIMARY KEY("user_id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "Users_index_0"
+ON "Users" ("user_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "Users_index_1"
+ON "Users" ("username");
+
  -- Table: SIMLETs
 CREATE TABLE IF NOT EXISTS "SIMLETs" (
 	"simlet_id" INTEGER NOT NULL UNIQUE,
@@ -34,8 +52,6 @@ CREATE TABLE IF NOT EXISTS "SIMLETs_shlinks" (
 	"simlet_id" INTEGER NOT NULL UNIQUE,
 	"short_url" VARCHAR NOT NULL,
 	"short_code" VARCHAR NOT NULL,
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"short_valid_date" DATETIME,
 	"short_expiration_date" DATETIME,
 	"short_title" VARCHAR NOT NULL,
@@ -63,6 +79,42 @@ CREATE TABLE IF NOT EXISTS "SIMLETs_permissions" (
 );
 CREATE INDEX IF NOT EXISTS "SIMLETs_permissions_index_0"
 ON "SIMLETs_permissions" ("simlet_id", "user_id");
+
+-- Table: ParticipantGroups
+CREATE TABLE IF NOT EXISTS "ParticipantGroups" (
+	"simlet_id" INTEGER NOT NULL,
+	"group_id" INTEGER NOT NULL UNIQUE,
+	"mongo_id" VARCHAR,
+	"group_name" VARCHAR NOT NULL,
+	"group_use_new_generation" BOOLEAN NOT NULL,
+	"group_owner_id" INTEGER NOT NULL,
+	"group_sandbox" BOOLEAN NOT NULL,
+	"group_allocator_mongo_id" VARCHAR,
+	"group_allocator_type" VARCHAR NOT NULL CHECK(group_allocator_type IN ("default", "group", "random")),
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	PRIMARY KEY("group_id"),
+	FOREIGN KEY ("simlet_id") REFERENCES "SIMLETs"("simlet_id")
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY ("group_owner_id") REFERENCES "Users"("user_id")
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "ParticipantGroups_index_0"
+ON "ParticipantGroups" ("group_id");
+
+CREATE TABLE IF NOT EXISTS "ParticipantGroups_participants" (
+	"group_id" INTEGER NOT NULL,
+	"participant_id" INTEGER NOT NULL,
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	PRIMARY KEY("group_id", "participant_id"),
+	FOREIGN KEY ("group_id") REFERENCES "ParticipantGroups"("group_id")
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY ("participant_id") REFERENCES "Users"("user_id")
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "ParticipantGroups_participants_index_0"
+ON "ParticipantGroups_participants" ("group_id", "participant_id");
 
 -- Table: Sessions
 CREATE TABLE IF NOT EXISTS "Sessions" (
@@ -102,6 +154,20 @@ CREATE TABLE IF NOT EXISTS "Sessions_dates" (
 CREATE UNIQUE INDEX IF NOT EXISTS "Sessions_dates_index_0"
 ON "Sessions_dates" ("session_id");
 
+CREATE TABLE IF NOT EXISTS "Sessions_tags_list" (
+	"tag_id" INTEGER NOT NULL UNIQUE,
+	"tag_name" VARCHAR NOT NULL,
+	"tag_color" VARCHAR NOT NULL,
+	"user_id" INTEGER NOT NULL,
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	PRIMARY KEY("tag_id"),
+	FOREIGN KEY ("user_id") REFERENCES "Users"("user_id")
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "Sessions_tags_list_index_0"
+ON "Sessions_tags_list" ("tag_id");
+
 CREATE TABLE IF NOT EXISTS "Sessions_tags" (
 	"session_id" INTEGER NOT NULL,
 	"tag_id" INTEGER NOT NULL,
@@ -115,20 +181,6 @@ CREATE TABLE IF NOT EXISTS "Sessions_tags" (
 );
 CREATE INDEX IF NOT EXISTS "Sessions_tags_index_0"
 ON "Sessions_tags" ("session_id", "tag_id");
-
-CREATE TABLE IF NOT EXISTS "session_tags_list" (
-	"tag_id" INTEGER NOT NULL UNIQUE,
-	"tag_name" VARCHAR NOT NULL,
-	"tag_color" VARCHAR NOT NULL,
-	"user_id" INTEGER NOT NULL,
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	PRIMARY KEY("tag_id"),
-	FOREIGN KEY ("user_id") REFERENCES "Users"("user_id")
-	ON UPDATE CASCADE ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS "session_tags_list_index_0"
-ON "session_tags_list" ("tag_id");
 
 CREATE TABLE IF NOT EXISTS "Sessions_permissions" (
 	"session_id" INTEGER NOT NULL,
@@ -237,75 +289,6 @@ CREATE TABLE IF NOT EXISTS "Activities_completion" (
 CREATE INDEX IF NOT EXISTS "Activities_completion_index_0"
 ON "Activities_completion" ("activity_id", "participant_id");
 
--- Table: Users
-CREATE TABLE IF NOT EXISTS "Users" (
-	"user_id" INTEGER NOT NULL UNIQUE,
-	"mongo_id" VARCHAR,
-	"username" VARCHAR NOT NULL UNIQUE,
-	"isToken" BOOLEAN NOT NULL,
-	"token" VARCHAR,
-	"email" VARCHAR NOT NULL,
-	"role" VARCHAR NOT NULL,
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	PRIMARY KEY("user_id")
-);
-CREATE UNIQUE INDEX IF NOT EXISTS "Users_index_0"
-ON "Users" ("user_id");
-CREATE UNIQUE INDEX IF NOT EXISTS "Users_index_1"
-ON "Users" ("username");
-
--- Table: ParticipantGroups
-CREATE TABLE IF NOT EXISTS "ParticipantGroups" (
-	"simlet_id" INTEGER NOT NULL,
-	"group_id" INTEGER NOT NULL UNIQUE,
-	"mongo_id" VARCHAR,
-	"group_name" VARCHAR NOT NULL,
-	"group_use_new_generation" BOOLEAN NOT NULL,
-	"group_owner_id" INTEGER NOT NULL,
-	"group_sandbox" BOOLEAN NOT NULL,
-	"group_allocator_type" VARCHAR NOT NULL CHECK(group_allocator_type IN ("default", "group", "random")),
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	PRIMARY KEY("simlet_id", "group_id"),
-	FOREIGN KEY ("simlet_id") REFERENCES "SIMLETs"("simlet_id")
-	ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY ("group_owner_id") REFERENCES "Users"("user_id")
-	ON UPDATE CASCADE ON DELETE CASCADE
-);
-CREATE UNIQUE INDEX IF NOT EXISTS "ParticipantGroups_index_0"
-ON "ParticipantGroups" ("group_id");
-
-CREATE TABLE IF NOT EXISTS "ParticipantGroups_participants" (
-	"group_id" INTEGER NOT NULL,
-	"participant_id" INTEGER NOT NULL,
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	PRIMARY KEY("group_id", "participant_id"),
-	FOREIGN KEY ("group_id") REFERENCES "ParticipantGroups"("group_id")
-	ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY ("participant_id") REFERENCES "Users"("user_id")
-	ON UPDATE CASCADE ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS "ParticipantGroups_participants_index_0"
-ON "ParticipantGroups_participants" ("group_id", "participant_id");
-
--- Table: Random_Allocators
-CREATE TABLE IF NOT EXISTS "Random_Allocators" (
-	"group_id" INTEGER NOT NULL,
-	"session_id" INTEGER NOT NULL,
-	"allocator_percentage" NUMERIC NOT NULL,
-	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
-	PRIMARY KEY("group_id", "session_id"),
-	FOREIGN KEY ("session_id") REFERENCES "Sessions"("session_id")
-	ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY ("group_id") REFERENCES "ParticipantGroups"("group_id")
-	ON UPDATE CASCADE ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS "Random_Allocators_index_0"
-ON "Random_Allocators" ("group_id", "session_id");
-
 -- Table: Experimental_Participants
 CREATE TABLE IF NOT EXISTS "Experimental_Participants" (
 	"simlet_id" INTEGER NOT NULL,
@@ -326,6 +309,22 @@ CREATE TABLE IF NOT EXISTS "Experimental_Participants" (
 );
 CREATE INDEX IF NOT EXISTS "Experimental_Participants_index_0"
 ON "Experimental_Participants" ("simlet_id", "group_id", "participant_id", "session_id");
+
+CREATE TABLE IF NOT EXISTS "Random_Allocators" (
+	"group_id" INTEGER NOT NULL,
+	"session_id" INTEGER NOT NULL,
+	"allocator_percentage" NUMERIC NOT NULL,
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	PRIMARY KEY("group_id", "session_id"),
+	FOREIGN KEY ("session_id") REFERENCES "Sessions"("session_id")
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY ("group_id") REFERENCES "ParticipantGroups"("group_id")
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "Random_Allocators_index_0"
+ON "Random_Allocators" ("group_id", "session_id");
+
 
 -- Table: Activities_template
 CREATE TABLE IF NOT EXISTS "Activities_template" (
@@ -414,7 +413,7 @@ CREATE TABLE IF NOT EXISTS "Activities_template_tags" (
 CREATE INDEX IF NOT EXISTS "Activities_template_tags_index_0"
 ON "Activities_template_tags" ("activity_template_id", "tag_id");
 
-CREATE TABLE IF NOT EXISTS "activities_template_tags_list" (
+CREATE TABLE IF NOT EXISTS "Activities_template_tags_list" (
 	"tag_id" INTEGER NOT NULL UNIQUE,
 	"tag_name" VARCHAR NOT NULL,
 	"tag_color" VARCHAR NOT NULL,
@@ -426,5 +425,5 @@ CREATE TABLE IF NOT EXISTS "activities_template_tags_list" (
 	FOREIGN KEY ("user_id") REFERENCES "Users"("user_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
 );
-CREATE INDEX IF NOT EXISTS "activities_template_tags_list_index_0"
-ON "activities_template_tags_list" ("tag_id");
+CREATE INDEX IF NOT EXISTS "Activities_template_tags_list_index_0"
+ON "Activities_template_tags_list" ("tag_id");
