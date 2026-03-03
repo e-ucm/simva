@@ -29,11 +29,21 @@ export class Simlet {
      * Human-readable name of the study
      */
     simlet_name: string;
+
+    /**
+     * Whether the simlet is archived
+     */
+    simlet_archived: boolean;
     
     /**
      * Description of the study purpose and methodology
      */
     simlet_description: string;
+
+    /**
+     * ID of the study supervisor
+     */
+    simlet_supervisor_id: number;
     
     current_user_id: number;
 
@@ -61,8 +71,6 @@ export class Simlet {
      * Array of tags for categorizing the study
      */
     tags: string[] = [];
-     
-    allocator_id: number;
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -77,8 +85,9 @@ export class Simlet {
     constructor(data: any) {
         this.simlet_id = data.simlet_id; // Ensure simlet_id is included in the data
         this.simlet_name = data.simlet_name || ""; // Ensure simlet_name is included in the data
+        this.simlet_archived = Boolean(data.simlet_archived);
         this.simlet_description = data.simlet_description || ""; // Ensure simlet_description is included in the data
-        this.allocator_id = data.allocator_id;
+        this.simlet_supervisor_id = data.simlet_supervisor_id;
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
@@ -138,10 +147,11 @@ export class Simlet {
         if(await db.Tables.Simlets.count({where : {simlet_name : simletData.simlet_name}}) > 0){
             throw new ConflictError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
         }
-        let allocator = await Allocator.createAllocator(simletData.allocator_type);
-        simletData.allocator_id = allocator.allocator_id;
         if(simletData.simlet_description === undefined){
             simletData.simlet_description = "";
+        }
+        if(simletData.simlet_archived === undefined){
+            simletData.simlet_archived = false;
         }
         const createdSimlet = await db.Tables.Simlets.create(simletData);
         return new Simlet(createdSimlet);
@@ -262,7 +272,7 @@ export class Simlet {
         this.canEdit();
         // Implementation for remove a group to this simlet
         let group = await SimletGroup.getFromDbData(this.simlet_id, group_id);
-        await db.Tables.ExperimentalParticipants.destroy({ where: { group_id : group_id, allocator_id : this.allocator_id }});
+        await db.Tables.ExperimentalParticipants.destroy({ where: { simlet_id: this.simlet_id, group_id : group_id }});
         await group.delete();
         this.groups = this.groups.filter(id => id !== group_id);
         return this;
@@ -271,77 +281,38 @@ export class Simlet {
     async addSession(session_data : any) : Promise<Simlet> {
         this.canEdit();
         session_data.simlet_id = this.simlet_id;
-        session_data.session_supervisor_id = this.current_user_id;
+        session_data.session_coordinator_id = this.current_user_id;
         let session = await Session.createFromDbData(session_data);
         this.sessions.push(session.session_id);
-        if(this.sessions.length == 1) {
-             this.groups.forEach(async (group_id) => {
-                await this.allocateGroupToDefaut(group_id);
-             })
-        }
+        // Note: allocateGroupToDefaut is now deprecated due to schema changes
+        // Allocation logic should be handled at the group level
         return this;
     }
 
     async getAllocator(): Promise<Allocator> {
-      return await Allocator.getFromDbData(this.allocator_id, this.current_user_id);
+      // Allocators are now at the group level (group_allocator_type)
+      // This method is deprecated and needs refactoring
+      throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
     }
 
     async allocateGroupToDefaut(group_id: number) {
-        let allocator = await this.getAllocator();
-        let sessionId = this.sessions && this.sessions.length > 0 ? this.sessions[0] : null;
-        if (!sessionId) {
-            // If no sessions exist, try to fetch the first session from DB
-            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id });
-            if (sessionIds.length > 0) {
-                sessionId = sessionIds[0].session_id;
-                this.sessions = sessionIds.map((row: any) => row.session_id);
-            }
-        }
-        if (!sessionId) {
-            throw new NotFoundError("No sessions found to allocate group to");
-        }
-        switch(allocator.allocator_type) {
-            case Allocator.getType():
-                let groupParticipants = await db.Tables.GroupParticipants.findAll({where : { group_id}})
-                for (const participant of groupParticipants) {
-                    await allocator.allocate(sessionId, participant.participant_id);
-                }
-                break;
-            case GroupAllocator.getType():
-                await allocator.allocate(sessionId, group_id);
-                break;
-            default:
-                throw new NotImplementedError("Method not implemented for this unknwown type.");
-        }
+        // Allocators are now at the group level (group_allocator_type)
+        // This method is deprecated and needs refactoring to use Group.group_allocator_type
+        throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
     }
 
     async allocateToSession(sessionId: number, id: number) : Promise<void> {
         this.canEdit();
-        let allocator = await this.getAllocator();
-        await allocator.allocate(sessionId, id);
+        // Allocators are now at the group level (group_allocator_type)
+        // This method is deprecated and needs refactoring
+        throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
     }
 
     async updateAllocator(data: Partial<Allocator>) : Promise<Allocator> {
       this.canEdit();
-      let allocator = await Allocator.getFromDbData(this.allocator_id, this.current_user_id);
-      allocator.update(data);
-      switch(allocator.allocator_type) {
-            case SessionAllocator.getType():
-                this.sessions.forEach(async (session) => {
-                        await allocator.allocate(session, this.groups);
-                });
-                break;
-            case RandomAllocator.getType():
-                await (allocator as RandomAllocator).allocateRandomly(this.sessions, this.groups);
-                break;
-            case GroupAllocator.getType():
-            case Allocator.getType():
-                allocator.allocateToDefault(this.sessions[0]);
-                break;
-            default:
-                throw new NotImplementedError("Method not implemented for this unknwown type.");
-        }
-      return allocator;
+      // Allocators are now at the group level (group_allocator_type)
+      // This method is deprecated and needs refactoring
+      throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
     }
 
     async getAllocatedParticipants(): Promise<SimletParticipant[]> {
@@ -403,14 +374,15 @@ export class Simlet {
         return {
             simlet_id: this.simlet_id,
             simlet_name: this.simlet_name,
+            simlet_archived: this.simlet_archived,
             simlet_description: this.simlet_description,
+            simlet_supervisor_id: this.simlet_supervisor_id,
             current_user_id: this.current_user_id,
             current_user_username: this.current_user_username,
             current_user_permission: this.current_user_permission,
             sessions: this.sessions,
             groups: this.groups,
             tags: this.tags,
-            allocator_id: this.allocator_id,
             createdAt: this.createdAt,
             updatedAt: this.updatedAt
         };

@@ -29,6 +29,10 @@ export class SingleUserPermission {
 
     current_user_id: number;
 
+    createdAt?: Date;
+
+    updatedAt?: Date;
+
     /**
      * Creates a new UserPermission instance
      * 
@@ -42,6 +46,8 @@ export class SingleUserPermission {
         this.object_id = object_id;
         this.object_type = object_type;
         this.current_user_id = current_user_id;
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
     }
 
     static async getFromDbData(object_type: string, object_id: number, user_id: number, current_user_id: number): Promise<SingleUserPermission> {
@@ -139,7 +145,9 @@ export class SingleUserPermission {
             user_id: this.user_id,
             username: this.username,
             permission: this.permission,
-            isCurrentUser: this.user_id === this.current_user_id
+            isCurrentUser: this.user_id === this.current_user_id,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
         };
     }
 }

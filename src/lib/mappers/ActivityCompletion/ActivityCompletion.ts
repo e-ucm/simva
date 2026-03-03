@@ -27,7 +27,17 @@ export class ActivityCompletion {
 
     activity_registration_id: string;
 
+    activity_result_presigned_url: string | null;
+
+    activity_result_presigned_url_generated_at: Date | null;
+
+    activity_result_presigned_url_expire_at: Date | null;
+
     activity_completed : boolean;
+
+    createdAt?: Date;
+
+    updatedAt?: Date;
 
     static async createAll(activity_id: number, participant_ids: number[]): Promise<ActivityCompletion[]> {
         const completions: ActivityCompletion[] = [];
@@ -113,6 +123,11 @@ export class ActivityCompletion {
         this.activity_completed = data.activity_completed;
         this.activity_completion_date = new Date(data.activity_completion_date);
         this.activity_registration_id = data.activity_registration_id;
+        this.activity_result_presigned_url = data.activity_result_presigned_url || null;
+        this.activity_result_presigned_url_generated_at = data.activity_result_presigned_url_generated_at ? new Date(data.activity_result_presigned_url_generated_at) : null;
+        this.activity_result_presigned_url_expire_at = data.activity_result_presigned_url_expire_at ? new Date(data.activity_result_presigned_url_expire_at) : null;
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
     }
 
     async update(data : Partial<ActivityCompletion>): Promise<ActivityCompletion> {
@@ -140,7 +155,12 @@ export class ActivityCompletion {
             activity_suspension_date: this.activity_suspension_date,
             activity_completed: this.activity_completed,
             activity_completion_date: this.activity_completion_date,
-            activity_registration_id: this.activity_registration_id
+            activity_registration_id: this.activity_registration_id,
+            activity_result_presigned_url: this.activity_result_presigned_url,
+            activity_result_presigned_url_generated_at: this.activity_result_presigned_url_generated_at,
+            activity_result_presigned_url_expire_at: this.activity_result_presigned_url_expire_at,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
         };
     }
 }

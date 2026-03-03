@@ -19,6 +19,11 @@ export class Group {
     current_user_permission: string;
 
     /**
+     * Foreign key to the parent simlet
+     */
+    simlet_id: number;
+
+    /**
      * Unique identifier for the group
      */
     group_id: number;
@@ -32,6 +37,16 @@ export class Group {
      * Human-readable name for the group
      */
     group_name: string;
+
+    /**
+     * Whether this is a sandbox group
+     */
+    group_sandbox: boolean;
+
+    /**
+     * Type of allocator for this group
+     */
+    group_allocator_type: "default" | "group" | "random";
     
     /**
      * Timestamp when the group was created
@@ -55,9 +70,12 @@ export class Group {
       * Processes participant arrays and ensures proper boolean conversion for group_use_new_generation.
      */
     constructor(data: any) {
+        this.simlet_id = data.simlet_id;
         this.group_id = data.group_id; // Ensure group_id is included in the data
         this.group_use_new_generation = Boolean(data.group_use_new_generation); // Ensure group_use_new_generation is included in the data
         this.group_name = data.group_name || data.name || "";
+        this.group_sandbox = Boolean(data.group_sandbox);
+        this.group_allocator_type = data.group_allocator_type || "default";
         this.participants = data.participants || [];
         this.group_owner_user_id = data.group_owner_user_id || "";
         this.group_owner_username = data.group_owner_username || "";
@@ -125,7 +143,7 @@ export class Group {
         return results[0].count || 0;
     }
     
-    static async createInDb(body: Partial<Group>, useNewGeneration : boolean, current_user_id: number): Promise<Group> {
+    static async createInDb(body: Partial<Group>, useNewGeneration : boolean, current_user_id: number, simlet_id?: number): Promise<Group> {
         const newGroupName = typeof body.group_name === "string" ? body.group_name.trim() : null;
         if(!newGroupName) {
             throw new ValidationError("Group name is required");
@@ -134,8 +152,13 @@ export class Group {
         if(count > 0) {
             throw new ConflictError("Group name must be unique");
         }
+        if(!body.simlet_id) {
+            body.simlet_id = simlet_id;
+        }
         body.group_owner_user_id = current_user_id;
         body.group_use_new_generation = useNewGeneration;
+        body.group_sandbox = body.group_sandbox ?? false;
+        body.group_allocator_type = body.group_allocator_type ?? "default";
         let createdGroup = await db.Tables.Group.create(body);
         return Group.getFromDbData(createdGroup.group_id, current_user_id);
     }

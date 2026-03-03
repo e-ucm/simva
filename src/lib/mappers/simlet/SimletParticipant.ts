@@ -19,7 +19,7 @@ export class SimletParticipant {
     /**
      * ID of the allocator used to assign this participant
      */
-    allocator_id: number;
+    allocator_id?: number;
 
     session_id: string;
     
@@ -58,6 +58,10 @@ export class SimletParticipant {
      */
     email: string;
 
+    createdAt?: Date;
+
+    updatedAt?: Date;
+
     /**
      * Creates a new SimletParticipant instance
      * 
@@ -67,7 +71,7 @@ export class SimletParticipant {
      */
     constructor(data: any) {
         this.simlet_id = data.simlet_id;
-        this.allocator_id = data.allocator_id;
+        this.allocator_id = data.allocator_id ?? undefined;
         this.session_id = data.session_id;
         this.group_id = data.group_id;
         this.user_id = data.user_id;
@@ -76,6 +80,8 @@ export class SimletParticipant {
         this.isToken = Boolean(data.isToken);
         this.role = data.role;
         this.email = data.email;
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
     }
 
     static async getAllFromDbData(type: string, object_id: number): Promise<SimletParticipant[]> {
@@ -105,14 +111,15 @@ export class SimletParticipant {
         return {
             simlet_id: this.simlet_id,
             session_id: this.session_id,
-            allocator_id: this.allocator_id,
             group_id: this.group_id,
             user_id: this.user_id,
             username: this.username,
             token: this.token,
             isToken: this.isToken,
             role: this.role,
-            email: this.email
+            email: this.email,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
         };
     }
 }

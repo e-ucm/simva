@@ -53,6 +53,10 @@ export class GroupParticipant {
      */
     password?: string;
 
+    createdAt?: Date;
+
+    updatedAt?: Date;
+
     /**
      * Creates a new GroupParticipant instance
      * 
@@ -67,6 +71,8 @@ export class GroupParticipant {
         this.isToken = Boolean(data.isToken);
         this.role = data.role;
         this.email = data.email;
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
     }
 
     static async getAllFromDbData(group_id : number) : Promise<GroupParticipant[]> {
@@ -241,7 +247,9 @@ export class GroupParticipant {
             token: this.token,
             isToken: this.isToken,
             role: this.role,
-            email: this.email
+            email: this.email,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
         };
     }
 }

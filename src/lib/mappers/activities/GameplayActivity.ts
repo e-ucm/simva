@@ -31,16 +31,6 @@ export class GamePlayActivity extends Activity {
 	game_scorm_xapi: boolean = false;
 	
 	/**
-	 * Category ID for game classification
-	 */
-	category_id: number;
-	
-	/**
-	 * Subject area ID for educational context
-	 */
-	subject_area_id: number;
-	
-	/**
 	 * Type/genre of the game (e.g., 'adventure', 'puzzle')
 	 */
 	game_type: string;
@@ -62,8 +52,6 @@ export class GamePlayActivity extends Activity {
 		// Assign gameplay activity-specific properties if provided in data
 		this.game_backup = data.game_backup ?? false;
 		this.game_scorm_xapi = data.game_scorm_xapi ?? false;
-		this.category_id = data.category_id;
-		this.subject_area_id = data.subject_area_id;
 		this.game_type = data.game_type;
 		this.game_url = data.game_url;
 	}
@@ -88,8 +76,6 @@ export class GamePlayActivity extends Activity {
 		if (gameplayData) {
 			instance.game_backup = gameplayData.game_backup ?? false;
 			instance.game_scorm_xapi = gameplayData.game_scorm_xapi ?? false;
-			instance.category_id = gameplayData.category_id as number;
-			instance.subject_area_id = gameplayData.subject_area_id as number;
 			instance.game_type = gameplayData.game_type;
 			instance.game_url = gameplayData.game_url;
 		}
@@ -307,12 +293,6 @@ export class GamePlayActivity extends Activity {
 		if (data.game_uri !== undefined) {
 			gameplayData.game_url = data.game_uri;
 		}
-		if (data.category_id !== undefined) {
-			gameplayData.category_id = data.category_id;
-		}
-		if (data.subject_area_id !== undefined) {
-			gameplayData.subject_area_id = data.subject_area_id;
-		}
 		if (data.game_type !== undefined) {
 			gameplayData.game_type = data.game_type;
 		}
@@ -348,8 +328,6 @@ export class GamePlayActivity extends Activity {
 			activity_type : GamePlayActivity.getType(),
 			game_backup: this.game_backup,
 			game_scorm_xapi: this.game_scorm_xapi,
-			category_id: this.category_id,
-			subject_area_id: this.subject_area_id,
 			game_type: this.game_type,
 			game_url: this.game_url
 		};

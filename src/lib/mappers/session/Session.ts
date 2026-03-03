@@ -17,27 +17,12 @@ import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCom
  * Sessions are the organizational units that contain multiple activities in sequence.
  */
 export class Session {
-    export(withData: boolean): Promise<object> {
-        let session = {
-            session_id: this.session_id,
-            simlet_id: this.simlet_id,
-            session_order: this.session_order,
-            current_user_id: this.current_user_id,
-            current_user_username: this.current_user_username,
-            current_user_permission: this.current_user_permission,
-            session_name: this.session_name,
-            session_description: this.session_description,
-            session_experimental_method: this.session_experimental_method,
-            session_can_be_manually_activated: this.session_can_be_manually_activated,
-            session_start_date: this.session_start_date,
-            session_end_date: this.session_end_date,
-        } as any;
-        if(withData) {
-            session["activities"] = this.activities;
-            session["tags"] = this.tags;
-        }
-        return session;
-    }
+    STATUS = {    
+        ACTIVE: "active",
+        INACTIVE: "inactive",
+        TERMINATED: "terminated"
+    } as const;
+
     /**
      * ID of the simlet (study) this session belongs to
      */
@@ -86,26 +71,21 @@ export class Session {
     updatedAt: Date;
     
     /**
-     * Experimental method or condition for this session
+     * Session status (active, inactive, terminated)
      */
-    session_experimental_method: string;
+    session_status: "active" | "inactive" | "terminated";
     
     session_can_be_manually_activated: boolean;
 
     /**
-     * Whether the session is currently active
+     * ID of the session coordinator
      */
-    session_active: boolean;
-    
+    session_coordinator_id: number;
+
     /**
-     * Start date for session availability
+     * ID of sandbox user for testing
      */
-    session_start_date?: Date;
-    
-    /**
-     * End date for session availability
-     */
-    session_end_date?: Date;
+    session_sandbox_user_id: number | null;
     
     /**
      * Array of activity IDs that belong to this session
@@ -153,11 +133,10 @@ export class Session {
         this.session_description = data.session_description || "";
         this.createdAt = new Date(data.createdAt);
         this.updatedAt = new Date(data.updatedAt);
-        this.session_experimental_method = data.session_experimental_method || "";
+        this.session_status = data.session_status || "inactive";
         this.session_can_be_manually_activated = Boolean(data.session_can_be_manually_activated);
-        this.session_active = Boolean(data.session_active);
-        this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
-        this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
+        this.session_coordinator_id = data.session_coordinator_id;
+        this.session_sandbox_user_id = data.session_sandbox_user_id || null;
     }
 
     /**
@@ -228,7 +207,7 @@ export class Session {
         session.allocated_activities = await Promise.all(activities.map(async (activity: any) => {
             return await ActivityToClass(activity.activity_id, current_user_id, true, activity);
         }));
-        if(session.session_active) {
+        if(session.session_status !== session.STATUS.ACTIVE) {
             throw new ConflictError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
         }
         return session;
@@ -247,7 +226,7 @@ export class Session {
      *   simlet_id: 1,
      *   session_name: 'Test Session',
      *   session_description: 'A test learning session',
-     *   session_supervisor_id: 123
+     *   session_coordinator_id: 123
      * });
      * ```
      */
@@ -257,7 +236,7 @@ export class Session {
             throw new ConflictError(`Session name ${sessionData.session_name} is already taken. Please choose a different name.`);
         }
         let session = await db.Tables.Sessions.create(sessionData);
-        return Session.getFromDbData(session.simlet_id, session.session_id, session.session_supervisor_id);
+        return Session.getFromDbData(session.simlet_id, session.session_id, session.session_coordinator_id);
     }
 
     /**
@@ -471,19 +450,19 @@ export class Session {
         if(!this.session_can_be_manually_activated) {
             throw new ConflictError(`Session with ID ${this.session_id} cannot be activated. Please check the session's experimental method and conditions.`);
         }
-        if(this.session_active) {
+        if(this.session_status == this.STATUS.ACTIVE) {
             throw new ValidationError(`Session with ID ${this.session_id} is already active.`);
         }
         let activities = await this.getActivities();
         activities.forEach(async (activity: Activity) => {
             await activity.activate(true);
         });
-        this.session_active = true;
+        this.session_status = this.STATUS.ACTIVE;
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
             throw new NotFoundError(`Session with ID ${this.session_id} not found for activation`);
         }
-        await session.update({ session_active: true });
+        await session.update({ session_status: this.STATUS.ACTIVE });
         return this;
     }
 
@@ -497,24 +476,24 @@ export class Session {
      * @throws {AuthentificationError} When user lacks edit permissions
      * @throws {ValidationError} When session cannot be deactivated or is already inactive
      */
-    async desactivate(): Promise<Session> {
+    async deactivate(): Promise<Session> {
         this.canEdit();
         if(!this.session_can_be_manually_activated) {
             throw new ConflictError(`Session with ID ${this.session_id} cannot be deactivated. Please check the session's experimental method and conditions.`);
         }
-        if(!this.session_active) {
+        if(this.session_status == this.STATUS.INACTIVE) {
             throw new ValidationError(`Session with ID ${this.session_id} is already inactive.`);
         }
         let activities = await this.getActivities();
         activities.forEach(async (activity: Activity) => {
             await activity.activate(false);
         });
-        this.session_active = false;
+        this.session_status = this.STATUS.INACTIVE;
         let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
         if(!session) {
             throw new NotFoundError(`Session with ID ${this.session_id} not found for deactivation`);
         }
-        await session.update({ session_active: false });
+        await session.update({ session_status: this.STATUS.INACTIVE });
         return this;
     }
 
@@ -550,11 +529,8 @@ export class Session {
                 allocated_session_id: this.allocated_session_id,
                 session_name: this.session_name,
                 session_description: this.session_description,
-                session_experimental_method: this.session_experimental_method,
+                session_status: this.session_status,
                 session_can_be_manually_activated: this.session_can_be_manually_activated,
-                session_active: this.session_active,
-                session_start_date: this.session_start_date,
-                session_end_date: this.session_end_date,
                 createdAt: this.createdAt,
                 updatedAt: this.updatedAt,
             };
@@ -568,16 +544,35 @@ export class Session {
                 current_user_permission: this.current_user_permission,
                 session_name: this.session_name,
                 session_description: this.session_description,
-                session_experimental_method: this.session_experimental_method,
+                session_status: this.session_status,
                 session_can_be_manually_activated: this.session_can_be_manually_activated,
-                session_active: this.session_active,
-                session_start_date: this.session_start_date,
-                session_end_date: this.session_end_date,
                 activities: this.activities,
                 tags: this.tags,
                 createdAt: this.createdAt,
                 updatedAt: this.updatedAt,
             };
         }   
+    }
+    
+    export(withData: boolean): Promise<object> {
+        let session = {
+            session_id: this.session_id,
+            simlet_id: this.simlet_id,
+            session_order: this.session_order,
+            current_user_id: this.current_user_id,
+            current_user_username: this.current_user_username,
+            current_user_permission: this.current_user_permission,
+            session_name: this.session_name,
+            session_description: this.session_description,
+            session_status: this.session_status,
+            session_can_be_manually_activated: this.session_can_be_manually_activated,
+            session_coordinator_id: this.session_coordinator_id,
+            session_sandbox_user_id: this.session_sandbox_user_id,
+        } as any;
+        if(withData) {
+            session["activities"] = this.activities;
+            session["tags"] = this.tags;
+        }
+        return session;
     }
 }

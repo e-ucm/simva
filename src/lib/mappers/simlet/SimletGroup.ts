@@ -33,6 +33,10 @@ export class SimletGroup {
      */
     participants: string[];
 
+    createdAt?: Date;
+
+    updatedAt?: Date;
+
     /**
      * Creates a new SimletGroup instance
      * 
@@ -45,6 +49,8 @@ export class SimletGroup {
         this.group_id = data.group_id;
         this.group_name = data.group_name;
         this.participants = [];
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
     }
 
     async init() {
@@ -102,7 +108,9 @@ export class SimletGroup {
             simlet_id: this.simlet_id,
             group_id: this.group_id,
             group_name: this.group_name,
-            participants: this.participants
+            participants: this.participants,
+            createdAt: this.createdAt,
+            updatedAt: this.updatedAt
         };
     }
 }
