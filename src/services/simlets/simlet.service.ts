@@ -730,16 +730,16 @@ export async function getSimletSessionParticipants(simletId: number, sessionId: 
 export async function activateSession(simletId: number, sessionId: number, current_user_id: number, activate: any): Promise<Session> {
    const session = await Session.getFromDbData(simletId, sessionId, current_user_id);
    if(activate) {
-      if(session.session_active) {
+      if(session.session_status == session.STATUS.ACTIVE) {
         throw new ValidationError('Session is already active');
       } else {
         return await session.activate();
       }
    } else {
-      if(session.session_active) {
-        return await session.desactivate();
+      if(session.session_status == session.STATUS.ACTIVE) {
+        return await session.deactivate();
       } else {
-        throw new ValidationError('Session is already desactive');
+        throw new ValidationError('Session is already inactive');
       }
     }
 }

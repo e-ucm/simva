@@ -14,10 +14,14 @@ export class Allocation {
     session_id: number
     object_id: number
     object_type: string
+    createdAt?: Date
+    updatedAt?: Date
 
     constructor(object_type: string, data: any) {
         this.object_type = object_type;
         this.session_id = data.session_id;
+        this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+        this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         switch(object_type) {
             case ALLOCATOR_TYPE.GROUP:
                 this.object_id = data.group_id;
@@ -31,9 +35,9 @@ export class Allocation {
         logger.debug({ object_type, session_id: this.session_id, object_id: this.object_id }, 'Allocation instance created');
     }
 
-    static async getAllFromDbData(allocator_id: number, allocator_type: string) : Promise<Allocation[]> {
-        let allocations = await db.Tables.ExperimentalParticipants.findAll({where : {allocator_id}});
-        logger.debug({ allocator_id, allocator_type, allocationsCount: allocations.length }, 'Allocation.getAllFromDbData query result');
+    static async getAllFromDbData(simlet_id: number, allocator_type: string) : Promise<Allocation[]> {
+        let allocations = await db.Tables.ExperimentalParticipants.findAll({ where: { simlet_id } });
+        logger.debug({ simlet_id, allocator_type, allocationsCount: allocations.length }, 'Allocation.getAllFromDbData query result');
         
         // For group allocator, deduplicate by group_id (one allocation per group)
         if (allocator_type === ALLOCATOR_TYPE.GROUP) {
@@ -45,10 +49,10 @@ export class Allocation {
             }
             const uniqueAllocations = Array.from(groupMap.values());
             logger.debug({ uniqueGroupsCount: uniqueAllocations.length }, 'Allocation.getAllFromDbData deduplicated by group');
-            return uniqueAllocations.map(allocation => new Allocation(allocator_type, allocation));
+            return uniqueAllocations.map((allocation: any) => new Allocation(allocator_type, allocation));
         }
         
-        return allocations.map(allocation => new Allocation(allocator_type, allocation));
+        return allocations.map((allocation: any) => new Allocation(allocator_type, allocation));
     }
 
     toJSON(): object {

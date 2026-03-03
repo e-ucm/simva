@@ -28,7 +28,7 @@ export async function getGroups(
   next: NextFunction
 ) {
   try {
-    let version = req.query.use_new_generation? (req.query.use_new_generation === 'true') : undefined;
+    let version = req.query.use_new_generation? Boolean(req.query.use_new_generation) : undefined;
     const searchString = req.query.searchstring as string | undefined;
     const limit = parseInt(req.query.limit as string) || undefined;
     let offset;
