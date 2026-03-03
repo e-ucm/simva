@@ -3843,14 +3843,14 @@ components:
       type: object
       properties:
         status:
-          type: string
-          example: "ok"
+          type: boolean
+          example: true
         db:
           type: object
           properties:
             status:
-              type: string
-              example: "ok"
+              type: boolean
+              example: true
     error:
       description: An error occurred
       type: object

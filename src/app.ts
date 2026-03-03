@@ -66,7 +66,7 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, limesurveyW
 
 // Health check endpoint
 app.get('/health', async (_req: Request, res: Response) => {
-  res.json({ status: 'ok', db: { status: await checkDatabaseConnection() } });
+  res.json({ status: true, db: { status: await checkDatabaseConnection() } });
 });
 
 app.use('/users', userRoutes);

@@ -113,7 +113,6 @@ export async function checkDatabaseConnection(): Promise<boolean> {
     return true;
   } catch (error) {
     logger.error(error, '❌ Unable to connect to the database:');
-    //process.exit(1); // Exit with error code
     return false;
   }
 }
