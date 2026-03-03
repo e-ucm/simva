@@ -115,10 +115,13 @@ print("Inserted:")
 print("  Users:", len(user_values))
 
 #Dict to map Username to MySQL Id
-cursor.execute("SELECT user_id, username FROM Users WHERE mongo_id IS NOT NULL")
+cursor.execute("SELECT user_id, username, mongo_id FROM Users WHERE mongo_id IS NOT NULL")
 mysql_users_ids = cursor.fetchall()
-mongo_user_to_mysql_id = {username: user_id for user_id, username in mysql_users_ids}
+mongo_user_to_mysql_id = {username: user_id for user_id, username, mongo_id in mysql_users_ids}
 print(mongo_user_to_mysql_id)
+mongo_id_user_to_mysql_id = {mongo_id: user_id for user_id, username, mongo_id in mysql_users_ids}
+mysql_id_user_to_mongo_id = {user_id: mongo_id for user_id, username, mongo_id in mysql_users_ids}  
+print(mongo_id_user_to_mysql_id)
 
 print("---------------")
 print("Adding SIMLETS ")
@@ -277,6 +280,18 @@ sqlite_con.commit()
 print("Inserted:")
 print("  SIMLETs_shlinks:", len(simlet_shlinks_values))
 print("  SIMLETs_groups:", len(simlet_group_values))
+
+#Dict to map (Mongo Id, simlet_id) to MySQL group_id
+cursor.execute("SELECT group_id, group_allocator_mongo_id, simlet_id FROM ParticipantGroups WHERE group_allocator_mongo_id IS NOT NULL")
+mysql_simlet_group_ids = cursor.fetchall()
+# Maps (mongo_id, simlet_id) -> group_id
+mongo_allocator_group_simlet_to_mysql_id = {}
+for group_id, group_allocator_mongo_id, simlet_id in mysql_simlet_group_ids:
+    print("group_id:", group_id, "group_allocator_mongo_id:", group_allocator_mongo_id, "simlet_id:", simlet_id)
+    if group_allocator_mongo_id not in mongo_allocator_group_simlet_to_mysql_id:
+        mongo_allocator_group_simlet_to_mysql_id[group_allocator_mongo_id] = set()
+    mongo_allocator_group_simlet_to_mysql_id[group_allocator_mongo_id].add((simlet_id, group_id))
+print(mongo_allocator_group_simlet_to_mysql_id)
 
 #Dict to map (Mongo Id, simlet_id) to MySQL group_id
 cursor.execute("SELECT group_id, mongo_id, simlet_id FROM ParticipantGroups WHERE mongo_id IS NOT NULL")
@@ -586,6 +601,12 @@ DO UPDATE SET
     session_id = excluded.session_id,
     updatedAt = datetime('now')
 """
+
+# Build session_id to simlet_id mapping
+cursor.execute("SELECT session_id, simlet_id FROM Sessions WHERE mongo_id IS NOT NULL")
+session_simlet_mapping = cursor.fetchall()
+session_id_to_simlet_id = {session_id: simlet_id for session_id, simlet_id in session_simlet_mapping}
+
 query = f"""
     SELECT simlet_id, group_id, user_id
     FROM vv_complete_groups_from_simlets
@@ -604,28 +625,54 @@ group_id_to_participants_ids={
     for group_id in group_id_to_simlet_id.keys()
 }
 print(group_id_to_participants_ids)
-participant_id_to_group_ids={
-    participant_id: group_id
-    for simlet_id, group_id, participant_id in sql_participants_ids
-}
-print(participant_id_to_group_ids)
+
+session_simlet_query = f"""
+    SELECT session_id, simlet_id
+    FROM Sessions WHERE session_order = 1
+"""
+cursor.execute(session_simlet_query)
+simlet_session_id = cursor.fetchall()
+simlet_id_to_default_session_id = {simlet_id: session_id for session_id, simlet_id in simlet_session_id}
+print("Simlet ID to default session ID mapping:", simlet_id_to_default_session_id)
 
 allocation_values=[]
 for a in filtered_allocators:
     allocator_mongo_id=a["_id"]["$oid"]
     allocator_type=a["type"]
-    for allocation_mongo_id in a.get("extra_data", {}).get("allocations", {}):
-        session_id = mongo_session_to_mysql_id[a.get("extra_data", {}).get("allocations", {})[allocation_mongo_id]]
+    for (simlet_id, group_id) in mongo_allocator_group_simlet_to_mysql_id.get(allocator_mongo_id, set()):
+        print("Processing group:", group_id, "simlet_id:", simlet_id, "for allocator_mongo_id:", allocator_mongo_id, "allocator_type:", allocator_type)
+        allocations = a.get("extra_data", {}).get("allocations", {})
+        print("Allocations for allocator_mongo_id:", allocator_mongo_id, "allocations:", allocations)
         if allocator_type == "default":
-            allocation_id=mongo_user_to_mysql_id[allocation_mongo_id]
-            for group_id in group_id_to_participants_ids:
-                if allocation_id in group_id_to_participants_ids[group_id]:
-                    allocation_values.append((group_id_to_simlet_id[group_id], group_id, allocation_id, session_id))
+            print("Processing allocation_mongo_id:", allocation_mongo_id)
+            participants_id = group_id_to_participants_ids.get(group_id, set())
+            allocations_sql_ids = {}
+            if(len(allocations.keys()) != len(participants_id)):
+                print("Warning: Number of allocations for default allocator does not match number of participants in the group. Allocations:", len(allocations), "Participants:", len(group_id_to_participants_ids.get(group_id, set())))
+                default_session_id = simlet_id_to_default_session_id.get(simlet_id, None)
+                print("Default session id for simlet_id:", simlet_id, "is:", default_session_id)
+                if default_session_id is not None:
+                    for participant_id in participants_id:
+                        if allocations.get(participant_id) is None:
+                            allocations_sql_ids[participant_id] = default_session_id  # Assign to default session
+                        else:
+                            allocations_sql_ids[participant_id] = mongo_session_to_mysql_id[allocations[mysql_id_user_to_mongo_id[participant_id]]]
+            print("Allocations SQL IDs for allocator_mongo_id:", allocator_mongo_id, "allocations_sql_ids:", allocations_sql_ids)
+            for allocation_id in allocations_sql_ids.keys():
+                session_id = allocations_sql_ids.get(allocation_id, None)
+                print("Allocation for participant:", allocation_id, "session_id:", session_id, "default_session_id:", simlet_id_to_default_session_id.get(simlet_id, None))
+                allocation_values.append((simlet_id, group_id, allocation_id, session_id))
         elif allocator_type == "group":
-            # A mongo group can have multiple SQL group_ids (one per simlet)
-            for group_id in mongo_group_to_mysql_ids.get(allocation_mongo_id, []):
-                for participant_id in group_id_to_participants_ids.get(group_id, set()):
-                    allocation_values.append((group_id_to_simlet_id[group_id], group_id, participant_id, session_id))
+            for allocation_mongo_id in allocations:
+                session_id = mongo_session_to_mysql_id[allocations[allocation_mongo_id]]
+                print("Processing allocation_mongo_id:", allocation_mongo_id, "session_id:", session_id)
+                # A mongo group can have multiple SQL group_ids (one per simlet)
+                lookup_group_id = mongo_group_to_mysql_ids.get(allocation_mongo_id)
+                print("Processing group_id:", allocation_mongo_id, "lookup_group_id:", lookup_group_id)
+                # Only allocate if group belongs to the same simlet as the session
+                if group_id in lookup_group_id:
+                    for participant_id in group_id_to_participants_ids.get(group_id, []):
+                        allocation_values.append((simlet_id, group_id, participant_id, session_id))
         else:
             continue
 print(allocation_values)
