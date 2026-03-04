@@ -17,37 +17,16 @@ import {
   createSimlet,
   patchSimlet,
   deleteSimlet,
-  updateSimletAllocator,
-  getAllocatorFromSimlet,
   getSimletParticipants,
-  getSimletGroups,
-  getSimletSessions,
-  getSimletSession,
-  getSessionActivities,
-  createSessionActivity,
-  updateSessionActivity,
-  deleteSessionActivity,
-  createSimletSession,
-  patchSimletSession,
-  deleteSimletSession,
   getSimletSchedule,
-  getSimletPermissions,
-  createSimletPermissions,
-  getSimletPermissionsForUser,
-  patchSimletPermissionsForUser,
-  deleteSimletPermissionsForUser,
-  getSessionPermissions,
-  createSessionPermissions,
-  getSessionPermissionsForUser,
-  patchSessionPermissionsForUser,
-  deleteSessionPermissionsForUser,
-  getSimletSessionParticipants,
-  activateSimletSession,
-  allocateToSessionSimlet,
-  addSimletGroup,
-  deleteSimletGroup, 
   exportSimlet
 } from "@/controlers/simlets/simlet.controler";
+
+// Import sub-routers
+import simletPermissionsRouter from "./simlet.permissions.routes";
+import sessionRouter from "./session.routes";
+import simletGroupsRouter from "./simlet.groups.routes";
+import simletAllocatorRouter from "./simlet.allocator.routes";
 
 /**
  * Express router for simlet-related API endpoints.
@@ -55,32 +34,18 @@ import {
  * Routes:
  * - GET / - Retrieve all simlets with optional pagination and filtering
  * - POST / - Create a new simlet
- * - GET /search - Search simlets by name or description
+ * - GET /:simlet_id/export - Export a simlet
  * - GET /:simlet_id - Retrieve a simlet by ID
- * - PUT /:simlet_id - Update a simlet by ID
+ * - PATCH /:simlet_id - Update a simlet by ID
  * - DELETE /:simlet_id - Delete a simlet by ID
- * - GET /:simlet_id/exists - Check if a simlet exists by ID
- * - GET /:simlet_id/allocator - Get allocator data for a simlet
  * - GET /:simlet_id/participants - Get participants allocated to a simlet
- * - GET /:simlet_id/groups - Get groups associated with a simlet
- * - GET /:simlet_id/sessions - Get sessions of a simlet
- * - GET /:simlet_id/sessions/:session_id - Get details of a specific session in a simlet
- * - GET /:simlet_id/sessions/:session_id/activities - Get activities in a specific session of a simlet
- * - POST /:simlet_id/sessions/:session_id/activities - Create a new activity in a specific session of a simlet
- * - POST /:simlet_id/sessions - Create a new session in a simlet
- * - PATCH /:simlet_id/sessions/:session_id - Update a specific session in a simlet
- * - DELETE /:simlet_id/sessions/:session_id - Delete a specific session in a simlet
  * - GET /:simlet_id/schedule - Get the schedule of a simlet
- * - GET /:simlet_id/permissions - Get permissions for a simlet
- * - POST /:simlet_id/permissions - Create permissions for a simlet
- * - GET /:simlet_id/permissions/:user_id - Get permissions for a user in a simlet
- * - PATCH /:simlet_id/permissions/:user_id - Update permissions for a user in a simlet
- * - DELETE /:simlet_id/permissions/:user_id - Delete permissions for a user in a simlet
- * - GET /:simlet_id/sessions/:session_id/permissions - Get permissions for a session in a simlet
- * - POST /:simlet_id/sessions/:session_id/permissions - Create permissions for a session in a simlet
- * - GET /:simlet_id/sessions/:session_id/permissions/:user_id - Get permissions for a user in a session of a simlet
- * - PATCH /:simlet_id/sessions/:session_id/permissions/:user_id - Update permissions for a user in a session of a simlet
- * - DELETE /:simlet_id/sessions/:session_id/permissions/:user_id - Delete permissions for a user in a session of a simlet
+ * 
+ * Sub-routers:
+ * - /:simlet_id/permissions - Simlet permissions routes
+ * - /:simlet_id/sessions - Session routes (includes activities and session permissions)
+ * - /:simlet_id/groups - Group management routes
+ * - /:simlet_id/allocator - Allocator management routes
  * 
  * @type {Router}
  * 
@@ -92,16 +57,16 @@ import {
  * // GET /simlets - all simlets
  * // GET /simlets?limit=10&offset=20 - paginated simlets
  * // POST /simlets - create simlet
- * // PUT /simlets/123 - update simlet
+ * // PATCH /simlets/123 - update simlet
  * // DELETE /simlets/123 - delete simlet
- * // GET /simlets/search?q=math - search simlets
- * // GET /simlets/me - current user's simlets
  * // GET /simlets/123 - single simlet
  * // GET /simlets/123/allocator - simlet's allocator
  * // GET /simlets/123/participants - simlet's participants
  * // GET /simlets/123/groups - simlet's groups
  * // GET /simlets/123/sessions - simlet's sessions
  * // GET /simlets/123/sessions/456 - specific session in simlet
+ * // GET /simlets/123/sessions/456/activities - activities in session
+ * // GET /simlets/123/sessions/456/permissions - session permissions
  * ```
  */
 const router = Router();
@@ -117,44 +82,14 @@ router.get("/:simlet_id", getSimletById);
 router.patch("/:simlet_id", patchSimlet);
 router.delete("/:simlet_id", deleteSimlet);
 
-//simlet permissions endpoints
-router.get("/:simlet_id/permissions", getSimletPermissions);
-router.post("/:simlet_id/permissions", createSimletPermissions);
-router.get("/:simlet_id/permissions/:user_id", getSimletPermissionsForUser);
-router.patch("/:simlet_id/permissions/:user_id", patchSimletPermissionsForUser);
-router.delete("/:simlet_id/permissions/:user_id", deleteSimletPermissionsForUser);
-
-// Session endpoints
-router.get("/:simlet_id/sessions", getSimletSessions);
-router.post("/:simlet_id/sessions", createSimletSession);
-router.get("/:simlet_id/sessions/:session_id", getSimletSession);
-router.patch("/:simlet_id/sessions/:session_id", patchSimletSession);
-router.delete("/:simlet_id/sessions/:session_id", deleteSimletSession);
-router.get("/:simlet_id/sessions/:session_id/participants", getSimletSessionParticipants);
-router.post("/:simlet_id/sessions/:session_id/activate", activateSimletSession);
-router.post("/:simlet_id/sessions/:session_id/allocate/:id", allocateToSessionSimlet);
-
-//session permissions endpoints
-router.get("/:simlet_id/sessions/:session_id/permissions", getSessionPermissions);
-router.post("/:simlet_id/sessions/:session_id/permissions", createSessionPermissions);
-router.get("/:simlet_id/sessions/:session_id/permissions/:user_id", getSessionPermissionsForUser);
-router.patch("/:simlet_id/sessions/:session_id/permissions/:user_id", patchSessionPermissionsForUser);
-router.delete("/:simlet_id/sessions/:session_id/permissions/:user_id", deleteSessionPermissionsForUser);
-
-// Activity list endpoints
-router.get("/:simlet_id/sessions/:session_id/activities", getSessionActivities);
-router.post("/:simlet_id/sessions/:session_id/activities", createSessionActivity);
-router.patch("/:simlet_id/sessions/:session_id/activities/:activity_id", updateSessionActivity);
-router.delete("/:simlet_id/sessions/:session_id/activities/:activity_id", deleteSessionActivity);
-
 // Additional simlet-related endpoints
-router.get("/:simlet_id/groups", getSimletGroups);
-router.post("/:simlet_id/groups/:group_id", addSimletGroup);
-router.delete("/:simlet_id/groups/:group_id", deleteSimletGroup);
 router.get("/:simlet_id/participants", getSimletParticipants);
-router.get("/:simlet_id/allocator", getAllocatorFromSimlet);
-router.patch("/:simlet_id/allocator", updateSimletAllocator);
-
 router.get("/:simlet_id/schedule", getSimletSchedule);
+
+// Mount sub-routers
+router.use("/:simlet_id/permissions", simletPermissionsRouter);
+router.use("/:simlet_id/sessions", sessionRouter);
+router.use("/:simlet_id/groups", simletGroupsRouter);
+router.use("/:simlet_id/allocator", simletAllocatorRouter);
 
 export default router;
