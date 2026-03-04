@@ -1,3 +1,6 @@
+-- This file contains the views related to permissions and their relation with users, simlets, sessions and activities.
+-- View : Permissions directly assigned to users for simlets and sessions
+
 DROP VIEW IF EXISTS vv_simlet_direct_permissions;
 CREATE VIEW vv_simlet_direct_permissions AS
 SELECT
@@ -120,6 +123,7 @@ FROM v_session_direct_permissions_users p
 JOIN Activities a ON a.session_id = p.session_id
 ORDER BY permission_type, permission, object_type;
 
+-- Views : Complete information about simlets, sessions and activities with permissions for each user
 DROP VIEW IF EXISTS v_complete_simlets_users_permissions;
 CREATE VIEW v_complete_simlets_users_permissions AS
 SELECT 
@@ -185,7 +189,7 @@ SELECT
 FROM Activities act
 LEFT JOIN vv_user_permissions up ON act.activity_id = up.object_id AND up.object_type = "ACTIVITY";
 
-DROP VIEW IF EXISTS v_complete_groups_users_permissions;
+-- Views : Complete information about simplet groups and their participants
 DROP VIEW IF EXISTS v_complete_groups_simlets;
 CREATE VIEW v_complete_groups_simlets AS
 SELECT 
@@ -224,6 +228,7 @@ SELECT
 FROM v_complete_group_participants cgp
 JOIN ParticipantGroups g ON g.group_id = cgp.group_id;
 
+-- View : Complete information about simplet groups, their participants and permissions for each user
 DROP VIEW IF EXISTS v_complete_groups_user_permissions;
 CREATE VIEW v_complete_groups_user_permissions AS
 SELECT
@@ -235,12 +240,14 @@ SELECT
 FROM v_complete_groups_simlets cgp
 LEFT JOIN vv_user_permissions up ON cgp.simlet_id = up.object_id AND up.object_type = "SIMLET";
 
+-- Views : Allocation of participants to sessions and groups with complete information about them
 DROP VIEW IF EXISTS v_complete_allocation_participants;
 CREATE VIEW v_complete_allocation_participants AS
 SELECT
     a.simlet_id,
     a.session_id,
     a.group_id,
+    g.group_allocator_type,
     u.user_id,
     u.username,
     u.isToken,
@@ -248,8 +255,28 @@ SELECT
     u.email,
     u.role
 FROM Experimental_Participants a
+JOIN ParticipantGroups g ON g.group_id = a.group_id
 JOIN Users u ON u.user_id = a.participant_id
 WHERE a.participant_id IS NOT NULL;
+
+-- View : Complete information about the allocation of participants to sessions and activities with complete information about them and permissions for each user
+DROP VIEW IF EXISTS v_complete_simlet_allocation_participants;
+CREATE VIEW v_complete_simlet_allocation_participants AS
+SELECT
+    ap.user_id as allocated_user_id,
+    ap.username as allocated_username,
+    ap.isToken as allocated_isToken,
+    ap.token as allocated_token,
+    ap.simlet_id,
+    s.simlet_name,
+    s.createdAt,
+    s.updatedAt,
+    s.simlet_description,
+    shlink.short_url
+FROM v_complete_allocation_participants ap
+LEFT JOIN SIMLETs s ON ap.simlet_id = s.simlet_id
+LEFT JOIN SIMLETs_shlinks shlink ON s.simlet_id = shlink.simlet_id
+WHERE s.simlet_id IS NOT NULL;
 
 DROP VIEW IF EXISTS v_complete_activity_allocation_participants;
 CREATE VIEW v_complete_activity_allocation_participants AS
@@ -284,24 +311,7 @@ LEFT JOIN Activities act ON ap.session_id = act.session_id
 LEFT JOIN Activities_completion ac ON ac.activity_id = act.activity_id AND ac.participant_id = ap.user_id
 WHERE act.activity_id IS NOT NULL;
 
-DROP VIEW IF EXISTS v_complete_simlet_allocation_participants;
-CREATE VIEW v_complete_simlet_allocation_participants AS
-SELECT
-    ap.user_id as allocated_user_id,
-    ap.username as allocated_username,
-    ap.isToken as allocated_isToken,
-    ap.token as allocated_token,
-    ap.simlet_id,
-    s.simlet_name,
-    s.createdAt,
-    s.updatedAt,
-    s.simlet_description,
-    shlink.short_url
-FROM v_complete_allocation_participants ap
-LEFT JOIN SIMLETs s ON ap.simlet_id = s.simlet_id
-LEFT JOIN SIMLETs_shlinks shlink ON s.simlet_id = shlink.simlet_id
-WHERE s.simlet_id IS NOT NULL;
-
+-- Views : Allocation of surveys to sessions and activities with complete information about them
 DROP VIEW IF EXISTS v_activities_by_survey_id;
 CREATE VIEW v_activities_by_survey_id AS
 SELECT
@@ -314,6 +324,7 @@ JOIN Sessions s ON a.session_id = s.session_id
 JOIN LimeSurvey_Activities la ON a.activity_id = la.activity_id
 WHERE la.survey_id IS NOT NULL;
 
+-- Views : Allocation of tags to sessions and activities with complete information about them
 DROP VIEW IF EXISTS v_session_tags;
 CREATE VIEW v_session_tags AS
 SELECT

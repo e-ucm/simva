@@ -182,7 +182,11 @@ export default (sequelize: Sequelize) => {
      * @throws {Error} If file read or query execution fails
      */
     runSqlFile : async(filePath: string): Promise<void> => {
-      const sql = fs.readFileSync(filePath, "utf8");
+      let sql = fs.readFileSync(filePath, "utf8");
+      // remove comments
+      sql = sql.replace(/--.*/g, ''); // remove single line comments
+      sql = sql.replace(/\/\*[\s\S]*?\*\//g, ''); // remove multi-line comments
+      
       const statements = sql
         .split(/;\s*$/m)
         .map((s: string) => s.trim())
