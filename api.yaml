@@ -122,7 +122,7 @@ paths:
             schema:
               $ref: '#/components/schemas/user'
       parameters:
-        - $ref: '#/components/parameters/username'
+        - $ref: '#/components/parameters/usernameQuery'
       responses:
         '200':
           description: User updated
@@ -250,7 +250,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
-        - $ref: '#/components/parameters/username'
+        - $ref: '#/components/parameters/usernamePath'
       requestBody:
         content:
           application/json:
@@ -3625,9 +3625,18 @@ components:
         type: integer
         example: 1234567890
       description: The group ID
-    username:
+    usernamePath:
       name: username
       in: path
+      required: true
+      schema:
+        type: string
+        example: "peter"
+        format: username
+      description: The username of a specific user
+    usernameQuery:
+      name: username
+      in: query
       required: true
       schema:
         type: string
@@ -3854,6 +3863,11 @@ components:
     error:
       description: An error occurred
       type: object
+      required:
+        - type
+        - message
+        - stack
+        - name
       properties:
         type:
           type: string
@@ -3877,7 +3891,7 @@ components:
           format: binary
     events:
       required:
-      - name
+      - eventname
       type: object
       properties:
         name:
@@ -3932,7 +3946,7 @@ components:
        - $ref: '#/components/schemas/user'
        - type: object
          properties:
-          userid:
+          user_id:
             type: integer
             example: 123
           createdAt:
@@ -3941,6 +3955,15 @@ components:
           updatedAt:
             type: string
             format: date-time
+         required:
+          - user_id
+          - username
+          - isToken
+          - token
+          - email
+          - role
+          - createdAt
+          - updatedAt
     userPermission:
       type: object
       properties:
@@ -3961,16 +3984,18 @@ components:
       allOf:
       - $ref: '#/components/schemas/userPermission'
       - type: object
+        required:
+          - user_id
+          - username
+          - permission
+          - isCurrentUser
         properties:
-          userid:
+          user_id:
             type: integer
             example: 456
-          createdAt:
-            type: string
-            format: date-time
-          updatedAt:
-            type: string
-            format: date-time
+          isCurrentUser:
+            type: boolean
+            example: true
     group:
       type: object
       properties:
@@ -3980,6 +4005,10 @@ components:
         group_use_new_generation:
           type: boolean
           example: true
+        group_allocator_type:
+          type: string
+          enum : ["default", "session", "group", "random"]
+          example: "default"
     groupCreation:
       allOf:
       - $ref: '#/components/schemas/group'
@@ -3991,6 +4020,17 @@ components:
       allOf:
       - $ref: '#/components/schemas/group'
       - type: object
+        required:
+          - group_id
+          - group_name
+          - group_use_new_generation
+          - participants
+          - allocations
+          - group_allocator_type
+          - group_owner_user_id
+          - group_owner_username
+          - createdAt
+          - updatedAt
         properties:
           groupid:
             type: integer
@@ -4000,7 +4040,7 @@ components:
               items:
                 type: integer
                 example: 123
-          group_owner_userid:
+          group_owner_user_id:
             type: integer
             example: 456
           group_owner_username:
@@ -4014,6 +4054,11 @@ components:
             type: string
             format: date-time
             example: "2017-07-21T17:32:28Z"
+          allocations:
+            type: object
+            additionalProperties:
+              type: integer
+              nullable: false
     simlet:
       type: object
       properties:
@@ -4034,20 +4079,29 @@ components:
         allOf:
         - $ref: '#/components/schemas/simlet'
         - type: object
+          required:
+            - simlet_name
+            - simlet_description
+            - simlet_id
+            - createdAt
+            - updatedAt
+            - current_user_id
+            - current_user_username
+            - current_user_permission
+            - sessions
+            - groups
+            - tags
           properties:        
             simlet_id:
               type: integer
               example: 123
-            allocator_id:
-              type: integer
-              example: 789
             createdAt:
               type: string
               format: date-time
             updatedAt:
               type: string
               format: date-time
-            current_userid:
+            current_user_id:
               type: integer
               example: 456
             current_user_username:
@@ -4073,6 +4127,9 @@ components:
       allOf:
       - $ref: '#/components/schemas/userMapper'
       - type: object
+        required:
+            - simlet_id
+            - session_id
         properties:
           simlet_id:
             type: integer
@@ -4080,14 +4137,14 @@ components:
           session_id:
             type: integer
             example: 201
-          allocated_group:
-            type: string
-            example: "control"
-          allocation_date:
-            type: string
-            format: date-time
     scheduleMapper:
       type: object
+      required:
+          - next
+          - simlet
+          - session
+          - url
+          - activities
       properties:
         next:
           type: integer
@@ -4102,24 +4159,19 @@ components:
         url:
           type: string
           example: "https://simva.test/simlets/123/sessions/201/activities/301/start"
-        activities: 
+        activities:
           type: array
           items:
             allOf:
               - $ref: '#/components/schemas/activityMapper'
               - type: object
+                required:
+                  - session_status
+                  - allocated_user_id
+                  - allocated_username
+                  - allocated_isToken
+                  - allocated_token
                 properties:
-                  session_active:
-                    type: boolean
-                    example: true
-                  session_start_date:
-                    type: string
-                    format: date-time
-                    nullable: true
-                  session_end_date:
-                    type: string
-                    format: date-time
-                    nullable: true 
                   allocated_user_id:
                     type: integer
                     example: 456
@@ -4132,9 +4184,10 @@ components:
                   allocated_token: 
                     type: string
                     example: "abc123"
-    
     activityPresignedUrlMapper:
       type: object
+      required:
+        - url
       properties:
         url:
           type: string
@@ -4148,23 +4201,13 @@ components:
         session_description:
           type: string
           example: "Pre-session session for baseline measurement"
-        session_experimental_method:
-          type: string
-          example: "control"
         session_can_be_manually_activated:
           type: boolean
           example: true
-        session_active:
-          type: boolean
-          example: false
-        session_start_date:
+        session_status:
           type: string
-          format: date-time
-          nullable: true
-        session_end_date:
-          type: string
-          format: date-time
-          nullable: true
+          enum: ["created", "active", "inactive", "terminated"]
+          example: "active"
     sessionCreation:
       allOf:
       - $ref: '#/components/schemas/session'
@@ -4172,13 +4215,27 @@ components:
         required:
         - session_name
         - session_description
-        - session_experimental_method
         - session_can_be_manually_activated
+        - session_status
         - session_active
     sessionMapper:
       allOf:
       - $ref: '#/components/schemas/session'
       - type: object
+        required:
+          - session_name
+          - session_description
+          - session_can_be_manually_activated
+          - session_status
+          - session_id
+          - simlet_id
+          - current_user_id
+          - current_user_username
+          - current_user_permission
+          - activities
+          - tags
+          - createdAt
+          - updatedAt
         properties:
           session_id:
             type: integer
@@ -4186,7 +4243,7 @@ components:
           simlet_id:
             type: integer
             example: 123
-          current_userid:
+          current_user_id:
             type: integer
             example: 456
           current_user_username:
@@ -4244,7 +4301,28 @@ components:
       allOf:
       - $ref: '#/components/schemas/noTypedActivity'
       - type: object
+        required:
+            - activity_name
+            - activity_type
+            - activity_trace_storage
+            - activity_description
+            - activity_comply_with_GDPR
+            - activity_can_be_restarted
+            - session_status
+            - activity_order
+            - session_id
+            - activity_id
+            - activity_presignedUrl
+            - activity_presignedUrl_generated_at
+            - activity_presignedUrl_expires_at
+            - allocated_user
+            - createdAt
+            - updatedAt
         properties:
+          session_status:
+            type: string
+            enum: ["created", "active", "inactive", "terminated"]
+            example: "paused"
           activity_order:
             type: integer
             example: 1
@@ -4410,6 +4488,8 @@ components:
         type: boolean
     activityOpenableMapper:
       type: object
+      required:
+        - openable
       properties:
         openable:
           type: boolean
@@ -4434,6 +4514,12 @@ components:
       allOf:
       - $ref: '#/components/schemas/allocator'
       - type: object
+        required:
+          - allocator_type
+          - allocator_id
+          - simlet_id
+          - createdAt
+          - updatedAt
         properties:
           allocator_id:
             type: integer

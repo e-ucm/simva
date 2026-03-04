@@ -3,6 +3,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Group } from "../group/Group";
 import { GroupParticipant } from "../group/GroupParticipant";
+import { Allocation } from "../allocators/Allocation";
 
 /**
  * Simlet Group mapper class representing a group assignment within a study (simlet).
@@ -28,6 +29,9 @@ export class SimletGroup {
      */
     group_name: string;
 
+    group_use_new_generation: boolean;
+
+    group_allocator_type: string;
     /**
      * Array of participant identifiers in this group
      */
@@ -36,6 +40,11 @@ export class SimletGroup {
     createdAt?: Date;
 
     updatedAt?: Date;
+
+    allocation: Allocation[] = [];
+
+    group_owner_user_id : number;
+    group_owner_username: string;
 
     /**
      * Creates a new SimletGroup instance
@@ -49,14 +58,20 @@ export class SimletGroup {
         this.group_id = data.group_id;
         this.group_name = data.group_name;
         this.participants = [];
+        this.group_owner_user_id = data.group_owner_user_id || "";
+        this.group_owner_username = data.group_owner_username || "";
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
+        this.group_use_new_generation = Boolean(data.group_use_new_generation);
+        this.group_allocator_type = data.group_allocator_type;
     }
 
     async init() {
         //Additional initialization logic can be added here if needed in the future
         const participantIds = await db.Functions.runViewQuery(db.Views.GroupParticipant.IdsByGroupId, { group_id: this.group_id })
         this.participants = participantIds.map((row: any) => row.participant_id) || [];
+        this.allocation = await Allocation.getFromDbData(this.simlet_id, this.group_id, this.group_allocator_type);
+        logger.debug({ allocationCount: this.allocation.length, allocation: this.allocation }, 'Group initialized with allocations');
     }
 
     static async createSimletGroup(simlet_id: number, group_id: number) : Promise<SimletGroup> {
@@ -108,9 +123,18 @@ export class SimletGroup {
             simlet_id: this.simlet_id,
             group_id: this.group_id,
             group_name: this.group_name,
+            group_allocator_type: this.group_allocator_type,
+            group_use_new_generation:this.group_use_new_generation,
             participants: this.participants,
+            group_owner_user_id: this.group_owner_user_id,
+            group_owner_username: this.group_owner_username,
             createdAt: this.createdAt,
-            updatedAt: this.updatedAt
+            updatedAt: this.updatedAt, 
+            allocations: this.allocation.reduce((acc, curr) => {
+                const json = curr.toJSON() as any;
+                acc[json.object_id] = json.session_id;
+                return acc;
+            }, {} as Record<number, number>)
         };
     }
 }

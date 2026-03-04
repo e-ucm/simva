@@ -242,7 +242,8 @@ export class Simlet {
         let group = await SimletGroup.createSimletGroup(this.simlet_id, group_id);
         this.groups.push(group.group_id);
         if(this.sessions.length > 0) {
-            await this.allocateGroupToDefaut(group_id);
+            throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
+        //    group.allocateGroupToDefaut();
         }
         return this;
     }
@@ -290,26 +291,6 @@ export class Simlet {
     }
 
     async getAllocator(): Promise<Allocator> {
-      // Allocators are now at the group level (group_allocator_type)
-      // This method is deprecated and needs refactoring
-      throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
-    }
-
-    async allocateGroupToDefaut(group_id: number) {
-        // Allocators are now at the group level (group_allocator_type)
-        // This method is deprecated and needs refactoring to use Group.group_allocator_type
-        throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
-    }
-
-    async allocateToSession(sessionId: number, id: number) : Promise<void> {
-        this.canEdit();
-        // Allocators are now at the group level (group_allocator_type)
-        // This method is deprecated and needs refactoring
-        throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
-    }
-
-    async updateAllocator(data: Partial<Allocator>) : Promise<Allocator> {
-      this.canEdit();
       // Allocators are now at the group level (group_allocator_type)
       // This method is deprecated and needs refactoring
       throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");

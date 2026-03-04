@@ -96,26 +96,6 @@ export async function getSimletSessionParticipants(
   }
 }
 
-export async function allocateToSessionSimlet(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
-  try {
-    const simletId = parseInt(req.params.simlet_id as string);
-    const sessionId = parseInt(req.params.session_id as string);
-    const objectId = parseInt(req.params.id as string);
-    let body = req.body;
-    let currentUser = req.user?.sql;
-    logger.debug({simletId, userId: currentUser?.user_id, body});
-    const allocator = await sessionService.allocateToSessionSimlet(simletId, sessionId, currentUser!.user_id as number, objectId);
-    logger.debug("Session allocated for simlet ID and user ID");
-    res.json(allocator.toJSON());
-  } catch (err) {
-    next(err);
-  }
-}
-
 export async function activateSimletSession(
   req: AuthenticatedRequest,
   res: Response,

@@ -26,7 +26,6 @@ import {
 import simletPermissionsRouter from "./simlet.permissions.routes";
 import sessionRouter from "./session.routes";
 import simletGroupsRouter from "./simlet.groups.routes";
-import simletAllocatorRouter from "./simlet.allocator.routes";
 
 /**
  * Express router for simlet-related API endpoints.
@@ -90,6 +89,5 @@ router.get("/:simlet_id/schedule", getSimletSchedule);
 router.use("/:simlet_id/permissions", simletPermissionsRouter);
 router.use("/:simlet_id/sessions", sessionRouter);
 router.use("/:simlet_id/groups", simletGroupsRouter);
-router.use("/:simlet_id/allocator", simletAllocatorRouter);
 
 export default router;

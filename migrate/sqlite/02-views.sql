@@ -199,6 +199,7 @@ SELECT
     g.createdAt,
     g.updatedAt,
     g.group_use_new_generation,
+    g.group_allocator_type,
     u.user_id as group_owner_user_id,
     u.username as group_owner_username
 FROM ParticipantGroups g
@@ -248,12 +249,7 @@ SELECT
     a.session_id,
     a.group_id,
     g.group_allocator_type,
-    u.user_id,
-    u.username,
-    u.isToken,
-    u.token,
-    u.email,
-    u.role
+    u.*
 FROM Experimental_Participants a
 JOIN ParticipantGroups g ON g.group_id = a.group_id
 JOIN Users u ON u.user_id = a.participant_id

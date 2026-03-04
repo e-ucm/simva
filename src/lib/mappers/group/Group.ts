@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { GroupParticipant } from "@/lib/mappers/group/GroupParticipant";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
+import { Allocation } from "../allocators/Allocation";
 
 /**
  * Group mapper class representing a collection of participants in studies.
@@ -58,7 +59,9 @@ export class Group {
      * Array of participant IDs belonging to this group
      */
     participants: number[];
-    
+
+    allocation: Allocation[] = [];
+
     group_owner_user_id : number;
     group_owner_username: string;
 
@@ -73,9 +76,9 @@ export class Group {
         this.simlet_id = data.simlet_id;
         this.group_id = data.group_id; // Ensure group_id is included in the data
         this.group_use_new_generation = Boolean(data.group_use_new_generation); // Ensure group_use_new_generation is included in the data
-        this.group_name = data.group_name || data.name || "";
+        this.group_name = data.group_name || "";
         this.group_sandbox = Boolean(data.group_sandbox);
-        this.group_allocator_type = data.group_allocator_type || "default";
+        this.group_allocator_type = data.group_allocator_type;
         this.participants = data.participants || [];
         this.group_owner_user_id = data.group_owner_user_id || "";
         this.group_owner_username = data.group_owner_username || "";
@@ -106,6 +109,8 @@ export class Group {
         //Additional initialization logic can be added here if needed in the future
         const participantIds = await db.Functions.runViewQuery(db.Views.GroupParticipant.IdsByGroupId, { group_id: this.group_id })
         this.participants = participantIds.map((row: any) => row.participant_id) || [];
+        this.allocation = await Allocation.getFromDbData(this.simlet_id, this.group_id, this.group_allocator_type);
+        logger.debug({ allocationCount: this.allocation.length, allocation: this.allocation }, 'Group initialized with allocations');
     }
 
     static async getAllFromDbData(current_user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Group[]> {
@@ -471,8 +476,14 @@ export class Group {
             participants: this.participants,
             group_owner_user_id: this.group_owner_user_id,
             group_owner_username: this.group_owner_username,
+            group_allocator_type:this.group_allocator_type,
             createdAt: this.createdAt,
             updatedAt: this.updatedAt,
+            allocations: this.allocation.reduce((acc, curr) => {
+                const json = curr.toJSON() as any;
+                acc[json.object_id] = json.session_id;
+                return acc;
+            }, {} as Record<number, number>)
         };
     }
 }

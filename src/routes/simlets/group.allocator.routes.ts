@@ -4,14 +4,15 @@
  * 
  * @module routes/simlets/simlet.allocator
  * @requires express
- * @requires @/controlers/simlets/simlet.controller
+ * @requires @/controlers/simlets/simlet.allocator.controler
  */
 
 import { Router } from "express";
 import { 
   getAllocatorFromSimlet,
-  updateSimletAllocator
-} from "@/controlers/simlets/simlet.allocator.controler";
+  updateSimletAllocator,
+  allocateToSessionSimlet
+} from "@/controlers/simlets/group.allocator.controler";
 
 /**
  * Express router for simlet allocator endpoints.
@@ -26,5 +27,7 @@ const router = Router({ mergeParams: true });
 
 router.get("/", getAllocatorFromSimlet);
 router.patch("/", updateSimletAllocator);
+router.post("/:session_id/allocate/:id", allocateToSessionSimlet);
+//router.delete("/:session_id/deallocate/:id", deallocateFromSessionSimlet);
 
 export default router;

@@ -55,7 +55,30 @@ export class Allocation {
         return allocations.map((allocation: any) => new Allocation(allocator_type, allocation));
     }
 
+    static async getFromDbData(simlet_id: number, group_id: number, allocator_type: string) : Promise<Allocation[]> {
+        let allocations = await db.Tables.ExperimentalParticipants.findAll({ where: { simlet_id, group_id } });
+        logger.debug({ simlet_id, allocator_type, allocationsCount: allocations.length }, 'Allocation.getFromDbData query result');
+        
+        // For group allocator, deduplicate by group_id (one allocation per group)
+        if (allocator_type === ALLOCATOR_TYPE.GROUP) {
+            const groupMap = new Map<number, any>();
+            for (const allocation of allocations) {
+                if (!groupMap.has(allocation.group_id)) {
+                    groupMap.set(allocation.group_id, allocation);
+                }
+            }
+            const uniqueAllocations = Array.from(groupMap.values());
+            logger.debug({ uniqueGroupsCount: uniqueAllocations.length }, 'Allocation.getAllFromDbData deduplicated by group');
+            return uniqueAllocations.map((allocation: any) => new Allocation(allocator_type, allocation));
+        }
+        
+        return allocations.map((allocation: any) => new Allocation(allocator_type, allocation));
+    }
+
     toJSON(): object {
-        return { [this.object_id]: this.session_id };
+        return { 
+            object_id: this.object_id,
+            session_id: this.session_id 
+        };
     }
 }

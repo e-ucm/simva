@@ -16,7 +16,6 @@ import {
   deleteSimletSession,
   getSimletSessionParticipants,
   activateSimletSession,
-  allocateToSessionSimlet,
   getSimletSessionCount
 } from "@/controlers/simlets/session.controler";
 import sessionPermissionsRouter from "./session.permissions.routes";
@@ -51,7 +50,6 @@ router.patch("/:session_id", patchSimletSession);
 router.delete("/:session_id", deleteSimletSession);
 router.get("/:session_id/participants", getSimletSessionParticipants);
 router.post("/:session_id/activate", activateSimletSession);
-router.post("/:session_id/allocate/:id", allocateToSessionSimlet);
 
 // Mount sub-routers
 router.use("/:session_id/permissions", sessionPermissionsRouter);
