@@ -91,9 +91,11 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/userMapper'
+                oneOf:
+                  - type: array
+                    items: 
+                      $ref: '#/components/schemas/userMapper'
+                  - $ref: '#/components/schemas/userMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -105,6 +107,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
+        - $ref: '#/components/parameters/usernameQuery'
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
