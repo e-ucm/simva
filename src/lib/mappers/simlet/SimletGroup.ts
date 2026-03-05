@@ -30,7 +30,7 @@ export class SimletGroup {
     group_name: string;
 
     group_use_new_generation: boolean;
-
+    group_sandbox: boolean;
     group_allocator_type: string;
     /**
      * Array of participant identifiers in this group
@@ -58,6 +58,7 @@ export class SimletGroup {
         this.group_id = data.group_id;
         this.group_name = data.group_name;
         this.participants = [];
+        this.group_sandbox = data.group_sandbox || false;
         this.group_owner_user_id = data.group_owner_user_id || "";
         this.group_owner_username = data.group_owner_username || "";
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
@@ -130,6 +131,7 @@ export class SimletGroup {
             group_owner_username: this.group_owner_username,
             createdAt: this.createdAt,
             updatedAt: this.updatedAt, 
+            group_sandbox: this.group_sandbox,
             allocations: this.allocation.reduce((acc, curr) => {
                 const json = curr.toJSON() as any;
                 acc[json.object_id] = json.session_id;

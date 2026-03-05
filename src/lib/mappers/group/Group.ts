@@ -479,6 +479,7 @@ export class Group {
             group_allocator_type:this.group_allocator_type,
             createdAt: this.createdAt,
             updatedAt: this.updatedAt,
+            group_sandbox: this.group_sandbox,
             allocations: this.allocation.reduce((acc, curr) => {
                 const json = curr.toJSON() as any;
                 acc[json.object_id] = json.session_id;

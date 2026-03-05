@@ -200,11 +200,11 @@ SELECT
     g.updatedAt,
     g.group_use_new_generation,
     g.group_allocator_type,
+    g.group_sandbox,
     u.user_id as group_owner_user_id,
     u.username as group_owner_username
 FROM ParticipantGroups g
-LEFT JOIN Users u ON u.user_id = g.group_owner_id
-WHERE g.group_sandbox IS NOT TRUE;
+LEFT JOIN Users u ON u.user_id = g.group_owner_id;
 
 DROP VIEW IF EXISTS v_complete_group_participants;
 CREATE VIEW v_complete_group_participants AS

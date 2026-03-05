@@ -833,7 +833,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/simlet'
+              $ref: '#/components/schemas/simletUpdate'
         description: simlet to be modified
     delete:
       tags:
@@ -1193,7 +1193,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/session'
+              $ref: '#/components/schemas/sessionUpdate'
       responses:
         '200':
           description: Session updated
@@ -1382,65 +1382,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activityCreation'
-  /simlets/{simletid}/allocator:
-    get:
-      tags:
-        - teachers
-      summary: gets the allocator from a simlet
-      operationId: getAllocatorFromSimlet
-      description: |
-        Obtains the allocator used by the simlet
-      responses:
-        '200':
-          description: the allocator object
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/allocatorMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/simletId'
-    patch:
-      tags:
-        - teachers
-      summary: set the allocator to the simlet
-      operationId: updateSimletAllocator
-      description: |
-        Updates the allocator from the simlet
-      responses:
-        '200':
-          description: updated correctly
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/allocatorMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/simletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/allocator'
-        description: simlet to be modified
   /simlets/{simletid}/permissions:
     get:
       tags:
@@ -3853,12 +3794,17 @@ components:
   schemas:
     health_check_response:
       type: object
+      required:
+        - status
+        - db
       properties:
         status:
           type: boolean
           example: true
         db:
           type: object
+          required:
+            - status
           properties:
             status:
               type: boolean
@@ -3932,7 +3878,16 @@ components:
            - "researcher"
            - "admin"
            - "lrsmanager"
-    userCreation:
+    tokenCreation:
+      allOf:
+        - $ref: '#/components/schemas/user'
+        - type: object
+          required:
+            - username
+            - isToken
+            - token
+            - role
+    userPasswordCreation:
       allOf:
         - $ref: '#/components/schemas/user'
         - type: object
@@ -3941,9 +3896,14 @@ components:
               type: string
               example: "Pass12345"
           required:
+            - username
+            - isToken
             - email
             - role
-            - isToken
+    userCreation:
+      oneOf:
+        - $ref: '#/components/schemas/tokenCreation'
+        - $ref: '#/components/schemas/userPasswordCreation'
     userMapper:
       allOf:
        - $ref: '#/components/schemas/user'
@@ -4012,6 +3972,9 @@ components:
           type: string
           enum : ["default", "session", "group", "random"]
           example: "default"
+        group_sandbox:
+          type: boolean
+          example: false
     groupCreation:
       allOf:
       - $ref: '#/components/schemas/group'
@@ -4019,6 +3982,8 @@ components:
         required:
         - group_name
         - group_use_new_generation
+        - group_allocator_type
+        - group_sandbox
     groupMapper:
       allOf:
       - $ref: '#/components/schemas/group'
@@ -4027,22 +3992,18 @@ components:
           - group_id
           - group_name
           - group_use_new_generation
-          - participants
-          - allocations
           - group_allocator_type
+          - group_sandbox
           - group_owner_user_id
           - group_owner_username
           - createdAt
           - updatedAt
+          - participants
+          - allocations
         properties:
           groupid:
             type: integer
             example: 123
-          participants:
-              type: array
-              items:
-                type: integer
-                example: 123
           group_owner_user_id:
             type: integer
             example: 456
@@ -4057,6 +4018,11 @@ components:
             type: string
             format: date-time
             example: "2017-07-21T17:32:28Z"
+          participants:
+              type: array
+              items:
+                type: integer
+                example: 123
           allocations:
             type: object
             additionalProperties:
@@ -4071,6 +4037,9 @@ components:
         simlet_description:
           type: string
           example: "A comprehensive simlet for serious game validation"
+        simlet_archived:
+          type: boolean
+          example: false
     simletCreation:
         allOf:
         - $ref: '#/components/schemas/simlet'
@@ -4078,14 +4047,25 @@ components:
           required:
           - simlet_name
           - simlet_description
+          - simlet_archived
+    simletUpdate:
+        allOf:
+        - $ref: '#/components/schemas/simlet'
+        - type: object
+          properties:
+            sessions:
+              type: array
+              items:
+                type: integer
     simletMapper:
         allOf:
         - $ref: '#/components/schemas/simlet'
         - type: object
           required:
+            - simlet_id
             - simlet_name
             - simlet_description
-            - simlet_id
+            - simlet_archived
             - createdAt
             - updatedAt
             - current_user_id
@@ -4124,7 +4104,45 @@ components:
             tags:
               type: array
               items:
-                type: string
+                $ref: '#/components/schemas/tagsMapper'
+    tags:
+      type: object
+      properties:
+        tag_name:
+          type: string
+          example: "tag1"
+        tag_color:
+          type: string
+          example: "#FF5733"
+    tagsCreation:
+      allOf:
+      - $ref: '#/components/schemas/tags'
+      - type: object
+        required:
+        - tag_name
+        - tag_color
+    tagsMapper:
+      allOf:
+      - $ref: '#/components/schemas/tags'
+      - type: object
+        required:
+          - tag_id
+          - tag_name
+          - tag_color
+          - createdAt
+          - updatedAt
+        properties:
+          tag_id:
+            type: integer
+            example: 123
+          createdAt:
+            type: string
+            format: date-time
+            example: "2017-07-21T17:32:28Z"
+          updatedAt:
+            type: string
+            format: date-time
+            example: "2017-07-21T17:32:28Z"
     # Simlet and session participants
     participantMapper:
       allOf:
@@ -4161,32 +4179,11 @@ components:
           example: 201
         url:
           type: string
-          example: "https://simva.test/simlets/123/sessions/201/activities/301/start"
+          example: "https://simva.test/scheduler/123"
         activities:
           type: array
           items:
-            allOf:
-              - $ref: '#/components/schemas/activityMapper'
-              - type: object
-                required:
-                  - session_status
-                  - allocated_user_id
-                  - allocated_username
-                  - allocated_isToken
-                  - allocated_token
-                properties:
-                  allocated_user_id:
-                    type: integer
-                    example: 456
-                  allocated_username:
-                    type: string
-                    example: "participant1"
-                  allocated_isToken:
-                    type: boolean
-                    example: false
-                  allocated_token: 
-                    type: string
-                    example: "abc123"
+            $ref: '#/components/schemas/activityAllocationMapper'
     activityPresignedUrlMapper:
       type: object
       required:
@@ -4220,18 +4217,26 @@ components:
         - session_description
         - session_can_be_manually_activated
         - session_status
-        - session_active
+    sessionUpdate:
+      allOf:
+      - $ref: '#/components/schemas/session'
+      - type: object
+        properties:
+          activities:
+            type: array
+            items:
+              type: integer
     sessionMapper:
       allOf:
       - $ref: '#/components/schemas/session'
       - type: object
         required:
+          - simlet_id
+          - session_id
           - session_name
           - session_description
           - session_can_be_manually_activated
           - session_status
-          - session_id
-          - simlet_id
           - current_user_id
           - current_user_username
           - current_user_permission
@@ -4262,7 +4267,7 @@ components:
           tags:
             type: array
             items:
-              type: integer
+              $ref: '#/components/schemas/tagsMapper'
           createdAt:
             type: string
             format: date-time
@@ -4282,9 +4287,6 @@ components:
         activity_trace_storage:
           type: boolean
           example: true
-        activity_description:
-          type: string
-          example: "Survey for validation"
         activity_comply_with_GDPR:
           type: boolean
           example: true
@@ -4300,21 +4302,22 @@ components:
         required:
         - activity_name
         - activity_type
+        - activity_trace_storage
+        - activity_can_be_restarted
     noTypedActivityMapper:
       allOf:
       - $ref: '#/components/schemas/noTypedActivity'
       - type: object
         required:
+            - session_id
+            - activity_id
+            - activity_order
             - activity_name
             - activity_type
             - activity_trace_storage
             - activity_description
             - activity_comply_with_GDPR
             - activity_can_be_restarted
-            - session_status
-            - activity_order
-            - session_id
-            - activity_id
             - activity_presignedUrl
             - activity_presignedUrl_generated_at
             - activity_presignedUrl_expires_at
@@ -4322,19 +4325,15 @@ components:
             - createdAt
             - updatedAt
         properties:
-          session_status:
-            type: string
-            enum: ["created", "active", "inactive", "terminated"]
-            example: "paused"
-          activity_order:
-            type: integer
-            example: 1
           session_id:
             type: integer
             example: 201
           activity_id:
             type: integer
             example: 301
+          activity_order:
+            type: integer
+            example: 1
           activity_presignedUrl:
             type: string
             nullable: true
@@ -4385,7 +4384,7 @@ components:
             example: true
           manual_ressource_type:
             type: string
-            enum: ["WEB", "DESKTOP_FILE"]
+            enum: ["WEB", "EXTERNAL"]
             example: "WEB"
           manual_ressource_url:
             type: string
@@ -4412,23 +4411,44 @@ components:
             example: false
           game_type:
             type: string
-            enum: ["WEB", "DESKTOP_FILE"]
+            enum: ["WEB", "DESKTOP"]
             example: "WEB"
           game_url:
             type: string
             example: "https://example.com/gameplay-activity-resource"
-          category_id:
-            type: integer
-            example: 5
-          subject_area_id:
-            type: integer
-            example: 3
     gameplayActivityCreation:
       allOf:
       - $ref: '#/components/schemas/gameplayActivity'
       - $ref: '#/components/schemas/noTypedActivityCreation'
       - type: object
         required:
+        - game_type
+        - game_url
+    limesurveyActivityMapper:
+      allOf:
+      - $ref: '#/components/schemas/limesurveyActivity'
+      - $ref: '#/components/schemas/noTypedActivityMapper'
+      - type: object
+        required:
+        - survey_id
+        - survey_language
+    manualActivityMapper:
+      allOf:
+      - $ref: '#/components/schemas/manualActivity'
+      - $ref: '#/components/schemas/noTypedActivityMapper'
+      - type: object
+        required:
+        - manual_user_managed
+        - manual_ressource_type
+        - manual_ressource_url
+    gameplayActivityMapper:
+      allOf:
+      - $ref: '#/components/schemas/gameplayActivity'
+      - $ref: '#/components/schemas/noTypedActivityMapper'
+      - type: object
+        required:
+        - game_backup
+        - game_scorm_xapi
         - game_type
         - game_url
     activity:
@@ -4443,21 +4463,54 @@ components:
       - $ref: '#/components/schemas/gameplayActivityCreation'
     activityMapper:
       anyOf:
-      - $ref: '#/components/schemas/activity'
-      - $ref: '#/components/schemas/noTypedActivityMapper'
+      - $ref: '#/components/schemas/limesurveyActivityMapper'
+      - $ref: '#/components/schemas/manualActivityMapper'
+      - $ref: '#/components/schemas/gameplayActivityMapper'
+    activityAllocationMapper:
+      allOf:
+        - $ref: '#/components/schemas/activityMapper'
+        - type: object
+          required:
+            - session_status
+            - allocated_user_id
+            - allocated_username
+            - allocated_isToken
+            - allocated_token
+          properties:
+            session_status:
+              type: string
+              enum: ["created", "active", "inactive", "terminated"]
+              example: "paused"
+            allocated_user_id:
+              type: integer
+              example: 456
+            allocated_username:
+              type: string
+              example: "participant1"
+            allocated_isToken:
+              type: boolean
+              example: false
+            allocated_token: 
+              type: string
+              example: "abc123"
     activity_type:
       type: object
+      required:
+        - activity_name
+        - activity_type
+        - activity_description
+        - activity_utils
       properties:
-        name:
+        activity_name:
           type: string
           example: "LimeSurvey Activity"
-        type:
+        activity_type:
           type: string
           example: "limesurvey"
-        description:
+        activity_description:
           type: string
           example: "A survey-based activity that uses LimeSurvey as service."
-        utils:
+        activity_utils:
           type: object
           additionalProperties: true
     activityInitializedMapper:
@@ -4507,48 +4560,24 @@ components:
       description: Key/value object to store the result data of the activity (e.g., score, completion status, etc.)
       additionalProperties:
         type: string
-    allocator:
-      type: object
-      properties:
-        allocator_type:
-          type: string
-          example: "random"
-    allocatorMapper:
-      allOf:
-      - $ref: '#/components/schemas/allocator'
-      - type: object
-        required:
-          - allocator_type
-          - allocator_id
-          - simlet_id
-          - createdAt
-          - updatedAt
-        properties:
-          allocator_id:
-            type: integer
-            example: 401
-          simlet_id:
-            type: integer
-            example: 123  
-          createdAt:
-            type: string
-            format: date-time
-          updatedAt:
-            type: string
-            format: date-time
     allocator_type:
       type: object
+      required:
+        - allocator_name
+        - allocator_type
+        - allocator_description
+        - allocator_utils
       properties:
-        name:
+        allocator_name:
           type: string
           example: "Group Allocator"
-        type:
+        allocator_type:
           type: string
           example: "group"
-        description:
+        allocator_description:
           type: string
           example: "This allocator allows you to select to which session branch is each group assigned."
-        utils:
+        allocator_utils:
           type: object
           additionalProperties: true
     lti_tool:
