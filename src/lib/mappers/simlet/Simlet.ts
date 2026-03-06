@@ -5,7 +5,7 @@ import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPer
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
-import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
+import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
 
 /**

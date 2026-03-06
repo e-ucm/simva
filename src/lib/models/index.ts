@@ -23,7 +23,6 @@ import { ManualActivityFactory } from "@/lib/models/activities/manualActivity.mo
 import { GameplayActivityFactory } from "@/lib/models/activities/gameplayActivity.model";
 import { LimesurveyActivityFactory } from "@/lib/models/activities/limesurveyActivity.model";
 import { SimletFactory } from "@/lib/models/simlets/simlet.model";
-import { SimletGroupsFactory } from "@/lib/models/simlets/simletGroups.model";
 import { SimletShlinksFactory } from "@/lib/models/simlets/simletShlinks.model";
 import { SimletPermissionsFactory } from "@/lib/models/simlets/simletPermissions.model";
 import { SimletTagsFactory } from "@/lib/models/simlets/simletTags.model";

@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
-import { SimletParticipant } from "./SimletParticipant";
+import { SimletParticipant } from "../simlet/SimletParticipant";
 import { Allocation } from "../allocators/Allocation";
+// Note: SimletGroupAllocatorToClass is dynamically imported to avoid circular dependency
 
 /**
  * Simlet Group mapper class representing a group assignment within a study (simlet).
@@ -44,6 +45,51 @@ export class SimletGroup {
 
     group_owner_id : number;
     group_owner_username: string;
+
+    /**
+     * Gets the allocator type identifier
+     * 
+     * @static
+     * @returns {string} The allocator type string
+     * @description Returns the base allocator type. Should be overridden by subclasses.
+     */
+    static getType(){
+        return 'default';
+    }
+    
+    /**
+     * Gets the human-readable name for this allocator type
+     * 
+     * @static
+     * @returns {string} The allocator type name
+     * @description Returns a user-friendly name for the allocator type.
+     */
+    static getName(){
+        return 'Default Allocator';
+    }
+
+    /**
+     * Gets a description of this allocator type
+     * 
+     * @static
+     * @returns {string} The allocator type description
+     * @description Returns a detailed description of how this allocator works.
+     */
+    static getDescription(){
+        return 'A basic allocator that allocate to the first session.';
+    }
+
+    /**
+     * Gets utility functions specific to this allocator type for a given user
+     * 
+     * @static
+     * @async
+     * @returns {Promise<object>} Object containing utility functions
+     * @description Returns allocator-specific utility functions. Base implementation returns empty object.
+     */
+    static async getUtils(){
+        return {};
+    }
 
     /**
      * Creates a new SimletGroup instance
@@ -89,10 +135,11 @@ export class SimletGroup {
         body.group_sandbox = body.group_sandbox ?? false;
         body.group_allocator_type = body.group_allocator_type ?? "group";
         let createdGroup = await db.Tables.Group.create(body);
-        return SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id);
+        return await SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id);
     }
 
     static async getCurrentUserAllFromDbData(current_user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<SimletGroup[]> {
+        const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         let groups;
         if(limit != undefined && offset != undefined) {
             groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserIdWithPagination, { current_user_id, version, search : searchString, limit, offset});
@@ -100,31 +147,33 @@ export class SimletGroup {
             groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { current_user_id, search : searchString, version });
         } 
         return Promise.all(groups.map(async (groupData: any) => { 
-            const group = new SimletGroup(groupData);
+            const group = await SimletGroupAllocatorToClass(groupData);
             await group.init();
             return group;
         }));
     }
 
     static async getAllFromDbData(simlet_id: number): Promise<SimletGroup[]> {
+        const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         const groups = await db.Functions.runViewQuery(
             db.Views.Group.bySimletId,
             { simlet_id }
         );
         logger.debug({groups} , "Groups data from view");
         return Promise.all(groups.map(async (group: any) => {
-            const simletGroup = new SimletGroup(group);
+            const simletGroup = await SimletGroupAllocatorToClass(group);
             await simletGroup.init();
             return simletGroup;
         }));
     }
 
     static async getFromDbData(simlet_id: number, group_id: number) : Promise<SimletGroup> {
+        const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         let simletGroupData = await db.Tables.Group.findOne({ where: { simlet_id, group_id } });
         if (!simletGroupData) {
             throw new NotFoundError(`SimletGroup with simlet_id ${simlet_id} and group_id ${group_id} not found`);
         }
-        const simletGroup = new SimletGroup(simletGroupData);
+        const simletGroup = await SimletGroupAllocatorToClass(simletGroupData);
         await simletGroup.init();
         return simletGroup;
     }

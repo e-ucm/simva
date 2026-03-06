@@ -12,7 +12,7 @@
  * @requires @/lib/mappers/allocators/AllocatorType
  */
 
-import { AllocatorType } from "@/lib/mappers/allocators/AllocatorType";
+import { AllocatorType } from "@/lib/mappers/simletGroup/AllocatorType";
 
 export { AllocatorType };
 

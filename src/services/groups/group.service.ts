@@ -12,7 +12,7 @@
  * @requires @/lib/errors/appErrors
  */
 
-import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
+import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 
 /**
  * Retrieves all groups accessible to a specific user.

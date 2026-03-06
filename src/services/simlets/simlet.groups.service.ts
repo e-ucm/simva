@@ -10,7 +10,7 @@
  */
 
 import { Simlet } from "@/lib/mappers/simlet/Simlet";
-import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
+import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 
 /**
