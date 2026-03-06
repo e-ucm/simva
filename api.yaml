@@ -926,7 +926,7 @@ paths:
         - $ref: '#/components/parameters/userId'
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/keycloakDelete'
-  /simlets/{simletid}/groups/{groupid}/allocate/{id}:
+  /simlets/{simletid}/groups/{groupid}/allocate/{sessionid}:
     post:
       tags:
         - teachers

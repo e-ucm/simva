@@ -242,7 +242,17 @@ export class Simlet {
     async updateGroup(groupId: number, body: Partial<SimletGroup>): Promise<SimletGroup> {
         this.canEdit();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
-        return await group.update(body);
+        const oldAllocatorType = group.group_allocator_type;
+        logger.debug({ groupId, oldAllocatorType, newAllocatorType: body.group_allocator_type }, 'updateGroup checking allocator type change');
+        const updatedGroup = await group.update(body);
+        if(body.group_allocator_type && body.group_allocator_type !== oldAllocatorType) {
+            logger.debug({ groupId, sessions: this.sessions }, 'updateGroup allocator type changed, reallocating to default');
+            // If the allocator type is being updated, we need to allocate all participants to default session
+            if(this.sessions.length > 0) {
+                await updatedGroup.allocateToDefault(this.sessions[0])
+            }
+        }
+        return updatedGroup;
     }
 
     async getGroupParticipants(groupId: number): Promise<SimletParticipant[]> {

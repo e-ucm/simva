@@ -383,32 +383,43 @@ export class SimletGroup {
     }
 
     async allocateToDefault(defaultSession: number) {
+        logger.debug({ 
+            defaultSession, 
+            simlet_id: this.simlet_id, 
+            group_id: this.group_id,
+            participantsCount: this.participants.length,
+            participants: this.participants 
+        }, 'Allocator.allocateToDefault starting');
+        
         const session = await Session.getFromDbData(this.simlet_id, defaultSession, this.current_user_id);
-        await Promise.all(
-            this.participants.map(async (participant_id: number) => {
-                const existing = await db.Tables.ExperimentalParticipants.findOne({
-                    where: {
-                        simlet_id: this.simlet_id,
-                        group_id: this.group_id,
-                        participant_id: participant_id,
-                    },
-                });
-                if (existing) {
-                    if (existing.session_id !== defaultSession) {
-                        await existing.update({ session_id: defaultSession });
-                    }
-                    return;
+        
+        for (const participant_id of this.participants) {
+            const existing = await db.Tables.ExperimentalParticipants.findOne({
+                where: {
+                    simlet_id: this.simlet_id,
+                    group_id: this.group_id,
+                    participant_id: participant_id,
                 }
+            });
+            
+            if (existing) {
+                logger.debug({ participant_id, oldSession: existing.session_id, newSession: defaultSession }, 'Allocator.allocateToDefault updating existing');
+                await existing.update({ session_id: defaultSession });
+            } else {
+                logger.debug({ participant_id, session_id: defaultSession }, 'Allocator.allocateToDefault creating new');
                 await db.Tables.ExperimentalParticipants.create({
                     simlet_id: this.simlet_id,
                     group_id: this.group_id,
                     participant_id: participant_id,
                     session_id: defaultSession,
                 });
-            })
-        );
+            }
+        }
+        
         await session.addParticipantsToAllActivities(this.participants);
-        logger.debug({ defaultSession }, 'Allocator.allocateToDefault synchronized participants');
+        // Refresh internal allocation state from database
+        this.allocation = await Allocation.getFromDbData(this.simlet_id, this.group_id, this.group_allocator_type);
+        logger.debug({ defaultSession, allocationCount: this.allocation.length }, 'Allocator.allocateToDefault synchronized participants');
     }
 
     toJSON(): object {
