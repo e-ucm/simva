@@ -1,4 +1,8 @@
+import { logger } from "@/lib/logger";
 import { SimletGroup } from "./SimletGroup";
+import { ValidationError } from "@/lib/errors/appErrors";
+import { db } from "@/lib/db";
+import { Session } from "../session/Session";
 
 export class GroupAllocatorSimletGroup extends SimletGroup {
     /**
@@ -48,5 +52,26 @@ export class GroupAllocatorSimletGroup extends SimletGroup {
 
     async getDetails(){
         return {};
+    }
+
+    async allocateToSession(sessionId: number, group_id: number): Promise<void> {
+        logger.debug({ sessionId, group_id }, 'GroupAllocator.allocate started');
+        if(typeof group_id !== 'number') {
+            logger.debug({ group_id, type: typeof group_id }, 'Allocator.allocate invalid group_id type');
+            throw new ValidationError("Not valid");
+        }
+        if(typeof group_id !== 'number') {
+            logger.debug({ group_id, type: typeof group_id }, 'GroupAllocator.allocate invalid group_id type');
+            throw new ValidationError("Not valid");
+        }
+        if(group_id !== this.group_id) {
+            logger.debug({ group_id, allocatorGroupId: this.group_id }, 'GroupAllocator.allocate group_id mismatch');
+            throw new ValidationError("Not valid");
+        }
+        if(this.group_allocator_type !== GroupAllocatorSimletGroup.getType()) {
+            logger.debug({ allocator_type: this.group_allocator_type, expected: GroupAllocatorSimletGroup.getType() }, 'GroupAllocator.allocate type mismatch');
+            throw new ValidationError("Not valid");
+        }
+        super.allocateToDefault(sessionId);
     }
 }

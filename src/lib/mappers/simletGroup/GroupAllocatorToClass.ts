@@ -1,7 +1,3 @@
-import { Allocator } from "@/lib/mappers/allocators/Allocator";
-import { SessionAllocator } from "@/lib/mappers/allocators/SessionAllocator";
-import { RandomAllocator } from "@/lib/mappers/allocators/RandomAllocator";
-import { GroupAllocator } from "@/lib/mappers/allocators/GroupAllocator";
 import { logger } from "@/lib/logger";
 import { RandomAllocatorSimletGroup } from "@/lib/mappers/simletGroup/RandomAllocatorSimletGroup";
 import { GroupAllocatorSimletGroup } from "@/lib/mappers/simletGroup/GroupAllocatorSimletGroup";
@@ -27,28 +23,28 @@ import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
  * const allocator = AllocatorToClass({ allocator_type: 'random', allocator_id: 456 });
  * // Returns a RandomAllocator instance
  */
-export async function SimletGroupAllocatorToClass(allocator: any) : Promise<SimletGroup> {
+export async function SimletGroupAllocatorToClass(allocator: any, current_user_id: number) : Promise<SimletGroup> {
     logger.debug({allocator}, allocator.group_allocator_type);
     switch (allocator.group_allocator_type) {
         case SessionAllocatorSimletGroup.getType():
-            let sessionAllocator = new SessionAllocatorSimletGroup(allocator);
+            let sessionAllocator = new SessionAllocatorSimletGroup(allocator, current_user_id);
             await sessionAllocator.init();
             return sessionAllocator;
         case RandomAllocatorSimletGroup.getType():
-            let randomAllocator = new RandomAllocatorSimletGroup(allocator);
+            let randomAllocator = new RandomAllocatorSimletGroup(allocator, current_user_id);
             await randomAllocator.init();
             return randomAllocator;
         case GroupAllocatorSimletGroup.getType():
-            let groupAllocator = new GroupAllocatorSimletGroup(allocator);
+            let groupAllocator = new GroupAllocatorSimletGroup(allocator, current_user_id);
             await groupAllocator.init();
             return groupAllocator;
         case SimletGroup.getType():
-            let baseAllocator = new SimletGroup(allocator);
+            let baseAllocator = new SimletGroup(allocator, current_user_id);
             await baseAllocator.init();
             return baseAllocator;
         default:
             logger.warn(`Unknown allocator type: ${allocator.group_allocator_type}, returning default Allocator instance.`);
-            let defaultAllocator = new SimletGroup(allocator);
+            let defaultAllocator = new SimletGroup(allocator, current_user_id);
             await defaultAllocator.init();
             return defaultAllocator;
     }

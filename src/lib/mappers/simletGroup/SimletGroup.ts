@@ -3,6 +3,8 @@ import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors/appE
 import { logger } from "@/lib/logger";
 import { SimletParticipant } from "../simlet/SimletParticipant";
 import { Allocation } from "../allocators/Allocation";
+import { Op } from "sequelize";
+import { Session } from "../session/Session";
 // Note: SimletGroupAllocatorToClass is dynamically imported to avoid circular dependency
 
 /**
@@ -35,7 +37,7 @@ export class SimletGroup {
     /**
      * Array of participant identifiers in this group
      */
-    participants: string[];
+    participants: number[];
 
     createdAt?: Date;
 
@@ -46,6 +48,7 @@ export class SimletGroup {
     group_owner_id : number;
     group_owner_username: string;
 
+    current_user_id: number;
     /**
      * Gets the allocator type identifier
      * 
@@ -98,7 +101,7 @@ export class SimletGroup {
      * @description Initializes group-study relationship and parses participant arrays from string format.
      * Uses database utility functions to properly convert string arrays to typed arrays.
      */
-    constructor(data: any) {
+    constructor(data: any, current_user_id: number) {
         this.simlet_id = data.simlet_id;
         this.group_id = data.group_id;
         this.group_name = data.group_name;
@@ -110,12 +113,13 @@ export class SimletGroup {
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         this.group_use_new_generation = Boolean(data.group_use_new_generation);
         this.group_allocator_type = data.group_allocator_type;
+        this.current_user_id = current_user_id;
     }
 
     async init() {
         //Additional initialization logic can be added here if needed in the future
         const participantIds = await db.Functions.runViewQuery(db.Views.GroupParticipant.IdsByGroupId, { group_id: this.group_id })
-        this.participants = participantIds.map((row: any) => row.participant_id) || [];
+        this.participants = participantIds.map((row: any) => parseInt(row.participant_id as string)) || [];
         this.allocation = await Allocation.getFromDbData(this.simlet_id, this.group_id, this.group_allocator_type);
         logger.debug({ allocationCount: this.allocation.length, allocation: this.allocation }, 'Group initialized with allocations');
     }
@@ -135,7 +139,7 @@ export class SimletGroup {
         body.group_sandbox = body.group_sandbox ?? false;
         body.group_allocator_type = body.group_allocator_type ?? "group";
         let createdGroup = await db.Tables.Group.create(body);
-        return await SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id);
+        return await SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id, current_user_id);
     }
 
     static async getCurrentUserAllFromDbData(current_user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<SimletGroup[]> {
@@ -147,13 +151,13 @@ export class SimletGroup {
             groups = await db.Functions.runViewQuery(db.Views.Group.byVersionAndUserId, { current_user_id, search : searchString, version });
         } 
         return Promise.all(groups.map(async (groupData: any) => { 
-            const group = await SimletGroupAllocatorToClass(groupData);
+            const group = await SimletGroupAllocatorToClass(groupData, current_user_id);
             await group.init();
             return group;
         }));
     }
 
-    static async getAllFromDbData(simlet_id: number): Promise<SimletGroup[]> {
+    static async getAllFromDbData(simlet_id: number, current_user_id: number): Promise<SimletGroup[]> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         const groups = await db.Functions.runViewQuery(
             db.Views.Group.bySimletId,
@@ -161,25 +165,25 @@ export class SimletGroup {
         );
         logger.debug({groups} , "Groups data from view");
         return Promise.all(groups.map(async (group: any) => {
-            const simletGroup = await SimletGroupAllocatorToClass(group);
+            const simletGroup = await SimletGroupAllocatorToClass(group, current_user_id);
             await simletGroup.init();
             return simletGroup;
         }));
     }
 
-    static async getFromDbData(simlet_id: number, group_id: number) : Promise<SimletGroup> {
+    static async getFromDbData(simlet_id: number, group_id: number, current_user_id: number) : Promise<SimletGroup> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         let simletGroupData = await db.Tables.Group.findOne({ where: { simlet_id, group_id } });
         if (!simletGroupData) {
             throw new NotFoundError(`SimletGroup with simlet_id ${simlet_id} and group_id ${group_id} not found`);
         }
-        const simletGroup = await SimletGroupAllocatorToClass(simletGroupData);
+        const simletGroup = await SimletGroupAllocatorToClass(simletGroupData, current_user_id);
         await simletGroup.init();
         return simletGroup;
     }
     
     async addParticipant(participantId: number) : Promise<SimletGroup> {
-        let participant = await SimletParticipant.addToGroup(this.group_id, participantId);
+        await SimletParticipant.addToGroup(this.group_id, participantId);
         return this;
     }
 
@@ -344,6 +348,67 @@ export class SimletGroup {
 
     async export(withData: boolean): Promise<object> {
         throw new Error("Export functionality not implemented for SimletGroup yet");
+    }
+    
+    async allocateToSession(sessionId: number, participant_id: number): Promise<void> {
+        if(typeof participant_id !== 'number') {
+            logger.debug({ participant_id, type: typeof participant_id }, 'Allocator.allocate invalid participant_id type');
+            throw new ValidationError("Not valid");
+        }
+        if(this.group_allocator_type !== SimletGroup.getType()) {
+            logger.debug({ allocator_type: this.group_allocator_type, expected: SimletGroup.getType() }, 'Allocator.allocate type mismatch');
+            throw new ValidationError("Not valid");
+        }
+        const participantGroupFound = this.participants.find(p => p === participant_id);
+        logger.debug({ participant_id, participantGroupFound }, 'Allocator.allocate participant membership check');
+        if(!participantGroupFound) {
+            throw new NotFoundError(`Participant with id ${participant_id} not found`);
+        }
+        let participantToUpdate = await db.Tables.ExperimentalParticipants.findOne({ where: { simlet_id: this.simlet_id, group_id : this.group_id, participant_id : participant_id } })
+        logger.debug({ participantExists: !!participantToUpdate, group_id: this.group_id }, 'Allocator.allocate participant lookup');
+        if(!participantToUpdate) {
+            logger.debug({ group_id: this.group_id, participant_id, sessionId }, 'Allocator.allocate creating new participant');
+            await db.Tables.ExperimentalParticipants.create({ simlet_id: this.simlet_id, group_id : this.group_id, participant_id : participant_id, session_id: sessionId });
+            logger.debug({ sessionId, participant_id }, 'Allocator.allocate created participant');
+        } else {
+            if(participantToUpdate.session_id === sessionId) {
+                logger.debug({ sessionId }, 'Allocator.allocate already allocated to session, skipping');
+                return;
+            }
+            const oldSessionId = participantToUpdate.session_id;
+            logger.debug({ sessionId, participant_id, oldSessionId }, 'Allocator.allocate updating participant session');
+            await participantToUpdate.update({ session_id: sessionId });
+            logger.debug({ sessionId, participant_id, oldSessionId }, 'Allocator.allocate updated participant');
+        }
+    }
+
+    async allocateToDefault(defaultSession: number) {
+        const session = await Session.getFromDbData(this.simlet_id, defaultSession, this.current_user_id);
+        await Promise.all(
+            this.participants.map(async (participant_id: number) => {
+                const existing = await db.Tables.ExperimentalParticipants.findOne({
+                    where: {
+                        simlet_id: this.simlet_id,
+                        group_id: this.group_id,
+                        participant_id: participant_id,
+                    },
+                });
+                if (existing) {
+                    if (existing.session_id !== defaultSession) {
+                        await existing.update({ session_id: defaultSession });
+                    }
+                    return;
+                }
+                await db.Tables.ExperimentalParticipants.create({
+                    simlet_id: this.simlet_id,
+                    group_id: this.group_id,
+                    participant_id: participant_id,
+                    session_id: defaultSession,
+                });
+            })
+        );
+        await session.addParticipantsToAllActivities(this.participants);
+        logger.debug({ defaultSession }, 'Allocator.allocateToDefault synchronized participants');
     }
 
     toJSON(): object {

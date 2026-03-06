@@ -1,4 +1,6 @@
+import { ValidationError } from "@/lib/errors/appErrors";
 import { SimletGroup } from "./SimletGroup";
+import { logger } from "@/lib/logger";
 
 /**
  * Session Allocator mapper class extending base Allocator.
@@ -57,5 +59,20 @@ export class SessionAllocatorSimletGroup extends SimletGroup {
 
     async getDetails(){
         return {};
+    }
+
+    async allocate(sessionsids: number[]): Promise<void> {
+        logger.debug({ sessionsids }, 'SessionAllocator.allocate started');
+        if(!Array.isArray(sessionsids)) {
+            logger.debug({ sessionsids, type: typeof sessionsids }, 'SessionAllocator.allocate invalid sessionsids type');
+            throw new ValidationError("Not valid");
+        }
+        for(const sessionId of sessionsids) {
+            if(typeof sessionId !== 'number') {
+                logger.debug({ sessionId, type: typeof sessionId }, 'SessionAllocator.allocate invalid sessionId type');
+                throw new ValidationError("Not valid");
+            }
+            super.allocateToDefault(sessionId);
+        }
     }
 }

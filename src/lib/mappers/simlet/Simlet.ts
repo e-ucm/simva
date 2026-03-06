@@ -3,7 +3,6 @@ import { AuthentificationError, ConflictError, NotFoundError, NotImplementedErro
 import { logger } from "@/lib/logger";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
-import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
@@ -236,44 +235,48 @@ export class Simlet {
 
     async createGroup(body: Partial<SimletGroup>): Promise<SimletGroup> {
       this.canEdit();
-      let group = await SimletGroup.createInDb(this.simlet_id, body, this.current_user_id as number);
+      let group = await SimletGroup.createInDb(this.simlet_id, body, this.current_user_id);
       return group;
     }
 
     async updateGroup(groupId: number, body: Partial<SimletGroup>): Promise<SimletGroup> {
         this.canEdit();
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
         return await group.update(body);
     }
 
     async getGroupParticipants(groupId: number): Promise<SimletParticipant[]> {
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
         return await group.getParticipants();
     }
     
     async addGroupParticipant(groupId: number, participantId: number): Promise<SimletGroup> {
         this.canEdit();
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
         return await group.addParticipant(participantId);
     }
     
-    async allocateToSession(sessionId: number, id: number) {
-      throw new Error("Method not implemented.");
+    async allocateToSession(group_id: number, sessionId: number, group_id_or_participant_id: number) {
+        this.canEdit();
+        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.current_user_id);
+        await group.allocateToSession(sessionId, group_id_or_participant_id);
     }
+
+
     async createGroupParticipant(groupId: number, body: Partial<SimletParticipant>): Promise<SimletParticipant> {
         this.canEdit();
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
         return await group.createParticipant(body);
     }
 
     async deleteGroupParticipant(groupId: number, participantId: number, keycloakDelete: boolean = false): Promise<void> {
         this.canEdit();
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
         await group.deleteParticipant(participantId, keycloakDelete);
     }
 
     async getGroupById(groupId: number): Promise<SimletGroup> {
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
         return group;
     }
 
@@ -285,28 +288,28 @@ export class Simlet {
     async getUserPermissions() : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for retrieving user permissions for this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return permissions.permissions;
     }
 
     async addUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for adding user permission to this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.addUserPermission(user_id, permission);
     }
 
     async removeUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for removing user permission from this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.removeUserPermission(user_id, permission);
     }
 
     async removeGroup(group_id: number): Promise<Simlet> {
         this.canEdit();
         // Implementation for remove a group to this simlet
-        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.current_user_id);
         await db.Tables.ExperimentalParticipants.destroy({ where: { simlet_id: this.simlet_id, group_id : group_id }});
         await group.delete();
         this.groups = this.groups.filter(id => id !== group_id);
@@ -324,51 +327,45 @@ export class Simlet {
         return this;
     }
 
-    async getAllocator(): Promise<Allocator> {
-      // Allocators are now at the group level (group_allocator_type)
-      // This method is deprecated and needs refactoring
-      throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
-    }
-
     async getAllocatedParticipants(): Promise<SimletParticipant[]> {
       return await SimletParticipant.getAllFromDbData("simlet", this.simlet_id);
     }
 
     async getGroups(): Promise<SimletGroup[]> {
-        return await SimletGroup.getAllFromDbData(this.simlet_id);
+        return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id);
     }
 
     async getSessions(searchString?: string, limit?: number, offset?: number): Promise<Session[]> {
-        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id as number, limit, offset, searchString);
+        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString);
     }
 
     async getSession(sessionId: number): Promise<Session> {  
-        return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id as number);
+        return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id);
     }
 
     async getPermissions() {
-      return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
+      return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
     }
     
     async createPermissions(body: any) {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id as number);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.createPermissions(body);
     }
     
     async getPermissionsForUser(userId: number) {
-        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id as number);
+        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
     }
     
     async patchPermissionsForUser(userId: number, body: any) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id as number);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
         return await permission.update(body.permission);
     }
 
     async deletePermissionsForUser(userId: number) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id as number);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
         return await permission.delete();
     }
 
@@ -379,7 +376,7 @@ export class Simlet {
             return await session.export(withData);
         }));
         simletData.groups = await Promise.all(this.groups.map(async (groupId) => {
-            let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+            let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
             return await group.export(withData);
         }));
         return simletData;
