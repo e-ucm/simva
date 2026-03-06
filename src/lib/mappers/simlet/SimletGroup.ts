@@ -74,7 +74,7 @@ export class SimletGroup {
         logger.debug({ allocationCount: this.allocation.length, allocation: this.allocation }, 'Group initialized with allocations');
     }
 
-    static async createInDb(simlet_id: number, body: Partial<SimletGroup>, useNewGeneration : boolean, current_user_id: number): Promise<SimletGroup> {
+    static async createInDb(simlet_id: number, body: Partial<SimletGroup>, current_user_id: number): Promise<SimletGroup> {
         const newGroupName = typeof body.group_name === "string" ? body.group_name.trim() : null;
         if(!newGroupName) {
             throw new ValidationError("Group name is required");
@@ -85,9 +85,9 @@ export class SimletGroup {
         }
         body.simlet_id = simlet_id;
         body.group_owner_id = current_user_id;
-        body.group_use_new_generation = useNewGeneration;
+        body.group_use_new_generation = Boolean(body.group_use_new_generation);
         body.group_sandbox = body.group_sandbox ?? false;
-        body.group_allocator_type = body.group_allocator_type ?? "default";
+        body.group_allocator_type = body.group_allocator_type ?? "group";
         let createdGroup = await db.Tables.Group.create(body);
         return SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id);
     }
@@ -248,7 +248,7 @@ export class SimletGroup {
      * ```
      */
     async createParticipant(body: Partial<SimletParticipant>): Promise<SimletParticipant> {
-        let participant = await SimletParticipant.createInDb(this.group_id, this.group_use_new_generation, body);
+        let participant = await SimletParticipant.createInDb(this.simlet_id, this.group_id, this.group_use_new_generation, body);
         return participant;
     }
 

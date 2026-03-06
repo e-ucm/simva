@@ -236,7 +236,7 @@ export class Simlet {
 
     async createGroup(body: Partial<SimletGroup>): Promise<SimletGroup> {
       this.canEdit();
-      let group = await SimletGroup.createInDb(this.simlet_id, body, false, this.current_user_id as number);
+      let group = await SimletGroup.createInDb(this.simlet_id, body, this.current_user_id as number);
       return group;
     }
 

@@ -128,7 +128,7 @@ export class SimletParticipant {
         return allocated.map((participant: any) => new SimletParticipant(participant));
     }
     
-    static async createInDb(group_id: number, is_new_generation: boolean, body: any): Promise<SimletParticipant> {
+    static async createInDb(simlet_id: number, group_id: number, is_new_generation: boolean, body: any): Promise<SimletParticipant> {
         const isTokenUser = body?.isToken === true || body?.isToken === "true";
         const participantData: any = {
             isToken: isTokenUser,
@@ -141,7 +141,7 @@ export class SimletParticipant {
                 throw new BadRequestError("Token is required when isToken is true");
             }
             participantData.token = tokenValue;
-            participantData.username = is_new_generation ? `${group_id}_${tokenValue}` : tokenValue;
+            participantData.username = is_new_generation ? `${simlet_id}_${tokenValue}` : tokenValue;
             participantData.email = body?.email || `${participantData.username}@example.com`;
             participantData.password = body?.token;
         } else {
@@ -182,7 +182,7 @@ export class SimletParticipant {
         }
         await db.Tables.GroupParticipants.destroy({ where : { group_id: this.group_id, participant_id: this.user_id}});
         if(this.isToken) {
-            await db.Tables.User.destroy({ where : { group_id: this.group_id, user_id: this.user_id }});
+            await db.Tables.User.destroy({ where : { user_id: this.user_id }});
         }
     }
 
