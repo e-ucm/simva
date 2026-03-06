@@ -126,3 +126,9 @@ export async function addSimletGroupParticipant(simletId: number, groupId: numbe
   const simlet = await Simlet.getFromDbData(simletId, currentUserId);
   return await simlet.addGroupParticipant(groupId, participantId);
 }
+
+export async function allocateToSessionSimlet(simletId: number, groupId: number, sessionId: number, participant_id_or_group_id: number, currentUserId: number) {
+  const simlet = await Simlet.getFromDbData(simletId, currentUserId);
+  return await simlet.allocateToSession(groupId, sessionId, participant_id_or_group_id);
+}
+

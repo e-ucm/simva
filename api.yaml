@@ -758,7 +758,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/group'
+              $ref: '#/components/schemas/groupUpdate'
         description: Group to be modified
     delete:
       tags:
@@ -926,6 +926,42 @@ paths:
         - $ref: '#/components/parameters/userId'
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/keycloakDelete'
+  /simlets/{simletid}/groups/{groupid}/allocate/{id}:
+    post:
+      tags:
+        - teachers
+      summary: allocates a participant or group to a session
+      operationId: allocateToSessionSimlet
+      description: |
+        Allocates participants to the selected session using the configured allocator.
+      responses:
+        '200':
+          description: allocation applied
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participant_id:
+                   type: integer
+                   example: 123
   /simlets/{simletid}/sessions:
     get:
       tags:
@@ -1153,33 +1189,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
-  /simlets/{simletid}/sessions/{sessionid}/allocate/{id}:
-    post:
-      tags:
-        - teachers
-      summary: allocates a participant or group to a session
-      operationId: allocateToSessionSimlet
-      description: |
-        Allocates participants to the selected session using the configured allocator.
-      responses:
-        '200':
-          description: allocation applied
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/simletId'
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/id'
   /simlets/{simletid}/sessions/{sessionid}/activities:
     get:
       tags:
@@ -3853,6 +3862,20 @@ components:
         - group_name
         - group_use_new_generation
         - group_sandbox
+    groupAllocatorRandomizeSessionAllocation:
+      type: object
+      additionalProperties:
+        type: integer
+        example: 123
+        description: |
+          The key of the object is the session id and the value is the percentage random for that session
+    groupUpdate:
+      allOf:
+      - $ref: '#/components/schemas/group'
+      - type: object
+        properties:
+          randomize_session_allocation:
+            $ref: '#/components/schemas/groupAllocatorRandomizeSessionAllocation'
     groupMapper:
       allOf:
       - $ref: '#/components/schemas/group'
@@ -3898,6 +3921,9 @@ components:
             additionalProperties:
               type: integer
               nullable: false
+              example: 123
+          randomize_session_allocation:
+            $ref: '#/components/schemas/groupAllocatorRandomizeSessionAllocation'
     simlet:
       type: object
       properties:

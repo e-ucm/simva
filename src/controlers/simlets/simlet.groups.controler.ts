@@ -222,3 +222,24 @@ export async function deleteGroupParticipant(
     next(err);
   }
 }
+
+export async function allocateToSessionSimlet(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const groupId = parseInt(req.params.group_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    const currentUser = req.user?.sql;
+    const currentUserId = currentUser?.user_id as number;
+    const participant_id_or_group_id = req.body.participant_id ? parseInt(req.body.participant_id) : groupId;
+    logger.debug({simletId, groupId, sessionId} , "Allocating group to session for simlet ID, group ID and session ID");
+    await simletGroupsService.allocateToSessionSimlet(simletId, groupId, sessionId, participant_id_or_group_id, currentUserId);
+    logger.debug({simletId, groupId, sessionId} , "Group allocated to session for simlet ID, group ID and session ID");
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}

@@ -18,9 +18,9 @@ import {
   getSimletGroupParticipants,
   createSimletGroupParticipant,
   addSimletGroupParticipant,
-  deleteGroupParticipant
+  deleteGroupParticipant,
+  allocateToSessionSimlet
 } from "@/controlers/simlets/simlet.groups.controler";
-import allocatorrouter from "@/routes/simlets/group.allocator.routes";
 
 /**
  * Express router for simlet groups endpoints.
@@ -52,7 +52,5 @@ router.post("/:group_id/participants", createSimletGroupParticipant);
 router.post("/:group_id/participants/:participant_id", addSimletGroupParticipant);
 // Individual participant operations
 router.delete("/:group_id/participants/:participant_id", deleteGroupParticipant);
-
-router.use("/:group_id/allocate", allocatorrouter);
-
+router.post("/:group_id/allocate/:session_id", allocateToSessionSimlet);
 export default router;
