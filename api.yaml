@@ -293,143 +293,6 @@ paths:
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/use_new_generation'
-    post:
-      tags:
-        - teachers
-      summary: adds a group for the current user as owner.
-      operationId: createGroup
-      description: |
-        Creates a new group for the current user as owner.
-      responses:
-        '200':
-          description: group created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/groupMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/groupCreation'
-  /groups/{groupid}:
-    get:
-      tags:
-        - admins
-        - students
-        - teachers
-      summary: gets the group with the given ID
-      operationId: getGroup
-      description: |
-        Obtains the requested group
-      responses:
-        '200':
-          description: group object
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/groupMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-    patch:
-      tags:
-        - teachers
-      summary: updates the group
-      operationId: updateGroup
-      description: Updates an existing group
-      responses:
-        '200':
-          description: item updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/groupMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/group'
-        description: Group to be modified
-    delete:
-      tags:
-        - teachers
-      summary: delete the group
-      operationId: deleteGroup
-      description: delete an existing group
-      responses:
-        '200':
-          description: deleted group
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-  /groups/{groupid}/simlets:
-    get:
-      tags:
-        - teachers
-      summary: gets the assigned studies to the group
-      operationId: getGroupStudies
-      description: |
-        Obtains the list of studies assigned to the group
-      responses:
-        '200':
-          description: list of studies assigned
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/simletMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
   /tasklist:
     post:
       tags:
@@ -461,224 +324,6 @@ paths:
           $ref: '#/components/responses/ConflictError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /groups/{groupid}/participants:
-    get:
-      tags:
-        - teachers
-      summary: gets the list of participants for this group
-      operationId: getGroupParticipants
-      description: |
-        Obtains the list of participants of the group
-      responses:
-        '200':
-          description: list of participants
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/participantMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-    post:
-      summary: adds a user.
-      tags:
-        - teachers
-      operationId: addUser
-      description: |
-        Creates a new user for the current group.
-      responses:
-        '200':
-          description: item created
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/userCreation'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-  /groups/count:
-    get:
-      tags:
-        - admins
-        - teachers
-      summary: gets the total count of groups
-      operationId: getGroupCount
-      description: |
-        Gets the total number of groups available to the current user
-      responses:
-        '200':
-          description: group count
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    example: 42
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /groups/{groupid}/participants/{userid}:
-    delete:
-      tags:
-        - teachers
-      summary: deletes a user.
-      operationId: deleteUser
-      description: |
-        Deletes a user from the current group.
-      responses:
-        '200':
-          description: item deleted
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-        - $ref: '#/components/parameters/userId'
-  /groups/{groupid}/permissions:
-    get:
-      tags:
-        - admins
-        - teachers
-      summary: gets permissions for a group
-      operationId: getGroupPermissions
-      description: |
-        Gets all user permissions for the specified group
-      responses:
-        '200':
-          description: group permissions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/userPermissionMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-  /groups/{groupid}/permissions/{userid}:
-    get:
-      tags:
-        - admins
-        - teachers
-      summary: gets permissions for a user in a group
-      operationId: getGroupPermissionsForUser
-      description: |
-        Gets permissions for a specific user in the specified group
-      responses:
-        '200':
-          description: user permissions for group
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/userPermissionMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-        - $ref: '#/components/parameters/userId'
-    patch:
-      tags:
-        - admins
-        - teachers
-      summary: updates permissions for a user in a group
-      operationId: patchGroupPermissionsForUser
-      description: |
-        Updates permissions for a specific user in the specified group
-      responses:
-        '200':
-          description: permissions updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/userPermissionMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-        - $ref: '#/components/parameters/userId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/userPermissionMapper'
-    delete:
-      tags:
-        - admins
-        - teachers
-      summary: deletes permissions for a user in a group
-      operationId: deleteGroupPermissionsForUser
-      description: |
-        Deletes permissions for a specific user in the specified group
-      responses:
-        '200':
-          description: permissions deleted
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/groupId'
-        - $ref: '#/components/parameters/userId'
   /simlets:
     get:
       tags:
@@ -1016,19 +661,20 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
-  /simlets/{simletid}/groups/{groupid}:
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/use_new_generation'
     post:
       tags:
-        - admins
         - teachers
-      summary: Add a group to a simlet
-      description: Add a group to a simlet by simlet ID and group ID
-      parameters:
-        - $ref: '#/components/parameters/simletId'
-        - $ref: '#/components/parameters/groupId'
+      summary: adds a group for the current user as owner.
+      operationId: createGroup
+      description: |
+        Creates a new group for the current user as owner.
       responses:
-        '201':
-          description: Group added successfully
+        '200':
+          description: group created
           content:
             application/json:
               schema:
@@ -1045,18 +691,30 @@ paths:
           $ref: '#/components/responses/ConflictError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    delete:
-      tags:
-        - admins
-        - teachers
-      summary: Remove a group from a simlet
-      description: Remove a group from a simlet by simlet ID and group ID 
       parameters:
         - $ref: '#/components/parameters/simletId'
-        - $ref: '#/components/parameters/groupId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/groupCreation'
+  /simlets/{simletid}/groups/{groupid}:
+    get:
+      tags:
+        - admins
+        - students
+        - teachers
+      summary: gets the group with the given ID
+      operationId: getGroup
+      description: |
+        Obtains the requested group
       responses:
         '200':
-          description: Group removed successfully
+          description: group object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -1065,6 +723,209 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+    patch:
+      tags:
+        - teachers
+      summary: updates the group
+      operationId: updateGroup
+      description: Updates an existing group
+      responses:
+        '200':
+          description: item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/group'
+        description: Group to be modified
+    delete:
+      tags:
+        - teachers
+      summary: delete the group
+      operationId: deleteGroup
+      description: delete an existing group
+      responses:
+        '200':
+          description: deleted group
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+  /simlets/{simletid}/groups/{groupid}/participants:
+    get:
+      tags:
+        - teachers
+      summary: gets the list of participants for this group
+      operationId: getGroupParticipants
+      description: |
+        Obtains the list of participants of the group
+      responses:
+        '200':
+          description: list of participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/userMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+    post:
+      summary: adds a user.
+      tags:
+        - teachers
+      operationId: addUser
+      description: |
+        Creates a new user for the current group.
+      responses:
+        '200':
+          description: item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/participantMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userCreation'
+      parameters:
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/simletId'
+  /simlets/{simletid}/groups/count:
+    get:
+      tags:
+        - admins
+        - teachers
+      summary: gets the total count of groups
+      operationId: getGroupCount
+      description: |
+        Gets the total number of groups available to the current user
+      responses:
+        '200':
+          description: group count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 42
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+  /simlets/{simletid}/groups/{groupid}/participants/{userid}:
+    post:
+      summary: add a user to a group.
+      tags:
+        - teachers
+      operationId: addUserToGroup
+      description: |
+        Adds a user to the current group.
+      responses:
+        '200':
+          description: group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/simletId'
+    delete:
+      tags:
+        - teachers
+      summary: deletes a user.
+      operationId: deleteUser
+      description: |
+        Deletes a user from the current group.
+      responses:
+        '200':
+          description: item deleted
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/keycloakDelete'
   /simlets/{simletid}/sessions:
     get:
       tags:
@@ -3742,6 +3603,13 @@ components:
       schema:
         type: string
         format: 'token1'
+    keycloakDelete:
+      in: query
+      name: keycloakDelete
+      description: |
+        If true, the user will be deleted also in keycloak. Only for testing purposes
+      schema:
+        type: boolean
   responses:
     HealthCheckSuccess:
       description: Health check successful
@@ -3962,6 +3830,9 @@ components:
     group:
       type: object
       properties:
+        simlet_id:
+          type: integer
+          example: 123
         group_name:
           type: string
           example: "Session group for School"
@@ -3982,13 +3853,13 @@ components:
         required:
         - group_name
         - group_use_new_generation
-        - group_allocator_type
         - group_sandbox
     groupMapper:
       allOf:
       - $ref: '#/components/schemas/group'
       - type: object
         required:
+          - simlet_id
           - group_id
           - group_name
           - group_use_new_generation
@@ -4146,18 +4017,18 @@ components:
     # Simlet and session participants
     participantMapper:
       allOf:
-      - $ref: '#/components/schemas/userMapper'
-      - type: object
-        required:
-            - simlet_id
-            - session_id
-        properties:
-          simlet_id:
-            type: integer
-            example: 123
-          session_id:
-            type: integer
-            example: 201
+        - $ref: '#/components/schemas/userMapper'
+        - type: object
+          required:
+              - simlet_id
+              - session_id
+          properties:
+            simlet_id:
+              type: integer
+              example: 123
+            session_id:
+              type: integer
+              example: 201
     scheduleMapper:
       type: object
       required:
@@ -4318,9 +4189,6 @@ components:
             - activity_description
             - activity_comply_with_GDPR
             - activity_can_be_restarted
-            - activity_presignedUrl
-            - activity_presignedUrl_generated_at
-            - activity_presignedUrl_expires_at
             - allocated_user
             - createdAt
             - updatedAt

@@ -201,7 +201,7 @@ SELECT
     g.group_use_new_generation,
     g.group_allocator_type,
     g.group_sandbox,
-    u.user_id as group_owner_user_id,
+    g.group_owner_id,
     u.username as group_owner_username
 FROM ParticipantGroups g
 LEFT JOIN Users u ON u.user_id = g.group_owner_id;
@@ -215,7 +215,9 @@ SELECT
     u.isToken,
     u.token,
     u.email,
-    u.role
+    u.role,
+    u.createdAt,
+    u.updatedAt
 FROM ParticipantGroups_participants p
 JOIN ParticipantGroups g ON g.group_id = p.group_id
 JOIN Users u ON u.user_id = p.participant_id

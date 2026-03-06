@@ -11,6 +11,7 @@
 
 import { Simlet } from "@/lib/mappers/simlet/Simlet";
 import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
+import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 
 /**
  * Retrieves all groups associated with a simlet.
@@ -42,7 +43,7 @@ export async function getSimletGroups(simletId: number, current_user_id: number)
  * @async
  * @function addSimletGroups
  * @param {number} simletId - The ID of the simlet
- * @param {number} groupId - The ID of the group to add
+ * @param {Partial<SimletGroup>} body - Group data containing group name and generation settings
  * @param {number} current_user_id - The ID of the user adding the group
  * @returns {Promise<Simlet>} The updated simlet instance
  * @throws {NotFoundError} When simlet or group is not found
@@ -51,13 +52,13 @@ export async function getSimletGroups(simletId: number, current_user_id: number)
  * 
  * @example
  * ```typescript
- * const simlet = await addSimletGroups(123, 456, 789);
+ * const simlet = await addSimletGroups(123, { group_name: "New Group" }, 789);
  * logger.info(`Group added to simlet: ${simlet.name}`);
  * ```
  */
-export async function addSimletGroups(simletId: number, groupId: number, current_user_id: number): Promise<Simlet> {
+export async function addSimletGroups(simletId: number, body: Partial<SimletGroup>, current_user_id: number): Promise<Simlet> {
   const simlet = await Simlet.getFromDbData(simletId, current_user_id);
-  await simlet.addGroup(groupId);
+  await simlet.createGroup(body);
   return simlet;
 }
 
@@ -80,8 +81,48 @@ export async function addSimletGroups(simletId: number, groupId: number, current
  * logger.info(`Group removed from simlet: ${simlet.name}`);
  * ```
  */
-export async function deleteSimletGroup(simletId: number, groupId: number, current_user_id: number): Promise<Simlet> {
+export async function deleteSimletGroup(simletId: number, groupId: number, current_user_id: number): Promise<void> {
   const simlet = await Simlet.getFromDbData(simletId, current_user_id);
   await simlet.removeGroup(groupId);
-  return simlet;
+}
+
+export async function updateSimletGroup(simletId: number, groupId: number, current_user_id: number, body: any) : Promise<SimletGroup> {
+  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.updateGroup(groupId, body);
+}
+
+export async function createSimletGroup(simletId: number, current_user_id: number, body: any) : Promise<SimletGroup> {
+  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.createGroup(body);
+}
+
+export async function getSimletGroupCount(simletId: number, current_user_id: number) : Promise<number> {
+  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.getGroupCount();
+}
+
+export async function getSimletGroupById(simletId: number, groupId: number, current_user_id: number) : Promise<SimletGroup> {
+  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.getGroupById(groupId);
+}
+
+export async function createSimletGroupParticipant(simletId: number, groupId: number, current_user_id: number, body: any) : Promise<SimletParticipant> {
+  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.createGroupParticipant(groupId, body);
+}
+
+export async function getSimletGroupParticipants(simletId: number, groupId: number, current_user_id: number) : Promise<SimletParticipant[]> {
+  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  return await simlet.getGroupParticipants(groupId);
+}
+
+export async function deleteGroupParticipant(simletId: number, groupId: number, participantId: number, current_user_id: number) : Promise<void> {
+  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+  await simlet.deleteGroupParticipant(groupId, participantId);
+}
+
+
+export async function addSimletGroupParticipant(simletId: number, groupId: number, participantId: number, currentUserId: number): Promise<SimletGroup> {
+  const simlet = await Simlet.getFromDbData(simletId, currentUserId);
+  return await simlet.addGroupParticipant(groupId, participantId);
 }

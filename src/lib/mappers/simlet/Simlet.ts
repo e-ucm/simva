@@ -7,9 +7,6 @@ import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/mappers/simlet/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
-import { GroupAllocator } from "../allocators/GroupAllocator";
-import { SessionAllocator } from "../allocators/SessionAllocator";
-import { RandomAllocator } from "../allocators/RandomAllocator";
 
 /**
  * Simlet (Simple Study) mapper class representing a research study.
@@ -172,6 +169,7 @@ export class Simlet {
         await simlet.init();
         return simlet;
     }
+
     static async getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString: string): Promise<number> {
         const results = await db.Functions.runViewQuery(
             db.Views.Session.countBySimletIdAndUserId, 
@@ -236,16 +234,52 @@ export class Simlet {
         await model.destroy();
     }
 
-    async addGroup(group_id: number): Promise<Simlet> {
+    async createGroup(body: Partial<SimletGroup>): Promise<SimletGroup> {
+      this.canEdit();
+      let group = await SimletGroup.createInDb(this.simlet_id, body, false, this.current_user_id as number);
+      return group;
+    }
+
+    async updateGroup(groupId: number, body: Partial<SimletGroup>): Promise<SimletGroup> {
         this.canEdit();
-        // Implementation for adding a group to this simlet
-        let group = await SimletGroup.createSimletGroup(this.simlet_id, group_id);
-        this.groups.push(group.group_id);
-        if(this.sessions.length > 0) {
-            throw new NotImplementedError("Allocators are now managed at the group level. Use Group.group_allocator_type instead.");
-        //    group.allocateGroupToDefaut();
-        }
-        return this;
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        return await group.update(body);
+    }
+
+    async getGroupParticipants(groupId: number): Promise<SimletParticipant[]> {
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        return await group.getParticipants();
+    }
+    
+    async addGroupParticipant(groupId: number, participantId: number): Promise<SimletGroup> {
+        this.canEdit();
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        return await group.addParticipant(participantId);
+    }
+    
+    async allocateToSession(sessionId: number, id: number) {
+      throw new Error("Method not implemented.");
+    }
+    async createGroupParticipant(groupId: number, body: Partial<SimletParticipant>): Promise<SimletParticipant> {
+        this.canEdit();
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        return await group.createParticipant(body);
+    }
+
+    async deleteGroupParticipant(groupId: number, participantId: number, keycloakDelete: boolean = false): Promise<void> {
+        this.canEdit();
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        await group.deleteParticipant(participantId, keycloakDelete);
+    }
+
+    async getGroupById(groupId: number): Promise<SimletGroup> {
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId);
+        return group;
+    }
+
+    async getGroupCount(): Promise<number> {
+        let count = await SimletGroup.getGroupCountForUser(this.simlet_id);
+        return count;
     }
 
     async getUserPermissions() : Promise<SingleUserPermission[]> {

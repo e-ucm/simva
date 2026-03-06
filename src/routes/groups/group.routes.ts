@@ -1,19 +1,6 @@
 import { Router } from "express";
 import { 
-  getGroups, 
-  getGroupById,
-  createGroup, 
-  updateGroup,
-  deleteGroup,
-  getGroupCount,
-  getGroupParticipants,
-  createGroupParticipant,
-  deleteGroupParticipant,
-  getGroupPermissions,
-  createGroupPermissions,
-  getGroupPermissionsForUser,
-  patchGroupPermissionsForUser,
-  deleteGroupPermissionsForUser
+  getGroups
 } from "@/controlers/groups/group.controler";
 
 /**
@@ -53,28 +40,5 @@ const router = Router();
 
 // Base group operations
 router.get("/", getGroups);
-router.get("/count", getGroupCount);
-router.post("/", createGroup);
-
-// Individual group operations
-router.get("/:id", getGroupById);
-router.patch("/:id", updateGroup);
-router.delete("/:id", deleteGroup);
-
-//router.get("/:id/simlets", getGroupSimlets); // For testing purposes, can be removed later
-
-// Group permissions operations
-router.get("/:group_id/permissions", getGroupPermissions);
-router.post("/:group_id/permissions", createGroupPermissions);
-router.get("/:group_id/permissions/:user_id", getGroupPermissionsForUser);
-router.patch("/:group_id/permissions/:user_id", patchGroupPermissionsForUser);
-router.delete("/:group_id/permissions/:user_id", deleteGroupPermissionsForUser);
-
-// Group participant operations
-router.get("/:id/participants", getGroupParticipants);
-router.post("/:id/participants", createGroupParticipant);
-
-// Individual participant operations
-router.delete("/:id/participants/:participant_id", deleteGroupParticipant);
 
 export default router;

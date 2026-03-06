@@ -89,7 +89,6 @@ export function initializeModels(
     GamePlayActivities: GameplayActivityFactory(sequelize, DataTypes),
     LimesurveyActivities: LimesurveyActivityFactory(sequelize, DataTypes),
     Simlets: SimletFactory(sequelize, DataTypes),
-    SimletGroups: SimletGroupsFactory(sequelize, DataTypes),
     SimletShlinks: SimletShlinksFactory(sequelize, DataTypes),
     SimletPermissions: SimletPermissionsFactory(sequelize, DataTypes),
     SimletTags: SimletTagsFactory(sequelize, DataTypes),

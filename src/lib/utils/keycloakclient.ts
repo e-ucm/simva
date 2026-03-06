@@ -5,7 +5,6 @@ import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Credentials } from '@keycloak/keycloak-admin-client/lib/utils/auth';
 import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
 import GroupRepresentation from '@keycloak/keycloak-admin-client/lib/defs/groupRepresentation';
-import { GroupParticipant } from '@/lib/mappers/group/GroupParticipant';
 import { NotFoundError } from '@/lib/errors/appErrors';
 
 interface KeycloakOption {
