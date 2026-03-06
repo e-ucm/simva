@@ -821,7 +821,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/participantMapper'
+                $ref: '#/components/schemas/userMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -3751,7 +3751,6 @@ components:
         - $ref: '#/components/schemas/user'
         - type: object
           required:
-            - username
             - isToken
             - token
             - role
