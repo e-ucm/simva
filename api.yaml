@@ -11,6 +11,14 @@ info:
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
+servers:
+  - url: https://{baseUrl}
+    description: SIMVA API Server
+    variables:
+      baseUrl:
+        default: localhost:3000
+        description: Base URL for the API
     
 tags:
   - name: admins
@@ -3435,20 +3443,25 @@ paths:
               $ref: '#/components/schemas/lti_tool'
         required: true
 security:
-  - OAuth2:
-      - read
-      - write
+  - OAuth2.0:
+      - openid
+      - profile
+      - email
 components:
   securitySchemes:
-    OAuth2:
+    OAuth2.0:
       type: oauth2
       flows:
         authorizationCode:
-          authorizationUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/auth
-          tokenUrl: https://sso.simva.e-ucm.es/auth/realms/simva/protocol/openid-connect/token
+          authorizationUrl: https://sso.simva-beta2.e-ucm.es/realms/simva/protocol/openid-connect/auth
+          tokenUrl: https://sso.simva-beta2.e-ucm.es/realms/simva/protocol/openid-connect/token
           scopes:
-            read: Grants read access
-            write: Grants write access
+            openid: Grants access to the OpenID Connect ID token
+            profile: Grants access to the user's profile information
+            email: Grants access to the user's email address
+      x-client-id: "{{clientId}}"
+      x-client-secret: "{{clientSecret}}"
+      x-callback-url: "https://oauth.pstmn.io/v1/callback"
   parameters:
     id:
       in: path
