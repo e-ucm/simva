@@ -758,7 +758,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/groupUpdate'
+              $ref: '#/components/schemas/group'
         description: Group to be modified
     delete:
       tags:
@@ -962,6 +962,41 @@ paths:
                 participant_id:
                    type: integer
                    example: 123
+  /simlets/{simletid}/groups/{groupid}/random/allocate:
+    post:
+      tags:
+        - teachers
+      summary: allocates randomly participant or group to a session
+      operationId: allocateRandomToSessionSimlet
+      description: |
+        Allocates participants to the selected session using the configured randomallocator.
+      responses:
+        '200':
+          description: allocation applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/groupAllocatorRandomizeSessionAllocation'
   /simlets/{simletid}/sessions:
     get:
       tags:
@@ -3863,19 +3898,16 @@ components:
         - group_use_new_generation
         - group_sandbox
     groupAllocatorRandomizeSessionAllocation:
-      type: object
-      additionalProperties:
-        type: integer
-        example: 123
-        description: |
-          The key of the object is the session id and the value is the percentage random for that session
-    groupUpdate:
-      allOf:
-      - $ref: '#/components/schemas/group'
-      - type: object
+      type: array
+      items:
+        type: object
         properties:
-          randomize_session_allocation:
-            $ref: '#/components/schemas/groupAllocatorRandomizeSessionAllocation'
+          session_id:
+            type: integer
+            example: 123
+          percentage:
+            type: integer
+            example: 50
     groupMapper:
       allOf:
       - $ref: '#/components/schemas/group'
@@ -4100,10 +4132,6 @@ components:
         session_can_be_manually_activated:
           type: boolean
           example: true
-        session_status:
-          type: string
-          enum: ["created", "active", "inactive", "terminated"]
-          example: "active"
     sessionCreation:
       allOf:
       - $ref: '#/components/schemas/session'
@@ -4112,7 +4140,6 @@ components:
         - session_name
         - session_description
         - session_can_be_manually_activated
-        - session_status
     sessionUpdate:
       allOf:
       - $ref: '#/components/schemas/session'
@@ -4156,6 +4183,10 @@ components:
           current_user_permission:
             type: string
             example: "READ_WRITE"
+          session_status:
+            type: string
+            enum: ["created", "active", "inactive", "terminated"]
+            example: "active"
           activities:
             type: array
             items:

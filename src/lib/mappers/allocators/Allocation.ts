@@ -29,49 +29,38 @@ export class Allocation {
             case ALLOCATOR_TYPE.DEFAULT:
                 this.object_id = data.participant_id;
                 break;
+            case ALLOCATOR_TYPE.RANDOM:
+                this.object_id = data.participant_id;
+                break;
+            case ALLOCATOR_TYPE.SESSION:
+                this.object_id = data.group_id;
+                break;
             default:
                 throw new BadRequestError(`Unknown object type: ${object_type}`);
         }
         logger.debug({ object_type, session_id: this.session_id, object_id: this.object_id }, 'Allocation instance created');
     }
 
-    static async getAllFromDbData(simlet_id: number, allocator_type: string) : Promise<Allocation[]> {
-        let allocations = await db.Tables.ExperimentalParticipants.findAll({ where: { simlet_id } });
-        logger.debug({ simlet_id, allocator_type, allocationsCount: allocations.length }, 'Allocation.getAllFromDbData query result');
-        
-        // For group allocator, deduplicate by group_id (one allocation per group)
-        if (allocator_type === ALLOCATOR_TYPE.GROUP) {
-            const groupMap = new Map<number, any>();
-            for (const allocation of allocations) {
-                if (!groupMap.has(allocation.group_id)) {
-                    groupMap.set(allocation.group_id, allocation);
-                }
-            }
-            const uniqueAllocations = Array.from(groupMap.values());
-            logger.debug({ uniqueGroupsCount: uniqueAllocations.length }, 'Allocation.getAllFromDbData deduplicated by group');
-            return uniqueAllocations.map((allocation: any) => new Allocation(allocator_type, allocation));
-        }
-        
-        return allocations.map((allocation: any) => new Allocation(allocator_type, allocation));
-    }
-
     static async getFromDbData(simlet_id: number, group_id: number, allocator_type: string) : Promise<Allocation[]> {
-        let allocations = await db.Tables.ExperimentalParticipants.findAll({ where: { simlet_id, group_id } });
-        logger.debug({ simlet_id, allocator_type, allocationsCount: allocations.length }, 'Allocation.getFromDbData query result');
-        
-        // For group allocator, deduplicate by group_id (one allocation per group)
-        if (allocator_type === ALLOCATOR_TYPE.GROUP) {
-            const groupMap = new Map<number, any>();
-            for (const allocation of allocations) {
-                if (!groupMap.has(allocation.group_id)) {
-                    groupMap.set(allocation.group_id, allocation);
+        let allocations : any = [];
+        switch(allocator_type) {
+            case ALLOCATOR_TYPE.GROUP:
+            case ALLOCATOR_TYPE.SESSION:
+                let allocation = await db.Tables.ExperimentalParticipants.findOne({ where: { simlet_id, group_id } });
+                if (allocation) {
+                    allocations = [allocation];
+                } else {
+                    allocations = [];
                 }
-            }
-            const uniqueAllocations = Array.from(groupMap.values());
-            logger.debug({ uniqueGroupsCount: uniqueAllocations.length }, 'Allocation.getAllFromDbData deduplicated by group');
-            return uniqueAllocations.map((allocation: any) => new Allocation(allocator_type, allocation));
+                break;
+            case ALLOCATOR_TYPE.DEFAULT:
+            case ALLOCATOR_TYPE.RANDOM:
+                allocations = await db.Tables.ExperimentalParticipants.findAll({ where: { simlet_id, group_id } });
+                break;
+            default:
+                throw new BadRequestError(`Unknown allocator type: ${allocator_type}`);
         }
-        
+        logger.debug({ simlet_id, allocator_type, allocationsCount: allocations.length }, 'Allocation.getFromDbData query result');
         return allocations.map((allocation: any) => new Allocation(allocator_type, allocation));
     }
 

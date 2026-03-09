@@ -32,7 +32,7 @@ export class Group extends Model {
   declare group_owner_id: number;
   declare group_sandbox: boolean;
   declare group_allocator_mongo_id: string | null;
-  declare group_allocator_type: "default" | "group" | "random";
+  declare group_allocator_type: "default" | "group" | "random" | "session";
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -99,7 +99,7 @@ export function GroupFactory(
     group_allocator_type: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: { isIn: [["default", "group", "random"]] },
+      validate: { isIn: [["default", "group", "random", "session"]] },
     },
     createdAt: {
       type: DataTypes.DATE,

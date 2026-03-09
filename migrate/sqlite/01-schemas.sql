@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS "ParticipantGroups" (
 	"group_owner_id" INTEGER NOT NULL,
 	"group_sandbox" BOOLEAN NOT NULL,
 	"group_allocator_mongo_id" VARCHAR,
-	"group_allocator_type" VARCHAR NOT NULL CHECK(group_allocator_type IN ("default", "group", "random")),
+	"group_allocator_type" VARCHAR NOT NULL CHECK(group_allocator_type IN ("default", "group", "random", "session")),
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("group_id"),
