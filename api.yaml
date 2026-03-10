@@ -596,6 +596,8 @@ paths:
           $ref: '#/components/responses/AuthentificationError'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
@@ -2134,6 +2136,8 @@ paths:
           $ref: '#/components/responses/AuthentificationError'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
@@ -3998,7 +4002,7 @@ components:
               type: array
               items:
                 type: integer
-    simletMapper:
+    noTypeSimletMapper:
         allOf:
         - $ref: '#/components/schemas/simlet'
         - type: object
@@ -4009,9 +4013,6 @@ components:
             - simlet_archived
             - createdAt
             - updatedAt
-            - current_user_id
-            - current_user_username
-            - current_user_permission
             - sessions
             - groups
             - tags
@@ -4025,15 +4026,6 @@ components:
             updatedAt:
               type: string
               format: date-time
-            current_user_id:
-              type: integer
-              example: 456
-            current_user_username:
-              type: string
-              example: "researcher1"
-            current_user_permission:
-              type: string
-              example: "READ_WRITE"
             sessions:
               type: array
               items:
@@ -4046,6 +4038,51 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/tagsMapper'
+    currentSimletMapper:
+        allOf:
+        - $ref: '#/components/schemas/noTypeSimletMapper'
+        - type: object
+          required:
+            - current_user_id
+            - current_user_username
+            - current_user_permission
+          properties:
+            current_user_id:
+              type: integer
+              example: 456
+            current_user_username:
+              type: string
+              example: "researcher1"
+            current_user_permission:
+              type: string
+              example: "READ_WRITE"
+    allocatorSimletMapper:
+        allOf:
+        - $ref: '#/components/schemas/noTypeSimletMapper'
+        - type: object
+          required:
+            - allocated_user_id
+            - allocated_user_username
+            - allocated_isToken
+            - allocated_token
+          properties:
+            allocated_user_id:
+              type: integer
+              example: 456
+            allocated_user_username:
+              type: string
+              example: "researcher1"
+            allocated_isToken:
+              type: boolean
+              example: false
+            allocated_token:
+              type: string
+              nullable: true
+              example: "token123"
+    simletMapper:
+      anyOf:
+      - $ref: '#/components/schemas/currentSimletMapper'
+      - $ref: '#/components/schemas/allocatorSimletMapper'
     tags:
       type: object
       properties:
@@ -4162,7 +4199,7 @@ components:
             type: array
             items:
               type: integer
-    sessionMapper:
+    noTypedSessionMapper:
       allOf:
       - $ref: '#/components/schemas/session'
       - type: object
@@ -4173,9 +4210,6 @@ components:
           - session_description
           - session_can_be_manually_activated
           - session_status
-          - current_user_id
-          - current_user_username
-          - current_user_permission
           - activities
           - tags
           - createdAt
@@ -4187,15 +4221,6 @@ components:
           simlet_id:
             type: integer
             example: 123
-          current_user_id:
-            type: integer
-            example: 456
-          current_user_username:
-            type: string
-            example: "researcher1"
-          current_user_permission:
-            type: string
-            example: "READ_WRITE"
           session_status:
             type: string
             enum: ["created", "active", "inactive", "terminated"]
@@ -4214,6 +4239,51 @@ components:
           updatedAt:
             type: string
             format: date-time
+    currentSessionMapper:
+      allOf:
+      - $ref: '#/components/schemas/noTypedSessionMapper'
+      - type: object
+        required:
+          - current_user_id
+          - current_user_username
+          - current_user_permission
+        properties:
+          current_user_id:
+            type: integer
+            example: 456
+          current_user_username:
+            type: string
+            example: "researcher1"
+          current_user_permission:
+            type: string
+            example: "READ_WRITE"
+    allocatedSessionMapper:
+      allOf:
+      - $ref: '#/components/schemas/noTypedSessionMapper'
+      - type: object
+        required:
+          - allocated_user_id
+          - allocated_user_username
+          - allocated_isToken
+          - allocated_token
+        properties:
+          allocated_user_id:
+            type: integer
+            example: 456
+          allocated_user_username:
+            type: string
+            example: "researcher1"
+          allocated_isToken:
+            type: boolean
+            example: false
+          allocated_token:
+            type: string
+            nullable: true
+            example: "token123"
+    sessionMapper:
+      anyOf:
+      - $ref: '#/components/schemas/currentSessionMapper'
+      - $ref: '#/components/schemas/allocatedSessionMapper'
     noTypedActivity:
       type: object
       properties:
