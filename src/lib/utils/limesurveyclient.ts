@@ -416,6 +416,25 @@ export class LimeSurveyClient {
         
         this.log(`LimeSurveyClient.activateSurvey -> Survey started: ${surveyId}`);
     }
+    toLimeDate(date : Date): string {
+        return date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    async setActiveSurvey(surveyId: number | string, activate: boolean): Promise<void> {
+        let expires = null;
+        if (activate) {
+            this.log(`LimeSurveyClient.setActiveSurvey -> Activating survey: ${surveyId}`);
+        } else {
+            expires = this.toLimeDate(new Date(Date.now()));
+            this.log(`LimeSurveyClient.setActiveSurvey -> Deactivating survey: ${surveyId} - expires at ${expires}`);
+        }
+        await this.ensureAuthenticated();
+        await this.request('set_survey_properties', [
+            this.sessionKey,
+            surveyId,
+            { expires: expires }
+        ]);
+        this.log(`LimeSurveyClient.setActiveSurvey -> Survey updated: ${surveyId}`);
+    }
 
     /**
      * Activate tokens for a survey
@@ -448,6 +467,17 @@ export class LimeSurveyClient {
         ]);
         
         this.log('LimeSurveyClient.updateActivatedSurveySettings -> Completed');
+    }
+
+    async setSurveyActive(surveyId: number | string, active: boolean = true): Promise<void> {
+        this.log(`LimeSurveyClient.setSurveyActive -> Starting survey: ${surveyId}`);
+        await this.ensureAuthenticated();
+        await this.request('set_survey_properties', [
+            this.sessionKey,
+            surveyId,
+            { active: active ? 'Y' : 'N' }
+        ]);
+        this.log(`LimeSurveyClient.setSurveyActive -> Survey updated: ${surveyId}`);
     }
 
     /**

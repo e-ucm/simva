@@ -138,7 +138,7 @@ config.limesurvey.host = process.env.LIMESURVEY_HOST || 'limesurvey.external.tes
 config.limesurvey.protocol = process.env.LIMESURVEY_PROTOCOL || 'https';
 config.limesurvey.port = process.env.LIMESURVEY_PORT || '443';
 config.limesurvey.external_url = config.limesurvey.protocol + '://' + config.limesurvey.host + ((ignored_ports.indexOf(Number(config.limesurvey.port)) !== -1) ? '' : (':' + config.limesurvey.port));
-config.limesurvey.useNewVersion = process.env.LIMESURVEY_USE_NEW_VERSION === 'true';
+config.limesurvey.useNewVersion = Boolean(process.env.LIMESURVEY_USE_NEW_VERSION);
 config.limesurvey.username = process.env.LIMESURVEY_ADMIN_USER || 'admin';
 config.limesurvey.password = process.env.LIMESURVEY_ADMIN_PASSWORD || 'secret';
 config.limesurvey.secret = process.env.LIMESURVEY_SECRET || 'secret';

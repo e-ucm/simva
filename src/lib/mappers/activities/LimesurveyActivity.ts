@@ -111,6 +111,16 @@ export class LimesurveyActivity extends Activity {
 		return super.addParticipants(participants_id);
 	}
 
+	async activate(activate: boolean): Promise<void> {
+		await super.activate(activate);
+		if(activate) {
+			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, `${config.api.url}/activities/${this.activity_id}`);
+		} else {
+			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, "");	
+		}
+		await limeSurveyClient.setActiveSurvey(this.survey_id, activate);
+	}
+
 	async removeParticipants(participants_id: number[]): Promise<void> {
 		super.removeParticipants(participants_id);
 		logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
@@ -125,10 +135,6 @@ export class LimesurveyActivity extends Activity {
 	async getSurveyLanguages(): Promise<SurveyLanguages> {
 		return await limeSurveyClient.getSurveyLanguages(this.survey_id);
 	}
-
-	async activate(activate: boolean): Promise<void> {
-		await super.activate(activate);
-    }
 
 	canBeOpened(): boolean {
 		return true;
