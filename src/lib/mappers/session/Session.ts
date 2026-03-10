@@ -208,7 +208,7 @@ export class Session {
             return await ActivityToClass(activity.activity_id, current_user_id, true, activity);
         }));
         if(session.session_status !== session.STATUS.ACTIVE) {
-            throw new ConflictError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
+            throw new ValidationError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
         }
         return session;
     }

@@ -14,8 +14,8 @@
 
 import { Simlet } from "@/lib/mappers/simlet/Simlet";
 import { Session } from "@/lib/mappers/session/Session";
-import { Allocator } from "@/lib/mappers/allocators/Allocator";
 import { ValidationError } from "@/lib/errors/appErrors";
+import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 
 /**
  * Retrieves all sessions within a simlet.
@@ -243,10 +243,7 @@ export async function activateSession(simletId: number, sessionId: number, curre
  * const allocator = await allocateToSessionSimlet(123, 456, 789, 555);
  * ```
  */
-export async function allocateToSessionSimlet(simletId: number, sessionId: number, current_user_id: number, id: number): Promise<Allocator> {
+export async function allocateToSessionSimlet(simletId: number, group_id: number, sessionId: number, current_user_id: number, id: number): Promise<SimletGroup> {
   const simlet = await Simlet.getFromDbData(simletId, current_user_id);
-  await simlet.allocateToSession(sessionId, id);
-  // Return updated allocator with fresh allocation data
-  const allocator = await simlet.getAllocator();
-  return allocator;
+  return await simlet.allocateToSession(group_id, sessionId, id);
 }

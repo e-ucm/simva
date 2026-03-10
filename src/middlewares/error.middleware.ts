@@ -27,34 +27,38 @@ export function errorMiddleware(
 ) {
   logger.error(err);
 
+  const errorResponse = {
+    type: err.name || err.constructor?.name || 'Error',
+    message: err.message || 'An error occurred',
+    stack: err.stack || '',
+    name: err.name || err.constructor?.name || 'Error'
+  };
+
   if (err instanceof NotFoundError) {
-    return res.status(404).json({ message: err.message });
+    return res.status(404).json(errorResponse);
   }
 
   if (err instanceof BadRequestError) {
-    return res.status(400).json({ message: err.message });
+    return res.status(400).json(errorResponse);
   }
   
   if (err instanceof ValidationError) {
-    return res.status(406).json({ message: err.message });
+    return res.status(406).json(errorResponse);
   }
 
   if(err instanceof ConflictError) {
-    return res.status(409).json({ message: err.message });
+    return res.status(409).json(errorResponse);
   }
   
   if (err instanceof AuthentificationError) {
-    return res.status(401).json({ message: err.message });
+    return res.status(401).json(errorResponse);
   }
 
   if(err instanceof NotImplementedError) {
-    return res.status(501).json({ message: err.message });
+    return res.status(501).json(errorResponse);
   }
 
   // For generic errors, return the error message in development/test, generic message in production
   //const message = process.env.NODE_ENV === 'production' ? "Internal server error" : (err.message || "Internal server error");
-  res.status(err.status || 500).json({
-    message: err.message,
-    errors: err.errors,
-  });
+  res.status(err.status || 500).json(errorResponse);
 }

@@ -262,7 +262,7 @@ DROP VIEW IF EXISTS v_complete_simlet_allocation_participants;
 CREATE VIEW v_complete_simlet_allocation_participants AS
 SELECT
     ap.user_id as allocated_user_id,
-    ap.username as allocated_username,
+    ap.username as allocated_user_username,
     ap.isToken as allocated_isToken,
     ap.token as allocated_token,
     ap.simlet_id,
