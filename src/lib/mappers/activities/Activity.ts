@@ -21,7 +21,7 @@ export class Activity {
 	allocated_user: boolean;
 	allocated_user_id?:number;
 	allocated_username?:string;
-	allocated_isToken?:string;
+	allocated_isToken?:boolean;
 	allocated_token?:string;
 	allocated_activity_result?: ActivityCompletion;
 
@@ -115,26 +115,30 @@ export class Activity {
 	constructor(allocated: boolean, data: any) {
 		this.allocated_user = allocated;
 		this.simlet_id = data.simlet_id;
-		this.session_id = data.session_id;
 		this.activity_id = data.activity_id;
 		this.activity_name = data.activity_name;
 		this.activity_order = data.activity_order;
 		this.activity_type = data.activity_type;
 		this.activity_trace_storage = data.activity_trace_storage || false; // Default to false if not provided
 		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
+		this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+		this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
 		if(this.allocated_user) {
+			this.session_id = data.allocated_session_id;
 			this.allocated_user_id = data.allocated_user_id ?? data.participant_id;
 			this.allocated_username = data.allocated_username ?? data.participant_username;
 			this.allocated_token = data.allocated_token ?? data.participant_token;
-			this.session_active = Boolean(data.session_active);
+			this.allocated_isToken = data.allocated_isToken ? Boolean(data.allocated_isToken) : false;
+			this.session_active = Boolean(data.session_status == "active");
 			this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
 			this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
 			this.allocated_activity_result = new ActivityCompletion(data);
+			this.activity_description = ""; // No description for allocated activities as they are user-specific instances of the base activity
+			this.activity_comply_with_GDPR = false; // GDPR compliance is not relevant for allocated activities as they are user-specific instances of the base activity
 		} else {
+			this.session_id = data.session_id;
 			this.activity_description = data.activity_description || ""; // Default to empty string if not provided
 			this.activity_comply_with_GDPR = Boolean(data.activity_comply_with_GDPR) || false;
-			this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
-			this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
 			this.activity_presignedUrl = data.activity_presignedUrl || "";
 			this.activity_presignedUrl_generated_at = data.activity_presignedUrl_generated_at ? new Date(data.activity_presignedUrl_generated_at) : undefined;
 			this.activity_presignedUrl_expired_at = data.activity_presignedUrl_expired_at ? new Date(data.activity_presignedUrl_expired_at) : undefined;
@@ -462,6 +466,13 @@ export class Activity {
 	 */
 	async setInitialized(initialized: boolean, participant_id: number): Promise<ActivityCompletion>{
 		let progressData = await this.getCurrentCompletionData([participant_id]);
+		if (progressData.length === 0) {
+			// Create completion record if it doesn't exist
+			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
+			await newCompletion.update({ activity_initialized: initialized });
+			newCompletion.activity_initialized = initialized;
+			return newCompletion;
+		}
 		for (const cd of progressData) {
 			await cd.update({ activity_initialized: initialized });
 			cd.activity_initialized = initialized; // Update local instance to reflect change
@@ -499,6 +510,13 @@ export class Activity {
 	 */
 	async setProgress(progress: number, participant_id: number): Promise<ActivityCompletion>{
 		let progressData = await this.getCurrentCompletionData([participant_id]);
+		if (progressData.length === 0) {
+			// Create completion record if it doesn't exist
+			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
+			await newCompletion.update({ activity_progress: progress });
+			newCompletion.activity_progress = progress;
+			return newCompletion;
+		}
 		for (const cd of progressData) {
 			await cd.update({ activity_progress: progress });
 			cd.activity_progress = progress; // Update local instance to reflect change
@@ -536,6 +554,13 @@ export class Activity {
 	 */
 	async setCompletion(completed: boolean, participant_id: number): Promise<ActivityCompletion>{
 		let data = await this.getCurrentCompletionData([participant_id]);
+		if (data.length === 0) {
+			// Create completion record if it doesn't exist
+			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
+			await newCompletion.update({ activity_completed: completed });
+			newCompletion.activity_completed = completed;
+			return newCompletion;
+		}
 		for (const cd of data) {
 			await cd.update({ activity_completed: completed });
 			cd.activity_completed = completed; // Update local instance to reflect change
@@ -574,6 +599,13 @@ export class Activity {
 	 */
 	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
 		let completionData = await this.getCurrentCompletionData([participant_id]);
+		if (completionData.length === 0) {
+			// Create completion record if it doesn't exist
+			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
+			await newCompletion.update({ activity_suspended: status });
+			newCompletion.activity_suspended = status;
+			return newCompletion;
+		}
 		for (const cd of completionData) {
 			await cd.update({ activity_suspended: status });
 			cd.activity_suspended = status; // Update local instance to reflect change
@@ -672,8 +704,69 @@ export class Activity {
 	));
 	}
 
-	async sendStatementsLRSForActivity(current_user_id: number, body: any): Promise<number[]> {
-		let ids = await lrsclient.setStatement(body, this.activity_id, (await User.getFromDbData(current_user_id)).username);
+	async processStatementsForActivity(current_user_id: number, statements: any): Promise<void> {
+		let objectDefinitionType = undefined;
+		switch(this.activity_type) {
+			case "limesurvey":
+				objectDefinitionType = "http://adlnet.gov/expapi/activities/assessment";
+				break;
+			case "gameplay":
+				objectDefinitionType = "https://w3id.org/xapi/seriousgames/activity-types/serious-game";
+				break;
+			case "manual":
+				logger.info("Processing manual activity for LRS statements");
+				//objectDefinitionType = "http://adlnet.gov/expapi/activities/manual-activity";
+				break;
+			default:
+				logger.warn(`Unsupported activity type ${this.activity_type} for xAPI trace processing`);
+		}
+		for(const statement_id in statements) {
+			let trace = statements[statement_id];
+			try {	
+				if(trace.object && trace.object.definition && trace.object.definition.type == objectDefinitionType) {
+					const initializedVerb='http://adlnet.gov/expapi/verbs/initialized';
+					const progressedVerb='http://adlnet.gov/expapi/verbs/progressed';
+					const completedVerb=this.activity_type == "limesurvey" ? 'http://adlnet.gov/expapi/verbs/terminated' : 'http://adlnet.gov/expapi/verbs/completed';
+					const resultExtensionProgress='https://w3id.org/xapi/seriousgames/extensions/progress';
+					switch(trace.verb.id) {
+						case initializedVerb:
+							logger.info(`INITIALIZED ACTIVITY ${this.activity_type}`);
+							await this.setInitialized(true, current_user_id);
+							break;
+						case progressedVerb:
+							let value= 0;
+							logger.info(`PROGRESSED ACTIVITY ${this.activity_type}`);
+							switch(this.activity_type) {
+								case "limesurvey":
+									value = trace.result.score.scaled;
+									break;
+								case "gameplay":
+									value = trace.result.extensions[resultExtensionProgress];
+									break;
+								default:
+									logger.warn(`Unsupported activity type ${this.activity_type} for progress value extraction from xAPI trace`);
+							}
+							logger.info(`Progress value from trace: ${value}`);
+							await this.setProgress(Number(value.toFixed(6)), current_user_id);
+							break;
+						case completedVerb:
+							logger.info(`COMPLETED ACTIVITY ${this.activity_type}`);
+							if(trace.result && trace.result.completion && Boolean(trace.result.completion)) {
+								await this.setCompletion(true, current_user_id);
+							}
+							break;
+						default:
+							logger.info(`OTHER VERB ${trace.verb.id} for ACTIVITY ${this.activity_type}, no state change applied`);
+					}
+				}
+			} catch (error) {
+				logger.error({error, trace}, `Error processing statement ${statement_id} for activity ${this.activity_id}:`);
+			}
+		}
+	}
+
+	async sendStatementsLRSForActivity(current_user_id: number, statements: any): Promise<number[]> {
+		let ids = await lrsclient.setStatement(statements, this.activity_id, (await User.getFromDbData(current_user_id)).username);
 		return ids;
 	}
 
@@ -710,6 +803,7 @@ export class Activity {
 				await minioClient.putFile(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`, result);
 				break;
 			case 'traces':
+				await this.processStatementsForActivity(participant_id, result);
 				await this.sendStatementsLRSForActivity(participant_id, result);
 				break;
 			default:
@@ -781,8 +875,7 @@ export class Activity {
 			};
 		} else {
 			return {
-				...obj,
-				allocated_user: this.allocated_user
+				...obj
 			};
 		}
 	}

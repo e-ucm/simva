@@ -123,7 +123,6 @@ export class LRSClient {
         }
         if(!trace.version) {
             trace.version = "1.0.3";
-            //trace.version = "2.0.0";
         }
         trace.stored = now.toISOString();
         trace.authority = {

@@ -17,6 +17,7 @@ export function getStatementsLRSForActivity(req: AuthenticatedRequest, res: Resp
 
 export async function postStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
+        logger.info({query: req.query,params: req.params, body: req.body}, "Received request to post statements to LRS for activity");
         let currentUser = req.user?.sql;
         const activityId = parseInt(req.params.activity_id as string);
         if(isNaN(activityId)) {
@@ -26,19 +27,18 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
         if(!body || typeof body !== "object") {
             throw new BadRequestError("Invalid request body");
         }
-        let postuser = req.query["user"] as string;
         let currentUserId = currentUser!.user_id as number;
         let ids: number[] = [];
         switch(currentUser?.role) {
             case "lrsmanager":
-                if(postuser) {
-                    const postuserId = (await User.getFromDbData(undefined, postuser)).user_id;
+                if(body && body.length > 0 && typeof body[0] === "object") {
+                    const postuserId = (await User.getFromDbData(undefined, body[0].actor.account.name)).user_id;
                     if(isNaN(postuserId)) {
                         throw new ValidationError("Invalid username in query parameter");
                     }
                     ids = await activitiesService.sendStatementsLRSForActivity(postuserId, activityId, body, currentUserId!);
                 } else {
-                    throw new ValidationError("Missing username in query parameter for lrsmanager role");
+                    throw new ValidationError("Invalid request body for lrsmanager role");
                 }
                 break;
             case "teacher":
@@ -48,7 +48,7 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
             default:
                 throw new AuthentificationError("User role not recognized");
         }
-        return res.status(201).json({ ids });
+        return res.status(201).json(ids);
     } catch (err) {
         next(err);
     }

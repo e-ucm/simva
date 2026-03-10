@@ -295,6 +295,8 @@ SELECT
     act.activity_trace_storage,
     act.activity_comply_with_GDPR,
     act.activity_can_be_restarted,
+    act.createdAt,
+    act.updatedAt,
     ac.activity_initialized,
     ac.activity_initialization_date,
     ac.activity_progress,

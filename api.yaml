@@ -2283,8 +2283,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/users'
-        - $ref: '#/components/parameters/type'
     post:
       tags:
         - teachers
@@ -2296,7 +2294,17 @@ paths:
         Post the statement object of the activity for a student
       responses:
         '200':
-          description: the traces has been stocked
+          description: the ids of the statements created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityStatementMapper'
+        '201':
+          description: the ids of the statements created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityStatementMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2311,7 +2319,6 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
     put:
       tags:
         - teachers
@@ -2323,7 +2330,17 @@ paths:
         Put the statement object of the activity for a student
       responses:
         '200':
-          description: the traces has been stocked
+          description: the ids of the statements created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityStatementMapper'
+        '201':
+          description: the ids of the statements created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityStatementMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2338,7 +2355,6 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
   /activities/{activityid}/agents:
     get:
       tags:
@@ -2364,8 +2380,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
-        - $ref: '#/components/parameters/type'
   /activities/{activityid}/agents/profile:
     get:
       tags:
@@ -2391,8 +2405,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
-        - $ref: '#/components/parameters/type'
     post:
       tags:
         - teachers
@@ -2421,7 +2433,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
     put:
       tags:
         - teachers
@@ -2450,7 +2461,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
     delete:
       tags:
         - teachers
@@ -2475,7 +2485,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
   /activities/{activityid}/activities:
     get:
       tags:
@@ -2501,8 +2510,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
-        - $ref: '#/components/parameters/type'
   /activities/{activityid}/activities/profile:
     get:
       tags:
@@ -2528,8 +2535,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
-        - $ref: '#/components/parameters/type'
     post:
       tags:
         - teachers
@@ -2558,7 +2563,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
     put:
       tags:
         - teachers
@@ -2587,7 +2591,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
     delete:
       tags:
         - teachers
@@ -2638,8 +2641,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/users'
-        - $ref: '#/components/parameters/type'
     post:
       tags:
         - teachers
@@ -2668,7 +2669,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
     put:
       tags:
         - teachers
@@ -2697,7 +2697,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
     delete:
       tags:
         - teachers
@@ -2722,7 +2721,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
   /activities/{activityid}/about:
     get:
       tags:
@@ -2748,8 +2746,6 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/user'
-        - $ref: '#/components/parameters/type'
   /activities/{activityid}/extension/{extension_id}:
     get:
       tags:
@@ -4328,7 +4324,6 @@ components:
             - activity_description
             - activity_comply_with_GDPR
             - activity_can_be_restarted
-            - allocated_user
             - createdAt
             - updatedAt
         properties:
@@ -4353,9 +4348,6 @@ components:
             type: string
             format: date-time
             nullable: true
-          allocated_user:
-            type: boolean
-            example: false
           createdAt:
             type: string
             format: date-time
@@ -4478,16 +4470,11 @@ components:
         - $ref: '#/components/schemas/activityMapper'
         - type: object
           required:
-            - session_status
             - allocated_user_id
             - allocated_username
             - allocated_isToken
             - allocated_token
           properties:
-            session_status:
-              type: string
-              enum: ["created", "active", "inactive", "terminated"]
-              example: "paused"
             allocated_user_id:
               type: integer
               example: 456
@@ -4497,7 +4484,7 @@ components:
             allocated_isToken:
               type: boolean
               example: false
-            allocated_token: 
+            allocated_token:
               type: string
               example: "abc123"
     activity_type:
@@ -4567,6 +4554,13 @@ components:
       description: Key/value object to store the result data of the activity (e.g., score, completion status, etc.)
       additionalProperties:
         type: string
+    activityStatementMapper:
+      type: array
+      description: List of xAPI statements generated by the activity, stored as their UUIDs
+      items:
+        type: string
+        description: uuid of the xAPI statement generated by the activity
+        example: "550e8400-e29b-41d4-a716-446655440000"
     allocator_type:
       type: object
       required:

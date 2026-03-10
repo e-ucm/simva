@@ -1,6 +1,7 @@
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { config } from "@/lib/config";
 import { Session } from "./Session";
+import { logger } from "@/lib/logger";
 
 
 export class SessionScheduler {
@@ -17,7 +18,7 @@ export class SessionScheduler {
     
     constructor(simletid: number, session: any) {
         this.simlet = simletid;
-        this.session = session ? session.session_id : null;
+        this.session = session.allocated_session_id;
         this.url = `${config.externalUrl}/scheduler/${this.simlet}`;
         if(session.allocated_activities && session.allocated_activities.length > 0) {
             for(const activity of session.allocated_activities) {
@@ -29,6 +30,7 @@ export class SessionScheduler {
                 }
             }
         }
+        logger.debug(this.toJSON(), "SessionScheduler constructor - session and activities data");
     }
 
     toJSON() {

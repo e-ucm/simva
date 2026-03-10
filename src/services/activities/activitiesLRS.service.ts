@@ -11,6 +11,7 @@ export async function sendStatementsLRSForActivity(currentUserId: number, activi
         throw new NotFoundError("The user you are trying to set statement to is not a participant");
     }
     if(await activity.canSendStatementsLRS()) {
+        await activity.processStatementsForActivity(currentUserId, body);
         let ids = await activity.sendStatementsLRSForActivity(lrsmanagerUserId, body);
         return ids;
     } else {
