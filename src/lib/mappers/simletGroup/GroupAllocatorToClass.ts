@@ -23,7 +23,7 @@ import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
  * const allocator = AllocatorToClass({ allocator_type: 'random', allocator_id: 456 });
  * // Returns a RandomAllocator instance
  */
-export async function SimletGroupAllocatorToClass(allocator: any, current_user_id: number) : Promise<SimletGroup> {
+export async function SimletGroupAllocatorToClass(allocator: any, current_user_id?: number) : Promise<SimletGroup> {
     logger.debug({allocator}, allocator.group_allocator_type);
     switch (allocator.group_allocator_type) {
         case SessionAllocatorSimletGroup.getType():

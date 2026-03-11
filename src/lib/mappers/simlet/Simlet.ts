@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { db } from "@/lib/db";
 import { AuthentificationError, ConflictError, NotFoundError, NotImplementedError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
@@ -70,7 +71,8 @@ export class Simlet {
 
     createdAt?: Date;
     updatedAt?: Date;
-    allocated_user: boolean;
+    is_admin: boolean;
+    allocated_user?: boolean;
     allocated_user_id?: number;
     allocated_user_username?: string;
     allocated_isToken?: boolean;
@@ -83,7 +85,8 @@ export class Simlet {
      * @description Initializes simlet properties and parses array fields from string format.
      * Uses database utility functions to properly convert string arrays to typed arrays.
      */
-    constructor(data: any, allocated_user: boolean = false) {
+    constructor(data: any, is_admin : boolean, allocated_user: boolean = false) {
+        this.is_admin = is_admin;
         this.simlet_id = data.simlet_id; // Ensure simlet_id is included in the data
         this.simlet_name = data.simlet_name || ""; // Ensure simlet_name is included in the data
         this.simlet_archived = Boolean(data.simlet_archived);
@@ -91,16 +94,19 @@ export class Simlet {
         this.simlet_supervisor_id = data.simlet_supervisor_id;
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
-        this.allocated_user = allocated_user;
-        if(this.allocated_user) {
-            this.allocated_user_id = data.allocated_user_id;
-            this.allocated_user_username = data.allocated_user_username;
-            this.allocated_isToken = Boolean(data.allocated_isToken);
-            this.allocated_token = data.allocated_token;
-        } else {
-            this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
-            this.current_user_username = data.current_user_username;
-            this.current_user_permission = data.current_user_permission;
+        this.allocated_user = Boolean(allocated_user);
+        switch(this.allocated_user) {
+            case true:
+                this.allocated_user_id = data.allocated_user_id;
+                this.allocated_user_username = data.allocated_user_username;
+                this.allocated_isToken = Boolean(data.allocated_isToken);
+                this.allocated_token = data.allocated_token;
+                break
+            case false:
+                this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
+                this.current_user_username = data.current_user_username;
+                this.current_user_permission = data.current_user_permission;
+            default:
         }        
     }
 
@@ -113,8 +119,22 @@ export class Simlet {
         const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id })
         this.sessions = sessionIds.map((row: any) => row.session_id) || [];
     }
+    
+    static async getAdminSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
+      let results = await db.Tables.Simlets.findAll({
+        where: searchString ? { simlet_name: { [Op.like]: `%${searchString}%` } } : undefined,
+        limit: limit !== undefined ? limit : undefined,
+        offset: offset !== undefined ? offset : undefined
+      });
+      const processedResults = await Promise.all(results.map(async (simlet: any) => {
+            const simletInstance = new Simlet(simlet, true, false);
+            await simletInstance.init();
+            return simletInstance;
+        }));
+        return processedResults;
+    }
 
-    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
+    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString?: string, limit?: number, offset?: number): Promise<Simlet[]> {
           let results;
           if(allocated_user) {
             if(limit !== undefined && offset !== undefined) {
@@ -143,7 +163,7 @@ export class Simlet {
         }
         logger.debug({results} , "getSimletsByUserId results");
         const processedResults =  await Promise.all(results.map(async (simlet: any) => {
-            const simletInstance = new Simlet(simlet, allocated_user);
+            const simletInstance = new Simlet(simlet, false, allocated_user);
             await simletInstance.init();
             return simletInstance;
         }));
@@ -151,7 +171,7 @@ export class Simlet {
         return processedResults;
     }
 
-    static async createSimlet(simletData: any): Promise<Simlet> {
+    static async createSimlet(simletData: any, is_admin: boolean = false): Promise<Simlet> {
         logger.debug({simletData} , "Creating simlet with data");
         if(await db.Tables.Simlets.count({where : {simlet_name : simletData.simlet_name}}) > 0){
             throw new ConflictError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
@@ -163,21 +183,26 @@ export class Simlet {
             simletData.simlet_archived = false;
         }
         const createdSimlet = await db.Tables.Simlets.create(simletData);
-        return new Simlet(createdSimlet, false);
+        return new Simlet(createdSimlet, is_admin, false);
     }
 
-    static async getFromDbData(simlet_id: number, current_user_id: number) : Promise<Simlet> {
-        let result = await db.Functions.runViewQuery(
-            db.Views.Simlet.byUserIdAndSimletId,
-            { current_user_id, simlet_id }
-        );
+    static async getFromDbData(simlet_id: number, is_admin : boolean, current_user_id?: number) : Promise<Simlet> {
+        let result;
+        if(!is_admin) {
+            result = await db.Functions.runViewQuery(
+                db.Views.Simlet.byUserIdAndSimletId,
+                { current_user_id, simlet_id }
+            );
+        } else {
+            result = await db.Tables.Simlets.findAll({ where: { simlet_id } });
+        }
         logger.debug({result} , "getSimletBySimletIdAndUserId results");
         if(result.length === 0){
             throw new NotFoundError(`Simlet with ID ${simlet_id} not found for user ID ${current_user_id}.`);
         } else if(result.length > 1){
             logger.warn(`Multiple simlets found with ID ${simlet_id} for user ID ${current_user_id}. Using the first one.`);
         }
-        const simlet = new Simlet(result[0], false);
+        const simlet = new Simlet(result[0],is_admin, false);
         await simlet.init();
         return simlet;
     }
@@ -190,9 +215,14 @@ export class Simlet {
         return results[0].count || 0;
     }
 
-    static async getSimletCountByUserId(current_user_id: number, searchString: string): Promise<number> {
-      const results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
-      return results[0].count || 0;
+    static async getSimletCountByUserId(searchString: string, current_user_id?: number): Promise<number> {
+        let results;
+        if(current_user_id) {
+            results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
+        } else {
+            results = await db.Tables.Simlets.findAll({ where: { simlet_name: { [Op.like]: `%${searchString}%` } } });
+        }
+        return results[0].count || 0; 
     }
     
     /**
@@ -257,10 +287,7 @@ export class Simlet {
 
     async updateGroup(groupId: number, body: Partial<SimletGroup>): Promise<SimletGroup> {
         this.canEdit();
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         const oldAllocatorType = group.group_allocator_type;
         logger.debug({ groupId, oldAllocatorType, newAllocatorType: body.group_allocator_type }, 'updateGroup checking allocator type change');
         const updatedGroup = await group.update(body);
@@ -275,28 +302,19 @@ export class Simlet {
     }
 
     async getGroupParticipants(groupId: number): Promise<SimletParticipant[]> {
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         return await group.getParticipants();
     }
     
     async addGroupParticipant(groupId: number, participantId: number): Promise<SimletGroup> {
         this.canEdit();
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         return await group.addParticipant(participantId);
     }
     
     async allocateToSession(group_id: number, sessionId: number, group_id_or_participant_id: number) : Promise<SimletGroup>{
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         this.canEdit();
-        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.is_admin, this.current_user_id);
         await group.allocateToSession(sessionId, group_id_or_participant_id);
         return group;
     }
@@ -304,27 +322,18 @@ export class Simlet {
 
     async createGroupParticipant(groupId: number, body: Partial<SimletParticipant>): Promise<SimletParticipant> {
         this.canEdit();
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         return await group.createParticipant(body);
     }
 
     async deleteGroupParticipant(groupId: number, participantId: number, keycloakDelete: boolean = false): Promise<void> {
         this.canEdit();
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         await group.deleteParticipant(participantId, keycloakDelete);
     }
 
     async getGroupById(groupId: number): Promise<SimletGroup> {
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         return group;
     }
 
@@ -336,9 +345,6 @@ export class Simlet {
     async getUserPermissions() : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for retrieving user permissions for this simlet
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return permissions.permissions;
     }
@@ -346,9 +352,6 @@ export class Simlet {
     async addUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for adding user permission to this simlet
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.addUserPermission(user_id, permission);
     }
@@ -356,9 +359,6 @@ export class Simlet {
     async removeUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         // Implementation for removing user permission from this simlet
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.removeUserPermission(user_id, permission);
     }
@@ -366,10 +366,7 @@ export class Simlet {
     async removeGroup(group_id: number): Promise<Simlet> {
         this.canEdit();
         // Implementation for remove a group to this simlet
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.current_user_id);
+        let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.is_admin, this.current_user_id);
         await db.Tables.ExperimentalParticipants.destroy({ where: { simlet_id: this.simlet_id, group_id : group_id }});
         await group.delete();
         this.groups = this.groups.filter(id => id !== group_id);
@@ -392,63 +389,39 @@ export class Simlet {
     }
 
     async getGroups(): Promise<SimletGroup[]> {
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id);
     }
 
     async getSessions(searchString?: string, limit?: number, offset?: number): Promise<Session[]> {
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString);
     }
 
     async getSession(sessionId: number): Promise<Session> {  
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-        return await Session.getFromDbData(this.simlet_id, sessionId, this.current_user_id);
+        return await Session.getFromDbData(this.simlet_id, sessionId, this.is_admin, this.current_user_id);
     }
 
     async getPermissions() {
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-      return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
     }
     
     async createPermissions(body: any) {
         this.canEdit();
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.createPermissions(body);
     }
     
     async getPermissionsForUser(userId: number) {
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
     }
     
     async patchPermissionsForUser(userId: number, body: any) {
         this.canEdit();
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
         return await permission.update(body.permission);
     }
 
     async deletePermissionsForUser(userId: number) {
         this.canEdit();
-        if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
         let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
         return await permission.delete();
     }
@@ -463,7 +436,7 @@ export class Simlet {
             if (!this.current_user_id) {
                 throw new AuthentificationError("Current user ID is not set");
             }
-            let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.current_user_id);
+            let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
             return await group.export(withData);
         }));
         return simletData;

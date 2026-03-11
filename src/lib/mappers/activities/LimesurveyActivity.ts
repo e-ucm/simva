@@ -62,7 +62,7 @@ export class LimesurveyActivity extends Activity {
 	 * @description Factory method that creates instance and loads additional data from database.
 	 * Handles database errors gracefully and ensures proper initialization.
 	 */
-	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<LimesurveyActivity> {
+	static async getFromDbData(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number): Promise<LimesurveyActivity> {
 		const instance = new LimesurveyActivity(allocated, activityData);
 		
 		const limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 

@@ -32,8 +32,8 @@ import { Activity } from "@/lib/mappers/activities/Activity";
  * activities.forEach(a => logger.info(a.name, a.type, a.url));
  * ```
  */
-export async function getSessionActivities(simlet_id: number, sessionId: number, current_user_id: number): Promise<Activity[]> {
-  let session = await Session.getFromDbData(simlet_id, sessionId, current_user_id);
+export async function getSessionActivities(simlet_id: number, sessionId: number, is_admin: boolean, current_user_id?: number): Promise<Activity[]> {
+  let session = await Session.getFromDbData(simlet_id, sessionId, is_admin, current_user_id);
   return await session.getActivities();
 }
 
@@ -61,8 +61,8 @@ export async function getSessionActivities(simlet_id: number, sessionId: number,
  * });
  * ```
  */
-export async function addSessionActivities(simletId: number, sessionId: number, current_user_id: number, body: any): Promise<Activity> {
-  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+export async function addSessionActivities(simletId: number, sessionId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Activity> {
+  let session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   return await session.addActivity(body);
 }
 
@@ -89,14 +89,14 @@ export async function addSessionActivities(simletId: number, sessionId: number, 
  * });
  * ```
  */
-export async function updateSessionActivity(simletId: number, sessionId: number, activityId: number, current_user_id: number, body: any): Promise<Activity> {
+export async function updateSessionActivity(simletId: number, sessionId: number, activityId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Activity> {
   // First verify the session exists and user has access
-  await Session.getFromDbData(simletId, sessionId, current_user_id);
+  await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   // Get the activity and update it
-  let activity = await Activity.getFromDbData(activityId, current_user_id, false);
+  let activity = await Activity.getFromDbData(activityId, false, is_admin, current_user_id);
   await activity.patch(body);
   // Return refreshed activity
-  return Activity.getFromDbData(activityId, current_user_id, false);
+  return Activity.getFromDbData(activityId, false, is_admin, current_user_id);
 }
 
 /**
@@ -118,10 +118,10 @@ export async function updateSessionActivity(simletId: number, sessionId: number,
  * await deleteSessionActivity(123, 456, 789, 555);
  * ```
  */
-export async function deleteSessionActivity(simletId: number, sessionId: number, activityId: number, current_user_id: number): Promise<void> {
+export async function deleteSessionActivity(simletId: number, sessionId: number, activityId: number, is_admin: boolean, current_user_id: number | undefined): Promise<void> {
   // First verify the session exists and user has access
-  await Session.getFromDbData(simletId, sessionId, current_user_id);
+  await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   // Get the activity and delete it
-  let activity = await Activity.getFromDbData(activityId, current_user_id, false);
+  let activity = await Activity.getFromDbData(activityId, false, is_admin, current_user_id);
   await activity.remove();
 }

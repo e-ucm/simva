@@ -161,7 +161,7 @@ async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<
       
       if (user.role !== newRole) {
         // Update user role using model method
-        await user.update({ role: newRole });
+        await user.update({ role: newRole }, false); // Update role without updating Keycloak since we're already processing a Keycloak token
         return decoded;
       } else {
         return decoded;
@@ -208,35 +208,22 @@ async function createUserFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): 
  * @param {Partial<KeycloakJWTPayload>} decoded - Decoded Keycloak JWT payload
  * @returns {string} User role
  */
-function getRoleFromKeycloakJWT(decoded: Partial<KeycloakJWTPayload>): string {
-  logger.debug("getRoleFromJWT: " + JSON.stringify(decoded));
-  
-  // If no realm_access is provided at all, default to student
-  if (!decoded.sso!.realm_access) {
-    return 'student';
-  }
-  
-  let role = 'norole';
-  
-  if (decoded.sso!.realm_access?.roles) {
-    const roles = decoded.sso!.realm_access.roles;
-    
-    if (roles.includes("admin")) {
-      role = 'admin';
-    } else if (roles.includes("lrsmanager")) {
-      role = 'lrsmanager';
-    } else {
-      // Check for teacher roles
-      const teacherRoles = ['teacher', 'teaching-assistant', 'researcher'];
-      const hasTeacherRole = teacherRoles.some(teacherRole => roles.includes(teacherRole));
-      
-      if (hasTeacherRole) {
+function getRoleFromKeycloakJWT(userdata: Partial<KeycloakJWTPayload>): string {
+    let role = 'norole';
+    if (userdata.sso?.realm_access?.roles) {
+      let roles = userdata.sso.realm_access.roles;
+      // Check for teacher roles first since they can also have student roles and we want to prioritize teacher role
+      logger.info({roles}, "Keycloak roles:");
+      if(roles.includes('administrator')) {
+        role = "administrator"
+      } else if (roles.includes("lrsmanager")) {
+        role = 'lrsmanager';
+      } else if (['teacher', 'researcher'].some(teacherRole => roles.includes(teacherRole))) {
         role = 'teacher';
-      } else if (roles.includes('student')) {
+      } else if (['teaching-assistant', 'student'].some(studentRole => roles.includes(studentRole))) {
         role = 'student';
       }
     }
+    logger.info(`Determined role from Keycloak JWT: ${role}`);
+    return role;
   }
-
-  return role;
-}

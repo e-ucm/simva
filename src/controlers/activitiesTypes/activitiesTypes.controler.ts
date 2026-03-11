@@ -16,6 +16,7 @@ import { Response, NextFunction } from "express";
 import * as activitiesTypesservice from "@/services/activities/activitiesTypes.service";
 import { NotFoundError, AuthentificationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
+import { getAccess } from "@/controlers/users/user.helper";
 
 /**
  * Retrieves all available activity types with their metadata and utilities.
@@ -45,6 +46,7 @@ export async function getActivityTypes(
 ) {
   try {
     let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     // Parse query types into an array (supports: ?type=a,b,c or ?type=a&type=b)
     let types: string[] | undefined;
     if (req.query.type) {
@@ -55,28 +57,20 @@ export async function getActivityTypes(
       }
     }
 
-    switch(currentUser?.role) {
-      case 'admin':
-        if(types && types.length > 0) {
-          const activityType = await activitiesTypesservice.getActivityTypes(types);
-          if (!activityType) {
-            throw new NotFoundError("Activity type not found");
-          }
-          return res.json(activityType.map(t => t.toJSON()));
-        } else {
-          const activityTypes = await activitiesTypesservice.getActivityTypes();
-          return res.json(activityTypes.map(t => t.toJSON()));
-        }
-      case 'teacher':
-      case 'student':
-        if(currentUser.user_id) {
-          const activityTypes = await activitiesTypesservice.getActivityTypes();
-          return res.json(activityTypes.map(t => t.toJSON()));
-        }
-        break;
-      default:
-        throw new AuthentificationError("Insufficient permissions to access activity types data");
+    if(access.is_admin && types && types.length > 0) {
+      const activityType = await activitiesTypesservice.getActivityTypes(types);
+      if (!activityType) {
+        throw new NotFoundError("Activity type not found");
+      }
+      return res.json(activityType.map(t => t.toJSON()));
     }
+
+    if(access.currentUserId) {
+      const activityTypes = await activitiesTypesservice.getActivityTypes();
+      return res.json(activityTypes.map(t => t.toJSON()));
+    }
+
+    throw new AuthentificationError("Insufficient permissions to access activity types data");
   } catch (err) {
     next(err);
   }

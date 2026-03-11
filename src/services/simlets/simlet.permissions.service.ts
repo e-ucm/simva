@@ -31,8 +31,8 @@ import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPer
  * });
  * ```
  */
-export async function getSimletPermissions(simletId: number, current_user_id: number): Promise<UserPermission> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function getSimletPermissions(simletId: number, is_admin: boolean, current_user_id?: number): Promise<UserPermission> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.getPermissions();
 }
 
@@ -58,8 +58,8 @@ export async function getSimletPermissions(simletId: number, current_user_id: nu
  * });
  * ```
  */
-export async function createSimletPermissions(simletId: number, current_user_id: number, body: any): Promise<UserPermission> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function createSimletPermissions(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<UserPermission> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.createPermissions(body);
 }
 
@@ -82,8 +82,8 @@ export async function createSimletPermissions(simletId: number, current_user_id:
  * logger.info('User permission level:', permissions.permission_level);
  * ```
  */
-export async function getSimletPermissionsForUser(simletId: number, userId: number, current_user_id: number): Promise<SingleUserPermission> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function getSimletPermissionsForUser(simletId: number, userId: number, is_admin: boolean, current_user_id?: number): Promise<SingleUserPermission> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.getPermissionsForUser(userId);
 }
 
@@ -110,8 +110,8 @@ export async function getSimletPermissionsForUser(simletId: number, userId: numb
  * );
  * ```
  */
-export async function patchSimletPermissionsForUser(simletId: number, userId: number, current_user_id: number, body: any): Promise<SingleUserPermission> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function patchSimletPermissionsForUser(simletId: number, userId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<SingleUserPermission> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.patchPermissionsForUser(userId, body);
 }
 
@@ -133,7 +133,7 @@ export async function patchSimletPermissionsForUser(simletId: number, userId: nu
  * await deleteSimletPermissionsForUser(123, 789, 456);
  * ```
  */
-export async function deleteSimletPermissionsForUser(simletId: number, userId: number, current_user_id: number): Promise<void> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function deleteSimletPermissionsForUser(simletId: number, userId: number, is_admin: boolean, current_user_id?: number): Promise<void> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   await simlet.deletePermissionsForUser(userId);
 }

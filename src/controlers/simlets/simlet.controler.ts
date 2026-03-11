@@ -17,6 +17,7 @@ import * as simletService from "@/services/simlets/simlet.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
 import { AuthentificationError } from "@/lib/errors/appErrors";
+import { getAccess } from "@/controlers/users/user.helper";
 
 /**
  * Retrieves simlets from the database.
@@ -49,19 +50,17 @@ export async function getAllSimlets(
         offset = parseInt(req.query.offset as string)|| undefined;
     }
     const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     let simlets;
-    switch(currentUser?.role) {
-      case "admin":
-      case "teacher":
-        simlets = await simletService.getSimletsByUserId(currentUser!.user_id as number, searchString, limit, offset);
-        res.json(simlets.map(s => s.toJSON()));
-        break;
-      case "student":
-          simlets = await simletService.getSimletsForStudent(currentUser!.user_id as number, searchString, limit, offset);
-          res.json(simlets.map(s => s.toJSON()));
-          break;  
-      default:
-        throw new AuthentificationError("Invalid user role");
+    if (access.is_admin) {
+      simlets = await simletService.getAllSimlets(searchString, limit, offset);
+      res.json(simlets.map(s => s.toJSON()));
+    } else if (access.allocated) {
+      simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, limit, offset);
+      res.json(simlets.map(s => s.toJSON()));
+    } else {
+      simlets = await simletService.getSimletsByUserId(access.currentUserId, searchString, limit, offset);
+      res.json(simlets.map(s => s.toJSON()));
     }
   } catch (err) {
     next(err);
@@ -75,14 +74,17 @@ export async function getSimletCount(
 ): Promise<void> {
   try {
     const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     const searchString = String(req.query.search || '');
     let count;
-    switch(currentUser?.role) {
-      case "admin":
-      case "teacher":
-        count = await simletService.getSimletCountByUserId(currentUser!.user_id as number, searchString);
-        res.json({ count });
-        break;
+    if (access.is_admin) {
+      count = await simletService.getSimletCountByUserId(searchString);
+      res.json({ count });
+    } else if (!access.allocated) {
+      count = await simletService.getSimletCountByUserId(searchString, access.currentUserId);
+      res.json({ count });
+    } else {
+      throw new AuthentificationError("Invalid user role");
     }
   } catch (err) {
     next(err);
@@ -111,17 +113,18 @@ export async function getSimletById(
 ): Promise<void> {
   try {
     const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     const simlet_id = parseInt(req.params.simlet_id as string);
     let simlet;
-    switch(currentUser?.role) {
-      case "admin":
-      case "teacher":
-        // For teachers, we could add additional permission checking here if needed
-        simlet = await simletService.getSimletBySimletIdAndUserId(simlet_id, currentUser!.user_id as number);
-        logger.debug({simlet} , "getSimletById results");
-        res.json(simlet.toJSON());
-        break;
+    if (access.is_admin) {
+      simlet = await simletService.getSimletBySimletIdAndUserId(simlet_id, true);
+    } else if (!access.allocated) {
+      simlet = await simletService.getSimletBySimletIdAndUserId(simlet_id, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
     }
+    logger.debug({simlet} , "getSimletById results");
+    res.json(simlet!.toJSON());
   } catch (err) {
     next(err);
   }
@@ -186,7 +189,15 @@ export async function patchSimlet(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
-    const simlet = await simletService.patch(simletId, currentUser!.user_id as number, req.body);
+    const access = getAccess(currentUser);
+    let simlet;
+    if (access.is_admin) {
+      simlet = await simletService.patch(simletId, req.body, true);
+    } else if (!access.allocated) {
+      simlet = await simletService.patch(simletId, req.body, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     res.json(simlet.toJSON());
   } catch (err) {
     next(err);
@@ -216,7 +227,14 @@ export async function deleteSimlet(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
-    await simletService.deleteSimlet(simletId, currentUser!.user_id as number);
+    const access = getAccess(currentUser);
+    if (access.is_admin) {
+      await simletService.deleteSimlet(simletId, true);
+    } else if (!access.allocated) {
+      await simletService.deleteSimlet(simletId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -231,8 +249,16 @@ export async function getSimletParticipants(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId} , "Getting participants for simlet ID");
-    const participants = await simletService.getSimletParticipants(simletId, currentUser!.user_id as number);
+    let participants;
+    if (access.is_admin) {
+      participants = await simletService.getSimletParticipants(simletId, true);
+    } else if (!access.allocated) {
+      participants = await simletService.getSimletParticipants(simletId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({participants} , "Participants retrieved for simlet ID");
     res.json(participants.map(p => p.toJSON()));
   } catch (err) {
@@ -248,8 +274,16 @@ export async function getSimletSchedule(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting schedule for simlet ID and user ID");
-    const schedule = await simletService.getSimletSchedule(simletId, currentUser!.user_id as number);
+    let schedule;
+    if (access.is_admin) {
+      schedule = await simletService.getSimletSchedule(simletId, true, access.currentUserId);
+    } else if (!access.allocated) {
+      schedule = await simletService.getSimletSchedule(simletId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({schedule} , "Schedule retrieved for simlet ID and user ID");
     res.json(schedule.toJSON());
   } catch (err) {
@@ -265,9 +299,16 @@ export async function exportSimlet(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const currentUser = req.user?.sql;
-    const currentUserId = currentUser?.user_id!;
-    logger.debug({simletId, userId: currentUserId} , "Exporting simlet for simlet ID and user ID");
-    const exportData = await simletService.exportSimlet(simletId, currentUserId);
+    const access = getAccess(currentUser);
+    logger.debug({simletId, userId: currentUser?.user_id} , "Exporting simlet for simlet ID and user ID");
+    let exportData;
+    if (access.is_admin) {
+      exportData = await simletService.exportSimlet(simletId, true);
+    } else if (!access.allocated) {
+      exportData = await simletService.exportSimlet(simletId, false, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({exportData} , "Simlet exported for simlet ID and user ID");
     res.json(exportData);
   } catch (err) {

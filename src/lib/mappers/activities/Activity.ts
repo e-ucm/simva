@@ -147,17 +147,35 @@ export class Activity {
      * 
      * @example
      * ```typescript
-     * const activities = await Activity.getAllFromDbData(123, 456, false);
+     * const activities = await Activity.getAllFromDbData(123, false, false, 456);
      * ```
      */
-    static async getAllFromDbData(session_id: number, user_id: number, allocated: boolean = false): Promise<Activity[]> {
+    static async getAllFromDbData(session_id: number, allocated: boolean = false, is_admin: boolean = false, user_id?: number): Promise<Activity[]> {
         let activities;
 		if(allocated) {
+			if(user_id === undefined) {
+				throw new NotFoundError(`Activities for session ID ${session_id} not found for user ID ${user_id}.`);
+			}
 			activities = await db.Functions.runViewQuery(
 				db.Views.Activity.bySessionIdParticipantId,
 				{ session_id: session_id, participant_id : user_id }
 			);
+		} else if (is_admin) {
+			const session = await db.Tables.Sessions.findOne({ where: { session_id } });
+			if (!session) {
+				throw new NotFoundError(`Session with ID ${session_id} not found.`);
+			}
+			activities = (await db.Tables.Activities.findAll({ where: { session_id } })).map((activity: any) => ({
+				...activity.toJSON(),
+				simlet_id: session.simlet_id,
+				current_user_id: user_id,
+				current_user_permission: "FULL",
+				current_user_username: "administrator"
+			}));
 		} else {
+			if(user_id === undefined) {
+				throw new NotFoundError(`Activities for session ID ${session_id} not found for user ID ${user_id}.`);
+			}
 			activities = await db.Functions.runViewQuery(
 				db.Views.Activity.bySessionIdUserId,
 				{ session_id: session_id, current_user_id : user_id }
@@ -165,7 +183,7 @@ export class Activity {
 		}
 		logger.debug({activities} , "Activities data from view");
 		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
-		return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity.activity_id, user_id, allocated, activity)));
+		return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity.activity_id, allocated, is_admin, activity, user_id)));
     }
 
     /**
@@ -187,14 +205,36 @@ export class Activity {
      * const activity = await Activity.getFromDbData(789, 456, true);
      * ```
      */
-	static async getFromDbData(activity_id:number, user_id: number, allocated : boolean = false, activityData : any = null) : Promise<Activity> {
+	static async getFromDbData(activity_id: number, allocated: boolean = false, is_admin: boolean = false, user_id?: number, activityData: any = null) : Promise<Activity> {
 		let results;
 		if(allocated) {
+			if(user_id === undefined) {
+				throw new NotFoundError(`Activity with ID ${activity_id} not found for user ID ${user_id}.`);
+			}
 			results = await db.Functions.runViewQuery(
 				db.Views.Activity.byActivityIdAndParticipantId,
 				{ activity_id, allocated_user_id : user_id }
 			);
+		} else if(is_admin) {
+			const activity = await db.Tables.Activities.findOne({ where: { activity_id } });
+			if (!activity) {
+				throw new NotFoundError(`Activity with ID ${activity_id} not found.`);
+			}
+			const session = await db.Tables.Sessions.findOne({ where: { session_id: activity.session_id } });
+			if (!session) {
+				throw new NotFoundError(`Session for activity ID ${activity_id} not found.`);
+			}
+			results = [{
+				...activity.toJSON(),
+				simlet_id: session.simlet_id,
+				current_user_id: user_id,
+				current_user_permission: "FULL",
+				current_user_username: "administrator"
+			}];
 		} else {
+			if(user_id === undefined) {
+				throw new NotFoundError(`Activity with ID ${activity_id} not found for user ID ${user_id}.`);
+			}
 			results = await db.Functions.runViewQuery(
 				db.Views.Activity.byActivityIdAndUserId,
 				{ activity_id, current_user_id : user_id }
@@ -207,7 +247,7 @@ export class Activity {
 		}
 		activityData = results[0];
 		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
-		return await ActivityToClass(activity_id, user_id, allocated, activityData);
+		return await ActivityToClass(activity_id, allocated, is_admin, activityData, user_id);
 	}
 	
 	/**
@@ -684,7 +724,7 @@ export class Activity {
 		);
 		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
 		return await Promise.all(previousActivitiesData.map(async (activity: any) =>
-			await ActivityToClass(activity.activity_id, allocated_user_id, true, activity)
+			await ActivityToClass(activity.activity_id, true, false, activity, allocated_user_id)
 	));
 	}
 

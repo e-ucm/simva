@@ -38,3 +38,7 @@ import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 export async function getGroups(current_user_id: number, version?: boolean, searchString?: string, limit?: number, offset?: number): Promise<SimletGroup[]> {
     return await SimletGroup.getCurrentUserAllFromDbData(current_user_id, version, limit, offset, searchString);
 }
+
+export async function getAdminGroups(version: boolean | undefined, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<SimletGroup[] | PromiseLike<SimletGroup[]>> {
+  return await SimletGroup.getAdminAllFromDbData(version, limit, offset, searchString);
+}

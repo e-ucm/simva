@@ -21,7 +21,7 @@ servers:
         description: Base URL for the API
     
 tags:
-  - name: admins
+  - name: administrators
     description: Secured Admin-only calls
   - name: teachers
     description: Operations available to teachers
@@ -87,7 +87,7 @@ paths:
   /users:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the list of users.
       operationId: getUsers
@@ -122,7 +122,7 @@ paths:
     patch:
       summary: Modifies the logged user, for exemple it's role.
       tags:
-        - admins
+        - administrators
         - noroles
       operationId: patchUser
       description: |
@@ -156,9 +156,10 @@ paths:
   /users/me:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
+        - noroles
       summary: Obtains your own user.
       operationId: getMe
       description: |
@@ -235,7 +236,7 @@ paths:
   /users/{username}:
     patch:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: updates a user
       operationId: patchUserByUsername
@@ -270,7 +271,7 @@ paths:
   /groups:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the list of groups where this student plays
@@ -304,6 +305,7 @@ paths:
   /tasklist:
     post:
       tags:
+        - administrators
         - teachers
       summary: add to the task list
       operationId: addToTaskList
@@ -335,7 +337,7 @@ paths:
   /simlets:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the list of studies for the current teacher
@@ -365,6 +367,7 @@ paths:
         - $ref: '#/components/parameters/limit'
     post:
       tags:
+        - administrators
         - teachers
       summary: adds an simlet for the current teacher
       operationId: createSimlet
@@ -399,6 +402,7 @@ paths:
   /simlets/import:
     post:
         tags:
+          - administrators
           - teachers
         summary: adds an simlet for the current teacher
         operationId: addSimletFromImport
@@ -432,7 +436,7 @@ paths:
   /simlets/{simletid}:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the simlet with the given ID
       operationId: getSimletById
@@ -457,6 +461,7 @@ paths:
         - $ref: '#/components/parameters/simletId'
     patch:
       tags:
+        - administrators
         - teachers
       summary: updates the simlet
       operationId: patchSimlet
@@ -490,6 +495,7 @@ paths:
         description: simlet to be modified
     delete:
       tags:
+        - administrators
         - teachers
       summary: Deletes the simlet with the given ID
       operationId: deleteSimlet
@@ -509,7 +515,7 @@ paths:
   /simlets/{simletid}/export:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the simlet export with the given ID
       operationId: getSimletExport
@@ -534,6 +540,9 @@ paths:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/events:
     get:
+      tags:
+        - administrators
+        - teachers
       summary: send Server Side Events to Client for this simlet
       operationId: limesurveyCompletionWebhook
       description: |
@@ -554,6 +563,7 @@ paths:
   /simlets/{simletid}/events/getPresignedUrl:
     get:
       tags:
+        - administrators
         - teachers
       summary: get getPresignedUrl for Server Side Events to Client for this simlet
       operationId: getEventsPresignedUrl
@@ -575,6 +585,7 @@ paths:
   /simlets/{simletid}/schedule:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: gets the list of scheduled activities for the student
@@ -604,6 +615,10 @@ paths:
         - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/schedule/events:
     get:
+      tags:
+        - administrators
+        - teachers
+        - students
       summary: send Server Side Events to Client for this simlet
       operationId: GetSSEEvent
       description: |
@@ -624,6 +639,7 @@ paths:
   /simlets/{simletid}/schedule/events/getPresignedUrl:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: get getPresignedUrl for Server Side Events to Client for this simlet
@@ -646,7 +662,7 @@ paths:
   /simlets/{simletid}/groups:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the assigned groups to the simlet
       operationId: getSimletGroups
@@ -677,6 +693,7 @@ paths:
         - $ref: '#/components/parameters/use_new_generation'
     post:
       tags:
+        - administrators
         - teachers
       summary: adds a group for the current user as owner.
       operationId: createGroup
@@ -711,7 +728,7 @@ paths:
   /simlets/{simletid}/groups/{groupid}:
     get:
       tags:
-        - admins
+        - administrators
         - students
         - teachers
       summary: gets the group with the given ID
@@ -738,6 +755,7 @@ paths:
         - $ref: '#/components/parameters/groupId'
     patch:
       tags:
+        - administrators
         - teachers
       summary: updates the group
       operationId: updateGroup
@@ -772,6 +790,7 @@ paths:
         description: Group to be modified
     delete:
       tags:
+        - administrators
         - teachers
       summary: delete the group
       operationId: deleteGroup
@@ -793,6 +812,7 @@ paths:
   /simlets/{simletid}/groups/{groupid}/participants:
     get:
       tags:
+        - administrators
         - teachers
       summary: gets the list of participants for this group
       operationId: getGroupParticipants
@@ -821,6 +841,7 @@ paths:
     post:
       summary: adds a user.
       tags:
+        - administrators
         - teachers
       operationId: addUser
       description: |
@@ -855,7 +876,7 @@ paths:
   /simlets/{simletid}/groups/count:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the total count of groups
       operationId: getGroupCount
@@ -886,6 +907,7 @@ paths:
     post:
       summary: add a user to a group.
       tags:
+        - administrators
         - teachers
       operationId: addUserToGroup
       description: |
@@ -915,6 +937,7 @@ paths:
         - $ref: '#/components/parameters/simletId'
     delete:
       tags:
+        - administrators
         - teachers
       summary: deletes a user.
       operationId: deleteUser
@@ -939,6 +962,7 @@ paths:
   /simlets/{simletid}/groups/{groupid}/allocate/{sessionid}:
     post:
       tags:
+        - administrators
         - teachers
       summary: allocates a participant or group to a session
       operationId: allocateToSessionSimlet
@@ -975,6 +999,7 @@ paths:
   /simlets/{simletid}/groups/{groupid}/random/allocate:
     post:
       tags:
+        - administrators
         - teachers
       summary: allocates randomly participant or group to a session
       operationId: allocateRandomToSessionSimlet
@@ -1010,6 +1035,7 @@ paths:
   /simlets/{simletid}/sessions:
     get:
       tags:
+        - administrators
         - teachers
       summary: gets the sessions from a simlet
       operationId: getSimletSessions
@@ -1036,6 +1062,7 @@ paths:
         - $ref: '#/components/parameters/simletId'
     post:
       tags:
+        - administrators
         - teachers
       summary: adds a session to the simlet
       operationId: createSimletSession
@@ -1071,6 +1098,7 @@ paths:
   /simlets/{simletid}/participants:
     get:
       tags:
+        - administrators
         - teachers
       summary: gets the list of participants for this simlet
       operationId: getSimletParticipants
@@ -1098,6 +1126,7 @@ paths:
   /simlets/{simletid}/sessions/{sessionid}:
     get:
       tags:
+        - administrators
         - teachers
       summary: gets the session with the given ID
       operationId: getSession
@@ -1124,6 +1153,7 @@ paths:
     patch:
       summary: Modifies the session.
       tags:
+        - administrators
         - teachers
       operationId: patchSession
       description: |
@@ -1157,6 +1187,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     delete:
       tags:
+        - administrators
         - teachers
       summary: deletes the session with the given ID
       operationId: deleteSession
@@ -1179,6 +1210,7 @@ paths:
   /simlets/{simletid}/sessions/{sessionid}/participants:
     get:
       tags:
+        - administrators
         - teachers
       summary: gets the list of participants for this session
       operationId: getSessionSimletParticipants
@@ -1207,6 +1239,7 @@ paths:
   /simlets/{simletid}/sessions/{sessionid}/activate:
     post:
       tags:
+        - administrators
         - teachers
       summary: gets the list of activities for the selected session
       operationId: activateSimletSession
@@ -1237,6 +1270,7 @@ paths:
   /simlets/{simletid}/sessions/{sessionid}/activities:
     get:
       tags:
+        - administrators
         - teachers
       summary: gets the list of activities for the selected session
       operationId: getSessionActivities
@@ -1264,6 +1298,7 @@ paths:
         - $ref: '#/components/parameters/sessionId'
     post:
       tags:
+        - administrators
         - teachers
       summary: adds a Activity to a session
       operationId: addActivityToSession
@@ -1300,7 +1335,7 @@ paths:
   /simlets/{simletid}/permissions:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets permissions for a simlet
       operationId: getSimletPermissions
@@ -1327,7 +1362,7 @@ paths:
         - $ref: '#/components/parameters/simletId'
     post:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: creates permissions for a simlet
       operationId: createSimletPermissions
@@ -1363,7 +1398,7 @@ paths:
   /simlets/{simletid}/permissions/{userid}:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets permissions for a user in a simlet
       operationId: getSimletPermissionsForUser
@@ -1389,7 +1424,7 @@ paths:
         - $ref: '#/components/parameters/userId'
     patch:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: updates permissions for a user in a simlet
       operationId: patchSimletPermissionsForUser
@@ -1425,7 +1460,7 @@ paths:
         required: true
     delete:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: deletes permissions for a user in a simlet
       operationId: deleteSimletPermissionsForUser
@@ -1448,7 +1483,7 @@ paths:
   /simlets/{simletid}/sessions/{sessionid}/permissions:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets permissions for a session
       operationId: getSessionPermissions
@@ -1476,7 +1511,7 @@ paths:
         - $ref: '#/components/parameters/sessionId'
     post:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: creates permissions for a session
       operationId: createSessionPermissions
@@ -1513,7 +1548,7 @@ paths:
   /simlets/{simletid}/sessions/{sessionid}/permissions/{userid}:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets permissions for a user in a session
       operationId: getSessionPermissionsForUser
@@ -1540,7 +1575,7 @@ paths:
         - $ref: '#/components/parameters/userId'
     patch:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: updates permissions for a user in a session
       operationId: patchSessionPermissionsForUser
@@ -1577,7 +1612,7 @@ paths:
         required: true
     delete:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: deletes permissions for a user in a session
       operationId: deleteSessionPermissionsForUser
@@ -1601,7 +1636,7 @@ paths:
   /activities:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the list of activities for the current teacher
       operationId: getAllActivities
@@ -1630,6 +1665,7 @@ paths:
         - $ref: '#/components/parameters/limit'
     post:
       tags:
+        - administrators
         - teachers
       summary: adds a Activity
       operationId: addActivity
@@ -1664,7 +1700,7 @@ paths:
   /activities/{activityid}:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the activity with the given ID
       operationId: getActivity
@@ -1690,6 +1726,7 @@ paths:
     patch:
       summary: Modifies the activity.
       tags:
+        - administrators
         - teachers
       operationId: patchActivity
       description: |
@@ -1722,6 +1759,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     delete:
       tags:
+        - administrators
         - teachers
       summary: deletes the activity with the given ID
       operationId: deleteActivity
@@ -1743,7 +1781,7 @@ paths:
   /activities/{activityid}/export:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: gets the activity export with the given ID
       operationId: exportActivity
@@ -1769,7 +1807,7 @@ paths:
   /activities/{activityid}/surveyowner:
     patch:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: update the survey owner for a Limesurvey activity
       operationId: updateSurveyOwner
@@ -1795,7 +1833,7 @@ paths:
   /activities/{activityid}/surveylanguages:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: get the survey languages for a Limesurvey activity
       operationId: getSurveyLanguages
@@ -1817,7 +1855,7 @@ paths:
   /activities/{activityid}/usersurveylist:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
       summary: get user survey list for a Limesurvey activity
       operationId: getUserSurveyList
@@ -1839,6 +1877,7 @@ paths:
   /activities/{activityid}/openable:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: returns if the activity can be opened or not
@@ -1866,6 +1905,7 @@ paths:
   /activities/{activityid}/open:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: redirects the user to the activity landing
@@ -1889,6 +1929,7 @@ paths:
   /activities/{activityid}/target:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: returns if the activity can be opened or not
@@ -1916,6 +1957,7 @@ paths:
   /activities/{activityid}/progress:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: gets the progress status of the activity
@@ -1943,6 +1985,7 @@ paths:
   /activities/{activityid}/suspension:
     post:
       tags:
+        - administrators
         - teachers
         - students
       summary: suspend the activity
@@ -1974,6 +2017,7 @@ paths:
   /activities/{activityid}/initialized:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: gets the initialized status of the activity
@@ -2000,6 +2044,7 @@ paths:
         - $ref: '#/components/parameters/users'
     post:
       tags:
+        - administrators
         - teachers
         - students
       summary: sets the initialized status of the activity
@@ -2012,7 +2057,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activityInitializedMapper'
+                $ref: '#/components/schemas/completionMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2031,6 +2076,7 @@ paths:
   /activities/{activityid}/completion:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: gets the completion status of the activity
@@ -2039,7 +2085,7 @@ paths:
         Obtains the completion status of the activity
       responses:
         '200':
-          description: if it is openable or not
+          description: the completion status of the activity
           content:
             application/json:
               schema:
@@ -2057,6 +2103,7 @@ paths:
         - $ref: '#/components/parameters/users'
     post:
       tags:
+        - administrators
         - teachers
         - students
       summary: sets the completion status of the activity
@@ -2065,11 +2112,11 @@ paths:
         Set the completion status of the activity for a student
       responses:
         '200':
-          description: if it is openable or not
+          description: the completion status of the activity
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activityCompletionMapper'
+                $ref: '#/components/schemas/completionMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2088,6 +2135,7 @@ paths:
   /activities/{activityid}/completion/multi:
     post:
       tags:
+        - administrators
         - teachers
       summary: sets the completion status for all participants of the activity
       operationId: setMultiCompletion
@@ -2099,7 +2147,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activityCompletionMapper'
+                $ref: '#/components/schemas/completionMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2117,6 +2165,7 @@ paths:
   /activities/{activityid}/result:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: gets the results of the activity
@@ -2146,6 +2195,7 @@ paths:
         - $ref: '#/components/parameters/type'
     post:
       tags:
+        - administrators
         - teachers
         - students
       summary: sets the result for the activity
@@ -2177,6 +2227,7 @@ paths:
   /activities/{activityid}/hasresult:
     get:
       tags:
+        - administrators
         - teachers
         - students
       summary: gets true if has results of the activity
@@ -2206,6 +2257,7 @@ paths:
   /activities/{activityid}/session:
     post:
       tags:
+        - administrators
         - teachers
         - students
       summary: sessioning endpoint for uadventure sessioning
@@ -2234,6 +2286,7 @@ paths:
   /activities/{activityid}/presignedurl:
     get:
       tags:
+        - administrators
         - teachers
       summary: gets the presigned minio url
       operationId: getPresignedFileUrl
@@ -2261,6 +2314,7 @@ paths:
   /activities/{activityid}/statements:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2285,6 +2339,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     post:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2321,6 +2376,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     put:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2358,6 +2414,7 @@ paths:
   /activities/{activityid}/agents:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2383,6 +2440,7 @@ paths:
   /activities/{activityid}/agents/profile:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2407,6 +2465,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     post:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2435,6 +2494,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     put:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2463,6 +2523,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     delete:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2488,6 +2549,7 @@ paths:
   /activities/{activityid}/activities:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2513,6 +2575,7 @@ paths:
   /activities/{activityid}/activities/profile:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2537,6 +2600,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     post:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2565,6 +2629,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     put:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2593,6 +2658,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     delete:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2619,6 +2685,7 @@ paths:
   /activities/{activityid}/activities/status:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2643,6 +2710,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     post:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2671,6 +2739,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     put:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2699,6 +2768,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
     delete:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2724,6 +2794,7 @@ paths:
   /activities/{activityid}/about:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2749,6 +2820,7 @@ paths:
   /activities/{activityid}/extension/{extension_id}:
     get:
       tags:
+        - administrators
         - teachers
         - students
         - lrsmanagers
@@ -2775,6 +2847,8 @@ paths:
   /activitytypes:
     get:
       tags:
+        - administrators
+        - lrsmanagers
         - teachers
       summary: gets the types of activities available
       operationId: getAllActivityTypes
@@ -2805,6 +2879,8 @@ paths:
   /allocatortypes:
     get:
       tags:
+        - administrators
+        - lrsmanagers
         - teachers
       summary: gets the types of allocators available
       operationId: getAllAllocatorTypes
@@ -2835,7 +2911,7 @@ paths:
   /lti:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the status of the LTI compatibility
@@ -2865,7 +2941,7 @@ paths:
   /lti/claims:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the LTI claims for the given hints
@@ -2897,7 +2973,7 @@ paths:
         - $ref: '#/components/parameters/lti_message_hint'
     post:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the LTI claims for the given hints
@@ -2934,7 +3010,7 @@ paths:
   /lti/context/{id}/lineitems/:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the LineItems of the Lti Activity
@@ -2963,7 +3039,7 @@ paths:
   /lti/context/{id}/lineitems/{lineitem}/:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the LineItems of the Lti Activity
@@ -2992,7 +3068,7 @@ paths:
         - $ref: '#/components/parameters/lineItem'
     put:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the LineItems of the Lti Activity
@@ -3026,7 +3102,7 @@ paths:
   /lti/context/{id}/lineitems/{lineitem}/results:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the result for the LineItems of the Lti Activity
@@ -3056,7 +3132,7 @@ paths:
   /lti/context/{id}/lineitems/{lineitem}/score:
     post:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the LineItems of the Lti Activity
@@ -3090,7 +3166,7 @@ paths:
   /lti/context/{id}/memberships:
     get:
       tags:
-        - admins
+        - administrators
         - teachers
         - students
       summary: gets the list of members based on the LTI NRPS
@@ -3801,7 +3877,7 @@ components:
            - "teacher"
            - "teaching-assistant"
            - "researcher"
-           - "admin"
+           - "administrator"
            - "lrsmanager"
     tokenCreation:
       allOf:
@@ -4077,6 +4153,7 @@ components:
               example: "token123"
     simletMapper:
       anyOf:
+      - $ref: '#/components/schemas/noTypeSimletMapper'
       - $ref: '#/components/schemas/currentSimletMapper'
       - $ref: '#/components/schemas/allocatorSimletMapper'
     tags:
@@ -4279,6 +4356,7 @@ components:
             example: "token123"
     sessionMapper:
       anyOf:
+      - $ref: '#/components/schemas/noTypedSessionMapper'
       - $ref: '#/components/schemas/currentSessionMapper'
       - $ref: '#/components/schemas/allocatedSessionMapper'
     noTypedActivity:

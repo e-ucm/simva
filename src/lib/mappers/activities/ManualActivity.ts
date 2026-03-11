@@ -57,7 +57,7 @@ export class ManualActivity extends Activity {
 	 * @description Factory method that creates instance and loads additional data from database.
 	 * Handles database errors gracefully and ensures proper initialization.
 	 */
-	static async getFromDbData(activity_id: number, user_id: number, allocated:boolean, activityData: any): Promise<ManualActivity> {
+	static async getFromDbData(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number): Promise<ManualActivity> {
 		const instance = new ManualActivity(allocated, activityData);
 		const manualData = await db.Tables.ManualActivities.findOne({ 
 			where: { activity_id: activity_id } 

@@ -5,8 +5,8 @@ export function getStatementsLRSForActivity(currentUserid: number, activityId: n
     throw new NotImplementedError("Endpoint not implemented yet");
 }
 
-export async function sendStatementsLRSForActivity(currentUserId: number, activityId: number, body: any, lrsmanagerUserId: number): Promise<number[]> {
-    let activity = await Activity.getFromDbData(activityId,currentUserId, true);
+export async function sendStatementsLRSForActivity(activityId: number, body: any, lrsmanagerUserId: number, is_admin: boolean, currentUserId: number): Promise<number[]> {
+    let activity = await Activity.getFromDbData(activityId, true, is_admin, currentUserId);
     if(!activity) {
         throw new NotFoundError("The user you are trying to set statement to is not a participant");
     }

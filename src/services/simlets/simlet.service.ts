@@ -58,6 +58,10 @@ export async function getSimletsForStudent(current_user_id: number, searchString
   return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset);
 }
 
+export async function getAllSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
+  return await Simlet.getAdminSimlets(searchString, limit, offset);
+}
+
 /**
  * Retrieves specific simlets for a specific user.
  * Uses the v_complete_simlets_users_permissions view to get user's simlets.
@@ -73,8 +77,8 @@ export async function getSimletsForStudent(current_user_id: number, searchString
  * const userSimlet = await getSimletBySimletIdAndUserId(123, 456);
  * ```
  */
-export async function getSimletBySimletIdAndUserId(simlet_id: number, current_user_id: number): Promise<Simlet> {
-  let simlet = await Simlet.getFromDbData(simlet_id, current_user_id);
+export async function getSimletBySimletIdAndUserId(simlet_id: number, is_admin: boolean, current_user_id?: number): Promise<Simlet> {
+  let simlet = await Simlet.getFromDbData(simlet_id, is_admin, current_user_id);
   simlet.printInfo(); // Example of using the Simlet class to log info about the first simlet
   return simlet;
 }
@@ -122,8 +126,8 @@ export async function createSimlet(simletData: any): Promise<Simlet> {
  * });
  * ```
  */
-export async function patch(simletId: number, current_user_id: number, simletData: any): Promise<Simlet> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function patch(simletId: number, simletData: any, is_admin: boolean, current_user_id?: number): Promise<Simlet> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.patch(simletData);
 }
 
@@ -143,8 +147,8 @@ export async function patch(simletId: number, current_user_id: number, simletDat
  * await deleteSimlet(123, 456);
  * ```
  */
-export async function deleteSimlet(simletId: number, current_user_id: number): Promise<void> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function deleteSimlet(simletId: number, is_admin: boolean, current_user_id?: number): Promise<void> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   await simlet.delete();
 }
 
@@ -166,8 +170,8 @@ export async function deleteSimlet(simletId: number, current_user_id: number): P
  * participants.forEach(p => logger.info(p.user_id, p.allocated_group));
  * ```
  */
-export async function getSimletParticipants(simletId: number, current_user_id: number): Promise<SimletParticipant[]> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function getSimletParticipants(simletId: number, is_admin: boolean, current_user_id?: number): Promise<SimletParticipant[]> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.getAllocatedParticipants();
 }
 
@@ -188,8 +192,8 @@ export async function getSimletParticipants(simletId: number, current_user_id: n
  * logger.info(`Found ${totalSimlets} experiment simlets`);
  * ```
  */
-export async function getSimletCountByUserId(current_user_id: number, searchString: string): Promise<number> {
-  return await Simlet.getSimletCountByUserId(current_user_id, searchString);
+export async function getSimletCountByUserId(searchString: string, current_user_id?: number): Promise<number> {
+  return await Simlet.getSimletCountByUserId(searchString, current_user_id);
 }
 
 /**
@@ -204,8 +208,8 @@ export async function getSimletCountByUserId(current_user_id: number, searchStri
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks read permissions
  */
-export async function getSimletSchedule(simletId: number, current_user_id: number): Promise<SessionScheduler> {
-  const schedule = await SessionScheduler.getFromDbData(simletId, current_user_id);
+export async function getSimletSchedule(simletId: number, is_admin: boolean, current_user_id: number): Promise<SessionScheduler> {
+  const schedule = await SessionScheduler.getFromDbData(simletId, is_admin, current_user_id);
   return schedule;
 }
 
@@ -227,12 +231,8 @@ export async function getSimletSchedule(simletId: number, current_user_id: numbe
  * fs.writeFileSync('simlet-backup.json', exportedData);
  * ```
  */
-export async function exportSimlet(simletId: number, currentUserId: number, withData: boolean = false): Promise<string> {
-  let simlet = await Simlet.getFromDbData(simletId, currentUserId);
+export async function exportSimlet(simletId: number, is_admin: boolean, withData: boolean = false, currentUserId?: number): Promise<string> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, currentUserId);
   let exported = await simlet.export(withData);
   return JSON.stringify(exported);
-}
-
-export async function getAllSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
-  return await Simlet.getAllSimlets(searchString, limit, offset);
 }

@@ -24,18 +24,18 @@ import { logger } from "@/lib/logger";
  * const activity = await ActivityToClass({ activity_type: 'limesurvey', activity_id: 123 });
  * // Returns a LimesurveyActivity instance with database data loaded
  */
-export async function ActivityToClass(activity_id: number, user_id: number, allocated : boolean, activityData: any) : Promise<Activity> {
+export async function ActivityToClass(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number) : Promise<Activity> {
     //logger.debug({activityData}, activityData.activity_type);
     let activity: Activity;
     switch (activityData.activity_type) {
         case GamePlayActivity.getType():
-            activity = await GamePlayActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            activity = await GamePlayActivity.getFromDbData(activity_id, allocated, is_admin, activityData, user_id);
             break;
         case LimesurveyActivity.getType():
-            activity = await LimesurveyActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            activity = await LimesurveyActivity.getFromDbData(activity_id, allocated, is_admin, activityData, user_id);
             break;
         case ManualActivity.getType():
-            activity = await ManualActivity.getFromDbData(activity_id, user_id, allocated, activityData);
+            activity = await ManualActivity.getFromDbData(activity_id, allocated, is_admin, activityData, user_id);
             break;
         case Activity.getType():
             activity = new Activity(allocated, activityData);

@@ -47,11 +47,11 @@ export class SimletGroup {
 
     group_owner_id : number;
     group_owner_username: string;
-
-    current_user_id: number;
+    is_admin: boolean = false;
+    current_user_id?: number;
     /**
      * Gets the allocator type identifier
-     * 
+     *  
      * @static
      * @returns {string} The allocator type string
      * @description Returns the base allocator type. Should be overridden by subclasses.
@@ -101,7 +101,7 @@ export class SimletGroup {
      * @description Initializes group-study relationship and parses participant arrays from string format.
      * Uses database utility functions to properly convert string arrays to typed arrays.
      */
-    constructor(data: any, current_user_id: number) {
+    constructor(data: any, current_user_id?: number) {
         this.simlet_id = data.simlet_id;
         this.group_id = data.group_id;
         this.group_name = data.group_name;
@@ -113,7 +113,11 @@ export class SimletGroup {
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         this.group_use_new_generation = Boolean(data.group_use_new_generation);
         this.group_allocator_type = data.group_allocator_type;
-        this.current_user_id = current_user_id;
+        if(this.current_user_id) {
+         this.current_user_id = current_user_id;   
+        } else {
+            this.is_admin = true;
+        }
     }
 
     async init() {
@@ -139,7 +143,24 @@ export class SimletGroup {
         body.group_sandbox = body.group_sandbox ?? false;
         body.group_allocator_type = body.group_allocator_type ?? "group";
         let createdGroup = await db.Tables.Group.create(body);
-        return await SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id, current_user_id);
+        return await SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id, false, current_user_id);
+    }
+
+     static async getAdminAllFromDbData(version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {
+        let groups = await db.Tables.Group.findAll({
+            where: {
+                group_name: searchString ? { [Op.iLike]: `%${searchString}%` } : { [Op.ne]: null },
+                group_use_new_generation: version? version : { [Op.ne]: null },
+            },
+            order: [['createdAt', 'DESC']],
+            limit: limit,
+            offset: offset
+        });
+        return Promise.all(groups.map(async (groupData) => {
+            const group = new SimletGroup(groupData, 0);
+            await group.init();
+            return group;
+        }));
     }
 
     static async getCurrentUserAllFromDbData(current_user_id: number, version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {
@@ -157,7 +178,7 @@ export class SimletGroup {
         }));
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id: number): Promise<SimletGroup[]> {
+    static async getAllFromDbData(simlet_id: number, current_user_id?: number): Promise<SimletGroup[]> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         const groups = await db.Functions.runViewQuery(
             db.Views.Group.bySimletId,
@@ -171,13 +192,13 @@ export class SimletGroup {
         }));
     }
 
-    static async getFromDbData(simlet_id: number, group_id: number, current_user_id: number) : Promise<SimletGroup> {
+    static async getFromDbData(simlet_id: number, group_id: number, is_admin: boolean, current_user_id?: number) : Promise<SimletGroup> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         let simletGroupData = await db.Tables.Group.findOne({ where: { simlet_id, group_id } });
         if (!simletGroupData) {
             throw new NotFoundError(`SimletGroup with simlet_id ${simlet_id} and group_id ${group_id} not found`);
         }
-        const simletGroup = await SimletGroupAllocatorToClass(simletGroupData, current_user_id);
+        const simletGroup = await SimletGroupAllocatorToClass(simletGroupData, is_admin ? 0 : current_user_id);
         await simletGroup.init();
         return simletGroup;
     }
@@ -391,7 +412,7 @@ export class SimletGroup {
             participants: this.participants 
         }, 'Allocator.allocateToDefault starting');
         
-        const session = await Session.getFromDbData(this.simlet_id, defaultSession, this.current_user_id);
+        const session = await Session.getFromDbData(this.simlet_id, defaultSession, false, this.current_user_id);
         
         for (const participant_id of this.participants) {
             const existing = await db.Tables.ExperimentalParticipants.findOne({

@@ -25,6 +25,7 @@ import { validateJWT, KeycloakJWTPayload } from '@/services/users/user.auth.serv
 import { AuthentificationError, NotFoundError } from '@/lib/errors/appErrors';
 import path from 'path';
 import { config } from '@/lib/config';
+import { db } from '@/lib/db';
 
 /**
  * Extended Express Request interface that includes authenticated user data.
@@ -111,7 +112,7 @@ export class Authenticator {
                 }
 
                 tag[method].push(path);
-                }
+              }
             }
           }
         }
@@ -185,17 +186,7 @@ export class Authenticator {
    * // Returns 'teacher'
    * ```
    */
-  private static getRoleFromRealmAccessRoles(userdata: KeycloakJWTPayload): string {
-    let role = 'norole';
-    if (userdata.sso.realm_access?.roles) {
-      if (userdata.sso.realm_access.roles.includes('teacher') || userdata.sso.realm_access.roles.includes('researcher')) {
-        role = 'teacher';
-      } else if (userdata.sso.realm_access.roles.includes('teaching-assistant') || userdata.sso.realm_access.roles.includes('student')) {
-        role = 'student';
-      }
-    }
-    return role;
-  }
+
 
   /**
    * Main authentication middleware function.
@@ -316,12 +307,8 @@ export class Authenticator {
         throw new NotFoundError('No user data found');
       }
 
-      // Get user role - use database role or derive from realm access
+      // Get user role - use database role
       let userRole = req.user.sql.role;
-      if (!userRole && req.user.sso.realm_access) {
-        userRole = this.getRoleFromRealmAccessRoles(req.user);
-        logger.debug(`[ROLE] Derived role from realm access: ${userRole}`);
-      }
       
       logger.debug(`[ROLE] User: ${req.user.sql.username}, Role: ${userRole}`);
       if (!userRole) {

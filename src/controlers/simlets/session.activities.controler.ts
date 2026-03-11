@@ -12,6 +12,8 @@ import { Response, NextFunction } from "express";
 import * as sessionActivitiesService from "@/services/simlets/session.activities.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
+import { AuthentificationError } from "@/lib/errors/appErrors";
+import { getAccess } from "@/controlers/users/user.helper";
 
 /**
  * @route /simlets/:simlet_id/sessions/:session_id/activities
@@ -34,8 +36,16 @@ export async function getSessionActivities(
     const simletId = parseInt(req.params.simlet_id as string);
     const sessionId = parseInt(req.params.session_id as string);
     let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({sessionId, userId: currentUser?.user_id} , "Getting activities for session ID and user ID");
-    const activities = await sessionActivitiesService.getSessionActivities(simletId, sessionId, currentUser!.user_id as number);
+    let activities;
+    if (access.is_admin) {
+      activities = await sessionActivitiesService.getSessionActivities(simletId, sessionId, true);
+    } else if (!access.allocated) {
+      activities = await sessionActivitiesService.getSessionActivities(simletId, sessionId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({activities} , "Activities retrieved for session ID and user ID");
     res.json(activities.map(a => a.toJSON()));
   } catch (err) {
@@ -53,8 +63,16 @@ export async function createSessionActivity(
     const sessionId = parseInt(req.params.session_id as string);
     let body = req.body;
     let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({sessionId, userId: currentUser?.user_id, body} , "Adding activities for session ID and user ID");
-    const activity = await sessionActivitiesService.addSessionActivities(simletId, sessionId, currentUser!.user_id as number, body);
+    let activity;
+    if (access.is_admin) {
+      activity = await sessionActivitiesService.addSessionActivities(simletId, sessionId, true, body);
+    } else if (!access.allocated) {
+      activity = await sessionActivitiesService.addSessionActivities(simletId, sessionId, false, body, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({activity} , "Activity added for session ID and user ID");
     res.json(activity.toJSON());
   } catch (err) {
@@ -73,8 +91,16 @@ export async function updateSessionActivity(
     const activityId = parseInt(req.params.activity_id as string);
     let body = req.body;
     let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, sessionId, activityId, userId: currentUser?.user_id, body} , "Updating activity for session");
-    const activity = await sessionActivitiesService.updateSessionActivity(simletId, sessionId, activityId, currentUser!.user_id as number, body);
+    let activity;
+    if (access.is_admin) {
+      activity = await sessionActivitiesService.updateSessionActivity(simletId, sessionId, activityId, true, body);
+    } else if (!access.allocated) {
+      activity = await sessionActivitiesService.updateSessionActivity(simletId, sessionId, activityId, false, body, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({activity} , "Activity updated");
     res.json(activity.toJSON());
   } catch (err) {
@@ -92,8 +118,15 @@ export async function deleteSessionActivity(
     const sessionId = parseInt(req.params.session_id as string);
     const activityId = parseInt(req.params.activity_id as string);
     let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, sessionId, activityId, userId: currentUser?.user_id} , "Deleting activity from session");
-    await sessionActivitiesService.deleteSessionActivity(simletId, sessionId, activityId, currentUser!.user_id as number);
+    if (access.is_admin) {
+      await sessionActivitiesService.deleteSessionActivity(simletId, sessionId, activityId, true, undefined);
+    } else if (!access.allocated) {
+      await sessionActivitiesService.deleteSessionActivity(simletId, sessionId, activityId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({activityId} , "Activity deleted");
     res.status(204).send();
   } catch (err) {

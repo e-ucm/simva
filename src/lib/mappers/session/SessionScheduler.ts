@@ -11,7 +11,7 @@ export class SessionScheduler {
     session: number;    
     url: string;
 
-    static async getFromDbData(simlet_id: number, current_user_id: number) {
+    static async getFromDbData(simlet_id: number, is_admin: boolean, current_user_id: number) {
         const session = await Session.getScheduledSessionForUser(simlet_id, current_user_id);
         return new SessionScheduler(simlet_id, session);
     }

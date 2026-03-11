@@ -38,8 +38,8 @@ import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
  * sessions.forEach(s => logger.info(s.name, s.open_date, s.close_date));
  * ```
  */
-export async function getSimletSessions(simletId: number, current_user_id: number, searchString?: string, limit?: number, offset?: number): Promise<Session[]> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function getSimletSessions(simletId: number, is_admin: boolean, searchString?: string, limit?: number, offset?: number, current_user_id?: number): Promise<Session[]> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.getSessions(searchString, limit, offset);
 }
 
@@ -83,8 +83,8 @@ export async function getSimletSessionCountByUserId(simlet_id: number, current_u
  * logger.info(session.name, session.status);
  * ```
  */
-export async function getSimletSession(simletId: number, sessionId: number, current_user_id: number): Promise<Session> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function getSimletSession(simletId: number, sessionId: number, is_admin: boolean, current_user_id?: number): Promise<Session> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.getSession(sessionId);
 }
 
@@ -112,8 +112,8 @@ export async function getSimletSession(simletId: number, sessionId: number, curr
  * });
  * ```
  */
-export async function createSimletSession(simletId: number, current_user_id: number, body: any): Promise<Simlet> {
-  let simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function createSimletSession(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Simlet> {
+  let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.addSession(body);
 }
 
@@ -140,8 +140,8 @@ export async function createSimletSession(simletId: number, current_user_id: num
  * });
  * ```
  */
-export async function patchSimletSession(simletId: number, sessionId: number, current_user_id: number, body: any): Promise<Session> {
-  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+export async function patchSimletSession(simletId: number, sessionId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Session> {
+  let session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   return await session.update(body);
 }
 
@@ -164,8 +164,8 @@ export async function patchSimletSession(simletId: number, sessionId: number, cu
  * await deleteSimletSession(123, 456, 789);
  * ```
  */
-export async function deleteSimletSession(simletId: number, sessionId: number, current_user_id: number): Promise<void> {
-  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+export async function deleteSimletSession(simletId: number, sessionId: number, is_admin: boolean, current_user_id?: number): Promise<void> {
+  let session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   return await session.delete();
 }
 
@@ -181,8 +181,8 @@ export async function deleteSimletSession(simletId: number, sessionId: number, c
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks read permissions
  */
-export async function getSimletSessionParticipants(simletId: number, sessionId: number, current_user_id: number) {
-  let session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+export async function getSimletSessionParticipants(simletId: number, sessionId: number, is_admin: boolean, current_user_id?: number) {
+  let session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   return await session.getParticipants();
 }
 
@@ -207,8 +207,8 @@ export async function getSimletSessionParticipants(simletId: number, sessionId: 
  * const inactiveSession = await activateSession(123, 456, 789, false);
  * ```
  */
-export async function activateSession(simletId: number, sessionId: number, current_user_id: number, activate: any): Promise<Session> {
-  const session = await Session.getFromDbData(simletId, sessionId, current_user_id);
+export async function activateSession(simletId: number, sessionId: number, is_admin: boolean, activate: any, current_user_id?: number): Promise<Session> {
+  const session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   if (activate) {
     if (session.session_status == session.STATUS.ACTIVE) {
       throw new ValidationError('Session is already active');
@@ -243,7 +243,7 @@ export async function activateSession(simletId: number, sessionId: number, curre
  * const allocator = await allocateToSessionSimlet(123, 456, 789, 555);
  * ```
  */
-export async function allocateToSessionSimlet(simletId: number, group_id: number, sessionId: number, current_user_id: number, id: number): Promise<SimletGroup> {
-  const simlet = await Simlet.getFromDbData(simletId, current_user_id);
+export async function allocateToSessionSimlet(simletId: number, group_id: number, sessionId: number, is_admin: boolean, id: number, current_user_id?: number): Promise<SimletGroup> {
+  const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.allocateToSession(group_id, sessionId, id);
 }

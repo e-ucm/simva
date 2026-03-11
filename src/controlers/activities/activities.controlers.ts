@@ -16,6 +16,7 @@ import { NextFunction, Response } from "express";
 import * as activitiesService from "@/services/activities/activities.service";
 import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
+import { getAccess } from "@/controlers/users/user.helper";
 
 
 function parseParticipantsId(participantsIdQuery: unknown): number[] {
@@ -69,18 +70,10 @@ export async function getActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    switch(currentUser?.role) {
-      case "teacher":
-        const activity = await activitiesService.getActivity(activityId, currentUserId, false);
-        return res.json(activity.toJSON());
-      case "student":
-        const allocatedActivity = await activitiesService.getActivity(activityId, currentUserId, true);
-        return res.json(allocatedActivity.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const activity = await activitiesService.getActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
+    return res.json(activity.toJSON());
   } catch (err) {
     next(err);
   }
@@ -93,21 +86,11 @@ export async function isActivityAccessible(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-
-    switch(currentUser?.role) {
-      case "teacher":
-        const accessible = await activitiesService.isActivityAccessible(activityId, currentUserId, false);
-        logger.debug(accessible);
-        return res.json({ openable: accessible });
-      case "student":
-        const allocatedAccessible = await activitiesService.isActivityAccessible(activityId, currentUserId, true);
-        logger.debug(allocatedAccessible);
-        return res.json({ openable: allocatedAccessible });
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const accessible = await activitiesService.isActivityAccessible(activityId, access.allocated, access.is_admin, access.currentUserId);
+    logger.debug(accessible);
+    return res.json({ openable: accessible });
   } catch (err) {
     next(err);
   }
@@ -121,8 +104,8 @@ export async function openTargetForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const currentUserId: number = currentUser!.user_id as number;
-    const targetUrl = await activitiesService.getUserTargetForActivity(activityId, currentUserId, true);
+    const access = getAccess(currentUser);
+    const targetUrl = await activitiesService.getUserTargetForActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
     logger.debug(`Redirecting to target URL: ${targetUrl}`);
     return res.redirect(targetUrl); 
   } catch (err) {
@@ -137,21 +120,12 @@ export async function getTargetForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    switch(currentUser?.role) {
-      case "teacher":
-        const participants_id = parseParticipantsId(req.query.users);
-        const target = await activitiesService.getTargetForActivity(activityId, currentUserId, false, participants_id);
-        logger.debug(target.toJSON());
-        return res.json(target.toJSON());
-      case "student":
-        const allocatedTarget = await activitiesService.getTargetForActivity(activityId, currentUserId, true, [currentUserId]);
-        logger.debug(allocatedTarget.toJSON());
-        return res.json(allocatedTarget.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
+    const target = await activitiesService.getTargetForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
+    logger.debug(target.toJSON());
+    return res.json(target.toJSON());
   } catch (err) {
     next(err);
   }
@@ -164,21 +138,12 @@ export async function getProgressForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    switch(currentUser?.role) {
-      case "teacher":
-        const participants_id = parseParticipantsId(req.query.users);
-        const progress = await activitiesService.getProgressForActivity(activityId, currentUserId, false, participants_id);
-        logger.debug(progress.toJSON());
-        return res.json(progress.toJSON());
-      case "student":
-        const allocatedProgress = await activitiesService.getProgressForActivity(activityId, currentUserId, true, [currentUserId]);
-        logger.debug(allocatedProgress.toJSON());
-        return res.json(allocatedProgress.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
+    const progress = await activitiesService.getProgressForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
+    logger.debug(progress.toJSON());
+    return res.json(progress.toJSON());
   } catch (err) {
     next(err);
   }
@@ -191,25 +156,19 @@ export async function setProgressForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const progress = req.body.progress as number;
-    switch(currentUser?.role) {
-      case "teacher":
-        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
-        if (isNaN(participant_id)) {
-          throw new ValidationError("Query param user must be a numeric ID");
-        }
-        const result = await activitiesService.setProgressForActivity(activityId, currentUserId, false, progress, participant_id);
-        logger.debug(result.toJSON());
-        return res.json(result.toJSON());
-      case "student":
-        const allocatedResult = await activitiesService.setProgressForActivity(activityId, currentUserId, true, progress, currentUserId);
-        logger.debug(allocatedResult.toJSON());
-        return res.json(allocatedResult.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
+    const access = getAccess(currentUser);
+    let participant_id = access.currentUserId;
+    if (!access.allocated) {
+      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
+      if (isNaN(participant_id)) {
+        throw new ValidationError("Query param user must be a numeric ID");
+      }
     }
+    const result = await activitiesService.setProgressForActivity(activityId, access.allocated, access.is_admin, progress, participant_id, access.currentUserId);
+    logger.debug(result.toJSON());
+    return res.json(result.toJSON());
   } catch (err) {
     next(err);
   }
@@ -222,21 +181,12 @@ export async function getInitializedForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    switch(currentUser?.role) {
-      case "teacher":
-        const participants_id = parseParticipantsId(req.query.users);
-        const initialized = await activitiesService.getInitializedForActivity(activityId, currentUserId, false, participants_id);
-        logger.debug(initialized.toJSON());
-        return res.json(initialized.toJSON());
-      case "student":
-        const allocatedInitialized = await activitiesService.getInitializedForActivity(activityId, currentUserId, true, [currentUserId]);
-        logger.debug(allocatedInitialized.toJSON());
-        return res.json(allocatedInitialized.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
+    const initialized = await activitiesService.getInitializedForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
+    logger.debug(initialized.toJSON());
+    return res.json(initialized.toJSON());
   } catch (err) {
     next(err);
   }
@@ -249,25 +199,19 @@ export async function setInitializedForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const initialized = req.body.initialized as boolean;
-    switch(currentUser?.role) {
-      case "teacher":
-        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
-        if (isNaN(participant_id)) {
-          throw new ValidationError("Query param user must be a numeric ID");
-        }
-        const result = await activitiesService.setInitializedForActivity(activityId, currentUserId, false, initialized, participant_id);
-        logger.debug(result.toJSON());
-        return res.json(result.toJSON());
-      case "student":
-        const allocatedResult = await activitiesService.setInitializedForActivity(activityId, currentUserId, true, initialized, currentUserId);
-        logger.debug(allocatedResult.toJSON());
-        return res.json(allocatedResult.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
+    const access = getAccess(currentUser);
+    let participant_id = access.currentUserId;
+    if (!access.allocated) {
+      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
+      if (isNaN(participant_id)) {
+        throw new ValidationError("Query param user must be a numeric ID");
+      }
     }
+    const result = await activitiesService.setInitializedForActivity(activityId, access.allocated, access.is_admin, initialized, participant_id, access.currentUserId);
+    logger.debug(result.toJSON());
+    return res.json(result.toJSON());
   } catch (err) {
     next(err);
   }
@@ -281,19 +225,11 @@ export async function getCompletionForActivity(
   try {
     let currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const participants_id = parseParticipantsId(req.query.users);
-    switch(currentUser?.role) {
-      case "teacher":
-        const completion = await activitiesService.getCompletionForActivity(activityId, currentUser!.user_id as number, false, participants_id);
-        logger.debug(completion.toJSON());
-        return res.json(completion.toJSON());
-      case "student":
-        const allocatedCompletion = await activitiesService.getCompletionForActivity(activityId, currentUser!.user_id as number, true, participants_id);
-        logger.debug(allocatedCompletion.toJSON());
-        return res.json(allocatedCompletion.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
+    const completion = await activitiesService.getCompletionForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
+    logger.debug(completion.toJSON());
+    return res.json(completion.toJSON());
   } catch (err) {
     next(err);
   }
@@ -306,25 +242,19 @@ export async function setCompletionForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const completed = req.body.completed as boolean;
-    switch(currentUser?.role) {
-      case "teacher":
-         let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
-        if (isNaN(participant_id)) {
-          throw new ValidationError("Query param user must be a numeric ID");
-        }
-        const result = await activitiesService.setCompletionForActivity(activityId, currentUserId, false, completed, participant_id);
-        logger.debug(result.toJSON());
-        return res.json(result.toJSON());
-      case "student":
-        const allocatedResult = await activitiesService.setCompletionForActivity(activityId, currentUserId, true, completed, currentUserId);
-        logger.debug(allocatedResult.toJSON());
-        return res.json(allocatedResult.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
+    const access = getAccess(currentUser);
+    let participant_id = access.currentUserId;
+    if (!access.allocated) {
+      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
+      if (isNaN(participant_id)) {
+        throw new ValidationError("Query param user must be a numeric ID");
+      }
     }
+    const result = await activitiesService.setCompletionForActivity(activityId, access.allocated, access.is_admin, completed, participant_id, access.currentUserId);
+    logger.debug(result.toJSON());
+    return res.json(result.toJSON());
   } catch (err) {
     next(err);
   }
@@ -337,17 +267,15 @@ export async function setMultiCompletionForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const status = req.body.status as boolean;
-    switch(currentUser?.role) {
-      case "teacher":
-        const result = await activitiesService.setMultiCompletionForActivity(activityId, currentUserId, false, status);
-        logger.debug(result.map((r) => r.toJSON()));
-        return res.json(result.map((r) => r.toJSON()));
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
+    const access = getAccess(currentUser);
+    if (access.allocated) {
+      throw new AuthentificationError("Students cannot set multi completion for activities");
     }
+    const result = await activitiesService.setMultiCompletionForActivity(activityId, access.allocated, access.is_admin, status, access.currentUserId);
+    logger.debug(result.map((r) => r.toJSON()));
+    return res.json(result.map((r) => r.toJSON()));
   } catch (err) {
     next(err);
   }
@@ -360,25 +288,19 @@ export async function setSuspensionForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const status = req.body.status as boolean;
-    switch(currentUser?.role) {
-      case "teacher":
-        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
-        if (isNaN(participant_id)) {
-          throw new ValidationError("Query param user must be a numeric ID");
-        }
-        const result = await activitiesService.setSuspensionForActivity(activityId, currentUserId, false, status, participant_id);
-        logger.debug(result.toJSON());
-        return res.json(result.toJSON());
-      case "student":
-        const allocatedResult = await activitiesService.setSuspensionForActivity(activityId, currentUserId, true, status, currentUserId);
-        logger.debug(allocatedResult.toJSON());
-        return res.json(allocatedResult.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
+    const access = getAccess(currentUser);
+    let participant_id = access.currentUserId;
+    if (!access.allocated) {
+      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
+      if (isNaN(participant_id)) {
+        throw new ValidationError("Query param user must be a numeric ID");
+      }
     }
+    const result = await activitiesService.setSuspensionForActivity(activityId, access.allocated, access.is_admin, status, participant_id, access.currentUserId);
+    logger.debug(result.toJSON());
+    return res.json(result.toJSON());
   } catch (err) {
     next(err);
   }
@@ -391,21 +313,12 @@ export async function getSuspensionForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    const participants_id = parseParticipantsId(req.query.users);
-    switch(currentUser?.role) {
-      case "teacher":
-        const suspension = await activitiesService.getSuspensionForActivity(activityId, currentUserId, false, participants_id);
-        logger.debug(suspension.toJSON());
-        return res.json(suspension.toJSON());
-      case "student":
-        const allocatedSuspension = await activitiesService.getSuspensionForActivity(activityId, currentUserId, true, participants_id);
-        logger.debug(allocatedSuspension.toJSON());
-        return res.json(allocatedSuspension.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
+    const suspension = await activitiesService.getSuspensionForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
+    logger.debug(suspension.toJSON());
+    return res.json(suspension.toJSON());
   } catch (err) {
     next(err);
   }
@@ -426,21 +339,12 @@ export async function hasResultsForActivity(
     if(type !== "results" && type !== "traces") {
       throw new ValidationError("Query param type must be either 'results' or 'traces'");
     }
-    const currentUserId: number = currentUser!.user_id as number;
-    switch(currentUser?.role) {
-      case "teacher":
-        const participants_id = parseParticipantsId(req.query.users);
-        logger.debug(participants_id, "Parsed participants_id from query param:");
-        const hasResults = await activitiesService.hasResultsForActivity(activityId, currentUserId, false, type, participants_id);
-        logger.debug(hasResults.toJSON());
-        return res.json(hasResults.toJSON());
-      case "student":
-        const allocatedHasResults = await activitiesService.hasResultsForActivity(activityId, currentUserId, true, type, [currentUserId]);
-        logger.debug(allocatedHasResults.toJSON());
-        return res.json(allocatedHasResults.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
+    logger.debug(participants_id, "Parsed participants_id from query param:");
+    const hasResults = await activitiesService.hasResultsForActivity(activityId, access.allocated, access.is_admin, type, participants_id, access.currentUserId);
+    logger.debug(hasResults.toJSON());
+    return res.json(hasResults.toJSON());
   } catch (err) {
     next(err);
   }
@@ -453,7 +357,6 @@ export async function setResultForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     let type = req.query.type as string;
     if(!type) {
@@ -463,20 +366,16 @@ export async function setResultForActivity(
       throw new ValidationError("Query param type must be either 'results' or 'traces'");
     }
     const result = req.body.result;
-    switch(currentUser?.role) {
-      case "teacher":
-        let participant_id: number = req.query.user ? parseInt(req.query.user as string) : NaN;
-        if (isNaN(participant_id)) {
-          throw new ValidationError("Query param user must be a numeric ID");
-        }
-        await activitiesService.setResultForActivity(activityId, currentUserId, false, type, result, participant_id);
-        return res.status(204).send();
-      case "student":
-        await activitiesService.setResultForActivity(activityId, currentUserId, true, type, result, currentUserId);
-        return res.status(204).send();  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
+    const access = getAccess(currentUser);
+    let participant_id = access.currentUserId;
+    if (!access.allocated) {
+      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
+      if (isNaN(participant_id)) {
+        throw new ValidationError("Query param user must be a numeric ID");
+      }
     }
+    await activitiesService.setResultForActivity(activityId, access.allocated, access.is_admin, type, result, participant_id, access.currentUserId);
+    return res.status(204).send();
   } catch (err) {
     next(err);
   }
@@ -489,9 +388,9 @@ export async function getPresignedUrlForActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
-    const url = await activitiesService.getPresignedUrlForActivity(activityId, currentUserId, false);
+    const access = getAccess(currentUser);
+    const url = await activitiesService.getPresignedUrlForActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
     logger.debug(url);
     return res.json({ url: url });
   } catch (err) {
@@ -514,20 +413,11 @@ export async function getResultsForActivity(
     if(type !== "results" && type !== "traces") {
       throw new ValidationError("Query param type must be either 'results' or 'traces'");
     }
-    const currentUserId: number = currentUser!.user_id as number;
-    switch(currentUser?.role) {
-      case "teacher":
-        const participants_id = parseParticipantsId(req.query.users);
-        const results = await activitiesService.getResultsForActivity(activityId, currentUserId, false, type, participants_id);
-        logger.debug(results.toJSON());
-        return res.json(results.toJSON());
-      case "student":
-        const allocatedResults = await activitiesService.getResultsForActivity(activityId, currentUserId, true, type, [currentUserId]);
-        logger.debug(allocatedResults.toJSON());
-        return res.json(allocatedResults.toJSON());  
-      default:
-        throw new AuthentificationError("User role not recognized"); // Shouldn't happen due to auth middleware, but added for type safety
-    }
+    const access = getAccess(currentUser);
+    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
+    const results = await activitiesService.getResultsForActivity(activityId, access.allocated, access.is_admin, type, participants_id, access.currentUserId);
+    logger.debug(results.toJSON());
+    return res.json(results.toJSON());
   } catch (err) {
     next(err);
   }
@@ -540,18 +430,14 @@ export async function updateActivity(
 ) {
   try {
     const currentUser = req.user?.sql;
-    const currentUserId: number = currentUser!.user_id as number;
     const activityId = parseInt(req.params.activity_id as string);
     const data = req.body;
-    switch(currentUser?.role) {
-      case "teacher":
-        const activity = await activitiesService.updateActivity(activityId, currentUserId, false, data);
-        return res.json(activity.toJSON());
-      case "student":
-        throw new AuthentificationError("Students cannot update activities");
-      default:
-        throw new AuthentificationError("User role not recognized");
+    const access = getAccess(currentUser);
+    if (access.allocated) {
+      throw new AuthentificationError("Students cannot update activities");
     }
+    const activity = await activitiesService.updateActivity(activityId, access.allocated, access.is_admin, data, access.currentUserId);
+    return res.json(activity.toJSON());
   } catch (err) {
     next(err);
   }

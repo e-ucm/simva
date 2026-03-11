@@ -6,6 +6,7 @@ import { AuthentificationError, BadRequestError, NotFoundError, NotImplementedEr
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { User } from "@/lib/mappers/Users/User";
+import { getAccess } from "@/controlers/users/user.helper";
 
 export function getStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
@@ -27,26 +28,24 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
         if(!body || typeof body !== "object") {
             throw new BadRequestError("Invalid request body");
         }
-        let currentUserId = currentUser!.user_id as number;
+        const access = currentUser?.role === "lrsmanager"
+            ? { currentUserId: currentUser.user_id as number, is_admin: false, canImpersonate: true }
+            : { ...getAccess(currentUser), canImpersonate: false };
         let ids: number[] = [];
-        switch(currentUser?.role) {
-            case "lrsmanager":
-                if(body && body.length > 0 && typeof body[0] === "object") {
-                    const postuserId = (await User.getFromDbData(undefined, body[0].actor.account.name)).user_id;
-                    if(isNaN(postuserId)) {
-                        throw new ValidationError("Invalid username in query parameter");
-                    }
-                    ids = await activitiesService.sendStatementsLRSForActivity(postuserId, activityId, body, currentUserId!);
-                } else {
-                    throw new ValidationError("Invalid request body for lrsmanager role");
+        if (access.is_admin) {
+            ids = await activitiesService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, access.is_admin, access.currentUserId);
+        } else if (access.canImpersonate) {
+            if(body && body.length > 0 && typeof body[0] === "object") {
+                const postuserId = (await User.getFromDbData(undefined, body[0].actor.account.name)).user_id;
+                if(isNaN(postuserId)) {
+                    throw new ValidationError("Invalid username in query parameter");
                 }
-                break;
-            case "teacher":
-            case "student":
-                ids = await activitiesService.sendStatementsLRSForActivity(currentUserId, activityId, body, currentUserId);
-                break;
-            default:
-                throw new AuthentificationError("User role not recognized");
+                ids = await activitiesService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, false, postuserId);
+            } else {
+                throw new ValidationError("Invalid request body for lrsmanager role");
+            }
+        } else {
+            ids = await activitiesService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, false, access.currentUserId);
         }
         return res.status(201).json(ids);
     } catch (err) {

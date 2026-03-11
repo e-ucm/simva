@@ -89,7 +89,7 @@ export class User {
    * const users = await User.getAllFromDbData(10, 0, 'john');
    * ```
    */
-  static async getAllFromDbData(limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<User[]> {
+  static async getAllFromDbData(limit?: number, offset?: number, searchString?: string): Promise<User[]> {
     let users = await db.Tables.User.findAll({
       order: [['user_id', 'ASC']],
       where: searchString ? {
@@ -189,7 +189,7 @@ export class User {
    * });
    * ```
    */
-  static async createDB(userData: { username: any; email: string | undefined; role: string; isToken: boolean; }): Promise<User> {
+  static async createDB(userData: { username: any; email?: string; role: string; isToken: boolean; }): Promise<User> {
     let user = await db.Tables.User.create(userData);
     return new User(user);
   }
@@ -210,12 +210,14 @@ export class User {
    * const updatedUser = await user.update({ role: 'teacher' });
    * ```
    */
-  async update(partial: Partial<User>): Promise<User> {
+  async update(partial: Partial<User>, updateInKeycloak: boolean = true): Promise<User> {
     let user = await db.Tables.User.findOne({ where: { user_id: this.user_id } });
     if (!user) {
       throw new NotFoundError(`User with ID ${this.user_id} not found`);
     }
-    await this.giveRoleToUserInKeycloak(partial.role as string);
+    if (updateInKeycloak) {
+      await this.giveRoleToUserInKeycloak(partial.role as string);
+    }
     await user.update({ role : partial.role });
     this.role = partial.role as string;
     return this;

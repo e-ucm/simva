@@ -16,6 +16,7 @@ import { Response, NextFunction } from "express";
 import * as allocatorTypesservice from "@/services/allocators/allocatorsTypes.service";
 import { NotFoundError, AuthentificationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
+import { getAccess } from "@/controlers/users/user.helper";
 
 /**
  * Retrieves all available allocator types with their metadata and utilities.
@@ -55,31 +56,24 @@ export async function getAllocatorTypes(
       }
     }
     let currentUser = req.user?.sql;
-    switch(currentUser?.role) {
-      case 'admin':
-        if(types && types.length > 0) {
-          const allocatorType = await allocatorTypesservice.getAllocatorTypes(types);
-          if (!allocatorType) {
-            throw new NotFoundError("Allocator type not found");
-          }
-          logger.debug({allocatorType});
-          res.json(allocatorType.map(t => t.toJSON()));
-        } else {
-          const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
-          logger.debug({allocatorTypes});
-          res.json(allocatorTypes.map(t => t.toJSON()));
-        }
-      case 'teacher':
-      case 'student':
-        if(currentUser.user_id) {
-          const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
-          logger.debug({allocatorTypes});
-          res.json(allocatorTypes.map(t => t.toJSON()));
-        }
-        break;
-      default:
-        throw new AuthentificationError("Insufficient permissions to access allocator types data");
+    const access = getAccess(currentUser);
+
+    if(access.canImpersonate && types && types.length > 0) {
+      const allocatorType = await allocatorTypesservice.getAllocatorTypes(types);
+      if (!allocatorType) {
+        throw new NotFoundError("Allocator type not found");
+      }
+      logger.debug({allocatorType});
+      return res.json(allocatorType.map(t => t.toJSON()));
     }
+
+    if(access.currentUserId) {
+      const allocatorTypes = await allocatorTypesservice.getAllocatorTypes();
+      logger.debug({allocatorTypes});
+      return res.json(allocatorTypes.map(t => t.toJSON()));
+    }
+
+    throw new AuthentificationError("Insufficient permissions to access allocator types data");
   } catch (err) {
     next(err);
   }

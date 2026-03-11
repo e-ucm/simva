@@ -12,6 +12,8 @@ import { Response, NextFunction } from "express";
 import * as simletGroupsService from "@/services/simlets/simlet.groups.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
+import { AuthentificationError } from "@/lib/errors/appErrors";
+import { getAccess } from "@/controlers/users/user.helper";
 
 export async function getSimletGroups(
   req: AuthenticatedRequest,
@@ -20,10 +22,17 @@ export async function getSimletGroups(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId} , "Getting groups for simlet ID");
-    const groups = await simletGroupsService.getSimletGroups(simletId, currentUserId);
+    let groups;
+    if (access.is_admin) {
+      groups = await simletGroupsService.getSimletGroups(simletId, true);
+    } else if (!access.allocated) {
+      groups = await simletGroupsService.getSimletGroups(simletId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({groups} , "Groups retrieved for simlet ID");
     res.json(groups.map(g => g.toJSON()));
   } catch (err) {
@@ -38,12 +47,19 @@ export async function addSimletGroup(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
-    let body = req.body;
-    logger.debug({simletId} , "Getting groups for simlet ID");
-    const simlet = await simletGroupsService.addSimletGroups(simletId, body, currentUserId);
-    logger.debug({simlet} , "Groups retrieved for simlet ID");
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    const body = req.body;
+    logger.debug({simletId} , "Adding group for simlet ID");
+    let simlet;
+    if (access.is_admin) {
+      simlet = await simletGroupsService.addSimletGroups(simletId, body, true);
+    } else if (!access.allocated) {
+      simlet = await simletGroupsService.addSimletGroups(simletId, body, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
+    logger.debug({simlet} , "Group added for simlet ID");
     res.json(simlet.toJSON());
   } catch (err) {
     next(err);
@@ -58,10 +74,16 @@ export async function deleteSimletGroup(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
-    logger.debug({simletId} , "Getting groups for simlet ID");
-    await simletGroupsService.deleteSimletGroup(simletId, groupId, currentUserId);
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    logger.debug({simletId, groupId} , "Deleting group for simlet ID");
+    if (access.is_admin) {
+      await simletGroupsService.deleteSimletGroup(simletId, groupId, true);
+    } else if (!access.allocated) {
+      await simletGroupsService.deleteSimletGroup(simletId, groupId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -76,11 +98,18 @@ export async function updateSimletGroup(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
-    let body = req.body;
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const body = req.body;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, groupId, body} , "Updating group for simlet ID and group ID");
-    const simlet = await simletGroupsService.updateSimletGroup(simletId, groupId, currentUserId, body);
+    let simlet;
+    if (access.is_admin) {
+      simlet = await simletGroupsService.updateSimletGroup(simletId, groupId, body, true);
+    } else if (!access.allocated) {
+      simlet = await simletGroupsService.updateSimletGroup(simletId, groupId, body, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({simlet} , "Group updated for simlet ID and group ID");
     res.json(simlet.toJSON());
   } catch (err) {
@@ -95,11 +124,18 @@ export async function createSimletGroup(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    let body = req.body;
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const body = req.body;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, body} , "Creating group for simlet ID");
-    const simlet = await simletGroupsService.createSimletGroup(simletId, currentUserId, body);
+    let simlet;
+    if (access.is_admin) {
+      simlet = await simletGroupsService.createSimletGroup(simletId, body, true);
+    } else if (!access.allocated) {
+      simlet = await simletGroupsService.createSimletGroup(simletId, body, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({simlet} , "Group created for simlet ID");
     res.json(simlet.toJSON());
   } catch (err) {
@@ -114,10 +150,17 @@ export async function getSimletGroupCount(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId} , "Getting group count for simlet ID");
-    const count = await simletGroupsService.getSimletGroupCount(simletId, currentUserId);
+    let count;
+    if (access.is_admin) {
+      count = await simletGroupsService.getSimletGroupCount(simletId, true);
+    } else if (!access.allocated) {
+      count = await simletGroupsService.getSimletGroupCount(simletId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({count} , "Group count retrieved for simlet ID");
     res.json({count});
   } catch (err) {
@@ -133,10 +176,17 @@ export async function getSimletGroupById(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, groupId} , "Getting group for simlet ID and group ID");
-    const group = await simletGroupsService.getSimletGroupById(simletId, groupId, currentUserId);
+    let group;
+    if (access.is_admin) {
+      group = await simletGroupsService.getSimletGroupById(simletId, groupId, true);
+    } else if (!access.allocated) {
+      group = await simletGroupsService.getSimletGroupById(simletId, groupId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({group} , "Group retrieved for simlet ID and group ID");
     res.json(group.toJSON());
   } catch (err) {
@@ -152,11 +202,18 @@ export async function createSimletGroupParticipant(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
-    let body = req.body;
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const body = req.body;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, groupId, body} , "Creating participant for simlet ID and group ID");
-    const participant = await simletGroupsService.createSimletGroupParticipant(simletId, groupId, currentUserId, body);
+    let participant;
+    if (access.is_admin) {
+      participant = await simletGroupsService.createSimletGroupParticipant(simletId, groupId, body, true);
+    } else if (!access.allocated) {
+      participant = await simletGroupsService.createSimletGroupParticipant(simletId, groupId, body, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({participant} , "Participant created for simlet ID and group ID");
     res.json(participant.toJSON());
   } catch (err) {
@@ -173,10 +230,17 @@ export async function addSimletGroupParticipant(
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
     const participantId = parseInt(req.params.participant_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, groupId, participantId} , "Adding participant for simlet ID, group ID and participant ID");
-    let groupupdated = await simletGroupsService.addSimletGroupParticipant(simletId, groupId, participantId, currentUserId);
+    let groupupdated;
+    if (access.is_admin) {
+      groupupdated = await simletGroupsService.addSimletGroupParticipant(simletId, groupId, participantId, true);
+    } else if (!access.allocated) {
+      groupupdated = await simletGroupsService.addSimletGroupParticipant(simletId, groupId, participantId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({simletId, groupId, participantId} , "Participant added for simlet ID, group ID and participant ID");
     res.json(groupupdated.toJSON());
   } catch (err) {
@@ -192,10 +256,17 @@ export async function getSimletGroupParticipants(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, groupId} , "Getting participants for simlet ID and group ID");
-    const participants = await simletGroupsService.getSimletGroupParticipants(simletId, groupId, currentUserId);
+    let participants;
+    if (access.is_admin) {
+      participants = await simletGroupsService.getSimletGroupParticipants(simletId, groupId, true);
+    } else if (!access.allocated) {
+      participants = await simletGroupsService.getSimletGroupParticipants(simletId, groupId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({participants} , "Participants retrieved for simlet ID and group ID");
     res.json(participants.map(p => p.toJSON()));
   } catch (err) {
@@ -212,10 +283,16 @@ export async function deleteGroupParticipant(
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
     const participantId = parseInt(req.params.participant_id as string);
-    let currentUser = req.user?.sql;
-    let currentUserId = currentUser?.user_id as number;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
     logger.debug({simletId, groupId, participantId} , "Deleting participant for simlet ID, group ID and participant ID");
-    await simletGroupsService.deleteGroupParticipant(simletId, groupId, participantId, currentUserId);
+    if (access.is_admin) {
+      await simletGroupsService.deleteGroupParticipant(simletId, groupId, participantId, true);
+    } else if (!access.allocated) {
+      await simletGroupsService.deleteGroupParticipant(simletId, groupId, participantId, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({simletId, groupId, participantId} , "Participant deleted for simlet ID, group ID and participant ID");
     res.status(204).send();
   } catch (err) {
@@ -233,10 +310,16 @@ export async function allocateToSessionSimlet(
     const groupId = parseInt(req.params.group_id as string);
     const sessionId = parseInt(req.params.session_id as string);
     const currentUser = req.user?.sql;
-    const currentUserId = currentUser?.user_id as number;
+    const access = getAccess(currentUser);
     const participant_id_or_group_id = req.body.participant_id ? parseInt(req.body.participant_id) : groupId;
     logger.debug({simletId, groupId, sessionId} , "Allocating group to session for simlet ID, group ID and session ID");
-    await simletGroupsService.allocateToSessionSimlet(simletId, groupId, sessionId, participant_id_or_group_id, currentUserId);
+    if (access.is_admin) {
+      await simletGroupsService.allocateToSessionSimlet(simletId, groupId, sessionId, participant_id_or_group_id, true);
+    } else if (!access.allocated) {
+      await simletGroupsService.allocateToSessionSimlet(simletId, groupId, sessionId, participant_id_or_group_id, false, access.currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     logger.debug({simletId, groupId, sessionId} , "Group allocated to session for simlet ID, group ID and session ID");
     res.status(204).send();
   } catch (err) {

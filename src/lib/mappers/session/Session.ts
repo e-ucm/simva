@@ -7,6 +7,7 @@ import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { SimletParticipant } from "../simlet/SimletParticipant";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
+import { Op } from 'sequelize';
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -104,6 +105,7 @@ export class Session {
     allocated_token?: string;
     allocated_session_id?: number;
     allocated_activities?: Activity[];
+    is_admin: boolean;
     /**
      * Creates a new Session instance
      * 
@@ -117,6 +119,7 @@ export class Session {
         this.current_user_id = data.current_user_id;
         this.current_user_username = data.current_user_username || "";
         this.current_user_permission = data.current_user_permission || "";
+        this.is_admin = data.is_admin || false;
         this.allocated_user = allocated_user;
         this.session_order = data.session_order;
         if(this.allocated_user) {
@@ -157,19 +160,28 @@ export class Session {
         }
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id: number, limit?: number, offset?: number, searchString?: string): Promise<Session[]> {
+    static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string): Promise<Session[]> {
         let sessions;
-        if(limit !== undefined && offset !== undefined) {
-            sessions = await db.Functions.runViewQuery( 
-                db.Views.Session.bySimletIdAndUserIdWithPagination, 
-                { simlet_id, current_user_id, search: searchString, limit, offset } 
-            ); 
+        if(current_user_id) {
+            if(limit !== undefined && offset !== undefined) {
+                sessions = await db.Functions.runViewQuery( 
+                    db.Views.Session.bySimletIdAndUserIdWithPagination, 
+                    { simlet_id, current_user_id, search: searchString, limit, offset } 
+                ); 
+            } else {
+                sessions = await db.Functions.runViewQuery(
+                    db.Views.Session.bySimletIdAndUserId,
+                    { simlet_id, current_user_id, search: searchString }
+                );
+            }
         } else {
-            sessions = await db.Functions.runViewQuery(
-                db.Views.Session.bySimletIdAndUserId,
-                { simlet_id, current_user_id, search: searchString }
-            );
+            sessions = await db.Tables.Sessions.findAll({
+                where : { session_name : { [Op.like]: `%${searchString}%`}},
+                limit : limit !== undefined ? limit : undefined,
+                offset: offset !== undefined ? offset : undefined
+            })
         }
+        
         logger.debug({sessions} , "Sessions data from view");
         return Promise.all(sessions.map(async (session: any) => {
             const sessionInstance = new Session(session, false);
@@ -178,17 +190,29 @@ export class Session {
         }));
     }
 
-    static async getFromDbData(simlet_id: number, session_id: number, current_user_id: number) : Promise<Session> {
-        const session = await db.Functions.runViewQuery(
-            db.Views.Session.bySimletIdSessionIdAndUserId,
-            { session_id, current_user_id, simlet_id }
-       );
-        if(session.length === 0){
+    static async getFromDbData(simlet_id: number, session_id: number, is_admin: boolean, current_user_id?: number) : Promise<Session> {
+        let sessions;
+        if(!is_admin) {
+            sessions = await db.Functions.runViewQuery(
+                db.Views.Session.bySimletIdSessionIdAndUserId,
+                { session_id, current_user_id, simlet_id }
+            );
+        } else {
+            const session = await db.Tables.Sessions.findOne({ where: { session_id, simlet_id } });
+            sessions = session ? [{
+                ...session.toJSON(),
+                current_user_id,
+                current_user_permission: "FULL",
+                current_user_username: "administrator",
+                is_admin: true
+            }] : [];
+        }
+        if(sessions.length === 0){
             throw new NotFoundError(`Session with ID ${session_id} not found for user ID ${current_user_id}.`);
-        } else if(session.length > 1) {
+        } else if(sessions.length > 1) {
             logger.warn(`Multiple sessions found with ID ${session_id} for user ID ${current_user_id}. Using the first one.`);
         }
-        const sessionInstance = new Session(session[0]);
+        const sessionInstance = new Session(sessions[0]);
         await sessionInstance.init();
         return sessionInstance;
     }
@@ -205,7 +229,7 @@ export class Session {
         const session = new Session(activities[0], true);
         await session.init();
         session.allocated_activities = await Promise.all(activities.map(async (activity: any) => {
-            return await ActivityToClass(activity.activity_id, current_user_id, true, activity);
+            return await ActivityToClass(activity.activity_id, true, false, activity, current_user_id);
         }));
         if(session.session_status !== session.STATUS.ACTIVE) {
             throw new ValidationError(`Allocated session with SIMLET ID ${simlet_id} for user ID ${current_user_id} is not active yet.`);
@@ -236,7 +260,7 @@ export class Session {
             throw new ConflictError(`Session name ${sessionData.session_name} is already taken. Please choose a different name.`);
         }
         let session = await db.Tables.Sessions.create(sessionData);
-        return Session.getFromDbData(session.simlet_id, session.session_id, session.session_coordinator_id);
+        return Session.getFromDbData(session.simlet_id, session.session_id, true);
     }
 
     /**
@@ -247,7 +271,7 @@ export class Session {
      * @returns {Promise<Activity[]>} Array of Activity instances belonging to this session
      */
     async getActivities(): Promise<Activity[]> {
-        return await Activity.getAllFromDbData(this.session_id, this.current_user_id as number, this.allocated_user);
+        return await Activity.getAllFromDbData(this.session_id, this.allocated_user, this.is_admin, this.current_user_id);
     }
 
     /**
@@ -265,13 +289,13 @@ export class Session {
         activityData.session_id = this.session_id;
         activityData.activity_order = (this.activities?.length ?? 0) + 1; // Add to the end of the activity list
         let activity = await db.Tables.Activities.create(activityData);
-        return Activity.getFromDbData(activity.activity_id, this.current_user_id as number, false);
+        return Activity.getFromDbData(activity.activity_id, false, this.is_admin, this.current_user_id);
      }
 
     async addParticipantsToAllActivities(participants_id: number[]) : Promise<ActivityCompletion[]> {
         let completions: ActivityCompletion[] = [];
         for (const act of this.activities || []) {
-            let activity = await Activity.getFromDbData(act, this.current_user_id!, false);
+            let activity = await Activity.getFromDbData(act, false, this.is_admin, this.current_user_id);
             let actCompletions = await activity.addParticipants(participants_id);
             completions = completions.concat(actCompletions);
         }
