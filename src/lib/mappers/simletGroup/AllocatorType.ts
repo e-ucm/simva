@@ -27,17 +27,17 @@ export class AllocatorType {
 	/**
 	 * Unique identifier for the allocator type
 	 */
-	allocator_type: string | undefined;
+	allocator_type?: string;
 
 	/**
 	 * Human-readable name for display
 	 */
-	allocator_name: string | undefined;
+	allocator_name?: string;
 
 	/**
 	 * Description of the allocation strategy
 	 */
-	allocator_description: string | undefined;
+	allocator_description?: string;
 
 	/**
 	 * Type-specific utility functions and configuration

@@ -142,7 +142,7 @@ export class SimletGroup {
         return await SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id, current_user_id);
     }
 
-    static async getCurrentUserAllFromDbData(current_user_id: number, version: boolean | undefined, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<SimletGroup[]> {
+    static async getCurrentUserAllFromDbData(current_user_id: number, version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         let groups;
         if(limit != undefined && offset != undefined) {

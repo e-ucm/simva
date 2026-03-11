@@ -1955,7 +1955,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/activitySuspensionMapper'
+                $ref: '#/components/schemas/completionMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2122,7 +2122,7 @@ paths:
       summary: gets the results of the activity
       operationId: getResult
       description: |
-        Obtains the completion status of the activity
+        Obtains the result of the activity for the specified user
       responses:
         '200':
           description: the result of the students required
@@ -4155,8 +4155,9 @@ components:
           type: string
           example: "https://simva.test/scheduler/123"
         activities:
-          type: array
-          items:
+          type: object
+          description: "Key : id of the activity /Value : The activities scheduled for the session, with their order and presigned urls if applicable"
+          additionalProperties:
             $ref: '#/components/schemas/activityAllocationMapper'
     activityPresignedUrlMapper:
       type: object
@@ -4507,6 +4508,139 @@ components:
         activity_utils:
           type: object
           additionalProperties: true
+    noTypedActivityCompletionMapper:
+      type: object
+      required:
+        - participant_id
+        - createdAt
+        - updatedAt
+      properties:
+            participant_id:
+              type: integer
+              example: 456
+            createdAt:
+              type: string
+              format: date-time
+              example: "2026-03-03T22:26:13.000Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2026-03-03T22:26:13.000Z"
+    postInitializationMapper:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivityCompletionMapper'
+      - type: object
+        required:
+          - activity_initialized
+          - activity_initialization_date
+        properties:
+              activity_initialized: 
+                type: boolean
+                example: true
+              activity_initialization_date:
+                type: string
+                format: date-time
+                example: "2026-03-03T22:26:13.000Z"
+    progressMapper:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivityCompletionMapper'
+      - type: object
+        required:
+          - participant_id
+          - activity_progress
+          - activity_initialization_date
+        properties:
+              activity_progress:
+                type: number
+                nullable: true
+                example: 0.5
+              activity_initialization_date:
+                type: string
+                format: date-time
+                example: "2026-03-03T22:26:13.000Z"
+    suspensionMapper:
+      allOf:
+      - $ref: '#/components/schemas/noTypedActivityCompletionMapper'
+      - type: object  
+        required:
+          - activity_initialization_date
+          - activity_suspended
+          - activity_suspension_date
+        properties: 
+              activity_initialization_date:
+                type: string
+                format: date-time
+                example: "2026-03-03T22:26:13.000Z"
+              activity_suspended:
+                type: boolean
+                example: false
+              activity_suspension_date:
+                type: string
+                format: date-time
+                nullable: true
+                example: "2026-03-05T10:15:30.000Z"
+    completedMapper:
+      allOf:
+        - $ref: '#/components/schemas/noTypedActivityCompletionMapper'
+        - type: object  
+          required:
+            - participant_id
+            - activity_completed
+            - activity_completion_date
+            - activity_initialization_date
+          properties:
+                participant_id:
+                  type: integer
+                  example: 456
+                activity_completed:
+                  type: boolean
+                  example: false
+                activity_completion_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  example: "2026-03-10T16:39:06.530Z"
+                activity_initialization_date:
+                  type: string
+                  format: date-time
+                  example: "2026-03-03T22:26:13.000Z"
+    targetMapper:
+      allOf:
+        - $ref: '#/components/schemas/noTypedActivityCompletionMapper'
+        - type: object  
+          required:
+            - participant_id
+            - activity_result_presigned_url
+            - activity_result_presigned_url_generated_at
+            - activity_result_presigned_url_expire_at
+          properties:
+                participant_id:
+                  type: integer
+                  example: 456
+                activity_result_presigned_url:
+                  type: string
+                  example: "https://example.com/presigned-url"
+                activity_result_presigned_url_generated_at:
+                  type: string
+                  format: date-time
+                  example: "2026-03-03T22:26:13.000Z"
+                activity_result_presigned_url_expire_at:
+                  type: string
+                  format: date-time
+                  example: "2026-03-05T10:15:30.000Z"
+    allCompletionMapper:
+      allOf:
+        - $ref: '#/components/schemas/progressMapper'
+        - $ref: '#/components/schemas/suspensionMapper'
+        - $ref: '#/components/schemas/completedMapper'
+        - $ref: '#/components/schemas/targetMapper'
+    completionMapper:
+      anyOf:
+        - $ref: '#/components/schemas/progressMapper'
+        - $ref: '#/components/schemas/suspensionMapper'
+        - $ref: '#/components/schemas/completedMapper'
+        - $ref: '#/components/schemas/targetMapper'
+        - $ref: '#/components/schemas/allCompletionMapper'
     activityInitializedMapper:
       type: object
       description: Key/value object to store the initialization data of the simlet

@@ -54,7 +54,7 @@ export async function getSimletsByUserId(user_id: number, searchString?: string,
  * @param {number} offset - Optional offset for pagination
  * @returns {Promise<Simlet[]>} Array of simlet records accessible to the student
  */
-export async function getSimletsForStudent(current_user_id: number, searchString: string, limit: number | undefined, offset: number | undefined): Promise<Simlet[]> {
+export async function getSimletsForStudent(current_user_id: number, searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
   return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset);
 }
 
@@ -231,4 +231,8 @@ export async function exportSimlet(simletId: number, currentUserId: number, with
   let simlet = await Simlet.getFromDbData(simletId, currentUserId);
   let exported = await simlet.export(withData);
   return JSON.stringify(exported);
+}
+
+export async function getAllSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
+  return await Simlet.getAllSimlets(searchString, limit, offset);
 }

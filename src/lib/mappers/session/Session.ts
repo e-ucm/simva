@@ -157,7 +157,7 @@ export class Session {
         }
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id: number, limit: number | undefined, offset: number | undefined, searchString: string | undefined): Promise<Session[]> {
+    static async getAllFromDbData(simlet_id: number, current_user_id: number, limit?: number, offset?: number, searchString?: string): Promise<Session[]> {
         let sessions;
         if(limit !== undefined && offset !== undefined) {
             sessions = await db.Functions.runViewQuery( 

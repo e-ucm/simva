@@ -18,10 +18,10 @@ import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 
 
-function parseParticipantsId(participantsIdQuery: unknown): number[] | undefined {
+function parseParticipantsId(participantsIdQuery: unknown): number[] {
   logger.debug(participantsIdQuery, "Received participants_id query param:");
   if (participantsIdQuery === undefined || participantsIdQuery === null) {
-    return undefined;
+    return [];
   }
 
   const rawValues = Array.isArray(participantsIdQuery)
@@ -34,7 +34,7 @@ function parseParticipantsId(participantsIdQuery: unknown): number[] | undefined
     .filter((value) => value.length > 0);
   logger.debug(tokens, "Parsed tokens from query param:");
   if (tokens.length === 0) {
-    return undefined;
+    return [];
   }
 
   const participantsId = tokens.map((value) => Number(value));

@@ -23,17 +23,17 @@ export class ActivityType {
 	/**
 	 * Unique identifier for the activity type
 	 */
-	activity_type: string | undefined;
+	activity_type?: string;
 
 	/**
 	 * Human-readable name for display
 	 */
-	activity_name: string | undefined;
+	activity_name?: string;
 
 	/**
 	 * Description of the activity type
 	 */
-	activity_description: string | undefined;
+	activity_description?: string;
 
 	/**
 	 * Type-specific utility functions and configuration

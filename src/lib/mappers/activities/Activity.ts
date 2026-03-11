@@ -37,10 +37,9 @@ export class Activity {
 	session_active?:boolean;
 	session_start_date?:Date;
 	session_end_date?:Date;
-	
-	activity_initialized?: boolean;
-	activity_progress?: number;
-	activity_completed?: boolean;
+	activity_presignedUrl?: string;
+	activity_presignedUrl_generated_at?: Date;
+	activity_presignedUrl_expired_at?: Date;
 
 	/**
 	 * Unique identifier for this activity
@@ -85,21 +84,6 @@ export class Activity {
 	updatedAt?: Date;
 	
 	/**
-	 * Pre-signed URL for accessing activity resources (optional)
-	 */
-	activity_presignedUrl?: string;
-	
-	/**
-	 * Timestamp when presigned URL was generated (optional)
-	 */
-	activity_presignedUrl_generated_at?: Date;
-	
-	/**
-	 * Expiration time for presigned URL in seconds (optional)
-	 */
-	activity_presignedUrl_expired_at?: Date;
-
-	/**
 	 * Whether this activity complies with GDPR requirements
 	 */
 	activity_comply_with_GDPR?: boolean;
@@ -132,7 +116,7 @@ export class Activity {
 			this.session_active = Boolean(data.session_status == "active");
 			this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
 			this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
-			this.allocated_activity_result = new ActivityCompletion(data);
+			this.allocated_activity_result = new ActivityCompletion(data, "all");
 			this.activity_description = ""; // No description for allocated activities as they are user-specific instances of the base activity
 			this.activity_comply_with_GDPR = false; // GDPR compliance is not relevant for allocated activities as they are user-specific instances of the base activity
 		} else {
@@ -423,15 +407,15 @@ export class Activity {
 		return new ActivityMappingResult(new Map<number, string>());
 	}
 
-	async getCurrentCompletionData(participants_id?: number[], columns?: string[]): Promise<ActivityCompletion[]> {
+	async getCurrentCompletionData(data_field: string, participants_id?: number[]): Promise<ActivityCompletion[]> {
 		let data;
 		if(this.allocated_user) {
 			participants_id = [this.allocated_user_id!];
-			data = await ActivityCompletion.getAllFromDbData(this.activity_id, columns, participants_id);
+			data = await ActivityCompletion.getAllFromDbData(this.activity_id, data_field, participants_id);
 		} else if (!participants_id || participants_id.length === 0) {
-			data = await ActivityCompletion.getAllFromDbData(this.activity_id, columns);
+			data = await ActivityCompletion.getAllFromDbData(this.activity_id, data_field);
 		} else {
-			data = await ActivityCompletion.getAllFromDbData(this.activity_id, columns, participants_id);
+			data = await ActivityCompletion.getAllFromDbData(this.activity_id, data_field, participants_id);
 		}
 		return data;
 	}
@@ -446,10 +430,10 @@ export class Activity {
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
 	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
-		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_initialized"]);
+		let progressData= await this.getCurrentCompletionData("activity_initialized", participants_id);
 		let progressMap = new Map<number, boolean>();
 		for (const cd of progressData) {
-			progressMap.set(cd.participant_id, cd.activity_initialized);
+			progressMap.set(cd.participant_id, cd.activity_initialized ?? false);
 		}
 		return new ActivityMappingResult(progressMap);
 	}
@@ -465,7 +449,7 @@ export class Activity {
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when initialized status is set
 	 */
 	async setInitialized(initialized: boolean, participant_id: number): Promise<ActivityCompletion>{
-		let progressData = await this.getCurrentCompletionData([participant_id]);
+		let progressData = await this.getCurrentCompletionData("activity_initialized", [participant_id]);
 		if (progressData.length === 0) {
 			// Create completion record if it doesn't exist
 			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
@@ -490,10 +474,10 @@ export class Activity {
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
 	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number>>{
-		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_progress"]);
+		let progressData= await this.getCurrentCompletionData("activity_progress", participants_id);
 		let progressMap = new Map<number, number>();
 		for (const cd of progressData) {
-			progressMap.set(cd.participant_id, cd.activity_progress);
+			progressMap.set(cd.participant_id, cd.activity_progress ?? 0);
 		}
 		return new ActivityMappingResult(progressMap);
 	}
@@ -509,7 +493,7 @@ export class Activity {
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when progress is set
 	 */
 	async setProgress(progress: number, participant_id: number): Promise<ActivityCompletion>{
-		let progressData = await this.getCurrentCompletionData([participant_id]);
+		let progressData = await this.getCurrentCompletionData("activity_progress", [participant_id]);
 		if (progressData.length === 0) {
 			// Create completion record if it doesn't exist
 			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
@@ -534,10 +518,10 @@ export class Activity {
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
 	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
-		let progressData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_completed"]);
+		let progressData= await this.getCurrentCompletionData("activity_completed", participants_id);
 		let progressMap = new Map<number, boolean>();
 		for (const cd of progressData) {
-			progressMap.set(cd.participant_id, cd.activity_completed);
+			progressMap.set(cd.participant_id, cd.activity_completed ?? false);
 		}
 		return new ActivityMappingResult(progressMap);
 	}
@@ -553,7 +537,7 @@ export class Activity {
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when completion is set
 	 */
 	async setCompletion(completed: boolean, participant_id: number): Promise<ActivityCompletion>{
-		let data = await this.getCurrentCompletionData([participant_id]);
+		let data = await this.getCurrentCompletionData("activity_completed", [participant_id]);
 		if (data.length === 0) {
 			// Create completion record if it doesn't exist
 			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
@@ -598,7 +582,7 @@ export class Activity {
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when suspension status is set
 	 */
 	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
-		let completionData = await this.getCurrentCompletionData([participant_id]);
+		let completionData = await this.getCurrentCompletionData("activity_suspended", [participant_id]);
 		if (completionData.length === 0) {
 			// Create completion record if it doesn't exist
 			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
@@ -614,10 +598,10 @@ export class Activity {
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
-		let suspensionData= await this.getCurrentCompletionData(participants_id, ["participant_id", "activity_suspended"]);
+		let suspensionData= await this.getCurrentCompletionData("activity_suspended", participants_id);
 		let suspensionMap = new Map<number, boolean>();
 		for (const cd of suspensionData) {
-			suspensionMap.set(cd.participant_id, cd.activity_suspended);
+			suspensionMap.set(cd.participant_id, cd.activity_suspended ?? false);
 		}
 		return new ActivityMappingResult(suspensionMap);
 	}
@@ -669,7 +653,7 @@ export class Activity {
 			} else if(this.session_start_date && Date.now() < this.session_start_date.getTime()) {
 				throw new AuthentificationError("The session for this activity has not started yet, cannot send statements to LRS.");
 			}
-			if(this.activity_completed) {
+			if(this.allocated_activity_result?.activity_completed && !this.activity_can_be_restarted) {
 				throw new AuthentificationError("The activity is already completed, cannot send statements to LRS.");
 			}	
 			if(this.activity_order === 1) {
@@ -683,7 +667,7 @@ export class Activity {
 					throw new AuthentificationError("Cannot verify previous activity completion for non-allocated user, cannot send statements to LRS.");
 				}
 				for(const previousActivity of previousActivities) {
-					if(!previousActivity.activity_completed && !previousActivity.activity_can_be_restarted) {
+					if(!previousActivity.allocated_activity_result?.activity_completed && !previousActivity.activity_can_be_restarted) {
 						throw new AuthentificationError(`The previous activity ${previousActivity.activity_name} is not completed, cannot send statements to LRS.`);
 					}
 				}
@@ -866,8 +850,6 @@ export class Activity {
 			 return {
 				...obj,
 				session_active: this.session_active,
-				session_start_date: this.session_start_date,
-				session_end_date: this.session_end_date,
 				allocated_user_id: this.allocated_user_id,
 				allocated_username: this.allocated_username,
 				allocated_isToken: this.allocated_isToken,

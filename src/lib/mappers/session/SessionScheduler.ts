@@ -38,7 +38,10 @@ export class SessionScheduler {
             simlet: this.simlet,
             session: this.session,
             url: this.url,
-            activities: this.activities.map(a => a.toJSON()),
+            activities: this.activities.reduce((acc, activity) => {
+                acc[activity.activity_id] = activity.toJSON();
+                return acc;
+            }, {} as Record<number, any>),
             next: this.next
         }
     }
