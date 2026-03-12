@@ -282,7 +282,7 @@ export async function getSimletSchedule(
     } else if (!access.allocated) {
       schedule = await simletService.getSimletSchedule(simletId, false, access.currentUserId);
     } else {
-      throw new AuthentificationError("Invalid user role");
+      schedule = await simletService.getSimletSchedule(simletId, false, access.currentUserId);
     }
     logger.debug({schedule} , "Schedule retrieved for simlet ID and user ID");
     res.json(schedule.toJSON());
