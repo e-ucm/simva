@@ -174,6 +174,7 @@ SELECT
     up.username as current_user_username,
     up.permission as current_user_permission,
     up.permission_type as current_user_permission_type,
+    ses.simlet_id,
     act.session_id,
     act.activity_id,
     act.activity_order,
@@ -187,6 +188,7 @@ SELECT
     act.activity_comply_with_GDPR,
     act.activity_can_be_restarted
 FROM Activities act
+LEFT JOIN Sessions ses ON act.session_id = ses.session_id
 LEFT JOIN vv_user_permissions up ON act.activity_id = up.object_id AND up.object_type = "ACTIVITY";
 
 -- Views : Complete information about simplet groups and their participants

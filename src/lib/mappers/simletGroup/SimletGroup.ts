@@ -113,8 +113,9 @@ export class SimletGroup {
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         this.group_use_new_generation = Boolean(data.group_use_new_generation);
         this.group_allocator_type = data.group_allocator_type;
-        if(this.current_user_id) {
-         this.current_user_id = current_user_id;   
+        if(current_user_id !== undefined && current_user_id !== null && current_user_id !== 0) {
+            this.current_user_id = current_user_id;
+            this.is_admin = false;
         } else {
             this.is_admin = true;
         }
@@ -412,7 +413,7 @@ export class SimletGroup {
             participants: this.participants 
         }, 'Allocator.allocateToDefault starting');
         
-        const session = await Session.getFromDbData(this.simlet_id, defaultSession, false, this.current_user_id);
+        const session = await Session.getFromDbData(this.simlet_id, defaultSession, this.is_admin, this.current_user_id);
         
         for (const participant_id of this.participants) {
             const existing = await db.Tables.ExperimentalParticipants.findOne({

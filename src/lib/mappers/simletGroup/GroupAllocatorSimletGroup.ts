@@ -72,6 +72,6 @@ export class GroupAllocatorSimletGroup extends SimletGroup {
             logger.debug({ allocator_type: this.group_allocator_type, expected: GroupAllocatorSimletGroup.getType() }, 'GroupAllocator.allocate type mismatch');
             throw new ValidationError("Not valid");
         }
-        super.allocateToDefault(sessionId);
+        await super.allocateToDefault(sessionId);
     }
 }

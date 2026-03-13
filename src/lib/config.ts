@@ -130,7 +130,15 @@ config.kafka.port = process.env.KAFKA_PORT || '9092';
 config.kafka.groupId = process.env.KAFKA_GROUP_ID || 'simva-group';
 config.kafka.clientId = process.env.KAFKA_CLIENT_ID || 'simva-client';
 config.kafka.topic = config.minio.tracesTopic;
-config.kafka.brokers = process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS.split(',') : [`${config.kafka.host}:${config.kafka.port}`];
+config.kafka.brokers = process.env.KAFKA_BROKERS ? process.env.KAFKA_BROKERS : [`${config.kafka.host}:${config.kafka.port}`];
+
+config.kafkaEvent = {};
+config.kafkaEvent.host = config.kafka.host;
+config.kafkaEvent.port = config.kafka.port;
+config.kafkaEvent.brokers = config.kafka.brokers;
+config.kafkaEvent.groupId = process.env.KAFKA_SIMVA_EVENTS_GROUP_ID || 'simva-events-group';
+config.kafka.clientId = process.env.KAFKA_SIMVA_EVENTS_CLIENT_ID || 'simva-event-client';
+config.kafkaEvent.topic = process.env.KAFKA_SIMVA_EVENTS_TOPIC || 'simva_events_topic';
 
 // LimeSurvey configuration
 config.limesurvey = {};

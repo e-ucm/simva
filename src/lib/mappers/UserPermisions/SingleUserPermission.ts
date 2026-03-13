@@ -28,6 +28,7 @@ export class SingleUserPermission {
     permission: string;
 
     current_user_id?: number;
+    is_admin: boolean;
 
     createdAt?: Date;
 
@@ -39,28 +40,29 @@ export class SingleUserPermission {
      * @param {any} data - Raw data object containing username and permission
      * @description Initializes user permission mapping from provided data.
      */
-    constructor(object_type: string, object_id: number, data: any, current_user_id?: number) {
+    constructor(object_type: string, object_id: number, data: any, current_user_id?: number, is_admin: boolean = false) {
         this.user_id = data.user_id;
         this.username = data.username;
         this.permission = data.permission;
         this.object_id = object_id;
         this.object_type = object_type;
         this.current_user_id = current_user_id;
+        this.is_admin = is_admin;
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
     }
 
-    static async getFromDbData(object_type: string, object_id: number, user_id: number, current_user_id?: number): Promise<SingleUserPermission> {
+    static async getFromDbData(object_type: string, object_id: number, user_id: number, current_user_id?: number, is_admin: boolean = false): Promise<SingleUserPermission> {
         switch (object_type) {
             case 'simlet':
                 let simletPermissions = await db.Functions.runViewQuery(db.Views.Simlet.directPermissionsBySimletId, { simlet_id: object_id, user_id: user_id });
-                return new SingleUserPermission(object_type, object_id, simletPermissions, current_user_id);
+                return new SingleUserPermission(object_type, object_id, simletPermissions, current_user_id, is_admin);
             case 'session':
                 const sessionPermissions = await db.Functions.runViewQuery(db.Views.Session.directPermissionsBySessionId, { session_id: object_id, user_id: user_id }); 
-                return new SingleUserPermission(object_type, object_id, sessionPermissions, current_user_id);
+                return new SingleUserPermission(object_type, object_id, sessionPermissions, current_user_id, is_admin);
             case 'group':
                 const groupPermissions = await db.Functions.runViewQuery(db.Views.Group.directPermissionsByGroupId, { group_id: object_id, user_id: user_id });
-                return new SingleUserPermission(object_type, object_id, groupPermissions, current_user_id);
+                return new SingleUserPermission(object_type, object_id, groupPermissions, current_user_id, is_admin);
             default:
                 throw new BadRequestError(`Unsupported object type: ${object_type}`);
         }
@@ -121,14 +123,20 @@ export class SingleUserPermission {
     }
 
     canEdit(): boolean {
-        if(this.user_id != this.current_user_id || this.current_user_id != null) {
+        if(this.is_admin) {
+            return true;
+        }
+        if(this.current_user_id != null && this.user_id !== this.current_user_id) {
             return true;
         }
         throw new AuthentificationError('User does not have permission to edit');
     }
 
     canDelete(): boolean {
-        if(this.user_id != this.current_user_id || this.current_user_id != null) {
+        if(this.is_admin) {
+            return true;
+        }
+        if(this.current_user_id != null && this.user_id !== this.current_user_id) {
             return true;
         }
         throw new AuthentificationError('User does not have permission to delete');

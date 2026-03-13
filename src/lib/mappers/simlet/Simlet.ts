@@ -254,6 +254,9 @@ export class Simlet {
     }
 
     canEdit() : boolean {
+        if(this.is_admin) {
+            return true;
+        }
         if(this.current_user_permission === "FULL" || this.current_user_permission === "WRITE") {
             return true;
         }
@@ -261,6 +264,9 @@ export class Simlet {
     }
 
     canDelete() : boolean {
+        if(this.is_admin) {
+            return true;
+        }
         if(this.current_user_permission === "FULL") {
             return true;
         }
@@ -401,28 +407,28 @@ export class Simlet {
     }
 
     async getPermissions() {
-        return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        return await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id, this.is_admin);
     }
     
     async createPermissions(body: any) {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id, this.is_admin);
         return await permissions.createPermissions(body);
     }
     
     async getPermissionsForUser(userId: number) {
-        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
+        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
     }
     
     async patchPermissionsForUser(userId: number, body: any) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
         return await permission.update(body.permission);
     }
 
     async deletePermissionsForUser(userId: number) {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id);
+        let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
         return await permission.delete();
     }
 

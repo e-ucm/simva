@@ -310,6 +310,9 @@ export class Session {
      * @throws {AuthentificationError} When user lacks edit permissions
      */
     canEdit() : boolean {
+        if(this.is_admin) {
+            return true;
+        }
         if(this.current_user_permission === "FULL" || this.current_user_permission === "WRITE") {
             return true;
         }
@@ -325,6 +328,9 @@ export class Session {
      * @throws {AuthentificationError} When user lacks delete permissions
      */
     canDelete() : boolean {
+        if(this.is_admin) {
+            return true;
+        }
         if(this.current_user_permission === "FULL") {
             return true;
         }
@@ -395,7 +401,7 @@ export class Session {
      */
     async createPermissions(body: any): Promise<any> {
         this.canEdit();
-        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id as number);
+        let permissions = await UserPermission.getFromDbData('session', this.session_id, this.current_user_id as number, this.is_admin);
         return await permissions.createPermissions(body);
     }
     
@@ -408,7 +414,7 @@ export class Session {
      * @returns {Promise<SingleUserPermission>} Permission instance for the user
      */
     async getPermissionsForUser(userId: number): Promise<SingleUserPermission> {
-        return await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number);
+        return await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number, this.is_admin);
     }
     
     /**
@@ -424,7 +430,7 @@ export class Session {
      */
     async patchPermissionsForUser(userId: number, body: any): Promise<any> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number);
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number, this.is_admin);
         return await permission.update(body.permission);
     }
 
@@ -440,7 +446,7 @@ export class Session {
      */
     async deletePermissionsForUser(userId: number): Promise<any> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number);
+        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number, this.is_admin);
         return await permission.delete();
     }
 

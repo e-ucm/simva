@@ -23,7 +23,7 @@ export class ActivityCompletion {
 
     activity_suspension_date?: Date;
 
-    activity_completion_date?: Date;
+    activity_completion_date?: Date | null;
 
     activity_registration_id: string;
 
@@ -147,6 +147,8 @@ export class ActivityCompletion {
                 break;
             case 'activity_completed':
                 this.activity_completed = data.activity_completed;
+                this.activity_completion_date = data.activity_completion_date ? new Date(data.activity_completion_date) : undefined;
+                this.activity_initialization_date = data.activity_initialization_date ? new Date(data.activity_initialization_date) : undefined;
                 break;
             case 'activity_result_presigned_url':
                 this.activity_result_presigned_url = data.activity_result_presigned_url || undefined;
@@ -208,6 +210,7 @@ export class ActivityCompletion {
             case 'activity_completed':
                 json.activity_completed = this.activity_completed;
                 json.activity_completion_date = this.activity_completion_date;
+                json.activity_initialization_date = this.activity_initialization_date;
                 break;
             case 'activity_result_presigned_url':
                 json.activity_result_presigned_url = this.activity_result_presigned_url || undefined;

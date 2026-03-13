@@ -8,6 +8,16 @@ import { ActivityCompletion } from "../ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 import { lrsclient } from "@/lib/utils/LRSclient";
 import { User } from "../Users/User";
+import KafkaClient, { KafkaOpts } from "@/lib/utils/kafkaclient";
+
+const kafkaEventConfig: KafkaOpts = {
+	clientId: config.kafkaEvent.clientId,
+	brokers: config.kafkaEvent.brokers,
+	topic: config.kafkaEvent.topic,
+	groupId: config.kafkaEvent.groupId
+};
+
+const kafkaEventClient = new KafkaClient(kafkaEventConfig);
 
 /**
  * Base Activity mapper class representing an activity within a session.
@@ -488,7 +498,21 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set initialized status for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when initialized status is set
 	 */
-	async setInitialized(initialized: boolean, participant_id: number): Promise<ActivityCompletion>{
+	async setInitialized(initialized: boolean, participant_id: number, sendMessage: boolean = false): Promise<ActivityCompletion>{
+		let message = {
+			type: "activity_initialized",
+			activity_type: this.activity_type,
+			activity_id: this.activity_id,
+			session_id: this.session_id,
+			simlet_id: this.simlet_id,
+			participant_id: participant_id,
+			username: this.allocated_username ?? this.current_user_username,
+			timestamp: new Date().toISOString(),
+			status: initialized
+		}
+		if (sendMessage) {
+			await kafkaEventClient.sendMessage(JSON.stringify(message));
+		}
 		let progressData = await this.getCurrentCompletionData("activity_initialized", [participant_id]);
 		if (progressData.length === 0) {
 			// Create completion record if it doesn't exist
@@ -532,7 +556,22 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set progress for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when progress is set
 	 */
-	async setProgress(progress: number, participant_id: number): Promise<ActivityCompletion>{
+	async setProgress(progress: number, participant_id: number, sendMessage: boolean = false): Promise<ActivityCompletion>{
+		let message = {
+			type: "activity_progressed",
+			activity_type: this.activity_type,
+			activity_id: this.activity_id,
+			session_id: this.session_id,
+			simlet_id: this.simlet_id,
+			participant_id: participant_id,
+			username: this.allocated_username ?? this.current_user_username,
+			timestamp: new Date().toISOString(),
+			progress: progress
+		}
+		if (sendMessage) {
+			await kafkaEventClient.sendMessage(JSON.stringify(message));
+		}
+								
 		let progressData = await this.getCurrentCompletionData("activity_progress", [participant_id]);
 		if (progressData.length === 0) {
 			// Create completion record if it doesn't exist
@@ -576,18 +615,49 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set completion for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when completion is set
 	 */
-	async setCompletion(completed: boolean, participant_id: number): Promise<ActivityCompletion>{
+	async setCompletion(completed: boolean, participant_id: number, sendMessage: boolean = true): Promise<ActivityCompletion>{
+		const now = new Date();
+		let message = {
+			type: "activity_completed",
+			activity_type: this.activity_type,
+			activity_id: this.activity_id,
+			session_id: this.session_id,
+			simlet_id: this.simlet_id,
+			participant_id: participant_id,
+			username: this.allocated_username ?? this.current_user_username,
+			status: completed,
+			timestamp: now.toISOString()
+		}
+		if (sendMessage) {
+			await kafkaEventClient.sendMessage(JSON.stringify(message));
+		}		
 		let data = await this.getCurrentCompletionData("activity_completed", [participant_id]);
 		if (data.length === 0) {
 			// Create completion record if it doesn't exist
 			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
-			await newCompletion.update({ activity_completed: completed });
+			const completionUpdate: Partial<ActivityCompletion> = {
+				activity_completed: completed,
+				activity_completion_date: completed ? now : null,
+				activity_initialization_date: now
+			};
+			await newCompletion.update(completionUpdate);
 			newCompletion.activity_completed = completed;
+			newCompletion.activity_completion_date = completed ? now : null;
+			newCompletion.activity_initialization_date = now;
 			return newCompletion;
 		}
 		for (const cd of data) {
-			await cd.update({ activity_completed: completed });
+			const completionUpdate: Partial<ActivityCompletion> = {
+				activity_completed: completed,
+				activity_completion_date: completed ? now : null,
+				activity_initialization_date: cd.activity_initialization_date ?? now
+			};
+			await cd.update(completionUpdate);
 			cd.activity_completed = completed; // Update local instance to reflect change
+			cd.activity_completion_date = completed ? now : null;
+			if (!cd.activity_initialization_date) {
+				cd.activity_initialization_date = now;
+			}
 		}
 		return data[0];
 	} 
@@ -605,7 +675,7 @@ export class Activity {
 		let participants_id = await this.getAllCurrentParticipantsId();
 		let completionData : ActivityCompletion[]= [];
 		for (const participant_id of participants_id) {
-			let data = await this.setCompletion(status, participant_id);
+			let data = await this.setCompletion(status, participant_id, true);
 			completionData.push(data);
 		}	
 		return completionData;
@@ -755,7 +825,7 @@ export class Activity {
 					switch(trace.verb.id) {
 						case initializedVerb:
 							logger.info(`INITIALIZED ACTIVITY ${this.activity_type}`);
-							await this.setInitialized(true, current_user_id);
+							await this.setInitialized(true, current_user_id, true);
 							break;
 						case progressedVerb:
 							let value= 0;
@@ -770,13 +840,14 @@ export class Activity {
 								default:
 									logger.warn(`Unsupported activity type ${this.activity_type} for progress value extraction from xAPI trace`);
 							}
+							let roundedValue = Number(value.toFixed(6));
 							logger.info(`Progress value from trace: ${value}`);
-							await this.setProgress(Number(value.toFixed(6)), current_user_id);
+							await this.setProgress(roundedValue, current_user_id, true);
 							break;
 						case completedVerb:
 							logger.info(`COMPLETED ACTIVITY ${this.activity_type}`);
 							if(trace.result && trace.result.completion && Boolean(trace.result.completion)) {
-								await this.setCompletion(true, current_user_id);
+								await this.setCompletion(true, current_user_id, true);
 							}
 							break;
 						default:

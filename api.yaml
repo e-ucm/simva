@@ -157,6 +157,7 @@ paths:
     get:
       tags:
         - administrators
+        - lrsmanagers
         - teachers
         - students
         - noroles
