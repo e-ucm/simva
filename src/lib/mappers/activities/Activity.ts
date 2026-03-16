@@ -935,10 +935,13 @@ export class Activity {
 	getTrackerConfig() : string {
         return  JSON.stringify({
 			"online": true,
-			"simva": true,
 			"homepage": `${config.externalUrl}`,
 			"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
 			"auth_protocol": "oauth2",
+			"backup": true,
+			"backup_trace_format": "XAPI",
+			"backup_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
+			"backup_auth_protocol": "same",
 			"auth_parameters": {
 				"grant_type": "code",
 				"auth_endpoint": `${config.sso.authUrl}`,
