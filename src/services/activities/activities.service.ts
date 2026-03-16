@@ -13,8 +13,7 @@
  * @requires @/lib/errors/appErrors
  */
 
-import { ValidationError, NotFoundError } from "@/lib/errors/appErrors";
-import { logger } from "@/lib/logger";
+import { NotFoundError } from "@/lib/errors/appErrors";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "@/lib/mappers/ActivityCompletion/ActivityMappingResult";
@@ -67,35 +66,35 @@ export async function getTargetForActivity(activityId: number, allocated: boolea
     return activity.target(participants_id);
 }
 
-export async function getProgressForActivity(activityId: number, allocated: boolean, is_admin: boolean, participants_id?: number[], current_user_id?: number): Promise<ActivityMappingResult<number>> {
+export async function getProgressForActivity(activityId: number, allocated: boolean, is_admin: boolean, participants_id?: number[], current_user_id?: number): Promise<ActivityMappingResult<number | null>> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
     return activity.getProgress(participants_id);
 }
 
 export async function setProgressForActivity(activityId: number, allocated: boolean, is_admin: boolean, progress: number, participant_id: number, current_user_id?: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
-    return activity.setProgress(progress, participant_id);
+    return activity.setProgress(progress, new Date(), participant_id);
 }
 
 
-export async function getInitializedForActivity(activityId: number, allocated: boolean, is_admin: boolean, participants_id?: number[], current_user_id?: number): Promise<ActivityMappingResult<boolean>> {
+export async function getInitializedForActivity(activityId: number, allocated: boolean, is_admin: boolean, participants_id?: number[], current_user_id?: number): Promise<ActivityMappingResult<boolean | null>> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
     return activity.getInitialized(participants_id);
 }
 
 export async function setInitializedForActivity(activityId: number, allocated: boolean, is_admin: boolean, initialized: boolean, participant_id: number, current_user_id?: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
-    return activity.setInitialized(initialized, participant_id);
+    return activity.setInitialized(initialized, new Date(),  participant_id);
 }
 
-export async function getCompletionForActivity(activityId: number, allocated: boolean, is_admin: boolean, participants_id?: number[], current_user_id?: number): Promise<ActivityMappingResult<boolean>> {
+export async function getCompletionForActivity(activityId: number, allocated: boolean, is_admin: boolean, participants_id?: number[], current_user_id?: number): Promise<ActivityMappingResult<boolean | null>> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
     return activity.getCompletion(participants_id);
 }
 
 export async function setCompletionForActivity(activityId: number, allocated: boolean, is_admin: boolean, completed: boolean, participant_id: number, current_user_id?: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
-    return activity.setCompletion(completed, participant_id);
+    return activity.setCompletion(completed, new Date(), participant_id);
 }
 
 export async function setMultiCompletionForActivity(activityId: number, allocated: boolean, is_admin: boolean, status: boolean, current_user_id?: number): Promise<ActivityCompletion[]> {
@@ -138,3 +137,8 @@ export async function getPresignedUrlForActivity(activityId: number, allocated: 
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
     return activity.generatePresignedFileUrl();
 }
+export async function getTrackerConfigForActivity(activityId: number, allocated: boolean, is_admin: boolean, currentUserId: number) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return activity.getTrackerConfig();
+}
+

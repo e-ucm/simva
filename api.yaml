@@ -2312,7 +2312,7 @@ paths:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
-  /activities/{activityid}/statements:
+  /activities/{activityid}/lrs/statements:
     get:
       tags:
         - administrators
@@ -2412,7 +2412,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/agents:
+  /activities/{activityid}/lrs/agents:
     get:
       tags:
         - administrators
@@ -2438,7 +2438,7 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/agents/profile:
+  /activities/{activityid}/lrs/agents/profile:
     get:
       tags:
         - administrators
@@ -2547,7 +2547,7 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/activities:
+  /activities/{activityid}/lrs/activities:
     get:
       tags:
         - administrators
@@ -2573,7 +2573,7 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/activities/profile:
+  /activities/{activityid}/lrs/activities/profile:
     get:
       tags:
         - administrators
@@ -2683,7 +2683,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/user'
-  /activities/{activityid}/activities/status:
+  /activities/{activityid}/lrs/activities/status:
     get:
       tags:
         - administrators
@@ -2792,7 +2792,7 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/about:
+  /activities/{activityid}/lrs/about:
     get:
       tags:
         - administrators
@@ -2818,7 +2818,7 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/extension/{extension_id}:
+  /activities/{activityid}/lrs/extension/{extension_id}:
     get:
       tags:
         - administrators
@@ -4619,6 +4619,7 @@ components:
               activity_initialization_date:
                 type: string
                 format: date-time
+                nullable: true
                 example: "2026-03-03T22:26:13.000Z"
     progressMapper:
       allOf:
@@ -4636,20 +4637,16 @@ components:
               activity_initialization_date:
                 type: string
                 format: date-time
+                nullable: true
                 example: "2026-03-03T22:26:13.000Z"
     suspensionMapper:
       allOf:
       - $ref: '#/components/schemas/noTypedActivityCompletionMapper'
       - type: object  
         required:
-          - activity_initialization_date
           - activity_suspended
           - activity_suspension_date
         properties: 
-              activity_initialization_date:
-                type: string
-                format: date-time
-                example: "2026-03-03T22:26:13.000Z"
               activity_suspended:
                 type: boolean
                 example: false
@@ -4666,7 +4663,6 @@ components:
             - participant_id
             - activity_completed
             - activity_completion_date
-            - activity_initialization_date
           properties:
                 participant_id:
                   type: integer
@@ -4679,10 +4675,6 @@ components:
                   format: date-time
                   nullable: true
                   example: "2026-03-10T16:39:06.530Z"
-                activity_initialization_date:
-                  type: string
-                  format: date-time
-                  example: "2026-03-03T22:26:13.000Z"
     targetMapper:
       allOf:
         - $ref: '#/components/schemas/noTypedActivityCompletionMapper'
@@ -4698,14 +4690,17 @@ components:
                   example: 456
                 activity_result_presigned_url:
                   type: string
+                  nullable: true
                   example: "https://example.com/presigned-url"
                 activity_result_presigned_url_generated_at:
                   type: string
                   format: date-time
+                  nullable: true
                   example: "2026-03-03T22:26:13.000Z"
                 activity_result_presigned_url_expire_at:
                   type: string
                   format: date-time
+                  nullable: true
                   example: "2026-03-05T10:15:30.000Z"
     allCompletionMapper:
       allOf:

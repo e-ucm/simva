@@ -170,28 +170,28 @@ export class GamePlayActivity extends Activity {
 		return new ActivityMappingResult(targetMap);
 	}
 
-	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
+	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean | null>> {
 		return super.getInitialized(participants_id);
 	}
 
-	async setInitialized(initialized: boolean, participant_id: number): Promise<ActivityCompletion> {
-		return super.setInitialized(initialized, participant_id);
+	async setInitialized(initialized: boolean, initialized_date: Date, participant_id: number): Promise<ActivityCompletion> {
+		return super.setInitialized(initialized, initialized_date, participant_id);
 	}
 
-	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number>> {
+	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number | null>> {
 		return super.getProgress(participants_id);
 	}
 	
-	async setProgress(progress: number, participant_id: number): Promise<ActivityCompletion> {
-		return super.setProgress(progress, participant_id);
+	async setProgress(progress: number, progress_date: Date, participant_id: number): Promise<ActivityCompletion> {
+		return super.setProgress(progress, progress_date, participant_id);
 	}
 
-	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
+	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean | null>> {
 		return super.getCompletion(participants_id);
 	}
 
-	async setCompletion(completed: boolean, participant_id: number): Promise<ActivityCompletion> {
-		return super.setCompletion(completed, participant_id);
+	async setCompletion(completed: boolean, completed_date: Date, participant_id: number): Promise<ActivityCompletion> {
+		return super.setCompletion(completed, completed_date, participant_id);
 	}
 
 	async setMultiCompletion(status : boolean): Promise<ActivityCompletion[]> {

@@ -8,19 +8,7 @@
  */
 
 import { Router } from "express";
-import { 
-  getSimletGroups,
-  createSimletGroup,
-  getSimletGroupCount,
-  getSimletGroupById,
-  updateSimletGroup,
-  deleteSimletGroup,
-  getSimletGroupParticipants,
-  createSimletGroupParticipant,
-  addSimletGroupParticipant,
-  deleteGroupParticipant,
-  allocateToSessionSimlet
-} from "@/controlers/simlets/simlet.groups.controler";
+import * as SimletGroupsControler from "@/controlers/simlets/simlet.groups.controler";
 
 /**
  * Express router for simlet groups endpoints.
@@ -34,23 +22,23 @@ import {
  */
 const router = Router({ mergeParams: true });
 
-router.get("/", getSimletGroups);
+router.get("/", SimletGroupsControler.getSimletGroups);
 
 // Base group operations
-router.get("/", getSimletGroups);
-router.get("/count", getSimletGroupCount);
-router.post("/", createSimletGroup);
+router.get("/", SimletGroupsControler.getSimletGroups);
+router.get("/count", SimletGroupsControler.getSimletGroupCount);
+router.post("/", SimletGroupsControler.createSimletGroup);
 
 // Individual group operations
-router.get("/:group_id", getSimletGroupById);
-router.patch("/:group_id", updateSimletGroup);
-router.delete("/:group_id", deleteSimletGroup);
+router.get("/:group_id", SimletGroupsControler.getSimletGroupById);
+router.patch("/:group_id", SimletGroupsControler.updateSimletGroup);
+router.delete("/:group_id", SimletGroupsControler.deleteSimletGroup);
 
 // Group participant operations
-router.get("/:group_id/participants", getSimletGroupParticipants);
-router.post("/:group_id/participants", createSimletGroupParticipant);
-router.post("/:group_id/participants/:participant_id", addSimletGroupParticipant);
+router.get("/:group_id/participants", SimletGroupsControler.getSimletGroupParticipants);
+router.post("/:group_id/participants", SimletGroupsControler.createSimletGroupParticipant);
+router.post("/:group_id/participants/:participant_id", SimletGroupsControler.addSimletGroupParticipant);
 // Individual participant operations
-router.delete("/:group_id/participants/:participant_id", deleteGroupParticipant);
-router.post("/:group_id/allocate/:session_id", allocateToSessionSimlet);
+router.delete("/:group_id/participants/:participant_id", SimletGroupsControler.deleteGroupParticipant);
+router.post("/:group_id/allocate/:session_id", SimletGroupsControler.allocateToSessionSimlet);
 export default router;

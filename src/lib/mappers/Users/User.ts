@@ -348,4 +348,13 @@ export class User {
         }
         return true;
     }
+
+    static async getAllCurrentParticipantsUsername(user_id: number[]): Promise<Map<number, string>> {
+        const usernames: Map<number, string> = new Map<number, string>();
+        let users = await User.getFromListDbData(user_id);
+        for (const user of users) {
+          usernames.set(user.user_id, user.username);
+        }
+        return usernames;
+      }
 }

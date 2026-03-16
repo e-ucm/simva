@@ -1,10 +1,9 @@
 
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { NextFunction, Response } from "express";
-import * as activitiesService from "@/services/activities/activitiesLRS.service";
+import * as activitiesLRSService from "@/services/activities/activitiesLRS.service";
 import { AuthentificationError, BadRequestError, NotFoundError, NotImplementedError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
-import { Activity } from "@/lib/mappers/activities/Activity";
 import { User } from "@/lib/mappers/Users/User";
 import { getAccess } from "@/controlers/users/user.helper";
 
@@ -33,19 +32,19 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
             : { ...getAccess(currentUser), canImpersonate: false };
         let ids: number[] = [];
         if (access.is_admin) {
-            ids = await activitiesService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, access.is_admin, access.currentUserId);
+            ids = await activitiesLRSService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, access.is_admin, access.currentUserId);
         } else if (access.canImpersonate) {
             if(body && body.length > 0 && typeof body[0] === "object") {
                 const postuserId = (await User.getFromDbData(undefined, body[0].actor.account.name)).user_id;
                 if(isNaN(postuserId)) {
                     throw new ValidationError("Invalid username in query parameter");
                 }
-                ids = await activitiesService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, false, postuserId);
+                ids = await activitiesLRSService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, false, postuserId);
             } else {
                 throw new ValidationError("Invalid request body for lrsmanager role");
             }
         } else {
-            ids = await activitiesService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, false, access.currentUserId);
+            ids = await activitiesLRSService.sendStatementsLRSForActivity(activityId, body, access.currentUserId, false, access.currentUserId);
         }
         return res.status(201).json(ids);
     } catch (err) {
@@ -182,6 +181,22 @@ export function getAboutLRSForActivity(req: AuthenticatedRequest, res: Response,
 }
 
  export function getExtensionLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+        throw new NotImplementedError("Endpoint not implemented yet");
+    } catch (err) {
+        next(err);
+    }
+}
+
+export function putAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+        throw new NotImplementedError("Endpoint not implemented yet");
+    } catch (err) {
+        next(err);
+    }
+}
+
+export function putActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         throw new NotImplementedError("Endpoint not implemented yet");
     } catch (err) {

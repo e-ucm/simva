@@ -127,7 +127,9 @@ export class ActivityCompletion {
                 this.activity_completed = data.activity_completed;
                 this.activity_initialization_date = data.activity_initialization_date ? new Date(data.activity_initialization_date) : undefined;
                 this.activity_suspension_date = data.activity_suspension_date ? new Date(data.activity_suspension_date) : undefined;
-                this.activity_completion_date = data.activity_completion_date ? new Date(data.activity_completion_date) : undefined;
+                this.activity_completion_date = data.activity_completion_date === null
+                    ? null
+                    : (data.activity_completion_date ? new Date(data.activity_completion_date) : undefined);
                 this.activity_result_presigned_url = data.activity_result_presigned_url || undefined;
                 this.activity_result_presigned_url_generated_at = data.activity_result_presigned_url_generated_at ? new Date(data.activity_result_presigned_url_generated_at) : undefined;
                 this.activity_result_presigned_url_expire_at = data.activity_result_presigned_url_expire_at ? new Date(data.activity_result_presigned_url_expire_at) : undefined;
@@ -147,8 +149,9 @@ export class ActivityCompletion {
                 break;
             case 'activity_completed':
                 this.activity_completed = data.activity_completed;
-                this.activity_completion_date = data.activity_completion_date ? new Date(data.activity_completion_date) : undefined;
-                this.activity_initialization_date = data.activity_initialization_date ? new Date(data.activity_initialization_date) : undefined;
+                this.activity_completion_date = data.activity_completion_date === null
+                    ? null
+                    : (data.activity_completion_date ? new Date(data.activity_completion_date) : undefined);
                 break;
             case 'activity_result_presigned_url':
                 this.activity_result_presigned_url = data.activity_result_presigned_url || undefined;

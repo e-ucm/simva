@@ -315,3 +315,19 @@ export async function exportSimlet(
     next(err);
   }
 }
+
+export function getTrackerConfig(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    logger.debug({simletId} , "Getting tracker config for simlet ID");
+    const trackerConfig = simletService.getTrackerConfigForSimlet(simletId);
+    logger.debug({trackerConfig} , "Tracker config retrieved for simlet ID");
+    res.json(trackerConfig);
+  } catch (err) {
+    next(err);
+  }
+}

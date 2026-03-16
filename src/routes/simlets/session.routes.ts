@@ -8,16 +8,7 @@
  */
 
 import { Router } from "express";
-import { 
-  getSimletSessions,
-  createSimletSession,
-  getSimletSession,
-  patchSimletSession,
-  deleteSimletSession,
-  getSimletSessionParticipants,
-  activateSimletSession,
-  getSimletSessionCount
-} from "@/controlers/simlets/session.controler";
+import * as SessionControler from "@/controlers/simlets/session.controler";
 import sessionPermissionsRouter from "./session.permissions.routes";
 import sessionActivitiesRouter from "./session.activities.routes";
 
@@ -42,14 +33,14 @@ import sessionActivitiesRouter from "./session.activities.routes";
  */
 const router = Router({ mergeParams: true });
 
-router.get("/", getSimletSessions);
-router.get("/count", getSimletSessionCount);
-router.post("/", createSimletSession);
-router.get("/:session_id", getSimletSession);
-router.patch("/:session_id", patchSimletSession);
-router.delete("/:session_id", deleteSimletSession);
-router.get("/:session_id/participants", getSimletSessionParticipants);
-router.post("/:session_id/activate", activateSimletSession);
+router.get("/", SessionControler.getSimletSessions);
+router.get("/count", SessionControler.getSimletSessionCount);
+router.post("/", SessionControler.createSimletSession);
+router.get("/:session_id", SessionControler.getSimletSession);
+router.patch("/:session_id", SessionControler.patchSimletSession);
+router.delete("/:session_id", SessionControler.deleteSimletSession);
+router.get("/:session_id/participants", SessionControler.getSimletSessionParticipants);
+router.post("/:session_id/activate", SessionControler.activateSimletSession);
 
 // Mount sub-routers
 router.use("/:session_id/permissions", sessionPermissionsRouter);

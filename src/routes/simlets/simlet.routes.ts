@@ -11,16 +11,7 @@
  */
 
 import { Router } from "express";
-import { 
-  getAllSimlets,
-  getSimletById,
-  createSimlet,
-  patchSimlet,
-  deleteSimlet,
-  getSimletParticipants,
-  getSimletSchedule,
-  exportSimlet
-} from "@/controlers/simlets/simlet.controler";
+import * as SimletControler from "@/controlers/simlets/simlet.controler";
 
 // Import sub-routers
 import simletPermissionsRouter from "./simlet.permissions.routes";
@@ -71,19 +62,20 @@ import simletGroupsRouter from "./simlet.groups.routes";
 const router = Router();
 
 // Collection endpoints (should come before parameterized routes)
-router.get("/", getAllSimlets);
-router.post("/", createSimlet);
+router.get("/", SimletControler.getAllSimlets);
+router.post("/", SimletControler.createSimlet);
 //router.post('/import', importSimlet);
-router.get('/:simlet_id/export', exportSimlet);
+router.get('/:simlet_id/export', SimletControler.exportSimlet);
 
 // Individual resource endpoints
-router.get("/:simlet_id", getSimletById);
-router.patch("/:simlet_id", patchSimlet);
-router.delete("/:simlet_id", deleteSimlet);
+router.get("/:simlet_id", SimletControler.getSimletById);
+router.patch("/:simlet_id", SimletControler.patchSimlet);
+router.delete("/:simlet_id", SimletControler.deleteSimlet);
 
 // Additional simlet-related endpoints
-router.get("/:simlet_id/participants", getSimletParticipants);
-router.get("/:simlet_id/schedule", getSimletSchedule);
+router.get("/:simlet_id/participants", SimletControler.getSimletParticipants);
+router.get("/:simlet_id/schedule", SimletControler.getSimletSchedule);
+router.get("/:simlet_id/tracker_config", SimletControler.getTrackerConfig);
 
 // Mount sub-routers
 router.use("/:simlet_id/permissions", simletPermissionsRouter);

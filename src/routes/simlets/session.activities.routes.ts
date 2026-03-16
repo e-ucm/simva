@@ -8,12 +8,7 @@
  */
 
 import { Router } from "express";
-import { 
-  getSessionActivities,
-  createSessionActivity,
-  updateSessionActivity,
-  deleteSessionActivity
-} from "@/controlers/simlets/session.activities.controler";
+import * as SessionActivitiesControler from "@/controlers/simlets/session.activities.controler";
 
 /**
  * Express router for session activities endpoints.
@@ -28,9 +23,9 @@ import {
  */
 const router = Router({ mergeParams: true });
 
-router.get("/", getSessionActivities);
-router.post("/", createSessionActivity);
-router.patch("/:activity_id", updateSessionActivity);
-router.delete("/:activity_id", deleteSessionActivity);
+router.get("/", SessionActivitiesControler.getSessionActivities);
+router.post("/", SessionActivitiesControler.createSessionActivity);
+router.patch("/:activity_id", SessionActivitiesControler.updateSessionActivity);
+router.delete("/:activity_id", SessionActivitiesControler.deleteSessionActivity);
 
 export default router;

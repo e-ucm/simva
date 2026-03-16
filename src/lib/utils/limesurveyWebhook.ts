@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors/appErrors";
 import KafkaClient from "@/lib/utils/kafkaclient";
 import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
+import { User } from "@/lib/mappers/Users/User";
 
 let kafkaClient : KafkaClient = new KafkaClient({
     clientId: config.kafka.clientId,
@@ -36,13 +37,22 @@ export async function limesurveyWebhookHandler(req: Request, res: Response) {
         logger.warn({ surveyId, count: limesurvey_activity.length }, 'Multiple activities found for the same surveyId, this should not happen');
     }
     const activity = limesurvey_activity[0];
+    const token: string = req.body.event_details.token;
+    let participant_id: number | undefined;
+    try {
+      const user = await User.getFromDbData(undefined, token);
+      participant_id = user.user_id;
+    } catch (e) {
+      logger.warn({ token }, 'Could not resolve participant_id for limesurvey token');
+    }
     const message = {
       type: type,
-      activityType: LimesurveyActivity.getType(),
-      surveyId: surveyId,
-      activityId: activity.activity_id,
-      studyId: activity.simlet_id,
-      user: req.body.event_details.token
+      activity_type: LimesurveyActivity.getType(),
+      survey_id: surveyId,
+      activity_id: activity.activity_id,
+      simlet_id: activity.simlet_id,
+      username: token,
+      ...(participant_id !== undefined ? { participant_id } : {})
     };
     messages.push(JSON.stringify(message));
   }

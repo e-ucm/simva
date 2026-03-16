@@ -1,9 +1,5 @@
 import { Router } from "express";
-import { 
-  getUsers, 
-  patchUser,
-  getMe
-} from "@/controlers/users/user.controler";
+import * as UserControler from "@/controlers/users/user.controler";
 
 /**
  * Express router for user-related API endpoints.
@@ -33,9 +29,9 @@ import {
 const router = Router();
 
 // Base user operations
-router.get("/", getUsers);
+router.get("/", UserControler.getUsers);
 // profile
-router.get("/me", getMe);
+router.get("/me", UserControler.getMe);
 
 /**
  * Obtains the list of surveys owned by current user.
@@ -56,6 +52,6 @@ router.get("/me", getMe);
  */
 //router.post('/events', getUserEvents);
 // User-specific operations
-router.patch("/:username", patchUser);
+router.patch("/:username", UserControler.patchUser);
 
 export default router;

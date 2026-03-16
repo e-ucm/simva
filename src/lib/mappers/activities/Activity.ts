@@ -427,12 +427,7 @@ export class Activity {
 
 	async getAllCurrentParticipantsUsername(participants_id?: number[]): Promise<Map<number, string>> {
 		const participantIds = await this.getAllCurrentParticipantsId(participants_id);
-		const usernames: Map<number, string> = new Map<number, string>();
-		let users = await User.getFromListDbData(participantIds);
-		for (const user of users) {
-			usernames.set(user.user_id, user.username);
-		}
-		return usernames;
+		return await User.getAllCurrentParticipantsUsername(participantIds);
 	}
 	
 	/**
@@ -457,6 +452,14 @@ export class Activity {
 		return new ActivityMappingResult(new Map<number, string>());
 	}
 
+	async getCurrentCompletionDataForParticipant(participant_id: number, data_field: string): Promise<ActivityCompletion> {
+		let data = await this.getCurrentCompletionData(data_field, [participant_id]);
+		if (data.length === 0) {
+			data = [await ActivityCompletion.create(this.activity_id, participant_id)];
+		}
+		return data[0];
+	}
+
 	async getCurrentCompletionData(data_field: string, participants_id?: number[]): Promise<ActivityCompletion[]> {
 		let data;
 		if(this.allocated_user) {
@@ -479,11 +482,11 @@ export class Activity {
 	 * @param {number[]} participants - Array of participant IDs
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
-	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
-		let progressData= await this.getCurrentCompletionData("activity_initialized", participants_id);
-		let progressMap = new Map<number, boolean>();
-		for (const cd of progressData) {
-			progressMap.set(cd.participant_id, cd.activity_initialized ?? false);
+	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean | null>>{
+		let data= await this.getCurrentCompletionData("activity_initialized", participants_id);
+		let progressMap = new Map<number, boolean | null>();
+		for (const cd of data) {
+			progressMap.set(cd.participant_id, cd.activity_initialized ?? null);
 		}
 		return new ActivityMappingResult(progressMap);
 	}
@@ -498,7 +501,7 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set initialized status for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when initialized status is set
 	 */
-	async setInitialized(initialized: boolean, participant_id: number, sendMessage: boolean = false): Promise<ActivityCompletion>{
+	async setInitialized(initialized: boolean, initialized_date: Date, participant_id: number): Promise<ActivityCompletion>{
 		let message = {
 			type: "activity_initialized",
 			activity_type: this.activity_type,
@@ -510,22 +513,12 @@ export class Activity {
 			timestamp: new Date().toISOString(),
 			status: initialized
 		}
-		if (sendMessage) {
-			await kafkaEventClient.sendMessage(JSON.stringify(message));
-		}
-		let progressData = await this.getCurrentCompletionData("activity_initialized", [participant_id]);
-		if (progressData.length === 0) {
-			// Create completion record if it doesn't exist
-			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
-			await newCompletion.update({ activity_initialized: initialized });
-			newCompletion.activity_initialized = initialized;
-			return newCompletion;
-		}
-		for (const cd of progressData) {
-			await cd.update({ activity_initialized: initialized });
-			cd.activity_initialized = initialized; // Update local instance to reflect change
-		}
-		return progressData[0];
+		await kafkaEventClient.sendMessage(JSON.stringify(message));
+		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_initialized");
+		logger.debug({data}, `Current initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		await data.update({ activity_initialized: initialized, activity_initialization_date: initialized_date });
+		logger.debug({data}, `Updated initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		return data;
 	}
 
 	/**
@@ -537,11 +530,11 @@ export class Activity {
 	 * @param {number[]} participants_id - Array of participant IDs
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
-	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number>>{
-		let progressData= await this.getCurrentCompletionData("activity_progress", participants_id);
-		let progressMap = new Map<number, number>();
-		for (const cd of progressData) {
-			progressMap.set(cd.participant_id, cd.activity_progress ?? 0);
+	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number | null>>{
+		let data= await this.getCurrentCompletionData("activity_progress", participants_id);
+		let progressMap = new Map<number, number | null>();
+		for (const cd of data) {
+			progressMap.set(cd.participant_id, cd.activity_progress ?? null);
 		}
 		return new ActivityMappingResult(progressMap);
 	}
@@ -553,10 +546,11 @@ export class Activity {
 	 * @async
 	 * @method setProgress
 	 * @param {number} progress - Progress value to set (0-100)
+	 * @param {Date} progress_date - Date when the progress was updated
 	 * @param {number} participant_id - Participant ID to set progress for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when progress is set
 	 */
-	async setProgress(progress: number, participant_id: number, sendMessage: boolean = false): Promise<ActivityCompletion>{
+	async setProgress(progress: number, progress_date: Date, participant_id: number): Promise<ActivityCompletion>{
 		let message = {
 			type: "activity_progressed",
 			activity_type: this.activity_type,
@@ -565,26 +559,15 @@ export class Activity {
 			simlet_id: this.simlet_id,
 			participant_id: participant_id,
 			username: this.allocated_username ?? this.current_user_username,
-			timestamp: new Date().toISOString(),
-			progress: progress
+			timestamp: progress_date.toISOString(),
+			value: progress
 		}
-		if (sendMessage) {
-			await kafkaEventClient.sendMessage(JSON.stringify(message));
-		}
-								
-		let progressData = await this.getCurrentCompletionData("activity_progress", [participant_id]);
-		if (progressData.length === 0) {
-			// Create completion record if it doesn't exist
-			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
-			await newCompletion.update({ activity_progress: progress });
-			newCompletion.activity_progress = progress;
-			return newCompletion;
-		}
-		for (const cd of progressData) {
-			await cd.update({ activity_progress: progress });
-			cd.activity_progress = progress; // Update local instance to reflect change
-		}
-		return progressData[0];
+		await kafkaEventClient.sendMessage(JSON.stringify(message));					
+		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_progress");
+		logger.debug({data}, `Current progress data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		await data.update({ activity_progress: progress });
+		logger.debug({data}, `Updated progress data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		return data;
 	}
 
 		/**
@@ -593,14 +576,14 @@ export class Activity {
 	 * 
 	 * @async
 	 * @method getProgress
-	 * @param {number[]} participants - Array of participant IDs
+	 * @param {number[]} participants_id - Array of participant IDs
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
-	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
-		let progressData= await this.getCurrentCompletionData("activity_completed", participants_id);
-		let progressMap = new Map<number, boolean>();
-		for (const cd of progressData) {
-			progressMap.set(cd.participant_id, cd.activity_completed ?? false);
+	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean | null>>{
+		let data= await this.getCurrentCompletionData("activity_completed", participants_id);
+		let progressMap = new Map<number, boolean | null>();
+		for (const cd of data) {
+			progressMap.set(cd.participant_id, cd.activity_completed ?? null);
 		}
 		return new ActivityMappingResult(progressMap);
 	}
@@ -612,11 +595,11 @@ export class Activity {
 	 * @async
 	 * @method setCompletion
 	 * @param {boolean} completed - Completion status to set
+	 * @param {Date} completed_date - Date when the activity was completed
 	 * @param {number} participant_id - Participant ID to set completion for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when completion is set
 	 */
-	async setCompletion(completed: boolean, participant_id: number, sendMessage: boolean = true): Promise<ActivityCompletion>{
-		const now = new Date();
+	async setCompletion(completed: boolean, completed_date: Date, participant_id: number): Promise<ActivityCompletion>{
 		let message = {
 			type: "activity_completed",
 			activity_type: this.activity_type,
@@ -626,40 +609,17 @@ export class Activity {
 			participant_id: participant_id,
 			username: this.allocated_username ?? this.current_user_username,
 			status: completed,
-			timestamp: now.toISOString()
+			timestamp: completed_date.toISOString()
 		}
-		if (sendMessage) {
-			await kafkaEventClient.sendMessage(JSON.stringify(message));
-		}		
-		let data = await this.getCurrentCompletionData("activity_completed", [participant_id]);
-		if (data.length === 0) {
-			// Create completion record if it doesn't exist
-			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
-			const completionUpdate: Partial<ActivityCompletion> = {
-				activity_completed: completed,
-				activity_completion_date: completed ? now : null,
-				activity_initialization_date: now
-			};
-			await newCompletion.update(completionUpdate);
-			newCompletion.activity_completed = completed;
-			newCompletion.activity_completion_date = completed ? now : null;
-			newCompletion.activity_initialization_date = now;
-			return newCompletion;
-		}
-		for (const cd of data) {
-			const completionUpdate: Partial<ActivityCompletion> = {
-				activity_completed: completed,
-				activity_completion_date: completed ? now : null,
-				activity_initialization_date: cd.activity_initialization_date ?? now
-			};
-			await cd.update(completionUpdate);
-			cd.activity_completed = completed; // Update local instance to reflect change
-			cd.activity_completion_date = completed ? now : null;
-			if (!cd.activity_initialization_date) {
-				cd.activity_initialization_date = now;
-			}
-		}
-		return data[0];
+		await kafkaEventClient.sendMessage(JSON.stringify(message));
+		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_completed");
+		logger.debug({data}, `Current completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		const completionUpdate: Partial<ActivityCompletion> = {
+			activity_completed: completed,
+			activity_completion_date: completed ? completed_date : null
+		};
+		await data.update(completionUpdate);
+		return data;
 	} 
 	
 	/**
@@ -675,9 +635,9 @@ export class Activity {
 		let participants_id = await this.getAllCurrentParticipantsId();
 		let completionData : ActivityCompletion[]= [];
 		for (const participant_id of participants_id) {
-			let data = await this.setCompletion(status, participant_id, true);
+			let data = await this.setCompletion(status, new Date(), participant_id);
 			completionData.push(data);
-		}	
+		}
 		return completionData;
 	}
 
@@ -692,19 +652,9 @@ export class Activity {
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when suspension status is set
 	 */
 	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
-		let completionData = await this.getCurrentCompletionData("activity_suspended", [participant_id]);
-		if (completionData.length === 0) {
-			// Create completion record if it doesn't exist
-			const newCompletion = await ActivityCompletion.create(this.activity_id, participant_id);
-			await newCompletion.update({ activity_suspended: status });
-			newCompletion.activity_suspended = status;
-			return newCompletion;
-		}
-		for (const cd of completionData) {
-			await cd.update({ activity_suspended: status });
-			cd.activity_suspended = status; // Update local instance to reflect change
-		}
-		return completionData[0];
+		let completionData = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_suspended");
+		await completionData.update({ activity_suspended: status });
+		return completionData;
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
@@ -813,6 +763,7 @@ export class Activity {
 				break;
 			default:
 				logger.warn(`Unsupported activity type ${this.activity_type} for xAPI trace processing`);
+				return; // Exit if activity type is not supported for trace processing
 		}
 		for(const statement_id in statements) {
 			let trace = statements[statement_id];
@@ -825,29 +776,33 @@ export class Activity {
 					switch(trace.verb.id) {
 						case initializedVerb:
 							logger.info(`INITIALIZED ACTIVITY ${this.activity_type}`);
-							await this.setInitialized(true, current_user_id, true);
+							await this.setInitialized(true, new Date(trace.timestamp), current_user_id);
 							break;
 						case progressedVerb:
-							let value= 0;
+							let value = 0;
 							logger.info(`PROGRESSED ACTIVITY ${this.activity_type}`);
 							switch(this.activity_type) {
 								case "limesurvey":
-									value = trace.result.score.scaled;
+									value = Number(trace?.result?.score?.scaled);
 									break;
 								case "gameplay":
-									value = trace.result.extensions[resultExtensionProgress];
+									value = Number(trace?.result?.extensions?.[resultExtensionProgress]);
 									break;
 								default:
 									logger.warn(`Unsupported activity type ${this.activity_type} for progress value extraction from xAPI trace`);
+									continue; // Skip if activity type is not supported for progress extraction
+							}
+							if (!Number.isFinite(value)) {
+								continue; // Skip if value is not a valid number
 							}
 							let roundedValue = Number(value.toFixed(6));
 							logger.info(`Progress value from trace: ${value}`);
-							await this.setProgress(roundedValue, current_user_id, true);
+							await this.setProgress(roundedValue, new Date(trace.timestamp), current_user_id);
 							break;
 						case completedVerb:
 							logger.info(`COMPLETED ACTIVITY ${this.activity_type}`);
 							if(trace.result && trace.result.completion && Boolean(trace.result.completion)) {
-								await this.setCompletion(true, current_user_id, true);
+								await this.setCompletion(true, new Date(trace.timestamp), current_user_id);
 							}
 							break;
 						default:
@@ -855,7 +810,11 @@ export class Activity {
 					}
 				}
 			} catch (error) {
-				logger.error({error, trace}, `Error processing statement ${statement_id} for activity ${this.activity_id}:`);
+				if (error instanceof Error) {
+					logger.error({ message: error.message, stack: error.stack, trace }, `Error processing statement ${statement_id} for activity ${this.activity_id}:`);
+				} else {
+					logger.error({ error, trace }, `Error processing statement ${statement_id} for activity ${this.activity_id}:`);
+				}
 			}
 		}
 	}
@@ -972,4 +931,23 @@ export class Activity {
 			};
 		}
 	}
+
+	getTrackerConfig() : string {
+        return  JSON.stringify({
+			"online": true,
+			"simva": true,
+			"homepage": `${config.externalUrl}`,
+			"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
+			"auth_protocol": "oauth2",
+			"auth_parameters": {
+				"grant_type": "code",
+				"auth_endpoint": `${config.sso.authUrl}`,
+				"token_endpoint": `${config.sso.tokenUrl}`,
+				"client_id": `${config.sso.pluginClientId}`,
+				"code_challenge_method": "S256",
+				"simva_user_token": "true",
+				"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
+			}
+		});
+    }
 }

@@ -24,7 +24,8 @@ export class SessionScheduler {
             for(const activity of session.allocated_activities) {
                 this.activities.push(activity);
                 if(!this.next) {
-                    if(!activity.activity_completed) {
+                    logger.debug({ allocated_activity_result: activity.allocated_activity_result }, "Checking activity completion status for next activity scheduling");
+                    if(!activity.allocated_activity_result.activity_completed) {
                         this.next = activity.activity_id;
                     }
                 }

@@ -21,7 +21,8 @@ import * as OpenApiValidator from 'express-openapi-validator';
 import userRoutes from '@/routes/users/user.routes';
 import groupRoutes from '@/routes/groups/group.routes';
 import simletRoutes from '@/routes/simlets/simlet.routes';
-import activitiesRoutes from './routes/activities/activities.routes';
+import activitiesRoutes from '@/routes/activities/activities.routes';
+import limesurveyRoutes from '@/routes/limesurvey/limesurvey.routes';
 import activitiesTypesRoutes from '@/routes/activitiesTypes/activitiesTypes.routes';
 import allocatorsTypesRoutes from '@/routes/allocatorsTypes/allocatorsTypes.routes';
 import { errorMiddleware } from '@/middlewares/error.middleware';
@@ -73,6 +74,7 @@ app.use('/users', userRoutes);
 app.use('/groups', groupRoutes);
 app.use('/simlets', simletRoutes);
 app.use('/activities', activitiesRoutes);
+app.use('/limesurvey', limesurveyRoutes);
 app.use('/activitytypes', activitiesTypesRoutes);
 app.use('/allocatortypes', allocatorsTypesRoutes);
 

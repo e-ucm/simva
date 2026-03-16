@@ -157,7 +157,7 @@ export async function setProgressForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const progress = req.body.progress as number;
+    const progress = parseInt(req.body.progress as string);
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
@@ -200,7 +200,7 @@ export async function setInitializedForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const initialized = req.body.initialized as boolean;
+    const initialized = Boolean(req.body.status);
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
@@ -243,7 +243,7 @@ export async function setCompletionForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const completed = req.body.completed as boolean;
+    const completed = Boolean(req.body.status);
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
@@ -268,7 +268,7 @@ export async function setMultiCompletionForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const status = req.body.status as boolean;
+    const status = Boolean(req.body.status);
     const access = getAccess(currentUser);
     if (access.allocated) {
       throw new AuthentificationError("Students cannot set multi completion for activities");
@@ -289,7 +289,7 @@ export async function setSuspensionForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const status = req.body.status as boolean;
+    const status = Boolean(req.body.status);
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
@@ -438,6 +438,22 @@ export async function updateActivity(
     }
     const activity = await activitiesService.updateActivity(activityId, access.allocated, access.is_admin, data, access.currentUserId);
     return res.json(activity.toJSON());
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getTrackerConfigForActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const currentUser = req.user?.sql;
+    const activityId = parseInt(req.params.activity_id as string);
+    const access = getAccess(currentUser);
+    const trackerConfig = await activitiesService.getTrackerConfigForActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
+    return res.json(trackerConfig);
   } catch (err) {
     next(err);
   }

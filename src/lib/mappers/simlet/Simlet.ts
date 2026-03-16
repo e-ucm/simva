@@ -7,6 +7,7 @@ import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
+import { config } from "@/lib/config";
 
 /**
  * Simlet (Simple Study) mapper class representing a research study.
@@ -476,6 +477,18 @@ export class Simlet {
                 current_user_username: this.current_user_username,
                 current_user_permission: this.current_user_permission
             }
+        }
+    }
+
+    getTrackerConfig() : object {
+        return  {
+            "study": `${this.simlet_id}`,
+            "host": `${config.api.host}`,
+            "protocol": `${config.api.protocol}`,
+            "port": `${config.api.port}`,
+            "url": `${config.api.url}`,
+            "sso": `${config.sso.openIdUrl}`,
+            "client_id": `${config.sso.uadventureClientId}`
         }
     }
 }

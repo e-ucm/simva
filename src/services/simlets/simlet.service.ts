@@ -236,3 +236,8 @@ export async function exportSimlet(simletId: number, is_admin: boolean, withData
   let exported = await simlet.export(withData);
   return JSON.stringify(exported);
 }
+
+export async function getTrackerConfigForSimlet(simletId: number, userId: number): Promise<object> {
+  let simlet = await Simlet.getFromDbData(simletId, false, userId);
+  return simlet.getTrackerConfig();
+}

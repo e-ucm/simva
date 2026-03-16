@@ -8,13 +8,7 @@
  */
 
 import { Router } from "express";
-import { 
-  getSimletPermissions,
-  createSimletPermissions,
-  getSimletPermissionsForUser,
-  patchSimletPermissionsForUser,
-  deleteSimletPermissionsForUser
-} from "@/controlers/simlets/simlet.permissions.controler";
+import * as SimletPermissionControler from "@/controlers/simlets/simlet.permissions.controler";
 
 /**
  * Express router for simlet permissions endpoints.
@@ -30,10 +24,10 @@ import {
  */
 const router = Router({ mergeParams: true });
 
-router.get("/", getSimletPermissions);
-router.post("/", createSimletPermissions);
-router.get("/:user_id", getSimletPermissionsForUser);
-router.patch("/:user_id", patchSimletPermissionsForUser);
-router.delete("/:user_id", deleteSimletPermissionsForUser);
+router.get("/", SimletPermissionControler.getSimletPermissions);
+router.post("/", SimletPermissionControler.createSimletPermissions);
+router.get("/:user_id", SimletPermissionControler.getSimletPermissionsForUser);
+router.patch("/:user_id", SimletPermissionControler.patchSimletPermissionsForUser);
+router.delete("/:user_id", SimletPermissionControler.deleteSimletPermissionsForUser);
 
 export default router;
