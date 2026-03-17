@@ -142,3 +142,7 @@ export async function getTrackerConfigForActivity(activityId: number, allocated:
     return activity.getTrackerConfig();
 }
 
+export async function getAllResultForActivity(activityId: number, allocated: boolean, is_admin: boolean, type: string, currentUserId: number): Promise<String> {
+  let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+  return await activity.getAllResults(type);
+}

@@ -9,6 +9,10 @@ export class ActivityMappingResult<T> {
         return this.map.get(key);
     }
 
+    set(key: number, value: T) {
+		this.map.set(key, value);
+	}
+
     toJSON(): Record<string, T> {
         return Object.fromEntries(this.map || []);
     }

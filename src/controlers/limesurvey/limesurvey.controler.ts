@@ -23,11 +23,7 @@ export async function isAdmin(
   next: NextFunction
 ) {
   try {
-    const surveyId = parseInt(req.params.survey_id as string);
-    if (isNaN(surveyId)) {
-      throw new NotFoundError("Invalid survey ID");
-    }
-    const isAdmin = await limesurveyService.isAdmin(surveyId, req.user!.sql.user_id as number);
+    const isAdmin = await limesurveyService.isAdmin(req.user!.sql.user_id as number);
     res.json({ isAdmin });
   } catch (err) {
     next(err);

@@ -834,12 +834,46 @@ export class Activity {
 	 * @param {number[]} participants_id - Array of participant IDs
 	 * @returns {Promise<boolean>} Promise resolving to true if participants have results
 	 */
+
 	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
-		return new ActivityMappingResult(new Map<number, boolean>());
+		let resultMap = new Map<number, boolean>();
+		switch(type) {
+			case 'backup':
+				for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
+					if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
+						resultMap.set(participant_id, true);
+					} else {
+						resultMap.set(participant_id, false);
+					}
+				}
+				break;
+			default:
+				break;
+		}
+		return new ActivityMappingResult(resultMap);
 	}
 
-	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string|null>> {
-		return new ActivityMappingResult(new Map<number, string|null>());
+	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string | null>> {
+		let resultMap = new Map<number, string | null>();
+		let participantIds: number[] = await this.getAllCurrentParticipantsId(participants_id);
+		logger.debug(`Getting results for activity ${this.activity_id} and participants ${participantIds}`);
+		for (const participant_id of participantIds) {
+			switch(type) {
+				case 'backup':
+					let file=`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`;
+					logger.debug(`Checking if file exists: ${file}`);
+					if(await minioClient.fileExists(file)) {
+						resultMap.set(participant_id, await minioClient.getPresignedUrl(file, config.minio.presignedUrlExpirationSeconds));
+					} else {
+						resultMap.set(participant_id, null);
+					}
+					break;
+				default:
+					resultMap.set(participant_id, null);
+					break;
+			}
+		}
+		return new ActivityMappingResult(resultMap);
 	}
 
 	/**
@@ -853,7 +887,7 @@ export class Activity {
 	 */
 	async setResult(type: string, result: any, participant_id: number): Promise<void> {
 		switch(type) {
-			case 'results':
+			case 'backup':
 				await minioClient.putFile(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`, result);
 				break;
 			case 'traces':
@@ -891,6 +925,10 @@ export class Activity {
 		} else {
 			throw new NotFoundError(`Error the file ${path} don't exist in minio`);
 		}
+	}
+
+	async getAllResults(type : string) : Promise<string> {
+		throw new NotFoundError("Not available for this activity type");
 	}
 
 	/**

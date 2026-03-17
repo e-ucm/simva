@@ -207,44 +207,11 @@ export class GamePlayActivity extends Activity {
 	}
 
 	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
-		let resultMap = new Map<number, boolean>();
-		switch(type) {
-			case 'results':
-				for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
-					if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
-						resultMap.set(participant_id, true);
-					} else {
-						resultMap.set(participant_id, false);
-					}
-				}
-				break;
-			default:
-				break;
-		}
-		return new ActivityMappingResult(resultMap);
+		return super.hasResults(type, participants_id);
 	}
 
 	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string | null>> {
-		let resultMap = new Map<number, string | null>();
-		let participantIds: number[] = await this.getAllCurrentParticipantsId(participants_id);
-		logger.debug(`Getting results for activity ${this.activity_id} and participants ${participantIds}`);
-		for (const participant_id of participantIds) {
-			switch(type) {
-				case 'results':
-					let file=`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`;
-					logger.debug(`Checking if file exists: ${file}`);
-					if(await minioClient.fileExists(file)) {
-						resultMap.set(participant_id, await minioClient.getPresignedUrl(file, config.minio.presignedUrlExpirationSeconds));
-					} else {
-						resultMap.set(participant_id, null);
-					}
-					break;
-				default:
-					resultMap.set(participant_id, null);
-					break;
-			}
-		}
-		return new ActivityMappingResult(resultMap);
+		return super.getResults(type, participants_id);
 	}
 
 	async setResult(type: string, result: any, participant_id: number): Promise<void> {

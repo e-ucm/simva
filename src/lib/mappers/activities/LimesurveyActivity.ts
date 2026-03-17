@@ -6,6 +6,8 @@ import { limeSurveyClient, Survey, SurveyLanguages } from "@/lib/utils/limesurve
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 import { User } from "../Users/User";
+import { minioClient } from "@/lib/utils/minioclient";
+import { NotFoundError } from "@/lib/errors/appErrors";
 
 /**
  * LimeSurvey Activity mapper class extending base Activity.
@@ -203,8 +205,76 @@ export class LimesurveyActivity extends Activity {
 		return super.generatePresignedFileUrl();
 	}
 
+	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
+		let pids = await super.getAllCurrentParticipantsId(participants_id);
+		logger.info(pids);
+		let usernames = await super.getAllCurrentParticipantsUsername(pids);
+		let results = await super.hasResults(type, participants_id);
+		for (const participant_id of pids ?? []) {
+			if(!results.get(participant_id)) {
+				const username = usernames.get(participant_id);
+				const activityResult = await ActivityCompletion.getFromDbData(this.activity_id, participant_id, "activity_completed");
+				if (typeof username === "string") {
+					let response = await limeSurveyClient.getResponseByToken(this.survey_id, this.survey_language, username, "full");
+					logger.info({username, response}, "response for user");
+					if(response.submitdate && activityResult.activity_completed) {
+						
+					}
+					if(typeof response !== "boolean") {
+						// Ensure response is a string, Buffer, or stream.Readable
+						let resultData = response;
+						if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
+							resultData = JSON.stringify(response);
+						}
+						await super.setResult("backup", resultData, participant_id);
+						results.set(participant_id, true);
+					} else {
+						results.set(participant_id, false);
+					}
+				}
+			} else {
+				results.set(participant_id, false);
+			}
+		}
+		logger.info(results);
+		return results;
+	}
+
 	async getResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<string | null>> {
-		return super.getResults(type, participants_id);
+		const pids = await super.getAllCurrentParticipantsId(participants_id);
+		await this.hasResults(type, pids);
+		return await super.getResults(type, pids);
+	}
+
+	async getAllResults(type : string) : Promise<string> {
+		let usernames: string[] = [];
+		const users: Map<number, string> = await super.getAllCurrentParticipantsUsername();
+		usernames.push(...users.values());
+		let path = `${config.minio.backupDir}/${this.activity_id}/${type}.result`;
+		switch(type) {
+			case "full":
+			case "code":
+				let response = await limeSurveyClient.getResponses(this.survey_id, this.survey_language, usernames, "full");
+				if(typeof response !== "boolean") {
+					// Ensure response is a string, Buffer, or stream.Readable
+					let resultData : any = response;
+					if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
+						resultData = JSON.stringify(response);
+					}
+					await minioClient.putFile(path, resultData);
+				}
+				break;
+			default:
+				throw new NotFoundError("Not available for this type in Limesurvey");
+		}
+		if (await minioClient.fileExists(path)) {
+			let presignedUrl = null;
+			presignedUrl = await minioClient.getPresignedUrl(path, config.minio.presigned_url_expiration_time_in_second);
+			await this.patch({ activity_presignedUrl: presignedUrl, activity_presignedUrl_generated_at: new Date(), activity_presignedUrl_expired_at: new Date(Date.now() + config.minio.presigned_url_expiration_time_in_second * 1000) });
+			return presignedUrl;
+		} else {
+			throw new NotFoundError(`Error the file ${path} don't exist in minio`);
+		}
 	}
 	
 	/**

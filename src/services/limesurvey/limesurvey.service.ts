@@ -11,7 +11,7 @@ export async function getSurveys(): Promise<{ id: number, name: string }[]> {
     }));
 }
 
-export async function isAdmin(survey_id: number, user_id: number): Promise<boolean> {
+export async function isAdmin(user_id: number): Promise<boolean> {
     // This is a placeholder implementation. Replace it with actual logic to check if the user is an admin in LimeSurvey.
     logger.info(`Checking if user with ID ${user_id} is an admin in LimeSurvey...`);
 
@@ -21,8 +21,12 @@ export async function isAdmin(survey_id: number, user_id: number): Promise<boole
         logger.error(`Username not found for user ID ${user_id}`);
         return false;
     }
-    const isAdmin = await limeSurveyClient.isUserOwnerOfSurvey(survey_id, username);
-    return isAdmin.isOwner;
+    try {
+        const isAdmin = await limeSurveyClient.getUser(username);
+        return true;
+    } catch(e) {
+        return false;
+    }
 }
 
 export async function getSurveyLanguagesForActivity(survey_id: number, user_id: number): Promise<string[]> {

@@ -334,10 +334,10 @@ export async function hasResultsForActivity(
     const activityId = parseInt(req.params.activity_id as string);
     let type = req.query.type as string;
     if (!type) {
-      type = "results";
+      type = "full";
     }
-    if(type !== "results" && type !== "traces") {
-      throw new ValidationError("Query param type must be either 'results' or 'traces'");
+    if(type !== "full" && type !== "code" && type !== "traces") {
+      throw new ValidationError("Query param type must be either 'full', 'code' for backups or 'traces' for traces");
     }
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
@@ -359,11 +359,11 @@ export async function setResultForActivity(
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
     let type = req.query.type as string;
-    if(!type) {
-      type = "results";
+    if (!type) {
+      type = "full";
     }
-    if(type !== "results" && type !== "traces") {
-      throw new ValidationError("Query param type must be either 'results' or 'traces'");
+    if(type !== "full" && type !== "code" && type !== "traces") {
+      throw new ValidationError("Query param type must be either 'full', 'code' for backups or 'traces' for traces");
     }
     const result = req.body.result;
     const access = getAccess(currentUser);
@@ -406,16 +406,61 @@ export async function getResultsForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
+
     let type = req.query.type as string;
-    if(!type) {
-      type = "results";
+    if (!type) {
+      type = "backup";
     }
-    if(type !== "results" && type !== "traces") {
-      throw new ValidationError("Query param type must be either 'results' or 'traces'");
+    if (type !== "backup" && type !== "traces") {
+      throw new ValidationError(
+        "Query param type must be either backup or traces"
+      );
     }
     const access = getAccess(currentUser);
-    const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
-    const results = await activitiesService.getResultsForActivity(activityId, access.allocated, access.is_admin, type, participants_id, access.currentUserId);
+    const queryUsers = req.query.users;
+    // Normalize "no users provided"
+    const hasUsers =
+      queryUsers !== undefined &&
+      queryUsers !== null &&
+      queryUsers !== "";
+
+    const queryAll = req.query.all;
+    const hasAll =
+      queryAll !== undefined &&
+      queryAll !== null &&
+      queryAll !== "";
+    if (!access.allocated && !hasUsers && hasAll) {
+      if (queryAll !== "full" && queryAll !== "code") {
+        throw new ValidationError(
+          "Query param all must be either full or code"
+        );
+      }
+      // ✅ FIXED CASE
+      const resultUrl = await activitiesService.getAllResultForActivity(
+        activityId,
+        access.allocated,
+        access.is_admin,
+        queryAll,
+        access.currentUserId
+      );
+
+      return res.json({ url: resultUrl });
+    }
+
+    // otherwise → specific users
+    const participants_id = access.allocated
+      ? [access.currentUserId]
+      : parseParticipantsId(queryUsers);
+
+    const results = await activitiesService.getResultsForActivity(
+      activityId,
+      access.allocated,
+      access.is_admin,
+      type,
+      participants_id,
+      access.currentUserId
+    );
+
     logger.debug(results.toJSON());
     return res.json(results.toJSON());
   } catch (err) {
