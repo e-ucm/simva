@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { AuthentificationError, BadRequestError, ValidationError } from "@/lib/errors/appErrors";
+import { AuthentificationError, BadRequestError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
+import { logger } from "@/lib/logger";
 
 /**
  * User Permission mapper class representing user access permissions.
@@ -56,13 +57,22 @@ export class SingleUserPermission {
         switch (object_type) {
             case 'simlet':
                 let simletPermissions = await db.Functions.runViewQuery(db.Views.Simlet.directPermissionsBySimletId, { simlet_id: object_id, user_id: user_id });
-                return new SingleUserPermission(object_type, object_id, simletPermissions, current_user_id, is_admin);
+                if(simletPermissions.length == 0) {
+                    throw new NotFoundError("Simlet Permission not found");
+                }
+                return new SingleUserPermission(object_type, object_id, simletPermissions[0], current_user_id, is_admin);
             case 'session':
                 const sessionPermissions = await db.Functions.runViewQuery(db.Views.Session.directPermissionsBySessionId, { session_id: object_id, user_id: user_id }); 
-                return new SingleUserPermission(object_type, object_id, sessionPermissions, current_user_id, is_admin);
+                if(sessionPermissions.length == 0) {
+                    throw new NotFoundError("Session Permission not found");
+                }
+                return new SingleUserPermission(object_type, object_id, sessionPermissions[0], current_user_id, is_admin);
             case 'group':
                 const groupPermissions = await db.Functions.runViewQuery(db.Views.Group.directPermissionsByGroupId, { group_id: object_id, user_id: user_id });
-                return new SingleUserPermission(object_type, object_id, groupPermissions, current_user_id, is_admin);
+                if(groupPermissions.length == 0) {
+                    throw new NotFoundError("Group Permission not found");
+                }
+                return new SingleUserPermission(object_type, object_id, groupPermissions[0], current_user_id, is_admin);
             default:
                 throw new BadRequestError(`Unsupported object type: ${object_type}`);
         }
@@ -106,6 +116,7 @@ export class SingleUserPermission {
      */
     async delete() : Promise<boolean> {
         this.canDelete();
+        logger.info({simlet_id: this.object_id, user_id: this.user_id}, "delete");
         switch (this.object_type) {
             case 'simlet':
                 await db.Tables.SimletPermissions.destroy({ where: { simlet_id: this.object_id, user_id: this.user_id } });

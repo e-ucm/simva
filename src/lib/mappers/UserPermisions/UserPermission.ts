@@ -184,15 +184,16 @@ export class UserPermission {
      */
     async removeUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         // Implementation for removing user permission from this object
+        logger.debug({user_id, permission}, "removeUserPermission");
         switch (this.object_type) {
             case 'simlet':
-                await db.Tables.SimletPermissions.destroy({ where: { simlet_id: this.object_id, user_id, permission } });
+                await db.Tables.SimletPermissions.destroy({ where: { simlet_id: this.object_id, user_id: user_id, permission: permission } });
                 break;
             case 'session':
-                await db.Tables.SessionPermissions.destroy({ where: { session_id: this.object_id, user_id, permission } });
+                await db.Tables.SessionPermissions.destroy({ where: { session_id: this.object_id, user_id: user_id, permission: permission } });
                 break;
             case 'group':
-                await db.Tables.GroupPermissions.destroy({ where: { group_id: this.object_id, user_id, permission } });
+                await db.Tables.GroupPermissions.destroy({ where: { group_id: this.object_id, user_id: user_id, permission: permission } });
                 break;
             default:
                 throw new BadRequestError(`Unsupported object type: ${this.object_type}`);

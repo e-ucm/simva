@@ -254,13 +254,19 @@ export class Session {
      * });
      * ```
      */
-    static async createFromDbData(sessionData: Partial<InstanceType<typeof db.Tables.Sessions>>): Promise<Session> {
+    static async createFromDbData(sessionData: Partial<InstanceType<typeof db.Tables.Sessions>>, is_admin: boolean, current_user_id : number): Promise<Session> {
         let sessioncount = await db.Tables.Sessions.count({where: {session_name: sessionData.session_name}});
         if(sessioncount > 0){
             throw new ConflictError(`Session name ${sessionData.session_name} is already taken. Please choose a different name.`);
         }
+        if(sessionData.session_coordinator_id == undefined) {
+            sessionData.session_coordinator_id = current_user_id;
+        }
+        if(sessionData.session_status == undefined) {
+            sessionData.session_status = "inactive";
+        }
         let session = await db.Tables.Sessions.create(sessionData);
-        return Session.getFromDbData(session.simlet_id, session.session_id, true);
+        return await Session.getFromDbData(session.simlet_id, session.session_id, is_admin, current_user_id);
     }
 
     /**

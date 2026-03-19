@@ -182,6 +182,19 @@ export class LimesurveyActivity extends Activity {
 	}
 
 	async setCompletion(completed: boolean, completed_date: Date, participant_id: number): Promise<ActivityCompletion> {
+		let usernames = await super.getAllCurrentParticipantsUsername([participant_id]);
+		const username = usernames.get(participant_id);
+		if(username) {
+			let response = await limeSurveyClient.getResponseByToken(this.survey_id, this.survey_language, username, "full");
+			if(typeof response !== "boolean") {
+				// Ensure response is a string, Buffer, or stream.Readable
+				let resultData = response;
+				if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
+					resultData = JSON.stringify(response);
+				}
+				await super.setResult("backup", resultData, participant_id);
+			}
+		}
 		return super.setCompletion(completed, completed_date, participant_id);
 	}
 
@@ -211,29 +224,25 @@ export class LimesurveyActivity extends Activity {
 		let usernames = await super.getAllCurrentParticipantsUsername(pids);
 		let results = await super.hasResults(type, participants_id);
 		for (const participant_id of pids ?? []) {
-			if(!results.get(participant_id)) {
-				const username = usernames.get(participant_id);
-				const activityResult = await ActivityCompletion.getFromDbData(this.activity_id, participant_id, "activity_completed");
-				if (typeof username === "string") {
-					let response = await limeSurveyClient.getResponseByToken(this.survey_id, this.survey_language, username, "full");
-					logger.info({username, response}, "response for user");
-					if(response.submitdate && activityResult.activity_completed) {
-						
+			const username = usernames.get(participant_id);
+			const activityResult = await ActivityCompletion.getFromDbData(this.activity_id, participant_id, "activity_completed");
+			if(activityResult.activity_completed) {
+				continue;
+			}
+			if (typeof username === "string") {
+				let response = await limeSurveyClient.getResponseByToken(this.survey_id, this.survey_language, username, "full");
+				logger.info({username, response}, "response for user");
+				if(typeof response !== "boolean") {
+					// Ensure response is a string, Buffer, or stream.Readable
+					let resultData = response;
+					if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
+						resultData = JSON.stringify(response, false, "\t");
 					}
-					if(typeof response !== "boolean") {
-						// Ensure response is a string, Buffer, or stream.Readable
-						let resultData = response;
-						if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
-							resultData = JSON.stringify(response);
-						}
-						await super.setResult("backup", resultData, participant_id);
-						results.set(participant_id, true);
-					} else {
-						results.set(participant_id, false);
-					}
+					await super.setResult("backup", resultData, participant_id);
+					results.set(participant_id, true);
+				} else {
+					results.set(participant_id, false);
 				}
-			} else {
-				results.set(participant_id, false);
 			}
 		}
 		logger.info(results);

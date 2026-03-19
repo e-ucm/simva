@@ -172,7 +172,7 @@ export class Simlet {
         return processedResults;
     }
 
-    static async createSimlet(simletData: any, is_admin: boolean = false): Promise<Simlet> {
+    static async createSimlet(simletData: any, is_admin: boolean = false, current_user_id?: number): Promise<Simlet> {
         logger.debug({simletData} , "Creating simlet with data");
         if(await db.Tables.Simlets.count({where : {simlet_name : simletData.simlet_name}}) > 0){
             throw new ConflictError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
@@ -182,6 +182,9 @@ export class Simlet {
         }
         if(simletData.simlet_archived === undefined){
             simletData.simlet_archived = false;
+        }
+        if(simletData.simlet_supervisor_id == undefined) {
+            simletData.simlet_supervisor_id = current_user_id;
         }
         const createdSimlet = await db.Tables.Simlets.create(simletData);
         return new Simlet(createdSimlet, is_admin, false);
@@ -380,15 +383,15 @@ export class Simlet {
         return this;
     }
 
-    async addSession(session_data : any) : Promise<Simlet> {
+    async addSession(session_data : any) : Promise<Session> {
         this.canEdit();
         session_data.simlet_id = this.simlet_id;
-        session_data.session_coordinator_id = this.current_user_id;
-        let session = await Session.createFromDbData(session_data);
+        session_data.session_order = this.sessions.length + 1;
+        let session = await Session.createFromDbData(session_data, this.is_admin, this.current_user_id!);
         this.sessions.push(session.session_id);
         // Note: allocateGroupToDefaut is now deprecated due to schema changes
         // Allocation logic should be handled at the group level
-        return this;
+        return session;
     }
 
     async getAllocatedParticipants(): Promise<SimletParticipant[]> {
@@ -430,6 +433,7 @@ export class Simlet {
     async deletePermissionsForUser(userId: number) {
         this.canEdit();
         let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
+        logger.debug(permission, "permission");
         return await permission.delete();
     }
 
