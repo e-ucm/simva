@@ -129,7 +129,7 @@ export async function deleteSimletPermissionsForUser(
     const userId = parseInt(req.params.user_id as string);
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    logger.debug({simletId, userId: currentUser?.user_id} , "Deleting permissions for simlet ID and user ID");
+    logger.debug({simletId, userId: userId} , "Deleting permissions for simlet ID and user ID");
     if (access.is_admin) {
       await simletPermissionsService.deleteSimletPermissionsForUser(simletId, userId, true);
     } else if (!access.allocated) {

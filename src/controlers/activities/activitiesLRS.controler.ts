@@ -17,7 +17,6 @@ export function getStatementsLRSForActivity(req: AuthenticatedRequest, res: Resp
 
 export async function postStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-        logger.info({query: req.query,params: req.params, body: req.body}, "Received request to post statements to LRS for activity");
         let currentUser = req.user?.sql;
         const activityId = parseInt(req.params.activity_id as string);
         if(isNaN(activityId)) {

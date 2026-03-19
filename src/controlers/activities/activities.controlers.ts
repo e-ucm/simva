@@ -20,7 +20,6 @@ import { getAccess } from "@/controlers/users/user.helper";
 
 
 function parseParticipantsId(participantsIdQuery: unknown): number[] {
-  logger.debug(participantsIdQuery, "Received participants_id query param:");
   if (participantsIdQuery === undefined || participantsIdQuery === null) {
     return [];
   }
@@ -33,7 +32,6 @@ function parseParticipantsId(participantsIdQuery: unknown): number[] {
     .flatMap((value) => String(value).split(","))
     .map((value) => value.trim())
     .filter((value) => value.length > 0);
-  logger.debug(tokens, "Parsed tokens from query param:");
   if (tokens.length === 0) {
     return [];
   }
@@ -89,7 +87,6 @@ export async function isActivityAccessible(
     const activityId = parseInt(req.params.activity_id as string);
     const access = getAccess(currentUser);
     const accessible = await activitiesService.isActivityAccessible(activityId, access.allocated, access.is_admin, access.currentUserId);
-    logger.debug(accessible);
     return res.json({ openable: accessible });
   } catch (err) {
     next(err);
@@ -106,7 +103,6 @@ export async function openTargetForActivity(
     const activityId = parseInt(req.params.activity_id as string);
     const access = getAccess(currentUser);
     const targetUrl = await activitiesService.getUserTargetForActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
-    logger.debug(`Redirecting to target URL: ${targetUrl}`);
     return res.redirect(targetUrl); 
   } catch (err) {
     next(err);
@@ -124,7 +120,6 @@ export async function getTargetForActivity(
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
     const target = await activitiesService.getTargetForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
-    logger.debug(target.toJSON());
     return res.json(target.toJSON());
   } catch (err) {
     next(err);
@@ -142,7 +137,6 @@ export async function getProgressForActivity(
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
     const progress = await activitiesService.getProgressForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
-    logger.debug(progress.toJSON());
     return res.json(progress.toJSON());
   } catch (err) {
     next(err);
@@ -167,7 +161,6 @@ export async function setProgressForActivity(
       }
     }
     const result = await activitiesService.setProgressForActivity(activityId, access.allocated, access.is_admin, progress, participant_id, access.currentUserId);
-    logger.debug(result.toJSON());
     return res.json(result.toJSON());
   } catch (err) {
     next(err);
@@ -185,7 +178,6 @@ export async function getInitializedForActivity(
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
     const initialized = await activitiesService.getInitializedForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
-    logger.debug(initialized.toJSON());
     return res.json(initialized.toJSON());
   } catch (err) {
     next(err);
@@ -210,7 +202,6 @@ export async function setInitializedForActivity(
       }
     }
     const result = await activitiesService.setInitializedForActivity(activityId, access.allocated, access.is_admin, initialized, participant_id, access.currentUserId);
-    logger.debug(result.toJSON());
     return res.json(result.toJSON());
   } catch (err) {
     next(err);
@@ -228,7 +219,6 @@ export async function getCompletionForActivity(
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
     const completion = await activitiesService.getCompletionForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
-    logger.debug(completion.toJSON());
     return res.json(completion.toJSON());
   } catch (err) {
     next(err);
@@ -253,7 +243,6 @@ export async function setCompletionForActivity(
       }
     }
     const result = await activitiesService.setCompletionForActivity(activityId, access.allocated, access.is_admin, completed, participant_id, access.currentUserId);
-    logger.debug(result.toJSON());
     return res.json(result.toJSON());
   } catch (err) {
     next(err);
@@ -274,7 +263,6 @@ export async function setMultiCompletionForActivity(
       throw new AuthentificationError("Students cannot set multi completion for activities");
     }
     const result = await activitiesService.setMultiCompletionForActivity(activityId, access.allocated, access.is_admin, status, access.currentUserId);
-    logger.debug(result.map((r) => r.toJSON()));
     return res.json(result.map((r) => r.toJSON()));
   } catch (err) {
     next(err);
@@ -299,7 +287,6 @@ export async function setSuspensionForActivity(
       }
     }
     const result = await activitiesService.setSuspensionForActivity(activityId, access.allocated, access.is_admin, status, participant_id, access.currentUserId);
-    logger.debug(result.toJSON());
     return res.json(result.toJSON());
   } catch (err) {
     next(err);
@@ -317,7 +304,6 @@ export async function getSuspensionForActivity(
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
     const suspension = await activitiesService.getSuspensionForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
-    logger.debug(suspension.toJSON());
     return res.json(suspension.toJSON());
   } catch (err) {
     next(err);
@@ -341,9 +327,7 @@ export async function hasResultsForActivity(
     }
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
-    logger.debug(participants_id, "Parsed participants_id from query param:");
     const hasResults = await activitiesService.hasResultsForActivity(activityId, access.allocated, access.is_admin, type, participants_id, access.currentUserId);
-    logger.debug(hasResults.toJSON());
     return res.json(hasResults.toJSON());
   } catch (err) {
     next(err);
@@ -391,7 +375,6 @@ export async function getPresignedUrlForActivity(
     const activityId = parseInt(req.params.activity_id as string);
     const access = getAccess(currentUser);
     const url = await activitiesService.getPresignedUrlForActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
-    logger.debug(url);
     return res.json({ url: url });
   } catch (err) {
     next(err);
@@ -460,8 +443,6 @@ export async function getResultsForActivity(
       participants_id,
       access.currentUserId
     );
-
-    logger.debug(results.toJSON());
     return res.json(results.toJSON());
   } catch (err) {
     next(err);

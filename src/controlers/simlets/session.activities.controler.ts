@@ -37,7 +37,6 @@ export async function getSessionActivities(
     const sessionId = parseInt(req.params.session_id as string);
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    logger.debug({sessionId, userId: currentUser?.user_id} , "Getting activities for session ID and user ID");
     let activities;
     if (access.is_admin) {
       activities = await sessionActivitiesService.getSessionActivities(simletId, sessionId, true);
@@ -46,7 +45,6 @@ export async function getSessionActivities(
     } else {
       throw new AuthentificationError("Invalid user role");
     }
-    logger.debug({activities} , "Activities retrieved for session ID and user ID");
     res.json(activities.map(a => a.toJSON()));
   } catch (err) {
     next(err);
@@ -64,7 +62,6 @@ export async function createSessionActivity(
     let body = req.body;
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    logger.debug({sessionId, userId: currentUser?.user_id, body} , "Adding activities for session ID and user ID");
     let activity;
     if (access.is_admin) {
       activity = await sessionActivitiesService.addSessionActivities(simletId, sessionId, true, body);
@@ -73,7 +70,6 @@ export async function createSessionActivity(
     } else {
       throw new AuthentificationError("Invalid user role");
     }
-    logger.debug({activity} , "Activity added for session ID and user ID");
     res.json(activity.toJSON());
   } catch (err) {
     next(err);
@@ -92,7 +88,6 @@ export async function updateSessionActivity(
     let body = req.body;
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    logger.debug({simletId, sessionId, activityId, userId: currentUser?.user_id, body} , "Updating activity for session");
     let activity;
     if (access.is_admin) {
       activity = await sessionActivitiesService.updateSessionActivity(simletId, sessionId, activityId, true, body);
@@ -101,7 +96,6 @@ export async function updateSessionActivity(
     } else {
       throw new AuthentificationError("Invalid user role");
     }
-    logger.debug({activity} , "Activity updated");
     res.json(activity.toJSON());
   } catch (err) {
     next(err);
@@ -119,7 +113,6 @@ export async function deleteSessionActivity(
     const activityId = parseInt(req.params.activity_id as string);
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    logger.debug({simletId, sessionId, activityId, userId: currentUser?.user_id} , "Deleting activity from session");
     if (access.is_admin) {
       await sessionActivitiesService.deleteSessionActivity(simletId, sessionId, activityId, true, undefined);
     } else if (!access.allocated) {
@@ -127,7 +120,6 @@ export async function deleteSessionActivity(
     } else {
       throw new AuthentificationError("Invalid user role");
     }
-    logger.debug({activityId} , "Activity deleted");
     res.status(204).send();
   } catch (err) {
     next(err);

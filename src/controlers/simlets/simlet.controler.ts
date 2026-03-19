@@ -157,8 +157,17 @@ export async function createSimlet(
   next: NextFunction
 ): Promise<void> {
   try {
-    req.body.simlet_coordinator_id = req.user?.sql.user_id;
-    const simlet = await simletService.createSimlet(req.body);
+    let currentUser = req.user?.sql;
+    const currentUserId = currentUser!.user_id!;
+    const access = getAccess(currentUser);
+    let simlet;
+    if (access.is_admin) {
+      simlet = await simletService.createSimlet(req.body, true, currentUserId);
+    } else if (!access.allocated) {
+      simlet = await simletService.createSimlet(req.body, false, currentUserId);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
     res.status(201).json(simlet.toJSON());
   } catch (err) {
     next(err);

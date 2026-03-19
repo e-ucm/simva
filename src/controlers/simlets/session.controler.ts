@@ -142,7 +142,7 @@ export async function activateSimletSession(
     } else {
       throw new AuthentificationError("Invalid user role");
     }
-    logger.debug({session} , "Session created for simlet ID and user ID");
+    logger.debug({session} , "Session activated for simlet ID and user ID");
     res.json(session.toJSON());
   } catch (err) {
     next(err);

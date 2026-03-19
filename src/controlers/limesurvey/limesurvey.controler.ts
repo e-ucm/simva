@@ -11,6 +11,7 @@ export async function getSurveys(
 ) {
   try {
     const surveys = await limesurveyService.getSurveys();
+    logger.debug(`Fetched surveys: ${JSON.stringify(surveys)}`);
     res.json(surveys);
   } catch (err) {
     next(err);

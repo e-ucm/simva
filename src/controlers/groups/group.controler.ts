@@ -38,7 +38,6 @@ export async function getGroups(
     } else {
         offset = parseInt(req.query.offset as string)|| undefined;
     }
-    logger.debug({version, searchString, limit, offset}, "Getting groups with query parameters");
     let groups: SimletGroup[];
     switch(req.user?.sql.role) {
       case "administrator":

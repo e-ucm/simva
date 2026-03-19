@@ -49,7 +49,7 @@ export async function createSessionPermissions(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const sessionId = parseInt(req.params.session_id as string);
-    let body = req.body
+    let body = req.body;
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     logger.debug({simletId, sessionId, userId: currentUser?.user_id, body} , "Creating permissions for session ID and user ID");
