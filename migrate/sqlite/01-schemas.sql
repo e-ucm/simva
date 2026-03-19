@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS "Sessions_tags" (
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("session_id", "tag_id"),
-	FOREIGN KEY ("tag_id") REFERENCES "tags_list"("tag_id")
+	FOREIGN KEY ("tag_id") REFERENCES "Sessions_tags_list"("tag_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY ("session_id") REFERENCES "Sessions"("session_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
@@ -405,7 +405,7 @@ CREATE TABLE IF NOT EXISTS "Activities_template_tags" (
 	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
 	PRIMARY KEY("activity_template_id", "tag_id"),
-	FOREIGN KEY ("tag_id") REFERENCES "activities_template_tags_list"("tag_id")
+	FOREIGN KEY ("tag_id") REFERENCES "Activities_template_tags_list"("tag_id")
 	ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY ("activity_template_id") REFERENCES "Activities_template"("activity_template_id")
 	ON UPDATE CASCADE ON DELETE CASCADE
