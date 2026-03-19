@@ -68,21 +68,32 @@ export class GamePlayActivity extends Activity {
 	 */
 	static async getFromDbData(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number): Promise<GamePlayActivity> {
 		const instance = new GamePlayActivity(allocated, activityData);
-				
-		const gameplayData = await db.Tables.GamePlayActivities.findOne({ 
+
+		let gameplayData = await db.Tables.GamePlayActivities.findOne({ 
 			where: { activity_id: activity_id } 
 		});
 		
-		if (gameplayData) {
-			instance.game_backup = gameplayData.game_backup ?? false;
-			instance.game_scorm_xapi = gameplayData.game_scorm_xapi ?? false;
-			instance.game_type = gameplayData.game_type;
-			instance.game_url = gameplayData.game_url;
+		if (!gameplayData) {
+			if(!activityData.game_url) {
+				logger.warn(`Game URL is missing for activity ID ${activity_id}, setting default empty string.`);
+				activityData.game_url = '';
+			}
+			gameplayData = await db.Tables.GamePlayActivities.create({
+				activity_id: activity_id,
+				game_backup: activityData.game_backup || false,
+				game_scorm_xapi: activityData.game_scorm_xapi || false,
+				game_type: activityData.game_type || "WEB",
+				game_url: activityData.game_url
+			});
 		}
+		instance.game_backup = gameplayData.game_backup ?? false;
+		instance.game_scorm_xapi = gameplayData.game_scorm_xapi ?? false;
+		instance.game_type = gameplayData.game_type;
+		instance.game_url = gameplayData.game_url;
 		
 		return instance;
 	}
-
+	
 	static getType(){
 		return 'gameplay';
 	}

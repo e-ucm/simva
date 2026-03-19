@@ -59,17 +59,23 @@ export class ManualActivity extends Activity {
 	 */
 	static async getFromDbData(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number): Promise<ManualActivity> {
 		const instance = new ManualActivity(allocated, activityData);
-		const manualData = await db.Tables.ManualActivities.findOne({ 
+		let manualData = await db.Tables.ManualActivities.findOne({ 
 			where: { activity_id: activity_id } 
 		});
-		if (manualData) {
-			instance.manual_user_managed = manualData.manual_user_managed ?? false;
-			instance.manual_ressource_type = manualData.manual_ressource_type ?? '';
-			instance.manual_ressource_url = manualData.manual_ressource_url ?? '';
+		if (!manualData) {
+			manualData = await db.Tables.ManualActivities.create({
+				activity_id: activity_id,
+				manual_user_managed: activityData.manual_user_managed || false,
+				manual_ressource_type: activityData.manual_ressource_type || 'WEB',
+				manual_ressource_url: activityData.manual_ressource_url || ''
+			});
 		}
+		instance.manual_user_managed = manualData.manual_user_managed ?? false;
+		instance.manual_ressource_type = manualData.manual_ressource_type ?? '';
+		instance.manual_ressource_url = manualData.manual_ressource_url ?? '';
 		return instance;
 	}
-	
+
 	static getType(){
 		return 'manual';
 	}

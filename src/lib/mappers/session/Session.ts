@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { AuthentificationError, ConflictError, NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { Activity } from "@/lib/mappers/activities/Activity";
-import { ActivityToClass } from  "@/lib/mappers/activities/ActivityToClass";
+import { ActivityToClass, createActivityFromType } from  "@/lib/mappers/activities/ActivityToClass";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { SimletParticipant } from "../simlet/SimletParticipant";
@@ -292,10 +292,8 @@ export class Session {
      */
     async addActivity(activityData: Partial<InstanceType<typeof db.Tables.Activities>>): Promise<Activity> {
         this.canEdit();
-        activityData.session_id = this.session_id;
-        activityData.activity_order = (this.activities?.length ?? 0) + 1; // Add to the end of the activity list
-        let activity = await db.Tables.Activities.create(activityData);
-        return Activity.getFromDbData(activity.activity_id, false, this.is_admin, this.current_user_id);
+        let activity = await createActivityFromType(activityData, this.session_id, this.activities!.length!, this.is_admin, this.current_user_id as number);
+        return activity;
      }
 
     async addParticipantsToAllActivities(participants_id: number[]) : Promise<ActivityCompletion[]> {

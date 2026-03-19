@@ -67,17 +67,23 @@ export class LimesurveyActivity extends Activity {
 	static async getFromDbData(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number): Promise<LimesurveyActivity> {
 		const instance = new LimesurveyActivity(allocated, activityData);
 		
-		const limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 
+		let limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 
 			where: { activity_id: activity_id } 
 		});
 		
-		if (limesurveyData) {
-			instance.survey_id = limesurveyData.survey_id ?? -1;
-			instance.survey_language = limesurveyData.survey_language ?? '';
-			instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
-			instance.survey_languages = await limeSurveyClient.getSurveyLanguages(instance.survey_id);
+		if (!limesurveyData) {
+			//TODO handle copy of survey and update survey_id in activityData before creating LimesurveyActivity entry in database
+			limesurveyData = await db.Tables.LimesurveyActivities.create({
+				activity_id: activity_id,
+				survey_id: activityData.survey_id || -1,
+				survey_language: null,
+				survey_lrsset: null
+			});
 		}
-		
+		instance.survey_id = limesurveyData.survey_id ?? -1;
+		instance.survey_language = limesurveyData.survey_language ?? '';
+		instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
+		instance.survey_languages = await limeSurveyClient.getSurveyLanguages(instance.survey_id);
 		return instance;
 	}
 	
@@ -236,7 +242,7 @@ export class LimesurveyActivity extends Activity {
 					// Ensure response is a string, Buffer, or stream.Readable
 					let resultData = response;
 					if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
-						resultData = JSON.stringify(response, false, "\t");
+						resultData = JSON.stringify(response, null, "\t");
 					}
 					await super.setResult("backup", resultData, participant_id);
 					results.set(participant_id, true);

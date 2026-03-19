@@ -3,6 +3,7 @@ import { GamePlayActivity } from "@/lib/mappers/activities/GameplayActivity";
 import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
 import { ManualActivity } from "@/lib/mappers/activities/ManualActivity";
 import { logger } from "@/lib/logger";
+import { db } from "@/lib/db";
 
 /**
  * Factory function that creates appropriate Activity subclass instances based on activity type.
@@ -46,4 +47,17 @@ export async function ActivityToClass(activity_id: number, allocated: boolean, i
             break;
     }
     return activity;
+}
+
+export async function createActivityFromType(activityData: any, session_id: number, activity_order: number, is_admin: boolean, current_user_id: number): Promise<Activity> {
+    activityData.session_id = session_id;
+    if(!activityData.activity_description) {
+        activityData.activity_description = "";
+    }
+    activityData.activity_order = (activity_order ?? 0) + 1; // Add to the end of the activity list
+    activityData.activity_comply_with_GDPR = false; // Default to true for new activities, can be updated later
+    let activity = await db.Tables.Activities.create(activityData);
+    activityData.activity_id = activity.activity_id;
+    let activityInstance = await ActivityToClass(activity.activity_id, false, is_admin, activityData, current_user_id);
+    return activityInstance;
 }

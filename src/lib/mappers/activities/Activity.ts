@@ -113,8 +113,8 @@ export class Activity {
 		this.activity_name = data.activity_name;
 		this.activity_order = data.activity_order;
 		this.activity_type = data.activity_type;
-		this.activity_trace_storage = data.activity_trace_storage || false; // Default to false if not provided
-		this.activity_can_be_restarted = data.activity_can_be_restarted || false;
+		this.activity_trace_storage = data.activity_trace_storage ? Boolean(data.activity_trace_storage) : false; // Default to false if not provided
+		this.activity_can_be_restarted = data.activity_can_be_restarted ? Boolean(data.activity_can_be_restarted) : false;
 		this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
 		this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
 		if(this.allocated_user) {
@@ -131,9 +131,9 @@ export class Activity {
 			this.activity_comply_with_GDPR = false; // GDPR compliance is not relevant for allocated activities as they are user-specific instances of the base activity
 		} else {
 			this.session_id = data.session_id;
-			this.activity_description = data.activity_description || ""; // Default to empty string if not provided
-			this.activity_comply_with_GDPR = Boolean(data.activity_comply_with_GDPR) || false;
-			this.activity_presignedUrl = data.activity_presignedUrl || "";
+			this.activity_description = data.activity_description ? String(data.activity_description) : ""; // Default to empty string if not provided
+			this.activity_comply_with_GDPR = data.activity_comply_with_GDPR ? Boolean(data.activity_comply_with_GDPR) : false;
+			this.activity_presignedUrl = data.activity_presignedUrl ? String(data.activity_presignedUrl) : undefined; // Default to undefined if not provided
 			this.activity_presignedUrl_generated_at = data.activity_presignedUrl_generated_at ? new Date(data.activity_presignedUrl_generated_at) : undefined;
 			this.activity_presignedUrl_expired_at = data.activity_presignedUrl_expired_at ? new Date(data.activity_presignedUrl_expired_at) : undefined;
 			this.current_user_id = data.current_user_id;
@@ -964,9 +964,7 @@ export class Activity {
 				allocated_token: this.allocated_token
 			};
 		} else {
-			return {
-				...obj
-			};
+			return obj;
 		}
 	}
 
