@@ -375,7 +375,7 @@ paths:
       description: |
         Creates a new simlet for the current teacher.
       responses:
-        '200':
+        '201':
           description: simlet created
           content:
             application/json:
@@ -1375,7 +1375,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/userPermissionMapper'
+                type: array
+                items:
+                  $ref: '#/components/schemas/userPermissionMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -1795,76 +1797,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/activityMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/surveyowner:
-    patch:
-      tags:
-        - administrators
-        - teachers
-      summary: update the survey owner for a Limesurvey activity
-      operationId: updateSurveyOwner
-      description: |
-        updateSurveyOwner
-      responses:
-        '200':
-          description: Survey Updated
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/surveylanguages:
-    get:
-      tags:
-        - administrators
-        - teachers
-      summary: get the survey languages for a Limesurvey activity
-      operationId: getSurveyLanguages
-      description: |
-        getSurveyLanguages
-      responses:
-        '200':
-          description: Survey Languages List
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/usersurveylist:
-    get:
-      tags:
-        - administrators
-        - teachers
-      summary: get user survey list for a Limesurvey activity
-      operationId: getUserSurveyList
-      description: |
-        getUserSurveyList
-      responses:
-        '200':
-          description: Survey List
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2344,6 +2276,113 @@ paths:
         - $ref: '#/components/parameters/activityId'
         - $ref: '#/components/parameters/users'
         - $ref: '#/components/parameters/type'
+  /limesurvey/isAdmin:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets user is admin of Limesurvey
+      operationId: getLimesurveyAdmin
+      description: |
+        gets user is admin of Limesurvey
+      responses:
+        '200':
+          description: gets user is admin of Limesurvey
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+  /limesurvey/surveys:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: get user survey list for a Limesurvey activity
+      operationId: getUserSurveyList
+      description: |
+        getUserSurveyList
+      responses:
+        '200':
+          description: Survey List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/limesurveySurveyMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /limesurvey/surveys/{surveyid}/owner:
+    patch:
+      tags:
+        - administrators
+        - teachers
+      summary: update the survey owner for a Limesurvey activity
+      operationId: updateSurveyOwner
+      description: |
+        updateSurveyOwner
+      responses:
+        '200':
+          description: Survey Updated
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/surveyId'
+  /limesurvey/surveys/{surveyid}/languages:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: get the survey languages for a Limesurvey activity
+      operationId: getSurveyLanguages
+      description: |
+        getSurveyLanguages
+      responses:
+        '200':
+          description: Survey Languages List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/limesurveySurveyLanguageMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/surveyId'
   /activities/{activityid}/lrs/statements:
     get:
       tags:
@@ -2941,35 +2980,6 @@ paths:
           $ref: '#/components/responses/ConflictError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /limesurvey/isAdmin:
-    get:
-      tags:
-        - administrators
-        - teachers
-      summary: gets user is admin of Limesurvey
-      operationId: getLimesurveyAdmin
-      description: |
-        gets user is admin of Limesurvey
-      responses:
-        '200':
-          description: gets user is admin of Limesurvey
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: boolean
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-        '501':
-          $ref: '#/components/responses/NotImplementedError'
   /lti:
     get:
       tags:
@@ -3675,6 +3685,14 @@ components:
         type: integer
         example: 1234567890
       description: The activity ID
+    surveyId:
+      in: path
+      name: surveyid
+      required: true
+      schema:
+        type: integer
+        example: 1234567890
+      description: The survey ID
     extensionId:
       in: path
       name: extension_id
@@ -4000,9 +4018,9 @@ components:
     userPermission:
       type: object
       properties:
-        username:
-          type: string
-          example: "teacher1"
+        user_id:
+          type: integer
+          example: 123
         permission:
           type: string
           example: "READ_WRITE"
@@ -4011,7 +4029,7 @@ components:
       - $ref: '#/components/schemas/userPermission'
       - type: object
         required:
-        - username
+        - user_id
         - permission
     userPermissionMapper:
       allOf:
@@ -4124,9 +4142,6 @@ components:
         simlet_description:
           type: string
           example: "A comprehensive simlet for serious game validation"
-        simlet_archived:
-          type: boolean
-          example: false
     simletCreation:
         allOf:
         - $ref: '#/components/schemas/simlet'
@@ -4134,12 +4149,14 @@ components:
           required:
           - simlet_name
           - simlet_description
-          - simlet_archived
     simletUpdate:
         allOf:
         - $ref: '#/components/schemas/simlet'
         - type: object
           properties:
+            simlet_archived:
+              type: boolean
+              example: false
             sessions:
               type: array
               items:
@@ -4168,6 +4185,9 @@ components:
             updatedAt:
               type: string
               format: date-time
+            simlet_archived:
+              type: boolean
+              example: false
             sessions:
               type: array
               items:
@@ -4429,6 +4449,51 @@ components:
       - $ref: '#/components/schemas/noTypedSessionMapper'
       - $ref: '#/components/schemas/currentSessionMapper'
       - $ref: '#/components/schemas/allocatedSessionMapper'
+    limesurveySurveyMapper:
+      type: object
+      required:
+        - sid
+        - gsid
+        - surveyls_title
+        - startdate
+        - expires
+        - active
+      properties:
+        id:
+          type: integer
+          example: 326392
+        gsid:
+          type: integer
+          example: 1
+        surveyls_title:
+          type: string
+          example: "Conectado_ES_BR_FR_EN_Pre"
+        startdate:
+          type: string
+          format: date-time
+          nullable: true
+        expires:
+          type: string
+          format: date-time
+          nullable: true
+        active:
+          type: string
+          enum: ["Y", "N"]
+          example: "N"
+    limesurveySurveyLanguageMapper:
+      type: object
+      required:
+        - default
+        - list
+      properties:
+        default:
+          type: string
+          example: "en"
+        list:
+          type: array
+          items:
+            type: string
+            example: "fr"
     noTypedActivity:
       type: object
       properties:
