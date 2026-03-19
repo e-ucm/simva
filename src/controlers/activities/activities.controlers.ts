@@ -71,6 +71,7 @@ export async function getActivity(
     const activityId = parseInt(req.params.activity_id as string);
     const access = getAccess(currentUser);
     const activity = await activitiesService.getActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
+    logger.debug(activity, "Fetched activity with ID: " + activityId);
     return res.json(activity.toJSON());
   } catch (err) {
     next(err);

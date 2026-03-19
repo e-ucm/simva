@@ -4504,17 +4504,9 @@ components:
           type: string
           enum: ["default", "manual", "limesurvey", "gameplay", "lti_tool"]
           example: "limesurvey"
-        activity_trace_storage:
-          type: boolean
-          example: true
         activity_comply_with_GDPR:
           type: boolean
           example: true
-          description: "Whether the activity complies with GDPR regulations. Has to be true if the activity collects data."
-        activity_can_be_restarted:
-          type: boolean
-          example: false
-          description: "Whether the activity can be restarted"
     noTypedActivityCreation:
       allOf:
       - $ref: '#/components/schemas/noTypedActivity'
@@ -4522,8 +4514,6 @@ components:
         required:
         - activity_name
         - activity_type
-        - activity_trace_storage
-        - activity_can_be_restarted
     noTypedActivityMapper:
       allOf:
       - $ref: '#/components/schemas/noTypedActivity'
@@ -4562,6 +4552,17 @@ components:
             type: string
             format: date-time
             nullable: true
+          activity_trace_storage:
+            type: boolean
+            example: true
+          activity_comply_with_GDPR:
+            type: boolean
+            example: true
+            description: "Whether the activity complies with GDPR regulations. Has to be true if the activity collects data."
+          activity_can_be_restarted:
+            type: boolean
+            example: false
+            description: "Whether the activity can be restarted"
           createdAt:
             type: string
             format: date-time
@@ -4601,7 +4602,14 @@ components:
             example: "WEB"
           manual_ressource_url:
             type: string
+            nullable: true
             example: "https://example.com/manual-activity-resource"
+          activity_trace_storage:
+            type: boolean
+            example: true
+          activity_can_be_restarted:
+            type: boolean
+            example: false
     manualActivityCreation:
       allOf:
       - $ref: '#/components/schemas/manualActivity'
@@ -4611,6 +4619,8 @@ components:
         - manual_user_managed
         - manual_ressource_type
         - manual_ressource_url
+        - activity_trace_storage
+        - activity_can_be_restarted
     gameplayActivity:
       allOf:
       - $ref: '#/components/schemas/noTypedActivity'
@@ -4628,7 +4638,14 @@ components:
             example: "WEB"
           game_url:
             type: string
+            nullable: true
             example: "https://example.com/gameplay-activity-resource"
+          activity_trace_storage:
+            type: boolean
+            example: true
+          activity_can_be_restarted:
+            type: boolean
+            example: false
     gameplayActivityCreation:
       allOf:
       - $ref: '#/components/schemas/gameplayActivity'
@@ -4637,6 +4654,8 @@ components:
         required:
         - game_type
         - game_url
+        - activity_trace_storage
+        - activity_can_be_restarted
     limesurveyActivityMapper:
       allOf:
       - $ref: '#/components/schemas/limesurveyActivity'

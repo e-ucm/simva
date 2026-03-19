@@ -70,6 +70,7 @@ export async function createSessionActivity(
     } else {
       throw new AuthentificationError("Invalid user role");
     }
+    logger.debug(activity, "Created new activity for session ID: " + sessionId);
     res.json(activity.toJSON());
   } catch (err) {
     next(err);
