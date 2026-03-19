@@ -112,7 +112,7 @@ export async function getSimletSession(simletId: number, sessionId: number, is_a
  * });
  * ```
  */
-export async function createSimletSession(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Simlet> {
+export async function createSimletSession(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Session> {
   let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.addSession(body);
 }

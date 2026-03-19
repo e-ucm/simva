@@ -57,7 +57,6 @@ export async function limesurveyWebhookHandler(req: Request, res: Response) {
     messages.push(JSON.stringify(message));
   }
   if(messages.length > 0) {
-    logger.info(JSON.stringify(messages));
     await kafkaClient.connectToProducer();
     await kafkaClient.sendMessages(messages);
   }
@@ -83,11 +82,8 @@ export async function verifyHookdeckSignature(
   for (const [key, value] of Object.entries(incomingHeaders)) {
     headers[key] = value;
   }
-  logger.info(headers);
 
   const rawBody = req.body;
-  logger.info(rawBody);
-  logger.info(JSON.stringify(rawBody));
 
   const conf={
     checkSourceVerification: false,

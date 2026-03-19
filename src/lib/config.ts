@@ -111,7 +111,7 @@ config.minio = {};
 config.minio.url = process.env.MINIO_URL || 'https://minio.external.test/';
 config.minio.apiUrl = process.env.MINIO_API_URL || 'minio-api.external.test';
 config.minio.ssl = process.env.MINIO_SSL !== 'false';
-config.minio.port = process.env.MINIO_PORT || '443';
+config.minio.port = parseInt(process.env.MINIO_PORT as string) || 443;
 config.minio.accessKey = process.env.MINIO_ACCESS_KEY || 'minio';
 config.minio.secretKey = process.env.MINIO_SECRET_KEY || 'secret';
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces';

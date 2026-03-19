@@ -37,6 +37,7 @@ class MinioClient {
     constructor(opts: MinioOpts) {
         try {
             this.#opts = opts;
+            logger.info(opts, "MINIO OPTS");
             this.#minio = new Minio({
                 endPoint: opts.apiUrl,
                 port: opts.port,
@@ -149,7 +150,12 @@ class MinioClient {
         const expiry = expirySeconds ?? this.#opts.presignedUrlFileExpirationTime;
         logger.debug({ path, expiry }, 'Minio: getPresignedUrl');
         
-        const url = await this.#minio!.presignedGetObject(this.#opts.bucket, path, expiry);
+        const url = await this.#minio!.presignedGetObject(
+            this.#opts.bucket, 
+            path, 
+            expiry,
+            { expires: "3600", responseContentType: "application/json" }
+         );
         logger.info({ path, url }, 'Minio: presigned URL generated');
         return url;
     }

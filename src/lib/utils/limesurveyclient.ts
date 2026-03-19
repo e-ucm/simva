@@ -359,6 +359,7 @@ export class LimeSurveyClient {
         const result = await this.request<Survey[]>('list_surveys', [this.sessionKey]);
         
         this.log('LimeSurveyClient.getSurveyList -> Completed');
+        this.log(JSON.stringify(result, null, `\t`));
         return result;
     }
 

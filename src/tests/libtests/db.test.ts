@@ -79,13 +79,9 @@ describe("Database", () => {
     expect(db.Tables.SimletGroups).toBeDefined();
     expect(db.Tables.SimletPermissions).toBeDefined();
     expect(db.Tables.SimletShlinks).toBeDefined();
-    expect(db.Tables.SimletTags).toBeDefined();
     
     // Tag models
-    expect(db.Tables.CategoryList).toBeDefined();
     expect(db.Tables.SessionTagsList).toBeDefined();
-    expect(db.Tables.SimletTagsList).toBeDefined();
-    expect(db.Tables.SubjectAreaList).toBeDefined();
     
     // Template models
     expect(db.Tables.ActivityTemplates).toBeDefined();

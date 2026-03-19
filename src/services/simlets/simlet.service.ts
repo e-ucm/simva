@@ -101,8 +101,8 @@ export async function getSimletBySimletIdAndUserId(simlet_id: number, is_admin: 
  * });
  * ```
  */
-export async function createSimlet(simletData: any): Promise<Simlet> {
-  return await Simlet.createSimlet(simletData);
+export async function createSimlet(simletData: any, isAdmin: boolean, currentUserId?: number): Promise<Simlet> {
+  return await Simlet.createSimlet(simletData, isAdmin, currentUserId);
 }
 
 /**

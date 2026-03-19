@@ -126,7 +126,6 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       }
 
       // Default: return decoded payload with normalized username
-      logger.debug({jwtPayload});
       resolve(jwtPayload);
     } catch (error) {
       logger.error({ error }, 'JWT validation error:');

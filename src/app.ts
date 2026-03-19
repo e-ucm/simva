@@ -48,7 +48,7 @@ export const app: express.Express = express();
 
 app.use(express.json());
 app.use((req: Request, _: Response, next : NextFunction) => {
-  logger.info(`${req.method} at ${req.originalUrl} with body ${req.body}`);
+  logger.debug(`${req.method} at ${req.originalUrl} with body ${req.body}`);
   next();
 })
 

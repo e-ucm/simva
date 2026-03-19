@@ -160,7 +160,6 @@ export class LRSClient {
             toret = response;
         } else {
             logger.info('Unknown case');
-            logger.info(statement);
             throw { message: 'Unknown case setting the statements' };
         }
         return toret;

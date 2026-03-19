@@ -25,7 +25,6 @@ import { LimesurveyActivityFactory } from "@/lib/models/activities/limesurveyAct
 import { SimletFactory } from "@/lib/models/simlets/simlet.model";
 import { SimletShlinksFactory } from "@/lib/models/simlets/simletShlinks.model";
 import { SimletPermissionsFactory } from "@/lib/models/simlets/simletPermissions.model";
-import { SimletTagsFactory } from "@/lib/models/simlets/simletTags.model";
 import { SessionFactory } from "@/lib/models/sessions/session.model";
 import { SessionDatesFactory } from "@/lib/models/sessions/sessionDates.model";
 import { SessionPermissionsFactory } from "@/lib/models/sessions/sessionPermissions.model";
@@ -54,11 +53,11 @@ import { SessionTagsListFactory } from "@/lib/models/tags/sessionTagsList.model"
  * Model Categories:
  * - User Management: User, Group, GroupParticipants, GroupPermissions
  * - Activities: Activities, ActivityCompletion, ManualActivities, GamePlayActivities, LimesurveyActivities
- * - SIMLETs: Simlets, SimletGroups, SimletShlinks, SimletPermissions, SimletTags
+ * - SIMLETs: Simlets, SimletGroups, SimletShlinks, SimletPermissions
  * - Sessions: Sessions, SessionPermissions, SessionTags
  * - Allocators: Allocators, ExperimentalParticipants, RandomAllocators
  * - Templates: ActivityTemplates, ActivityTemplatePermissions, ManualTemplateActivities, GameplayActivitiesTemplates, LimesurveyActivitiesTemplates
- * - Tags: SimletTagsList, SessionTagsList, SubjectAreaList, CategoryList
+ * - Tags: SessionTagsList
  * 
  * @example
  * ```typescript
@@ -90,7 +89,6 @@ export function initializeModels(
     Simlets: SimletFactory(sequelize, DataTypes),
     SimletShlinks: SimletShlinksFactory(sequelize, DataTypes),
     SimletPermissions: SimletPermissionsFactory(sequelize, DataTypes),
-    SimletTags: SimletTagsFactory(sequelize, DataTypes),
     Sessions: SessionFactory(sequelize, DataTypes),
     SessionDates: SessionDatesFactory(sequelize, DataTypes),
     SessionPermissions: SessionPermissionsFactory(sequelize, DataTypes),
