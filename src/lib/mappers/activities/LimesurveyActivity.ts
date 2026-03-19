@@ -70,20 +70,32 @@ export class LimesurveyActivity extends Activity {
 		let limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 
 			where: { activity_id: activity_id } 
 		});
-		
+		let found = !!limesurveyData;
+		logger.debug(`LimesurveyActivity.getFromDbData: Found LimeSurvey data for activity_id ${activity_id}: ${found}`);
 		if (!limesurveyData) {
+			if(activityData.rawsurvey) {
+				activityData.survey_id = await limeSurveyClient.createSurvey(activityData.rawsurvey);
+			} else if(activityData.copysurvey) {
+				activityData.survey_id = await limeSurveyClient.cloneSurvey(activityData.copysurvey, activityData.activity_name || `Copy of survey ${activityData.copysurvey}`);
+			} else {
+				throw new NotFoundError("No survey data provided for new LimesurveyActivity");
+			}
 			//TODO handle copy of survey and update survey_id in activityData before creating LimesurveyActivity entry in database
+			instance.survey_languages = await limeSurveyClient.getSurveyLanguages(activityData.survey_id);
 			limesurveyData = await db.Tables.LimesurveyActivities.create({
 				activity_id: activity_id,
-				survey_id: activityData.survey_id || -1,
-				survey_language: null,
+				survey_id: activityData.survey_id,
+				survey_language: instance.survey_languages.default,
 				survey_lrsset: null
 			});
 		}
 		instance.survey_id = limesurveyData.survey_id ?? -1;
 		instance.survey_language = limesurveyData.survey_language ?? '';
 		instance.survey_lrsset = limesurveyData.survey_lrsset ?? -1;
-		instance.survey_languages = await limeSurveyClient.getSurveyLanguages(instance.survey_id);
+		if(found) {
+			instance.survey_languages = await limeSurveyClient.getSurveyLanguages(instance.survey_id);
+		}
+		
 		return instance;
 	}
 	

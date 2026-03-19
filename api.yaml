@@ -4574,20 +4574,32 @@ components:
       - $ref: '#/components/schemas/noTypedActivity'
       - type: object
         properties:
-          survey_id:
-            type: integer
-            example: 789
           survey_language:
             type: string
             example: "en"
     limesurveyActivityCreation:
-      allOf:
-      - $ref: '#/components/schemas/limesurveyActivity'
-      - $ref: '#/components/schemas/noTypedActivityCreation'
-      - type: object
-        required:
-        - survey_id
-        - survey_language
+      oneOf:
+        - allOf:
+            - $ref: '#/components/schemas/limesurveyActivity'
+            - $ref: '#/components/schemas/noTypedActivityCreation'
+            - type: object
+              properties:
+                rawsurvey:
+                  type: string
+                  example: "{...}"
+                  description: "LimeSurvey survey file upload (base64 or plain string)"
+              required:
+                - rawsurvey
+        - allOf:
+            - $ref: '#/components/schemas/limesurveyActivity'
+            - $ref: '#/components/schemas/noTypedActivityCreation'
+            - type: object
+              properties:
+                copysurvey:
+                  type: integer
+                  example: 456
+              required:
+                - copysurvey
     manualActivity:
       allOf:
       - $ref: '#/components/schemas/noTypedActivity'
@@ -4664,6 +4676,13 @@ components:
         required:
         - survey_id
         - survey_language
+        properties:
+          survey_id:
+            type: integer
+            example: 789
+          survey_language:
+            type: string
+            example: "en"
     manualActivityMapper:
       allOf:
       - $ref: '#/components/schemas/manualActivity'

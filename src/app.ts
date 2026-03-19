@@ -46,7 +46,9 @@ import { config } from '@/lib/config';
  */
 export const app: express.Express = express();
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 app.use((req: Request, _: Response, next : NextFunction) => {
   logger.debug(`${req.method} at ${req.originalUrl} with body ${req.body}`);
   next();

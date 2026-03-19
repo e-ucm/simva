@@ -58,6 +58,8 @@ export async function createActivityFromType(activityData: any, session_id: numb
     activityData.activity_comply_with_GDPR = false; // Default to true for new activities, can be updated later
     let activity = await db.Tables.Activities.create(activityData);
     activityData.activity_id = activity.activity_id;
+    activityData.createdAt = activity.createdAt;
+    activityData.updatedAt = activity.updatedAt;
     let activityInstance = await ActivityToClass(activity.activity_id, false, is_admin, activityData, current_user_id);
     return activityInstance;
 }
