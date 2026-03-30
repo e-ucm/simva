@@ -1332,6 +1332,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activityCreation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/activityCreation'
   /simlets/{simletid}/permissions:
     get:
       tags:
