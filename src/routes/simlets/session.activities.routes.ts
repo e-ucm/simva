@@ -9,6 +9,8 @@
 
 import { Router } from "express";
 import * as SessionActivitiesControler from "@/controlers/simlets/session.activities.controler";
+import multer from 'multer';
+const upload = multer();
 
 /**
  * Express router for session activities endpoints.
@@ -24,8 +26,8 @@ import * as SessionActivitiesControler from "@/controlers/simlets/session.activi
 const router = Router({ mergeParams: true });
 
 router.get("/", SessionActivitiesControler.getSessionActivities);
-router.post("/", SessionActivitiesControler.createSessionActivity);
-router.patch("/:activity_id", SessionActivitiesControler.updateSessionActivity);
+router.post("/", upload.single("file"), SessionActivitiesControler.createSessionActivity);
+router.patch("/:activity_id", upload.single("file"), SessionActivitiesControler.updateSessionActivity);
 router.delete("/:activity_id", SessionActivitiesControler.deleteSessionActivity);
 
 export default router;
