@@ -248,6 +248,9 @@ export class Simlet {
         if(typeof data.simlet_description == "string") {
             toUpdate.simlet_description = data.simlet_description;
         }
+        if(typeof data.simlet_archived == "boolean") {
+            toUpdate.simlet_archived = data.simlet_archived;
+        }
         let model = await db.Tables.Simlets.findOne({ where: { simlet_id: this.simlet_id } });
         if(!model) {
             throw new NotFoundError(`Simlet with ID ${this.simlet_id} not found.`);
