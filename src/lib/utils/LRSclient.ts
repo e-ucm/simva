@@ -5,6 +5,7 @@ import * as path from 'path';
 import { config } from "@/lib/config";
 import { logger } from '../logger';
 import { kafkaClient } from './kafkaclient';
+import { LRSTracker } from 'js-tracker';
 
 const { ScalableBloomFilter } = BloomFilters;
 
@@ -22,6 +23,7 @@ export class LRSClient {
 	// ##########################################
 	filter: InstanceType<typeof ScalableBloomFilter>;
 	readonly #backupPath: string;
+	jstracker!: LRSTracker;
 
 	/**
 	 * Creates a new LRSClient instance
@@ -33,6 +35,16 @@ export class LRSClient {
 	constructor(backupPath?: string) {
 		this.#backupPath = backupPath ?? path.join(config.bloomFilterBackupPath, config.bloomFilterBackupFile);
 		this.filter = this.loadFromFile() ?? new ScalableBloomFilter();
+	}
+
+	async initJSScormTracker() {
+		this.jstracker = new LRSTracker();
+		this.jstracker.trackerSettings.batch_endpoint = `${config.lrs.url}/xapi/`;
+		this.jstracker.trackerSettings.oauth_type = "oauth1";
+		this.jstracker.oauth1.username = config.lrs.username;
+		this.jstracker.oauth1.password = config.lrs.password;
+		await this.jstracker.login(); // Authenticate with the LRS before sending any statements
+		this.jstracker.start(); // Initialize the tracker before using it
 	}
 
 	/**
@@ -114,21 +126,19 @@ export class LRSClient {
 	}
 
 	updateMissingTraceElements(participant: string, trace : any) {
+		let statement = this.jstracker.fromXAPI(trace); // Initialize the statement builder with the trace data
         const now = new Date();
         if(!trace.id) {
-            trace.id = this.generateStatementId(trace);
+            statement.withId(this.generateStatementId(trace));
         }
         if(!trace.timestamp) {
-            trace.timestamp = now.toISOString();
+            statement.withTimestamp(now.toISOString());
         }
         if(!trace.version) {
-            trace.version = "1.0.3";
+            statement.withVersion("1.0.3");
         }
-        trace.stored = now.toISOString();
-        trace.authority = {
-            homePage: config.external_url,
-            name: participant
-        };
+		statement.withAutorityAccount(participant, config.externalUrl);
+		statement.withStored(now.toISOString());
         return trace;
     }
 
@@ -143,6 +153,22 @@ export class LRSClient {
 		await kafkaClient.sendMessages(payloads, 0, JSON.stringify({ _id: activityId }));
 		return responses;
 	}
+	
+	async sendTracesToLRS(traces: any[], activityId: number): Promise<number[]> {
+		if(!this.jstracker) {
+			await this.initJSScormTracker();
+		}
+		let ids: number[] = [];
+		for (var i = traces.length - 1; i >= 0; i--) {
+			let trace = traces[i];
+			logger.info({ trace, activityId }, 'Sending trace to LRS');
+			// Assuming the correct method is to use jstracker.scorm().sendXAPI or similar
+			// Replace with the correct method for your JSScormTracker version
+			this.jstracker.fromXAPI(trace).withContextActivity(this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/activities/${activityId}`, 'course').send();
+			ids.push(trace.id);
+		}
+		return ids;
+	}
 
 	async setStatement(statement: any, activityId: number, participant: string): Promise<number[]> {
 		let toret: number[] = [];
@@ -152,11 +178,21 @@ export class LRSClient {
                 var trace = statement[traceId];
                 traces.push(this.updateMissingTraceElements(participant, trace));
             }
-            let response = await this.sendTracesToKafka(traces, activityId);
+			let response: number[] = [];
+			if(config.lrs.enabled) {
+            	 response = await this.sendTracesToLRS(traces, activityId);
+			} else {
+				response = await this.sendTracesToKafka(traces, activityId);
+			}
             toret = response;
         } else if(!statement || typeof statement === 'object'){
             trace = this.updateMissingTraceElements(participant, statement);
-            let response = await this.sendTracesToKafka([trace], activityId);
+            let response: number[] = [];
+			if(config.lrs.enabled) {
+            	 response = await this.sendTracesToLRS([trace], activityId);
+			} else {
+				response = await this.sendTracesToKafka([trace], activityId);
+			}
             toret = response;
         } else {
             logger.info('Unknown case');
