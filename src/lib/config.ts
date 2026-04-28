@@ -197,6 +197,13 @@ config.shlink.protocol = process.env.SHLINK_PROTOCOL || 'https';
 config.shlink.url = config.shlink.protocol + '://' + config.shlink.serverHost + ((ignored_ports.indexOf(Number(config.shlink.port)) !== -1) ? '' : (':' + config.shlink.port));
 config.shlink.apikey = process.env.SHLINK_SERVER_API_KEY || 'password';
 
+// LRS configuration
+config.lrs = {};
+config.lrs.enabled = process.env.LRS_ENDPOINT !== undefined;
+config.lrs.apiKeyDefault = process.env.LRS_API_KEY_DEFAULT || 'my_api_key';
+config.lrs.apiSecretDefault = process.env.LRS_API_SECRET_DEFAULT || 'my_api_secret';
+config.lrs.endpoint = process.env.LRS_ENDPOINT || null;
+
 /**
  * Exported configuration object.
  * 

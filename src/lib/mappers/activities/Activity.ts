@@ -683,31 +683,40 @@ export class Activity {
 	 * @returns {void}
 	 */
 	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
-		let jstracker = new JSScormTracker();
-		jstracker.trackerSettings.actor_homePage = config.externalUrl;
-		jstracker.trackerSettings.actor_name = username;
-		jstracker.start(); // Initialize the tracker before using it
-		let scormActivityTracker = jstracker.scorm(`${config.externalUrl}/activity/${this.activity_id}`, jstracker.SCORMTYPE.ACTVITY);
+		let jsTracker = new JSScormTracker();
+		jsTracker.trackerSettings.parent_activity_id = `${config.externalUrl}/simlets/${this.simlet_id}/activities/${this.activity_id}`;
+		jsTracker.start();
+		let scormActivityTracker = jsTracker.scorm(`${config.externalUrl}/simlets/${this.simlet_id}/activities/${this.activity_id}`, 'activity');
 		let statement;
 		switch(verb) {
 			case "initialized":
-				statement = scormActivityTracker.initialized().statement;
+				statement = scormActivityTracker.initialized();
 				break;
 			case "resumed":
-				statement = scormActivityTracker.resumed().statement;
+				statement = scormActivityTracker.resumed();
 				break;
 			case "suspended":
-				statement = scormActivityTracker.suspended().statement;
+				statement = scormActivityTracker.suspended();
+				statement.withScoreScaled(resultScore);
+				statement.withResultExtension(jsTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
 				break;
 			case "terminated":
-				scormActivityTracker.IsInitialized = false;
+				scormActivityTracker.IsInitialized = true;
 				scormActivityTracker.InitializedTime = new Date(timestamp);
-				statement = scormActivityTracker.terminated().statement;
+				statement = scormActivityTracker.terminated();
+				statement.withScoreScaled(resultScore);
+				statement.withResultExtension(jsTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
 				break;
 			default:
 				logger.warn(`Unsupported verb ${verb} for xAPI trace`);
 		}
-		logger.info(statement? statement.toXAPI() : "No statement generated", "XAPI Statement:");
+		if (statement) {
+			statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/simlets/${this.simlet_id}`, jsTracker.ALL.ACTIVITYTYPES.COURSE);
+			statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING, `${config.externalUrl}/sessions/${this.session_id}`, jsTracker.ALL.ACTIVITYTYPES.LESSON);
+			logger.info(statement? statement.statement.toXAPI() : "No statement generated", "XAPI Statement:");
+			lrsclient.sendTracesToLRS([statement.statement.toXAPI()], this.activity_id);
+		}
+		
 	}
 
 	async canSendStatementsLRS(): Promise<boolean> {
