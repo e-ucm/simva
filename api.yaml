@@ -1887,6 +1887,34 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
+  /activities/{activityid}/tracker_config:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+      summary: gets tracker configuration for an activity
+      operationId: getActivityTrackerConfig
+      description: |
+        Returns the tracker configuration for the current user in the given activity.
+      responses:
+        '200':
+          description: tracker configuration payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/progress:
     get:
       tags:

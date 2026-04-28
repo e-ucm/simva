@@ -6,7 +6,7 @@ import { config } from "@/lib/config";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 import { minioClient } from "@/lib/utils/minioclient";
 import { BadRequestError, ValidationError } from "@/lib/errors/appErrors";
-import ms from "ms";
+import { User } from "@/lib/mappers/Users/User";
 
 /**
  * Gameplay Activity mapper class extending base Activity.
@@ -135,50 +135,98 @@ export class GamePlayActivity extends Activity {
 	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {
 		participants_id = await this.getAllCurrentParticipantsId(participants_id);
 		let targetMap = new Map<number, string>();
-		let usernames=await this.getAllCurrentParticipantsUsername(participants_id);
 		for (const participant_id of participants_id) {
-			let customUri;
+			let customUri = this.game_url;
 			switch(this.game_type) {
 				case "WEB":
 					logger.info(this.game_url);
-					if(this.game_url && this.game_url.indexOf('?') !== -1){
-						if(this.game_url.indexOf('{authToken}') !== -1){
-							//let authToken = await UsersController.generateJWT(users[participants[i]]);
-							//customUri = customUri.replace('{authToken}', authToken);
-						}
-						customUri = this.game_url;
-						customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)); //OK
-						customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)); //OK
-						customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`)); //OK
-						customUri = customUri.replace('{tokenEndpoint}', encodeURIComponent(`${config.sso.tokenUrl}`)); //OK
-						customUri = customUri.replace('{userToken}', participant_id.toString()); //OK
-						customUri = customUri.replace('{activityId}', this.activity_id.toString()); //OK
-						customUri = customUri.replace('{studyId}', this.simlet_id.toString()); //OK
-						customUri = customUri.replace('{username}', participant_id.toString()); //OK
-					} else {
-						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)}`
-							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
-							+ `&backup_type=XAPI`
-							+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
-							+ `&actor_user=${usernames.get(participant_id)}`
-							+ `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
-							+ `&sso_client_id=simva-plugin`
-							+ `&sso_login_hint=${this.simlet_id}`
-							+ `&sso_username=${usernames.get(participant_id)}`
-							+ `&sso_grant_type=password`
-							+ `&sso_scope=offline_access`
-							+ `&batch_length=200`
-							+ `&batch_timeout=5min`
-							+ `&max_retry_delay=30min`;
-					}
 					targetMap.set(participant_id, customUri);
+					break;
 				default:
+					targetMap.set(participant_id, customUri);
 					break;
 			}
 			
 		}
 		logger.debug(targetMap.toString());
 		return new ActivityMappingResult(targetMap);
+	}
+
+	async getTrackerConfig(): Promise<object> {
+		if (this.game_type !== "WEB") {
+			return super.getTrackerConfig();
+		}
+
+		let participantId = this.allocated_user_id ?? this.current_user_id;
+		if (!participantId) {
+			return {};
+		}
+
+		let participantUsername = this.allocated_username;
+		let participantPassword = this.allocated_token;
+
+		if (!participantUsername || !participantPassword) {
+			const user = await User.getFromDbData(participantId);
+			participantUsername = participantUsername || user.username;
+			participantPassword = participantPassword || user.token || participantUsername;
+		}
+
+		//const authToken = await this.getOAuthTokenForUser(participantUsername, participantPassword);
+		const trackerConfig: any = {
+			result_uri: `${config.api.url}/activities/${this.activity_id}`,
+			backup_uri: `${config.api.url}/activities/${this.activity_id}/result`,
+			backup_type: "XAPI",
+			actor_homepage: `${config.externalUrl}`,
+			actor_user: participantUsername,
+			batch_length: "200",
+			batch_timeout: "5min",
+			max_retry_delay: "30min"
+		};
+		trackerConfig.sso_token_endpoint = `${config.sso.tokenUrl}`;
+		trackerConfig.sso_client_id = "simva-plugin";
+		trackerConfig.sso_login_hint = `${this.simlet_id}`;
+		trackerConfig.sso_username = participantUsername;
+		trackerConfig.sso_grant_type = "password";
+		trackerConfig.sso_scope = "offline_access";
+		return trackerConfig;
+	}
+
+	private async getOAuthTokenForUser(username: string, password: string): Promise<string | null> {
+		try {
+			if (!config.sso.tokenUrl) {
+				return null;
+			}
+
+			const requestBody = new URLSearchParams();
+			requestBody.set("grant_type", "password");
+			requestBody.set("client_id", config.sso.pluginClientId || "simva-plugin");
+			requestBody.set("username", username);
+			requestBody.set("password", password);
+			requestBody.set("scope", "offline_access");
+
+			const response = await fetch(config.sso.tokenUrl, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded"
+				},
+				body: requestBody
+			});
+
+			if (!response.ok) {
+				logger.warn(`OAuth token request failed for user ${username}: ${response.status}`);
+				return null;
+			}
+
+			const tokenData = await response.json() as { access_token?: string };
+			if (!tokenData.access_token) {
+				return null;
+			}
+
+			return `Bearer ${tokenData.access_token}`;
+		} catch (error) {
+			logger.warn({ error }, `OAuth token request failed for user ${username}`);
+			return null;
+		}
 	}
 
 	async getInitialized(participants_id?: number[]): Promise<ActivityMappingResult<boolean | null>> {

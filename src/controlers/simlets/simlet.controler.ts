@@ -332,9 +332,10 @@ export function getTrackerConfig(
 ) {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
-    logger.debug({simletId} , "Getting tracker config for simlet ID");
-    const trackerConfig = simletService.getTrackerConfigForSimlet(simletId);
-    logger.debug({trackerConfig} , "Tracker config retrieved for simlet ID");
+    const userId = req.user?.sql.user_id;
+    logger.debug({simletId, userId} , "Getting tracker config for simlet ID and user ID");
+    const trackerConfig = simletService.getTrackerConfigForSimlet(simletId, userId!);
+    logger.debug({trackerConfig} , "Tracker config retrieved for simlet ID and user ID");
     res.json(trackerConfig);
   } catch (err) {
     next(err);

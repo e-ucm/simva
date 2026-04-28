@@ -968,8 +968,8 @@ export class Activity {
 		}
 	}
 
-	getTrackerConfig() : string {
-        return  JSON.stringify({
+	async getTrackerConfig() : Promise<object> {
+		return {
 			"online": true,
 			"homepage": `${config.externalUrl}`,
 			"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
@@ -987,6 +987,6 @@ export class Activity {
 				"simva_user_token": "true",
 				"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
 			}
-		});
+		};
     }
 }
