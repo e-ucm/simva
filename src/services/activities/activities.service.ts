@@ -40,7 +40,7 @@ import { ActivityMappingResult } from "@/lib/mappers/ActivityCompletion/Activity
  */
 export async function getActivity(activityId: number, allocated: boolean, is_admin: boolean, current_user_id?: number): Promise<Activity> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
-    await activity.sendXAPITraceForActivity("test", "initialized", (new Date()).toUTCString(), -1, "");
+    //await activity.sendXAPITraceForActivity("test", "initialized", (new Date()).toUTCString(), -1, "");
     return activity;
 }
 

@@ -8,7 +8,7 @@ import GroupRepresentation from '@keycloak/keycloak-admin-client/lib/defs/groupR
 import { NotFoundError } from '@/lib/errors/appErrors';
 
 interface KeycloakOption {
-    data?: { enabled: string; url: any; secret: any; eventTypes: string[]; };
+    data?: Record<string, any>;
     url: string;
     method: string;
     headers: Record<string, string>;
@@ -41,6 +41,34 @@ export class KeycloakClient {
     private groupCache: GroupCache = {};
     private groupCacheDuration: number = 300000; // 5 minutes
     private ssoConfig: any;
+
+    /**
+     * Extracts a usable token string from different token container shapes.
+     */
+    private extractAccessToken(rawToken: unknown): string | null {
+        if (typeof rawToken === 'string') {
+            const cleaned = rawToken.trim().replace(/^Bearer\s+/i, '');
+            return cleaned || null;
+        }
+
+        if (rawToken && typeof rawToken === 'object') {
+            const tokenCandidate = rawToken as { token?: unknown; access_token?: unknown; accessToken?: unknown };
+            const value = tokenCandidate.token ?? tokenCandidate.access_token ?? tokenCandidate.accessToken;
+            if (typeof value === 'string') {
+                const cleaned = value.trim().replace(/^Bearer\s+/i, '');
+                return cleaned || null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Basic JWT shape check before sending token to webhook endpoint.
+     */
+    private isLikelyJwt(token: string): boolean {
+        return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token);
+    }
 
     constructor(ssoConfig: any) {
         let kcconfig = {
@@ -374,9 +402,14 @@ export class KeycloakClient {
         try {
             await this.ensureAuthenticated();
             
-            const accessToken = this.client.getAccessToken();
+            const rawAccessToken = await Promise.resolve(this.client.getAccessToken() as unknown);
+            const accessToken = this.extractAccessToken(rawAccessToken);
             if (!accessToken) {
                 throw new Error('No access token available');
+            }
+
+            if (!this.isLikelyJwt(accessToken)) {
+                throw new Error('Invalid access token format received from Keycloak admin client');
             }
             
             logger.info('Keycloak -> Creating webhook configuration');
@@ -385,7 +418,9 @@ export class KeycloakClient {
                 enabled: true,
                 url: config.api.webhookPath,
                 secret: config.api.webhookSecret,
-                eventTypes: ['*']
+                eventTypes: ['*'],
+                // Some webhook plugins parse token from payload instead of Authorization header.
+                accessToken
             };
             
             const webhookOptions = {
