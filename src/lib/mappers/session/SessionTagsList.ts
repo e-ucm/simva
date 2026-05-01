@@ -17,28 +17,55 @@ export class SessionTagList {
     }
 
     static async getSessionsTags(sessions_id: number[], current_user_id: number): Promise<SessionTag[]> {
+        if(!Array.isArray(sessions_id) || sessions_id.length === 0) {
+            return [];
+        }
+
         const tags = await db.Tables.SessionTagsList.findAll({ where: { session_id: { [Op.in]: sessions_id } } });
-        let tagsId = tags.map((row: any) => row.tag_id);
+        let tagsId = tags
+            .map((row: any) => Number(row.tag_id))
+            .filter((tagId: number) => Number.isFinite(tagId));
+
+        tagsId = [...new Set(tagsId)];
+        if(tagsId.length === 0) {
+            return [];
+        }
+
         return await SessionTag.getTags(tagsId, current_user_id);
     }
 
     static async getSessionTags(session_id: number, current_user_id: number): Promise<SessionTag[]> {
         const tags = await db.Tables.SessionTagsList.findAll({ where: { session_id } });
-        let tagsId = tags.map((row: any) => row.tag_id);
+        let tagsId = tags
+            .map((row: any) => Number(row.tag_id))
+            .filter((tagId: number) => Number.isFinite(tagId));
+
+        tagsId = [...new Set(tagsId)];
+        if(tagsId.length === 0) {
+            return [];
+        }
+
         return await SessionTag.getTags(tagsId, current_user_id);
     }
 
-    static async getSessionTagFromList(tag_id: number, current_user_id: number): Promise<SessionTag> {
-        const tag = await db.Tables.SessionTagsList.findOne({ where: { tag_id } });
+    static async getSessionTagFromList(session_id: number, tag_id: number, current_user_id: number): Promise<SessionTag> {
+        const tag = await db.Tables.SessionTagsList.findOne({ where: { session_id, tag_id } });
         if(!tag) {
-            throw new NotFoundError(`Tag with id ${tag_id} not found in session tags list`);
+            throw new NotFoundError(`Tag with id ${tag_id} not found in session ${session_id} tags list`);
         }
         return await SessionTag.getTag(tag.tag_id, current_user_id);
     }
 
     static async addTag(session_id: number, tag_id: number, current_user_id: number): Promise<SessionTag> {
         let existingTag = await SessionTag.getTag(tag_id, current_user_id);
-        await db.Tables.SessionTagsList.create({ session_id, tag_id: existingTag.tag_id });
+
+        const currentRelation = await db.Tables.SessionTagsList.findOne({
+            where: { session_id, tag_id: existingTag.tag_id }
+        });
+        if(!currentRelation) {
+            await db.Tables.SessionTagsList.create({ session_id, tag_id: existingTag.tag_id });
+        }
+
         return existingTag;
     }
 

@@ -169,8 +169,9 @@ export class Session {
 
     async deleteTagFromList(tag_id: number): Promise<SessionTag[]> {
         this.canEdit();
-        let tag = await SessionTagList.getSessionTagFromList(tag_id, this.current_user_id as number);
-        await tag.delete();
+        await SessionTagList.getSessionTagFromList(this.session_id, tag_id, this.current_user_id as number);
+        const sessionTag = new SessionTagList(this.session_id, tag_id, this.current_user_id as number);
+        await sessionTag.deleteTag();
         this.tags = this.tags.filter(t => t.tag_id !== tag_id);
         return this.tags || [];
     } 
@@ -596,7 +597,7 @@ export class Session {
                 session_status: this.session_status,
                 session_can_be_manually_activated: this.session_can_be_manually_activated,
                 activities: this.activities,
-                tags: this.tags,
+                tags: this.tags.map((tag) => tag.toJSON()),
                 createdAt: this.createdAt,
                 updatedAt: this.updatedAt,
             };
@@ -620,7 +621,7 @@ export class Session {
         } as any;
         if(withData) {
             session["activities"] = this.activities;
-            session["tags"] = this.tags;
+            session["tags"] = this.tags.map((tag) => tag.toJSON());
         }
         return session;
     }

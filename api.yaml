@@ -4460,12 +4460,16 @@ components:
           - tag_id
           - tag_name
           - tag_color
+          - tag_right
           - createdAt
           - updatedAt
         properties:
           tag_id:
             type: integer
             example: 123
+          tag_right:
+            type: string
+            example: "READ_WRITE"
           createdAt:
             type: string
             format: date-time
