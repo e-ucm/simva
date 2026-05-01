@@ -8,6 +8,8 @@ import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { Session } from "@/lib/mappers/session/Session";
 import { config } from "@/lib/config";
+import { SessionTag } from "../session/SessionTagsElement";
+import { SessionTagList } from "../session/SessionTagsList";
 
 /**
  * Simlet (Simple Study) mapper class representing a research study.
@@ -68,7 +70,7 @@ export class Simlet {
     /**
      * Array of tags for categorizing the study
      */
-    tags: string[] = [];
+    tags: SessionTag[] = [];
 
     createdAt?: Date;
     updatedAt?: Date;
@@ -112,9 +114,6 @@ export class Simlet {
     }
 
     async init() {
-        //Additional initialization logic can be added here if needed in the future
-        const tagIds = await db.Functions.runViewQuery(db.Views.Simlet.tagsBySimletId, { simlet_id: this.simlet_id })
-        this.tags = tagIds.map((row: any) => row.tag_name) || [];
         const groupIds = await db.Functions.runViewQuery(db.Views.Simlet.groupIdsBySimletId, { simlet_id: this.simlet_id })
         this.groups = groupIds.map((row: any) => row.group_id) || [];
         if(this.is_admin) {
@@ -124,6 +123,7 @@ export class Simlet {
             const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletIdAndUserId, { simlet_id: this.simlet_id, current_user_id: this.current_user_id});
             this.sessions = sessionIds.map((row: any) => row.session_id) || [];
         }
+        this.tags = await SessionTagList.getSessionsTags(this.sessions, this.current_user_id as number);
     }
     
     static async getAdminSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
@@ -469,7 +469,7 @@ export class Simlet {
             simlet_supervisor_id: this.simlet_supervisor_id,
             sessions: this.sessions,
             groups: this.groups,
-            tags: this.tags,
+            tags: this.tags.map(tag => tag.toJSON()),
             createdAt: this.createdAt,
             updatedAt: this.updatedAt
         };

@@ -25,6 +25,7 @@ import activitiesRoutes from '@/routes/activities/activities.routes';
 import limesurveyRoutes from '@/routes/limesurvey/limesurvey.routes';
 import activitiesTypesRoutes from '@/routes/activitiesTypes/activitiesTypes.routes';
 import allocatorsTypesRoutes from '@/routes/allocatorsTypes/allocatorsTypes.routes';
+import tagsRoutes from '@/routes/tags/tags.router';
 import { errorMiddleware } from '@/middlewares/error.middleware';
 import { auth, roleAllowed } from "@/middlewares/auth.middleware";
 import { logger } from '@/lib/logger';
@@ -79,5 +80,6 @@ app.use('/activities', activitiesRoutes);
 app.use('/limesurvey', limesurveyRoutes);
 app.use('/activitytypes', activitiesTypesRoutes);
 app.use('/allocatortypes', allocatorsTypesRoutes);
+app.use('/tags', tagsRoutes);
 
 app.use(errorMiddleware);

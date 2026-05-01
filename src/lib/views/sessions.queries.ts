@@ -18,6 +18,29 @@ const queries: Record<string, QueryTemplate> = {
             },
         },
     },
+    IdsBySimletIdAndUserId: {
+        description: "Get all Session IDs of a SIMLET by its ID",
+        sql: `
+        SELECT session_id
+        FROM v_simlet_sessions_users_permissions
+        WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
+        ORDER BY session_order
+        `,
+        params: {
+            simlet_id: {
+                type: "number",
+                required: true,
+                description: "Simlet Identifier",
+                example: 1,
+            },
+            current_user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+        },
+    },
   tagsBySessionId: {
     description: "Get all tags of a Session by its ID",
     sql: `

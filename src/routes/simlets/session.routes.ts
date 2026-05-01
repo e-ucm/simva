@@ -41,6 +41,8 @@ router.patch("/:session_id", SessionControler.patchSimletSession);
 router.delete("/:session_id", SessionControler.deleteSimletSession);
 router.get("/:session_id/participants", SessionControler.getSimletSessionParticipants);
 router.post("/:session_id/activate", SessionControler.activateSimletSession);
+router.post("/:session_id/tags/:tag_id", SessionControler.addTagForUser);
+router.delete("/:session_id/tags/:tag_id", SessionControler.deleteTagForUser);
 
 // Mount sub-routers
 router.use("/:session_id/permissions", sessionPermissionsRouter);

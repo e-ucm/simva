@@ -226,3 +226,53 @@ export async function deleteSimletSession(
     next(err);
   }
 }
+
+export async function addTagForUser(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    const tag_id = parseInt(req.params.tag_id as string);
+    let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    logger.debug({simletId, sessionId, userId: currentUser?.user_id, tag_id} , "Adding tag for user in session for simlet ID and user ID");
+    let tags;
+    if (!access.allocated) {
+      tags = await sessionService.addTagForUser(simletId, sessionId, access.is_admin, access.currentUserId, tag_id);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
+    logger.debug({tags} , "Tag added for user in session for simlet ID and user ID");
+    res.json(tags.map(t => t.toJSON()));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteTagForUser(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    const tag_id = parseInt(req.params.tag_id as string);
+    let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    logger.debug({simletId, sessionId, userId: currentUser?.user_id, tag_id} , "Deleting tag for user in session for simlet ID and user ID");
+    let tags;
+    if (!access.allocated) {
+      tags = await sessionService.deleteSimletTagForUser(simletId, sessionId, access.is_admin, access.currentUserId, tag_id);
+    } else {
+      throw new AuthentificationError("Invalid user role");
+    }
+    logger.debug({tags} , "Tag deleted for user in session for simlet ID and user ID");
+    res.json(tags.map(t => t.toJSON()));
+  } catch (err) {
+    next(err);
+  }
+}

@@ -8,6 +8,8 @@ import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPer
 import { SimletParticipant } from "../simlet/SimletParticipant";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { Op } from 'sequelize';
+import { SessionTagList } from "./SessionTagsList";
+import { SessionTag } from "./SessionTagsElement";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -96,7 +98,7 @@ export class Session {
     /**
      * Array of tags for categorizing the session
      */
-    tags?: string[] = [];
+    tags: SessionTag[] = [];
     
     allocated_user: boolean;
     allocated_user_id?: number;
@@ -152,13 +154,26 @@ export class Session {
      */
     async init(): Promise<void> {
         if(!this.allocated_user) {
-            //Additional initialization logic can be added here if needed in the future
-            const tagIds = await db.Functions.runViewQuery(db.Views.Session.tagsBySessionId, { session_id: this.session_id })
-            this.tags = tagIds.map((row: any) => row.tag_name) || [];
-            const sessionIds = await db.Functions.runViewQuery(db.Views.Activity.IdsBySessionId, { session_id: this.session_id })
-            this.activities = sessionIds.map((row: any) => row.activity_id) || [];
+            const activititiesIds = await db.Functions.runViewQuery(db.Views.Activity.IdsBySessionId, { session_id: this.session_id })
+            this.activities = activititiesIds.map((row: any) => row.activity_id) || [];
+            this.tags = await SessionTagList.getSessionTags(this.session_id, this.current_user_id as number);
         }
     }
+
+    async addTagToList(tag_id: number): Promise<SessionTag[]> {
+        this.canEdit();
+        let tag = await SessionTagList.addTag(this.session_id, tag_id, this.current_user_id as number);
+        this.tags.push(tag);
+        return this.tags;
+    }
+
+    async deleteTagFromList(tag_id: number): Promise<SessionTag[]> {
+        this.canEdit();
+        let tag = await SessionTagList.getSessionTagFromList(tag_id, this.current_user_id as number);
+        await tag.delete();
+        this.tags = this.tags.filter(t => t.tag_id !== tag_id);
+        return this.tags || [];
+    } 
 
     static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string): Promise<Session[]> {
         let sessions;

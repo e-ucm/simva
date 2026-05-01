@@ -18,10 +18,11 @@ import { Sequelize, Model } from "sequelize";
  * @property {string} tag_name - Display name of the session tag
  * @property {string} tag_color - Color code for visual distinction of the session tag
  */
-export class SessionTagsList extends Model {
+export class SessionTagsElement extends Model {
   declare tag_id: number;
   declare tag_name: string;
   declare tag_color: string;
+  declare user_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -30,26 +31,26 @@ export class SessionTagsList extends Model {
  * Factory function to initialize the SessionTagsList model with Sequelize.
  * Creates the session tags lookup table for session categorization.
  * 
- * @function SessionTagsListFactory
+ * @function SessionTagsElementFactory
  * @param {Sequelize} sequelize - The Sequelize instance
  * @param {typeof import("sequelize").DataTypes} DataTypes - Sequelize data types
- * @returns {typeof SessionTagsList} The initialized SessionTagsList model
+ * @returns {typeof SessionTagsElement} The initialized SessionTagsElement model
  * 
  * @example
  * ```typescript
- * const SessionTagsList = SessionTagsListFactory(sequelize, DataTypes);
- * await SessionTagsList.create({
+ * const SessionTagsElement = SessionTagsElementFactory(sequelize, DataTypes);
+ * await SessionTagsElement.create({
  *   tag_name: 'collaborative-learning',
  *   tag_color: '#FF5733'
  * });
  * ```
  */
 
-export function SessionTagsListFactory(
+export function SessionTagsElementFactory(
   sequelize: Sequelize,
   DataTypes: typeof import("sequelize").DataTypes
 ) {
-  SessionTagsList.init({
+  SessionTagsElement.init({
     tag_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -61,6 +62,10 @@ export function SessionTagsListFactory(
     },
     tag_color: {
       type: DataTypes.STRING,
+      allowNull: false,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     createdAt: {
@@ -80,5 +85,5 @@ export function SessionTagsListFactory(
     timestamps: true,
   });
 
-  return SessionTagsList;
+  return SessionTagsElement;
 }

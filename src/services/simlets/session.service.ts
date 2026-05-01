@@ -16,6 +16,7 @@ import { Simlet } from "@/lib/mappers/simlet/Simlet";
 import { Session } from "@/lib/mappers/session/Session";
 import { ValidationError } from "@/lib/errors/appErrors";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
+import { SessionTag } from "@/lib/mappers/session/SessionTagsElement";
 
 /**
  * Retrieves all sessions within a simlet.
@@ -246,4 +247,16 @@ export async function activateSession(simletId: number, sessionId: number, is_ad
 export async function allocateToSessionSimlet(simletId: number, group_id: number, sessionId: number, is_admin: boolean, id: number, current_user_id?: number): Promise<SimletGroup> {
   const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.allocateToSession(group_id, sessionId, id);
+}
+
+export async function addTagForUser(simletId: number, sessionId: number, is_admin: boolean, current_user_id: number, tag_id: number): Promise<SessionTag[]> {
+   const session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
+   let tags = await session.addTagToList(tag_id);
+   return tags;
+}
+
+export async function deleteSimletTagForUser(simletId: number, sessionId: number, is_admin: boolean, current_user_id: number, tag_id: number): Promise<SessionTag[]> {
+  const session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
+  const tags = await session.deleteTagFromList(tag_id);
+  return tags;
 }

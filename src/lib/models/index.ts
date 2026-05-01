@@ -39,7 +39,7 @@ import { GameplayActivitiesTemplateFactory } from "@/lib/models/templates/gamepl
 import { LimesurveyActivitiesTemplateFactory } from "@/lib/models/templates/limesurveyActivitiesTemplate.model";
 import { ActivityTemplateTagsFactory } from "@/lib/models/templates/activityTemplateTags.model";
 import { ActivityTemplateTagsListFactory } from "@/lib/models/templates/activityTemplateTagsList.model";
-import { SessionTagsListFactory } from "@/lib/models/tags/sessionTagsList.model";
+import { SessionTagsElementFactory } from "@/lib/models/tags/sessionTagsList.model";
 
 /**
  * Initialize all SIMVA models with the provided Sequelize instance.
@@ -92,7 +92,8 @@ export function initializeModels(
     Sessions: SessionFactory(sequelize, DataTypes),
     SessionDates: SessionDatesFactory(sequelize, DataTypes),
     SessionPermissions: SessionPermissionsFactory(sequelize, DataTypes),
-    SessionTags: SessionTagsFactory(sequelize, DataTypes),
+    SessionTagsList: SessionTagsFactory(sequelize, DataTypes),
+    SessionTagsElement: SessionTagsElementFactory(sequelize, DataTypes),
     Allocators: AllocatorFactory(sequelize, DataTypes),
     ExperimentalParticipants: ExperimentalParticipantsFactory(sequelize, DataTypes),
     RandomAllocators: RandomAllocatorsFactory(sequelize, DataTypes),
@@ -103,6 +104,5 @@ export function initializeModels(
     LimesurveyActivitiesTemplates: LimesurveyActivitiesTemplateFactory(sequelize, DataTypes),
     ActivityTemplateTags: ActivityTemplateTagsFactory(sequelize, DataTypes),
     ActivityTemplateTagsList: ActivityTemplateTagsListFactory(sequelize, DataTypes),
-    SessionTagsList: SessionTagsListFactory(sequelize, DataTypes),
   };
 }
