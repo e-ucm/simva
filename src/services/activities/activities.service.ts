@@ -133,6 +133,11 @@ export async function updateActivity(activityId: number, allocated: boolean, is_
     return Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
 }
 
+export async function deleteActivity(activityId: number, allocated: boolean, is_admin: boolean, current_user_id?: number): Promise<void> {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
+    await activity.remove();
+}
+
 export async function getPresignedUrlForActivity(activityId: number, allocated: boolean, is_admin: boolean, current_user_id?: number): Promise<string> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
     return activity.generatePresignedFileUrl();

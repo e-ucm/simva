@@ -21,7 +21,7 @@ const router: Router = Router();
 //router.post("/", activitiesControlers.createActivity);
 //router.get("/:activity_id/export", activitiesControlers.exportActivity);
 //router.patch("/:activity_id", activitiesControlers.updateActivity);
-//router.delete("/:activity_id", activitiesControlers.deleteActivity);
+router.delete("/:activity_id", activitiesControlers.deleteActivity);
 //router.get("/:activity_id/surveylanguages", activitiesControlers.getSurveyLanguagesForActivity);
 //router.get("/:activity_id/usersurveylist", activitiesControlers.getUserSurveyListForActivity);
 //router.patch("/:activity_id/surveyowner", activitiesControlers.setSurveyOwnerForActivity);

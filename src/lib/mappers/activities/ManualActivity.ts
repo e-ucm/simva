@@ -170,6 +170,16 @@ export class ManualActivity extends Activity {
 		return super.getResults(type, participants_id);
 	}
 
+	async remove(): Promise<void> {
+		const manualActivity = await db.Tables.ManualActivities.findOne({
+			where: { activity_id: this.activity_id }
+		});
+		if(manualActivity){
+			await manualActivity.destroy();
+		}
+		await super.remove();
+	}
+	
 	toJSON(): object {
 		return {
 			...super.toJSON(),

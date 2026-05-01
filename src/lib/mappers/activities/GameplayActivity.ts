@@ -291,6 +291,15 @@ export class GamePlayActivity extends Activity {
 		}
 	}
 
+	async remove(): Promise<void> {
+		const gameplayActivity = await db.Tables.GamePlayActivities.findOne({
+			where: { activity_id: this.activity_id }
+		});
+		if(gameplayActivity){
+			await gameplayActivity.destroy();
+		}
+		await super.remove();
+	}
 
 	/**
 	 * Converts the GamePlayActivity instance to a JSON representation.

@@ -303,6 +303,16 @@ export class LimesurveyActivity extends Activity {
 			throw new NotFoundError(`Error the file ${path} don't exist in minio`);
 		}
 	}
+
+	async remove(): Promise<void> {
+		const limesurveyActivity = await db.Tables.LimesurveyActivities.findOne({
+			where: { activity_id: this.activity_id }
+		});
+		if(limesurveyActivity){
+			await limesurveyActivity.destroy();
+		}
+		await super.remove();
+	}
 	
 	/**
 	 * Converts the LimesurveyActivity instance to a JSON representation.

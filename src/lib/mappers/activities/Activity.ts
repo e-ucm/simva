@@ -374,6 +374,10 @@ export class Activity {
 	 * ```
 	 */
 	async remove(): Promise<void> {
+		const completion = await ActivityCompletion.getAllFromDbData(this.activity_id, 'all');
+		for(const c of completion) {
+			await c.delete();
+		}
 		let activity = await db.Tables.Activities.findOne({ where: { activity_id: this.activity_id } });
 		if (!activity) {
 			throw new NotFoundError(`Activity with ID ${this.activity_id} not found`);

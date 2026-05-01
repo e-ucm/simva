@@ -470,6 +470,25 @@ export async function updateActivity(
   }
 }
 
+export async function deleteActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const currentUser = req.user?.sql;
+    const activityId = parseInt(req.params.activity_id as string);
+    const access = getAccess(currentUser);
+    if (access.allocated) {
+      throw new AuthentificationError("Students cannot delete activities");
+    }
+    await activitiesService.deleteActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
+    return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getTrackerConfigForActivity(
   req: AuthenticatedRequest,
   res: Response,
