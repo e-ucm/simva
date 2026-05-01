@@ -134,7 +134,7 @@ export class LimesurveyActivity extends Activity {
 	async activate(activate: boolean): Promise<void> {
 		await super.activate(activate);
 		if(activate) {
-			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, `${config.api.url}/activities/${this.activity_id}`);
+			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, `${config.api.url}/activities/${this.activity_id}/lrs`);
 		} else {
 			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, "");	
 		}

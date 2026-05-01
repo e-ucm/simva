@@ -148,7 +148,7 @@ export class GamePlayActivity extends Activity {
 						}
 						customUri = this.game_url;
 						customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)); //OK
-						customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)); //OK
+						customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)); //OK
 						customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`)); //OK
 						customUri = customUri.replace('{tokenEndpoint}', encodeURIComponent(`${config.sso.tokenUrl}`)); //OK
 						customUri = customUri.replace('{userToken}', participant_id.toString()); //OK
@@ -156,8 +156,8 @@ export class GamePlayActivity extends Activity {
 						customUri = customUri.replace('{studyId}', this.simlet_id.toString()); //OK
 						customUri = customUri.replace('{username}', participant_id.toString()); //OK
 					} else {
-						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}`)}`
-							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
+						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
+							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)}`
 							+ `&backup_type=XAPI`
 							+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
 							+ `&actor_user=${usernames.get(participant_id)}`
