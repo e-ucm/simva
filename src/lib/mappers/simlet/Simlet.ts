@@ -117,8 +117,13 @@ export class Simlet {
         this.tags = tagIds.map((row: any) => row.tag_name) || [];
         const groupIds = await db.Functions.runViewQuery(db.Views.Simlet.groupIdsBySimletId, { simlet_id: this.simlet_id })
         this.groups = groupIds.map((row: any) => row.group_id) || [];
-        const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id })
-        this.sessions = sessionIds.map((row: any) => row.session_id) || [];
+        if(this.is_admin) {
+            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id });
+            this.sessions = sessionIds.map((row: any) => row.session_id) || [];
+        } else {
+            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletIdAndUserId, { simlet_id: this.simlet_id, current_user_id: this.current_user_id});
+            this.sessions = sessionIds.map((row: any) => row.session_id) || [];
+        }
     }
     
     static async getAdminSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
@@ -331,7 +336,6 @@ export class Simlet {
         await group.allocateToSession(sessionId, group_id_or_participant_id);
         return group;
     }
-
 
     async createGroupParticipant(groupId: number, body: Partial<SimletParticipant>): Promise<SimletParticipant> {
         this.canEdit();

@@ -143,6 +143,19 @@ LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
 LEFT JOIN vv_user_permissions up ON sim.simlet_id = up.object_id AND up.object_type = "SIMLET"
 GROUP BY up.user_id, up.username, up.permission, sim.simlet_id;
 
+DROP VIEW IF EXISTS v_simlet_sessions_users_permissions;
+CREATE VIEW v_simlet_sessions_users_permissions AS
+SELECT 
+    up.user_id as current_user_id,
+    up.username as current_user_username,
+    up.permission as current_user_permission,
+    up.permission_type as current_user_permission_type,
+    ses.simlet_id,
+    ses.session_id,
+    ses.session_order
+FROM Sessions ses
+LEFT JOIN vv_user_permissions up ON ses.session_id = up.object_id AND up.object_type = "SESSION";
+
 DROP VIEW IF EXISTS v_complete_sessions_users_permissions;
 CREATE VIEW v_complete_sessions_users_permissions AS
 SELECT 
@@ -164,8 +177,7 @@ SELECT
     ses.updatedAt
 FROM Sessions ses
 LEFT JOIN vv_user_permissions up ON ses.session_id = up.object_id AND up.object_type = "SESSION"
-LEFT JOIN Users u ON ses.session_sandbox_user_id = u.user_id
-GROUP BY ses.simlet_id, ses.session_id;
+LEFT JOIN Users u ON ses.session_sandbox_user_id = u.user_id;
 
 DROP VIEW IF EXISTS v_complete_activities_users_permissions;
 CREATE VIEW v_complete_activities_users_permissions AS
