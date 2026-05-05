@@ -10,6 +10,7 @@ import { Session } from "@/lib/mappers/session/Session";
 import { config } from "@/lib/config";
 import { SessionTag } from "../session/SessionTagsElement";
 import { SessionTagList } from "../session/SessionTagsList";
+import { SimletShlink } from "./SimletShlink";
 
 /**
  * Simlet (Simple Study) mapper class representing a research study.
@@ -458,6 +459,33 @@ export class Simlet {
             return await group.export(withData);
         }));
         return simletData;
+    }
+
+    async createShlinkURL(shlink: any): Promise<SimletShlink> {
+        this.canEdit();
+        shlink.longUrl = `${config.externalUrl}/scheduler/${this.simlet_id}`;
+        shlink.title = `scheduler_${this.simlet_id}`;
+        shlink.tag = 'simlet';
+        return await SimletShlink.createDbData(this.simlet_id, shlink);
+    }
+
+    async getShlinkURL(): Promise<SimletShlink> {
+        return await SimletShlink.getFromDbData(this.simlet_id);
+    }
+
+    async updateShlinkURL(shlink: any): Promise<SimletShlink> {
+        this.canEdit();
+        let existingShlink = await SimletShlink.getFromDbData(this.simlet_id);
+        if(!existingShlink) {
+            throw new NotFoundError(`Shlink URL for simlet ID ${this.simlet_id} not found.`);
+        }
+        return await existingShlink.updateURL(shlink);
+    }
+
+    async deleteShlinkURL(): Promise<void> {
+        this.canEdit();
+        let shlink = await SimletShlink.getFromDbData(this.simlet_id);
+        await shlink.deleteShLink();
     }
 
     toJSON(): object {

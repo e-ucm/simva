@@ -17,6 +17,7 @@ import * as SimletControler from "@/controlers/simlets/simlet.controler";
 import simletPermissionsRouter from "./simlet.permissions.routes";
 import sessionRouter from "./session.routes";
 import simletGroupsRouter from "./simlet.groups.routes";
+import simletShlinkRouter from "./simlet.shlink.routes";
 
 /**
  * Express router for simlet-related API endpoints.
@@ -81,5 +82,6 @@ router.get("/:simlet_id/tracker_config", SimletControler.getTrackerConfig);
 router.use("/:simlet_id/permissions", simletPermissionsRouter);
 router.use("/:simlet_id/sessions", sessionRouter);
 router.use("/:simlet_id/groups", simletGroupsRouter);
+router.use("/:simlet_id/shlink", simletShlinkRouter);
 
 export default router;

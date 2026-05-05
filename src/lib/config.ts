@@ -194,7 +194,8 @@ config.shlink = {};
 config.shlink.serverHost = process.env.SHLINK_SERVER_HOST || 'shlink.external.test';
 config.shlink.port = process.env.SHLINK_PORT || '443';
 config.shlink.protocol = process.env.SHLINK_PROTOCOL || 'https';
-config.shlink.serverApiKey = process.env.SHLINK_SERVER_API_KEY || 'password';
+config.shlink.url = config.shlink.protocol + '://' + config.shlink.serverHost + ((ignored_ports.indexOf(Number(config.shlink.port)) !== -1) ? '' : (':' + config.shlink.port));
+config.shlink.apikey = process.env.SHLINK_SERVER_API_KEY || 'password';
 
 /**
  * Exported configuration object.

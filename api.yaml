@@ -660,6 +660,121 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
+  /simlets/{simletid}/shlink:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets the shlink URL for the simlet
+      operationId: getSimletShlink
+      description: |
+        Obtains the shlink URL for the simlet
+      responses:
+        '200':
+          description: shlink URL obtained
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shlinkMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+    post:
+      tags:
+        - administrators
+        - teachers
+      summary: creates a shlink URL for the simlet
+      operationId: createSimletShlink
+      description: |
+        Creates a shlink URL for the simlet
+      responses:
+        '200':
+          description: shlink URL created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shlinkMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shlink'
+    patch:
+      tags:
+        - administrators
+        - teachers
+      summary: updates the shlink URL for the simlet
+      operationId: updateSimletShlink
+      description: |
+        Updates the shlink URL for the simlet
+      responses:
+        '200':
+          description: shlink URL updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/shlinkMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/shlink'
+    delete:
+      tags:
+        - administrators
+        - teachers
+      summary: deletes the shlink URL for the simlet
+      operationId: deleteSimletShlink
+      description: |
+        Deletes the shlink URL for the simlet
+      responses:
+        '204':
+          description: shlink URL deleted
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
   /simlets/{simletid}/groups:
     get:
       tags:
@@ -4323,6 +4438,64 @@ components:
               example: 123
           randomize_session_allocation:
             $ref: '#/components/schemas/groupAllocatorRandomizeSessionAllocation'
+    shlink:
+      oneOf:
+        - type: object
+          required:
+          - length
+          properties:
+            length:
+              type: integer
+              example: 5
+        - type: object
+          required:
+          - customSlug
+          properties:
+            customSlug:
+              type: string
+              example: "customSlug123"
+    shlinkMapper:
+      type: object
+      required:
+        - shortUrl
+        - shortCode
+        - shortValidDate
+        - shortExpirationDate
+        - shortTitle
+        - shortDomain
+        - createdAt
+        - updatedAt
+      properties:
+        shortUrl:
+          type: string
+          example: "https://shlink.test/abc123"
+        shortCode:
+          type: string
+          example: "abc123"
+        shortValidDate:
+          type: string
+          format: date-time
+          example: "2024-07-21T17:32:28Z"
+          nullable: true
+        shortExpirationDate:        
+          type: string
+          format: date-time
+          example: "2024-07-21T17:32:28Z"
+          nullable: true
+        shortTitle: 
+          type: string
+          example: "Short URL for session 123"
+        shortDomain: 
+          type: string
+          example: "https://shlink.test"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-07-21T17:32:28Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-07-21T17:32:28Z"
     simlet:
       type: object
       properties:
