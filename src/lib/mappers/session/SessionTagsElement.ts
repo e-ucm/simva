@@ -11,18 +11,22 @@ export class SessionTag {
     createdAt: Date;
     updatedAt: Date;
 
-    constructor(tag: any, current_user_id: number) {
+    constructor(tag: any, current_user_id?: number) {
         this.tag_id = tag.tag_id;
         this.tag_name = tag.tag_name;
         this.tag_color = tag.tag_color;
         this.tag_user_id = tag.user_id;
-        this.is_current_user = tag.user_id === current_user_id;
+        this.is_current_user = current_user_id !== undefined && tag.user_id === current_user_id;
         this.createdAt = tag.createdAt;
         this.updatedAt = tag.updatedAt;
     }
 
-    static async getTags(tagsId: number[], current_user_id: number): Promise<SessionTag[]> {
-        const tags = await db.Tables.SessionTagsElement.findAll({ where: { tag_id: { [Op.in]: tagsId }, user_id: current_user_id } });
+    static async getTags(tagsId: number[], current_user_id?: number): Promise<SessionTag[]> {
+        const where: any = { tag_id: { [Op.in]: tagsId } };
+        if (current_user_id !== undefined) {
+            where.user_id = current_user_id;
+        }
+        const tags = await db.Tables.SessionTagsElement.findAll({ where });
         return tags.map((tag: any) => new SessionTag(tag, current_user_id));
     }
 

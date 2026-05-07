@@ -1,7 +1,5 @@
 import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
 import { SessionTag } from './SessionTagsElement';
-import { Session } from 'node:inspector';
 import { NotFoundError, ValidationError } from '@/lib/errors/appErrors';
 import { Op } from 'sequelize';
 
@@ -16,7 +14,7 @@ export class SessionTagList {
         this.current_user_id = current_user_id;
     }
 
-    static async getSessionsTags(sessions_id: number[], current_user_id: number): Promise<SessionTag[]> {
+    static async getSessionsTags(sessions_id: number[], current_user_id?: number): Promise<SessionTag[]> {
         if(!Array.isArray(sessions_id) || sessions_id.length === 0) {
             return [];
         }
@@ -34,7 +32,7 @@ export class SessionTagList {
         return await SessionTag.getTags(tagsId, current_user_id);
     }
 
-    static async getSessionTags(session_id: number, current_user_id: number): Promise<SessionTag[]> {
+    static async getSessionTags(session_id: number, current_user_id?: number): Promise<SessionTag[]> {
         const tags = await db.Tables.SessionTagsList.findAll({ where: { session_id } });
         let tagsId = tags
             .map((row: any) => Number(row.tag_id))
