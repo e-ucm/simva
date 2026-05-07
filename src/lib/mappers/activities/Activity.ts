@@ -711,10 +711,10 @@ export class Activity {
 				logger.warn(`Unsupported verb ${verb} for xAPI trace`);
 		}
 		if (statement) {
-			statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/simlets/${this.simlet_id}`, jsTracker.ALL.ACTIVITYTYPES.COURSE);
-			statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING, `${config.externalUrl}/sessions/${this.session_id}`, jsTracker.ALL.ACTIVITYTYPES.LESSON);
+			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/simlets/${this.simlet_id}`, jsTracker.ALL.ACTIVITYTYPES.COURSE);
+			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING, `${config.externalUrl}/sessions/${this.session_id}`, jsTracker.ALL.ACTIVITYTYPES.LESSON);
 			logger.info(statement? statement.statement.toXAPI() : "No statement generated", "XAPI Statement:");
-			lrsclient.sendTracesToLRS([statement.statement.toXAPI()], this.activity_id);
+			lrsclient.sendTracesToLRS([lrsclient.updateMissingTraceElements(this.current_user_username?this.current_user_username:"unknown", statement!, this.simlet_id, this.session_id, this.activity_id)]);
 		}
 		
 	}
@@ -817,6 +817,7 @@ export class Activity {
 							if(trace.result && trace.result.completion && Boolean(trace.result.completion)) {
 								await this.setCompletion(true, new Date(trace.timestamp), current_user_id);
 							}
+							lrsclient.flush();
 							break;
 						default:
 							logger.info(`OTHER VERB ${trace.verb.id} for ACTIVITY ${this.activity_type}, no state change applied`);
@@ -833,7 +834,7 @@ export class Activity {
 	}
 
 	async sendStatementsLRSForActivity(current_user_id: number, statements: any): Promise<number[]> {
-		let ids = await lrsclient.setStatement(statements, this.activity_id, (await User.getFromDbData(current_user_id)).username);
+		let ids = await lrsclient.setStatement(statements, this.simlet_id, this.session_id, this.activity_id, (await User.getFromDbData(current_user_id)).username);
 		return ids;
 	}
 

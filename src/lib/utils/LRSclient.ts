@@ -24,6 +24,7 @@ export class LRSClient {
 	filter: InstanceType<typeof ScalableBloomFilter>;
 	readonly #backupPath: string;
 	jstracker!: LRSTracker;
+	flushLRS: boolean = false;
 
 	/**
 	 * Creates a new LRSClient instance
@@ -39,14 +40,29 @@ export class LRSClient {
 
 	async initJSScormTracker() {
 		this.jstracker = new LRSTracker();
-		this.jstracker.trackerSettings.batch_endpoint = `${config.lrs.url}/xapi/`;
-		this.jstracker.trackerSettings.oauth_type = "oauth1";
-		this.jstracker.oauth1.username = config.lrs.username;
-		this.jstracker.oauth1.password = config.lrs.password;
+		this.jstracker.trackerSettings.debug = true;
+		logger.info(config.lrs, 'Initializing JS SCORM Tracker with LRS settings');
+		const lrsEndpoint = (config.lrs.endpoint || '').replace(/\/+$/, '');
+		const lrsUsername = config.lrs.apiKeyDefault;
+		const lrsPassword = config.lrs.apiSecretDefault;
+
+		if (!lrsEndpoint || !lrsUsername || !lrsPassword) {
+			throw new Error('Invalid LRS configuration: endpoint, api key and api secret are required.');
+		}
+
+		this.jstracker.trackerSettings.batch_endpoint = `${lrsEndpoint}/xapi`;
+		this.jstracker.trackerSettings.oauth_type = "OAuth1";
+		logger.info(this.jstracker.trackerSettings, 'JS SCORM Tracker settings configured');
+		this.jstracker.oauth1.username = lrsUsername;
+		this.jstracker.oauth1.password = lrsPassword;
+		logger.info(this.jstracker.oauth1, 'JS SCORM Tracker OAuth settings configured');
 		await this.jstracker.login(); // Authenticate with the LRS before sending any statements
 		this.jstracker.start(); // Initialize the tracker before using it
 	}
 
+	flush() {
+		this.flushLRS = true;
+	}
 	/**
 	 * Loads bloom filter from backup file
 	 * @returns {InstanceType<typeof ScalableBloomFilter> | null} Loaded filter or null if not found/invalid
@@ -98,6 +114,71 @@ export class LRSClient {
 		this.filter = ScalableBloomFilter.fromJSON(data);
 	}
 
+	private normalizeStatementForLRS(statement: any): any {
+		if (!statement || typeof statement !== 'object') {
+			return statement;
+		}
+
+		const normalized = { ...statement };
+		const score = normalized?.result?.score;
+		if (score && typeof score === 'object') {
+			const toNumber = (value: any): number | undefined => {
+				if (value === null || value === undefined || value === '') {
+					return undefined;
+				}
+				const parsed = typeof value === 'number' ? value : Number(value);
+				return Number.isFinite(parsed) ? parsed : undefined;
+			};
+
+			const scaled = toNumber(score.scaled);
+			if (scaled !== undefined) {
+				score.scaled = Math.max(-1, Math.min(1, scaled));
+			}
+
+			const raw = toNumber(score.raw);
+			if (raw !== undefined) {
+				score.raw = raw;
+			}
+
+			const min = toNumber(score.min);
+			if (min !== undefined) {
+				score.min = min;
+			}
+
+			const max = toNumber(score.max);
+			if (max !== undefined) {
+				score.max = max;
+			}
+		}
+
+		const definition = normalized?.object?.definition;
+		if (definition && typeof definition === 'object') {
+			const normalizeInteractionComponents = (components: any, prefix: string): any => {
+				if (!Array.isArray(components)) {
+					return components;
+				}
+				return components.map((component: any, index: number) => {
+					const normalizedComponent = (component && typeof component === 'object') ? { ...component } : { id: component };
+					const candidateId = normalizedComponent?.id;
+					if (candidateId === null || candidateId === undefined || String(candidateId).trim() === '') {
+						normalizedComponent.id = `${prefix}_${index + 1}`;
+					} else {
+						normalizedComponent.id = String(candidateId);
+					}
+					return normalizedComponent;
+				});
+			};
+
+			definition.scale = normalizeInteractionComponents(definition.scale, 'likert');
+			definition.choices = normalizeInteractionComponents(definition.choices, 'choice');
+			definition.source = normalizeInteractionComponents(definition.source, 'source');
+			definition.target = normalizeInteractionComponents(definition.target, 'target');
+			definition.steps = normalizeInteractionComponents(definition.steps, 'step');
+		}
+
+		return normalized;
+	}
+
 	generateStatementId(trace: any): string {
 		var traceid;
 		if(trace.id == null) {
@@ -117,7 +198,10 @@ export class LRSClient {
 	 */
 	registerShutdownHandler(): void {
 		const shutdown = () => {
-			logger.info('Saving bloom filter before shutdown...');
+			logger.info('Shutdown signal received, flushing data and saving bloom filter...');
+			if(this.jstracker) {
+				this.jstracker.flush();
+			}
 			this.saveToFile();
 		};
 		process.on('SIGTERM', shutdown);
@@ -125,28 +209,44 @@ export class LRSClient {
 		process.on('beforeExit', shutdown);
 	}
 
-	updateMissingTraceElements(participant: string, trace : any) {
-		let statement = this.jstracker.fromXAPI(trace); // Initialize the statement builder with the trace data
+	updateMissingTraceElements(participant: string, trace : any, simletId: number, sessionId: number, activityId: number): any {
+		let updatedStatement = trace;
+		logger.info('Updating missing trace elements');
         const now = new Date();
         if(!trace.id) {
-            statement.withId(this.generateStatementId(trace));
+            updatedStatement.withId(this.generateStatementId(trace));
         }
         if(!trace.timestamp) {
-            statement.withTimestamp(now.toISOString());
+            updatedStatement.withTimestamp(now.toISOString());
         }
         if(!trace.version) {
-            statement.withVersion("1.0.3");
+            updatedStatement.withVersion("1.0.3");
         }
-		statement.withAutorityAccount(participant, config.externalUrl);
-		statement.withStored(now.toISOString());
-        return trace;
+		updatedStatement.withAutorityAccount(participant, config.externalUrl);
+		updatedStatement.withStored(now.toISOString());
+		updatedStatement.withContextActivity(
+					this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
+					`${config.externalUrl}/activities/${activityId}`,
+					'course'
+				)
+				.withContextActivity(
+					this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+					`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}`,
+					'course'
+				)
+				.withContextActivity(
+					this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+					`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}/activities/${activityId}`,
+					'course'
+				)
+        return updatedStatement;
     }
 
 	async sendTracesToKafka(traces: any[], activityId: number): Promise<number[]> {
 		let payloads = [];
 		let responses = [];
 		for (var i = traces.length - 1; i >= 0; i--) {
-			let trace = traces[i];
+			let trace = traces[i].toXAPI();
 			responses.push(trace.id);
 			payloads.push(JSON.stringify(trace));
 		}
@@ -154,42 +254,49 @@ export class LRSClient {
 		return responses;
 	}
 	
-	async sendTracesToLRS(traces: any[], activityId: number): Promise<number[]> {
-		if(!this.jstracker) {
-			await this.initJSScormTracker();
-		}
+	async sendTracesToLRS(traces: any[]): Promise<number[]> {
 		let ids: number[] = [];
 		for (var i = traces.length - 1; i >= 0; i--) {
-			let trace = traces[i];
-			logger.info({ trace, activityId }, 'Sending trace to LRS');
-			// Assuming the correct method is to use jstracker.scorm().sendXAPI or similar
-			// Replace with the correct method for your JSScormTracker version
-			this.jstracker.fromXAPI(trace).withContextActivity(this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/activities/${activityId}`, 'course').send();
-			ids.push(trace.id);
+			let traceBuilder = traces[i];
+			logger.info('Sending trace to LRS');
+			await traceBuilder
+				.send();
+			ids.push(traceBuilder.statement?.id);
+		}
+		await this.jstracker.flush();
+		if(this.flushLRS) {
+			await this.jstracker.flush();
+			this.flushLRS = false;
 		}
 		return ids;
 	}
 
-	async setStatement(statement: any, activityId: number, participant: string): Promise<number[]> {
+	async setStatement(statement: any, simletId: number, sessionId: number, activityId: number, participant: string): Promise<number[]> {
+		if (config.lrs.enabled && !this.jstracker) {
+			await this.initJSScormTracker();
+		}
 		let toret: number[] = [];
         if(Array.isArray(statement)){
-            var traces= [];
+            const traces: any[] = [];
             for(let traceId = 0; traceId < statement.length; traceId++) {
-                var trace = statement[traceId];
-                traces.push(this.updateMissingTraceElements(participant, trace));
+				const normalizedTrace = this.normalizeStatementForLRS(statement[traceId]);
+				const traceBuilder = this.jstracker.fromXAPI(normalizedTrace);
+                traces.push(this.updateMissingTraceElements(participant, traceBuilder, simletId, sessionId, activityId));
             }
 			let response: number[] = [];
 			if(config.lrs.enabled) {
-            	 response = await this.sendTracesToLRS(traces, activityId);
+            	 response = await this.sendTracesToLRS(traces);
 			} else {
 				response = await this.sendTracesToKafka(traces, activityId);
 			}
             toret = response;
-        } else if(!statement || typeof statement === 'object'){
-            trace = this.updateMissingTraceElements(participant, statement);
+        } else if(statement && typeof statement === 'object'){
+			const normalizedTrace = this.normalizeStatementForLRS(statement);
+			const traceBuilder = this.jstracker.fromXAPI(normalizedTrace);
+            const trace = this.updateMissingTraceElements(participant, traceBuilder, simletId, sessionId, activityId);
             let response: number[] = [];
 			if(config.lrs.enabled) {
-            	 response = await this.sendTracesToLRS([trace], activityId);
+            	 response = await this.sendTracesToLRS([trace]);
 			} else {
 				response = await this.sendTracesToKafka([trace], activityId);
 			}
