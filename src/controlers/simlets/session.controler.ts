@@ -290,7 +290,7 @@ export async function getLRSStatementsForSession(
     const access = getAccess(currentUser);
     logger.debug({simletId, sessionId, userId: currentUser?.user_id} , "Getting LRS statements for session with simlet ID, session ID and user ID");
     let statements= await sessionService.getLRSStatements(simletId, sessionId, access.is_admin, access.currentUserId, req.query);
-    logger.debug({statements} , "LRS statements retrieved for session with simlet ID, session ID and user ID");
+    logger.debug("LRS statements retrieved for session with simlet ID, session ID and user ID");
     res.json(statements);
   } catch (err) {
     next(err);

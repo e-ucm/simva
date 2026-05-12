@@ -855,16 +855,18 @@ export class Activity {
 
 	async getLRSStatements(query: any): Promise<Object> {
 		let client = await lrsclient.getLRSClient();
-		query.activity = this.getLRSActivityId();
-		query.related_activities = true;
 		logger.debug({query}, "Querying LRS for statements with query:");
-		let statements = await client.getStatementByQuery(query);
-		return statements;
-	}
-
-	async getLRSMoreStatements(moreUrl : string): Promise<Object> {
-		let client = await lrsclient.getLRSClient();
-		let statements = await client.getMoreStatements(moreUrl);
+		let statements;
+		if(query.more) {
+			statements = await client.getMoreStatements(query.more);
+		} else {
+			query.activity = this.getLRSActivityId();
+			query.related_activities = true;
+			statements = await client.getStatementByQuery(query);
+		}
+		if(statements.data && statements.data.more !== '') {
+			logger.debug({moreUrl: statements.data.more}, "More statements available at URL:");
+		}
 		return statements;
 	}
 

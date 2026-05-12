@@ -1539,6 +1539,22 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/lrsAgent'
+        - $ref: '#/components/parameters/lrsAttachments'
+        - $ref: '#/components/parameters/lrsAscending'
+        - $ref: '#/components/parameters/lrsActivity'
+        - $ref: '#/components/parameters/lrsFormat'
+        - $ref: '#/components/parameters/lrsRelatedAgents'
+        - $ref: '#/components/parameters/lrsRelatedActivities'
+        - $ref: '#/components/parameters/lrsLimit'
+        - $ref: '#/components/parameters/lrsFrom'
+        - $ref: '#/components/parameters/lrsRegistration'
+        - $ref: '#/components/parameters/lrsSince'
+        - $ref: '#/components/parameters/lrsStatementId'
+        - $ref: '#/components/parameters/lrsUntil'
+        - $ref: '#/components/parameters/lrsVerb'
+        - $ref: '#/components/parameters/lrsVoidedStatementId'
+        - $ref: '#/components/parameters/lrsMore'
   /simlets/{simletid}/permissions:
     get:
       tags:
@@ -2620,6 +2636,22 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/lrsAgent'
+        - $ref: '#/components/parameters/lrsAttachments'
+        - $ref: '#/components/parameters/lrsAscending'
+        - $ref: '#/components/parameters/lrsActivity'
+        - $ref: '#/components/parameters/lrsFormat'
+        - $ref: '#/components/parameters/lrsRelatedAgents'
+        - $ref: '#/components/parameters/lrsRelatedActivities'
+        - $ref: '#/components/parameters/lrsLimit'
+        - $ref: '#/components/parameters/lrsFrom'
+        - $ref: '#/components/parameters/lrsRegistration'
+        - $ref: '#/components/parameters/lrsSince'
+        - $ref: '#/components/parameters/lrsStatementId'
+        - $ref: '#/components/parameters/lrsUntil'
+        - $ref: '#/components/parameters/lrsVerb'
+        - $ref: '#/components/parameters/lrsVoidedStatementId'
+        - $ref: '#/components/parameters/lrsMore'
     post:
       tags:
         - administrators
@@ -2694,38 +2726,6 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
-  /activities/{activityid}/lrs/statements/more:
-    get:
-      tags:
-        - administrators
-        - teachers
-        - students
-        - lrsmanagers
-      summary: gets the statement of the activity
-      operationId: getStatement
-      description: |
-        Get the statement object of the activity for a student
-      responses:
-        '200':
-          description: the result of the students required
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-        '501':
-          $ref: '#/components/responses/NotImplementedError'
-      parameters:
-        - $ref: '#/components/parameters/activityId'
-        - $ref: '#/components/parameters/moreQuery'
   /activities/{activityid}/lrs/agents:
     get:
       tags:
@@ -4052,14 +4052,6 @@ components:
         type: integer
         example: 1234567890
       description: The activity ID
-    moreQuery:
-      name: more
-      in: query
-      required: true
-      schema:
-        type: string
-        example: "https://mylrs.test/activities/1234567890"
-      description: the url to get more information about the activity
     surveyId:
       in: path
       name: surveyid
@@ -4213,6 +4205,125 @@ components:
         If true, the user will be deleted also in keycloak. Only for testing purposes
       schema:
         type: boolean
+    lrsMore:
+      name: more
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Return more statements using this URL provided in the "more" property of the response
+    lrsAgent:
+      name: agent
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter statements by agent or identified group
+    lrsAttachments:
+      name: attachments
+      in: query
+      required: false
+      schema:
+        type: boolean
+      description: Include attachments in the response
+    lrsAscending:
+      name: ascending
+      in: query
+      required: false
+      schema:
+        type: boolean
+      description: Return statements in ascending stored-time order
+    lrsFormat:
+      name: format
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - ids
+          - exact
+          - canonical
+      description: Statement representation format
+    lrsLimit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+      description: Maximum number of xAPI statements to return
+    lrsRelatedAgents:
+      name: related_agents
+      in: query
+      required: false
+      schema:
+        type: boolean
+      description: Include statements related to matching agents
+    lrsRegistration:
+      name: registration
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter statements by registration UUID
+    lrsSince:
+      name: since
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+      description: Return statements stored since this timestamp
+    lrsStatementId:
+      name: statementId
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Id of Statement to fetch
+    lrsUntil:
+      name: until
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+      description: Return statements stored at or before this timestamp
+    lrsVerb:
+      name: verb
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter statements by verb IRI
+    lrsVoidedStatementId:
+      name: voidedStatementId
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Id of voided Statement to fetch
+    lrsActivity:
+        name: activity
+        in: query
+        required: false
+        schema:
+          type: string
+        description: The activity IRI to filter xAPI statements
+    lrsRelatedActivities:
+        name: related_activities
+        in: query
+        required: false
+        schema:
+          type: boolean
+        description: Include statements related to the specified activity
+    lrsFrom:
+        name: from
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Pagination cursor returned by the xAPI statement endpoint
   responses:
     HealthCheckSuccess:
       description: Health check successful

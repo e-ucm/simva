@@ -621,11 +621,16 @@ export class Session {
 
     async getLRSStatements(query: any): Promise<Object> {
         let client = await lrsclient.getLRSClient();
-        query.activity = this.getLRSSessionId();
-        query.related_activities = true;
+        let statements;
         logger.debug({query}, "Querying LRS for statements with query:");
-        let statements = await client.getStatementByQuery(query);
-        logger.debug({statements} , "LRS statements retrieved for session with simlet ID, session ID and user ID");
+        if(query.more) {
+			statements = await client.getMoreStatements(query.more);
+		} else {
+            query.activity = this.getLRSSessionId();
+            query.related_activities = true;
+			statements = await client.getStatementByQuery(query);
+		}
+        logger.debug("LRS statements retrieved for session with simlet ID, session ID and user ID");
         return statements;
     }
 
