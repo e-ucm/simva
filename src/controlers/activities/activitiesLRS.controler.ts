@@ -52,9 +52,7 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
         if(!body || typeof body !== "object") {
             throw new BadRequestError("Invalid request body");
         }
-        const access = currentUser?.role === "lrsmanager"
-            ? { currentUserId: currentUser.user_id as number, is_admin: false, allocated : false, canImpersonate: true }
-            : { ...getAccess(currentUser), canImpersonate: false };
+        const access = getAccess(currentUser);
         let ids: number[] = [];
         if (access.is_admin) {
             ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, access.allocated, activityId, body, access.currentUserId);
@@ -64,7 +62,7 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
                 if(isNaN(postuserId)) {
                     throw new ValidationError("Invalid username in query parameter");
                 }
-                ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, access.allocated, activityId, body, postuserId);
+                ids = await activitiesLRSService.sendStatementsLRSForActivity(postuserId, false, true, activityId, body, access.currentUserId);
             } else {
                 throw new ValidationError("Invalid request body for lrsmanager role");
             }
@@ -88,9 +86,7 @@ export async function putStatementsLRSForActivity(req: AuthenticatedRequest, res
         if(!body || typeof body !== "object") {
             throw new BadRequestError("Invalid request body");
         }
-        const access = currentUser?.role === "lrsmanager"
-            ? { currentUserId: currentUser.user_id as number, is_admin: false, allocated: false, canImpersonate: true }
-            : { ...getAccess(currentUser), canImpersonate: false };
+        const access = getAccess(currentUser);
         let ids: number[] = [];
         if (access.is_admin) {
             ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, access.allocated, activityId, body, access.currentUserId);
@@ -100,7 +96,7 @@ export async function putStatementsLRSForActivity(req: AuthenticatedRequest, res
                 if(isNaN(postuserId)) {
                     throw new ValidationError("Invalid username in query parameter");
                 }
-                ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, access.allocated, activityId, body, postuserId);
+                ids = await activitiesLRSService.sendStatementsLRSForActivity(postuserId, false, true, activityId, body, access.currentUserId);
             } else {
                 throw new ValidationError("Invalid request body for lrsmanager role");
             }

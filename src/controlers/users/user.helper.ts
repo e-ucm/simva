@@ -13,7 +13,7 @@ export function getAccess(currentUser: KeycloakJWTPayload["sql"] | undefined): U
     case "administrator":
       return { allocated: false, is_admin: true, currentUserId: currentUser.user_id as number, canImpersonate: true };
     case "lrsmanager":
-        return { allocated: false, is_admin: false, currentUserId: currentUser.user_id as number, canImpersonate: true };
+        return { allocated: true, is_admin: false, currentUserId: currentUser.user_id as number, canImpersonate: true };
     case "teacher":
       return { allocated: false, is_admin: false, currentUserId: currentUser.user_id as number, canImpersonate: false };
     case "student":
