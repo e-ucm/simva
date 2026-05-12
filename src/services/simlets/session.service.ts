@@ -260,3 +260,8 @@ export async function deleteSimletTagForUser(simletId: number, sessionId: number
   const tags = await session.deleteTagFromList(tag_id);
   return tags;
 }
+
+export async function getLRSStatements(simletId: number, sessionId: number, is_admin: boolean, currentUserId: number, query: any): Promise<Object> {
+  const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
+  return await session.getLRSStatements(query);
+}

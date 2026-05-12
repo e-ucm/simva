@@ -8,6 +8,7 @@ import { Router } from "express";
 const router: Router = Router({ mergeParams: true });
 
 router.get("/statements", activitiesLRSControler.getStatementsLRSForActivity);
+router.get("/statements/more", activitiesLRSControler.getMoreStatementsLRSForActivity);
 router.post("/statements", activitiesLRSControler.postStatementsLRSForActivity);
 router.put("/statements", activitiesLRSControler.putStatementsLRSForActivity);
 router.get("/agents", activitiesLRSControler.getAgentsLRSForActivity);

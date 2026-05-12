@@ -1,72 +1,142 @@
 import { NotFoundError, NotImplementedError } from "@/lib/errors/appErrors";
 import { Activity } from "@/lib/mappers/activities/Activity";
 
-export function getStatementsLRSForActivity(currentUserid: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function getStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, query: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.getLRSStatements(query);
 }
 
-export async function sendStatementsLRSForActivity(activityId: number, body: any, lrsmanagerUserId: number, is_admin: boolean, currentUserId: number): Promise<number[]> {
-    let activity = await Activity.getFromDbData(activityId, true, is_admin, currentUserId);
+export async function getMoreStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, more: string) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.getLRSMoreStatements(more);
+}
+
+export async function sendStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any, lrsmanagerUserId: number): Promise<number[]> {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
     if(!activity) {
         throw new NotFoundError("The user you are trying to set statement to is not a participant");
     }
     if(await activity.canSendStatementsLRS()) {
         await activity.processStatementsForActivity(currentUserId, body);
-        let ids = await activity.sendStatementsLRSForActivity(lrsmanagerUserId, body);
+        let ids = await activity.sendLRSStatements(lrsmanagerUserId, body);
         return ids;
     } else {
         return [];
     }
 }
 
-export function getAgentsLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function getAgentsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.getLRSAgents(params);
 }
 
-export function getAgentsProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function getAgentsProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.getLRSAgentsProfile(params);
 }
 
-export function postAgentsProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function postAgentsProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.postLRSAgentsProfile(body);
 }
 
-export function updateAgentsProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function updateAgentsProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.updateLRSAgentsProfile(body);
 }
 
-export function deleteAgentsProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function deleteAgentsProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.deleteLRSAgentsProfile(params);
 }
 
-export function getActivitiesLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function getActivitiesLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.getLRSActivities(params);
 }
 
-export function getActivitiesProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function getActivitiesProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.getLRSActivitiesProfile(params);
 }
 
-export function postActivitiesProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function postActivitiesProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.postLRSActivitiesProfile(body);
 }
 
-export function updateActivitiesProfileLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function updateActivitiesProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.updateLRSActivitiesProfile(body);
 }
 
-export function deleteActivitiesProfileLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function deleteActivitiesProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.deleteLRSActivitiesProfile(params);
 }
 
-export function getActivitiesStateLRSForActivity(currentUserId: number, activityId: number) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function getActivitiesStateLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.getLRSActivitiesState(params);
 }
 
-export function postActivitiesStateLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function postActivitiesStateLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.postLRSActivitiesState(body);
 }
 
-export function updateActivitiesStateLRSForActivity(currentUserId: number, activityId: number, body: any) {
-    throw new NotImplementedError("Endpoint not implemented yet");
+export async function updateActivitiesStateLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.updateLRSActivitiesState(body);
 }
+
+export async function deleteActivitiesStateLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, params: any) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return await activity.deleteLRSActivitiesState(params);
+}
+
+export async function putStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any, lrsmanagerUserId: number): Promise<number[]> {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    if(!activity) {
+        throw new NotFoundError("The user you are trying to set statement to is not a participant");
+    }
+    if(await activity.canSendStatementsLRS()) {
+        await activity.processStatementsForActivity(currentUserId, body);
+        let ids = await activity.sendLRSStatements(lrsmanagerUserId, body);
+        return ids;
+    } else {
+        return [];
+    }
+}
+
+export async function putAgentsProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any, lrsmanagerUserId: number): Promise<Object> {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    if(!activity) {
+        throw new NotFoundError("The user you are trying to set statement to is not a participant");
+    }
+    return await activity.updateLRSAgentsProfile(body);
+}
+
+export async function putActivitiesProfileLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any, lrsmanagerUserId: number): Promise<Object> {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    if(!activity) {
+        throw new NotFoundError("The user you are trying to set statement to is not a participant");
+    }
+    return await activity.updateLRSActivitiesProfile(body);
+}
+
+export async function getAboutLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    if(!activity) {
+        throw new NotFoundError("The user you are trying to set statement to is not a participant");
+    }
+    return await activity.getLRSAbout();
+}
+
+export async function getExtensionLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, extensionId: string) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    if(!activity) {
+        throw new NotFoundError("The user you are trying to set statement to is not a participant");
+    }
+    return await activity.getLRSExtension(extensionId);
+}   

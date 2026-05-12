@@ -1507,6 +1507,38 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activityCreation'
+  /simlets/{simletid}/sessions/{sessionid}/lrs/statements:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+        - lrsmanagers
+      summary: gets the statement of the session for a student
+      operationId: getStatement
+      description: |
+        Get the statement object of the session for a student
+      responses:
+        '200':
+          description: the result of the students required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
   /simlets/{simletid}/permissions:
     get:
       tags:
@@ -2571,6 +2603,11 @@ paths:
       responses:
         '200':
           description: the result of the students required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2657,6 +2694,38 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
+  /activities/{activityid}/lrs/statements/more:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+        - lrsmanagers
+      summary: gets the statement of the activity
+      operationId: getStatement
+      description: |
+        Get the statement object of the activity for a student
+      responses:
+        '200':
+          description: the result of the students required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/moreQuery'
   /activities/{activityid}/lrs/agents:
     get:
       tags:
@@ -3983,6 +4052,14 @@ components:
         type: integer
         example: 1234567890
       description: The activity ID
+    moreQuery:
+      name: more
+      in: query
+      required: true
+      schema:
+        type: string
+        example: "https://mylrs.test/activities/1234567890"
+      description: the url to get more information about the activity
     surveyId:
       in: path
       name: surveyid

@@ -23,7 +23,7 @@ export class LRSClient {
 	// ##########################################
 	filter: InstanceType<typeof ScalableBloomFilter>;
 	readonly #backupPath: string;
-	jstracker!: LRSTracker;
+	lrs!: LRSTracker;
 	flushLRS: boolean = false;
 
 	/**
@@ -38,9 +38,13 @@ export class LRSClient {
 		this.filter = this.loadFromFile() ?? new ScalableBloomFilter();
 	}
 
+	checkLRSEnable(): boolean {
+		return (config.lrs.enabled && (!this.lrs || (this.lrs && !this.lrs?.tracker?.online)));
+	}
+
 	async initJSScormTracker() {
-		this.jstracker = new LRSTracker();
-		this.jstracker.trackerSettings.debug = true;
+		const lrs = new LRSTracker();
+		lrs.trackerSettings.debug = true;
 		logger.info(config.lrs, 'Initializing JS SCORM Tracker with LRS settings');
 		const lrsEndpoint = (config.lrs.endpoint || '').replace(/\/+$/, '');
 		const lrsUsername = config.lrs.apiKeyDefault;
@@ -50,14 +54,15 @@ export class LRSClient {
 			throw new Error('Invalid LRS configuration: endpoint, api key and api secret are required.');
 		}
 
-		this.jstracker.trackerSettings.batch_endpoint = `${lrsEndpoint}/xapi`;
-		this.jstracker.trackerSettings.oauth_type = "OAuth1";
-		logger.info(this.jstracker.trackerSettings, 'JS SCORM Tracker settings configured');
-		this.jstracker.oauth1.username = lrsUsername;
-		this.jstracker.oauth1.password = lrsPassword;
-		logger.info(this.jstracker.oauth1, 'JS SCORM Tracker OAuth settings configured');
-		await this.jstracker.login(); // Authenticate with the LRS before sending any statements
-		this.jstracker.start(); // Initialize the tracker before using it
+		lrs.trackerSettings.batch_endpoint = `${lrsEndpoint}/xapi`;
+		lrs.trackerSettings.oauth_type = "OAuth1";
+		logger.info(lrs.trackerSettings, 'JS SCORM Tracker settings configured');
+		lrs.oauth1.username = lrsUsername;
+		lrs.oauth1.password = lrsPassword;
+		logger.info(lrs.oauth1, 'JS SCORM Tracker OAuth settings configured');
+		await lrs.login(); // Authenticate with the LRS before sending any statements
+		lrs.start(); // Initialize the tracker before using it
+		this.lrs = lrs; // Only assign after successful initialization
 	}
 
 	flush() {
@@ -199,8 +204,8 @@ export class LRSClient {
 	registerShutdownHandler(): void {
 		const shutdown = () => {
 			logger.info('Shutdown signal received, flushing data and saving bloom filter...');
-			if(this.jstracker) {
-				this.jstracker.flush();
+			if(this.lrs) {
+				this.lrs.flush();
 			}
 			this.saveToFile();
 		};
@@ -209,7 +214,7 @@ export class LRSClient {
 		process.on('beforeExit', shutdown);
 	}
 
-	updateMissingTraceElements(participant: string, trace : any, simletId: number, sessionId: number, activityId: number): any {
+	updateMissingTraceElements(trace : any, participant: string, simletId: number, sessionId: number, activityId?: number): any {
 		let updatedStatement = trace;
 		logger.info('Updating missing trace elements');
         const now = new Date();
@@ -222,27 +227,49 @@ export class LRSClient {
         if(!trace.version) {
             updatedStatement.withVersion("1.0.3");
         }
+		//updatedStatement.withPlatform(config.externalUrl);
 		updatedStatement.withAutorityAccount(participant, config.externalUrl);
 		updatedStatement.withStored(now.toISOString());
+		if(activityId) {
+			updatedStatement.withContextActivity(
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
+				`${config.externalUrl}/activities/${activityId}`,
+				'course'
+			)
+			.withContextActivity(
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+				`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}/activities/${activityId}`,
+				'course'
+			);
+		} else {
+			updatedStatement.withContextActivity(
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
+				`${config.externalUrl}/simlets/${simletId}`,
+				'course'
+			)	
+		}
 		updatedStatement.withContextActivity(
-					this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
-					`${config.externalUrl}/activities/${activityId}`,
-					'course'
-				)
-				.withContextActivity(
-					this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-					`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}`,
-					'course'
-				)
-				.withContextActivity(
-					this.jstracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-					`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}/activities/${activityId}`,
-					'course'
-				)
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+				`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}`,
+				'course'
+			);
+		updatedStatement.withContextActivity(
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+				`${config.externalUrl}/simlets/${simletId}`,
+				'course'
+			)
+
         return updatedStatement;
     }
+	
+	async getLRSClient(): Promise<LRSTracker> {
+		if (this.checkLRSEnable()) {
+			await this.initJSScormTracker();
+		}
+		return this.lrs;
+	}
 
-	async sendTracesToKafka(traces: any[], activityId: number): Promise<number[]> {
+	async sendTracesToKafka(traces: any[], activityId?: number): Promise<number[]> {
 		let payloads = [];
 		let responses = [];
 		for (var i = traces.length - 1; i >= 0; i--) {
@@ -250,7 +277,9 @@ export class LRSClient {
 			responses.push(trace.id);
 			payloads.push(JSON.stringify(trace));
 		}
-		await kafkaClient.sendMessages(payloads, 0, JSON.stringify({ _id: activityId }));
+		if(activityId) {
+			await kafkaClient.sendMessages(payloads, 0, JSON.stringify({ _id: activityId }));
+		}
 		return responses;
 	}
 	
@@ -263,16 +292,16 @@ export class LRSClient {
 				.send();
 			ids.push(traceBuilder.statement?.id);
 		}
-		await this.jstracker.flush();
+		await this.lrs.flush();
 		if(this.flushLRS) {
-			await this.jstracker.flush();
+			await this.lrs.flush();
 			this.flushLRS = false;
 		}
 		return ids;
 	}
 
-	async setStatement(statement: any, simletId: number, sessionId: number, activityId: number, participant: string): Promise<number[]> {
-		if (config.lrs.enabled && !this.jstracker) {
+	async setStatement(statement: any, participant: string, simletId: number, sessionId: number, activityId?: number): Promise<number[]> {
+		if (this.checkLRSEnable()) {
 			await this.initJSScormTracker();
 		}
 		let toret: number[] = [];
@@ -280,8 +309,8 @@ export class LRSClient {
             const traces: any[] = [];
             for(let traceId = 0; traceId < statement.length; traceId++) {
 				const normalizedTrace = this.normalizeStatementForLRS(statement[traceId]);
-				const traceBuilder = this.jstracker.fromXAPI(normalizedTrace);
-                traces.push(this.updateMissingTraceElements(participant, traceBuilder, simletId, sessionId, activityId));
+				const traceBuilder = this.lrs.fromXAPI(normalizedTrace);
+                traces.push(this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId));
             }
 			let response: number[] = [];
 			if(config.lrs.enabled) {
@@ -292,8 +321,8 @@ export class LRSClient {
             toret = response;
         } else if(statement && typeof statement === 'object'){
 			const normalizedTrace = this.normalizeStatementForLRS(statement);
-			const traceBuilder = this.jstracker.fromXAPI(normalizedTrace);
-            const trace = this.updateMissingTraceElements(participant, traceBuilder, simletId, sessionId, activityId);
+			const traceBuilder = this.lrs.fromXAPI(normalizedTrace);
+            const trace = this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId);
             let response: number[] = [];
 			if(config.lrs.enabled) {
             	 response = await this.sendTracesToLRS([trace]);

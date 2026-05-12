@@ -10,6 +10,8 @@ import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCom
 import { Op } from 'sequelize';
 import { SessionTagList } from "./SessionTagsList";
 import { SessionTag } from "./SessionTagsElement";
+import { lrsclient } from "@/lib/utils/LRSclient";
+import { config } from "@/lib/config";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -602,6 +604,20 @@ export class Session {
                 updatedAt: this.updatedAt,
             };
         }   
+    }
+
+    async getLRSStatements(query: any): Promise<Object> {
+        let client = await lrsclient.getLRSClient();
+        query.activity = this.getLRSSessionId();
+        query.related_activities = true;
+        logger.debug({query}, "Querying LRS for statements with query:");
+        let statements = await client.getStatementByQuery(query);
+        logger.debug({statements} , "LRS statements retrieved for session with simlet ID, session ID and user ID");
+        return statements;
+    }
+
+    getLRSSessionId(): any {
+        return `${config.externalUrl}/simlets/${this.simlet_id}/sessions/${this.session_id}`;
     }
     
     export(withData: boolean): Promise<object> {

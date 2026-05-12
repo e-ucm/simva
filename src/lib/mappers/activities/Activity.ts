@@ -714,7 +714,7 @@ export class Activity {
 			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/simlets/${this.simlet_id}`, jsTracker.ALL.ACTIVITYTYPES.COURSE);
 			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING, `${config.externalUrl}/sessions/${this.session_id}`, jsTracker.ALL.ACTIVITYTYPES.LESSON);
 			logger.info(statement? statement.statement.toXAPI() : "No statement generated", "XAPI Statement:");
-			lrsclient.sendTracesToLRS([lrsclient.updateMissingTraceElements(this.current_user_username?this.current_user_username:"unknown", statement!, this.simlet_id, this.session_id, this.activity_id)]);
+			lrsclient.sendTracesToLRS([lrsclient.updateMissingTraceElements(statement!, this.current_user_username?this.current_user_username:"unknown", this.simlet_id, this.session_id, this.activity_id)]);
 		}
 		
 	}
@@ -833,9 +833,169 @@ export class Activity {
 		}
 	}
 
-	async sendStatementsLRSForActivity(current_user_id: number, statements: any): Promise<number[]> {
-		let ids = await lrsclient.setStatement(statements, this.simlet_id, this.session_id, this.activity_id, (await User.getFromDbData(current_user_id)).username);
+	async sendLRSStatements(current_user_id: number, statements: any): Promise<number[]> {
+		let ids = await lrsclient.setStatement(statements, (await User.getFromDbData(current_user_id)).username, this.simlet_id, this.session_id, this.activity_id);
 		return ids;
+	}
+
+	async getLRSStatement(statementId : string): Promise<Object> {
+		let client = await lrsclient.getLRSClient();
+		let statement = await client.getStatementById(statementId);
+		if(!statement) {
+			throw new NotFoundError(`Statement with ID ${statementId} not found in LRS.`);
+		} else {
+			return statement;
+		}
+	}
+
+	async getLRSStatements(query: any): Promise<Object> {
+		let client = await lrsclient.getLRSClient();
+		query.activity = this.getLRSActivityId();
+		query.related_activities = true;
+		logger.debug({query}, "Querying LRS for statements with query:");
+		let statements = await client.getStatementByQuery(query);
+		return statements;
+	}
+
+	async getLRSMoreStatements(moreUrl : string): Promise<Object> {
+		let client = await lrsclient.getLRSClient();
+		let statements = await client.getMoreStatements(moreUrl);
+		return statements;
+	}
+
+	async getLRSAgents(query: any): Promise<Object> {
+		let client = await lrsclient.getLRSClient();
+		let agent = await client.getAgent(query);
+		return agent;
+	}
+	
+
+	async getLRSAgentProfile(agentId: string, profileId: string): Promise<Object> {
+		let client = await lrsclient.getLRSClient();
+		let profile = await client.getAgentProfile({ agent: agentId, profileId });
+		return profile;
+	}
+
+	private getLRSActivityId(params: any = {}): string {
+		return params.activityId || `${config.externalUrl}/simlets/${this.simlet_id}/sessions/${this.session_id}/activities/${this.activity_id}`;
+	}
+
+	async getLRSAgentsProfile(params: any = {}): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		if (params.profileId) {
+			return await client.getAgentProfile(params);
+		}
+		return await client.getAgentProfiles(params);
+	}
+
+	async postLRSAgentsProfile(body: any): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.createAgentProfile(body);
+	}
+
+	async updateLRSAgentsProfile(body: any): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.setAgentProfile(body);
+	}
+
+	async deleteLRSAgentsProfile(params: any = {}): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.deleteAgentProfile(params);
+	}
+
+	async getLRSActivities(params: any = {}): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.getActivity({
+			...params,
+			activityId: this.getLRSActivityId(params)
+		});
+	}
+
+	async getLRSActivitiesProfile(params: any = {}): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		const requestParams = {
+			...params,
+			activityId: this.getLRSActivityId(params)
+		};
+		if (requestParams.profileId) {
+			return await client.getActivityProfile(requestParams);
+		}
+		return await client.getActivityProfiles(requestParams);
+	}
+
+	async postLRSActivitiesProfile(body: any): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.createActivityProfile({
+			...body,
+			activityId: this.getLRSActivityId(body)
+		});
+	}
+
+	async updateLRSActivitiesProfile(body: any): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.setActivityProfile({
+			...body,
+			activityId: this.getLRSActivityId(body)
+		});
+	}
+
+	async deleteLRSActivitiesProfile(params: any = {}): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.deleteActivityProfile({
+			...params,
+			activityId: this.getLRSActivityId(params)
+		});
+	}
+
+	async getLRSActivitiesState(params: any = {}): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		const requestParams = {
+			...params,
+			activityId: this.getLRSActivityId(params)
+		};
+		if (requestParams.stateId) {
+			return await client.getState(requestParams);
+		}
+		return await client.getStates(requestParams);
+	}
+
+	async postLRSActivitiesState(body: any): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.createState({
+			...body,
+			activityId: this.getLRSActivityId(body)
+		});
+	}
+
+	async updateLRSActivitiesState(body: any): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.setState({
+			...body,
+			activityId: this.getLRSActivityId(body)
+		});
+	}
+
+	async deleteLRSActivitiesState(params: any = {}): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		const requestParams = {
+			...params,
+			activityId: this.getLRSActivityId(params)
+		};
+		if (requestParams.stateId) {
+			return await client.deleteState(requestParams);
+		} else {
+			return await client.deleteStates(requestParams);
+		}
+	}
+
+	async getLRSAbout(): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.getAbout({});
+	}
+
+	async getLRSExtension(extensionId: string): Promise<Object> {
+		const client = await lrsclient.getLRSClient();
+		return await client.getExtension(this.getLRSActivityId(), extensionId);
 	}
 
 	/**
@@ -906,7 +1066,7 @@ export class Activity {
 				break;
 			case 'traces':
 				await this.processStatementsForActivity(participant_id, result);
-				await this.sendStatementsLRSForActivity(participant_id, result);
+				await this.sendLRSStatements(participant_id, result);
 				break;
 			default:
 				throw new BadRequestError(`Unsupported result type: ${type}`);

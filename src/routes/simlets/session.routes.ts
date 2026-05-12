@@ -44,6 +44,9 @@ router.post("/:session_id/activate", SessionControler.activateSimletSession);
 router.post("/:session_id/tags/:tag_id", SessionControler.addTagForUser);
 router.delete("/:session_id/tags/:tag_id", SessionControler.deleteTagForUser);
 
+// New route for getting LRS statements for a session
+router.get("/:session_id/lrs/statements", SessionControler.getLRSStatementsForSession);
+
 // Mount sub-routers
 router.use("/:session_id/permissions", sessionPermissionsRouter);
 router.use("/:session_id/activities", sessionActivitiesRouter);

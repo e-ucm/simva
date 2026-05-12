@@ -14,6 +14,7 @@ import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
+import { ParsedQs } from "qs";
 
 export async function getSimletSessions(
   req: AuthenticatedRequest,
@@ -272,6 +273,25 @@ export async function deleteTagForUser(
     }
     logger.debug({tags} , "Tag deleted for user in session for simlet ID and user ID");
     res.json(tags.map(t => t.toJSON()));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getLRSStatementsForSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    logger.debug({simletId, sessionId, userId: currentUser?.user_id} , "Getting LRS statements for session with simlet ID, session ID and user ID");
+    let statements= await sessionService.getLRSStatements(simletId, sessionId, access.is_admin, access.currentUserId, req.query);
+    logger.debug({statements} , "LRS statements retrieved for session with simlet ID, session ID and user ID");
+    res.json(statements);
   } catch (err) {
     next(err);
   }
