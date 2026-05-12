@@ -126,23 +126,31 @@ export class LimesurveyActivity extends Activity {
 	}
 
 	async addParticipants(participants_id: number[]): Promise<ActivityCompletion[]> {
-		let usernamesMap = await this.getAllCurrentParticipantsUsername(participants_id);
-		await limeSurveyClient.addParticipants(this.survey_id, usernamesMap ? Array.from(usernamesMap.values()) : []);
-		return super.addParticipants(participants_id);
+		const resolvedParticipantIds = await this.getAllCurrentParticipantsId(participants_id);
+		const usernamesMap = await this.getAllCurrentParticipantsUsername(resolvedParticipantIds);
+		await limeSurveyClient.addParticipants(this.survey_id, Array.from(usernamesMap.values()));
+		return super.addParticipants(resolvedParticipantIds);
 	}
 
 	async activate(activate: boolean): Promise<void> {
 		await super.activate(activate);
+		try {
+			await limeSurveyClient.activateSurvey(this.survey_id);
+		} catch (error) {
+			logger.info({ error }, `Error activating survey with ID ${this.survey_id}`);
+		}
 		if(activate) {
+			await limeSurveyClient.activateTokens(this.survey_id);
 			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, `${config.api.url}/activities/${this.activity_id}/lrs`);
 		} else {
 			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, "");	
 		}
 		await limeSurveyClient.setActiveSurvey(this.survey_id, activate);
+		await this.addParticipants(await this.getAllCurrentParticipantsId());
 	}
 
 	async removeParticipants(participants_id: number[]): Promise<void> {
-		super.removeParticipants(participants_id);
+		await super.removeParticipants(participants_id);
 		logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
 		let usernamesMap = await this.getAllCurrentParticipantsUsername(participants_id);
 		await limeSurveyClient.deleteParticipants(this.survey_id, usernamesMap ? Array.from(usernamesMap.values()) : []);
@@ -161,7 +169,16 @@ export class LimesurveyActivity extends Activity {
 	}
 
 	async getAllCurrentParticipantsId(participants_id?: number[]): Promise<number[]> {
-		return super.getAllCurrentParticipantsId(participants_id);
+		const currentParticipantIds = await super.getAllCurrentParticipantsId(participants_id);
+		if (currentParticipantIds.length > 0 || this.allocated_user) {
+			return currentParticipantIds;
+		}
+
+		const allocatedParticipants = await db.Tables.ExperimentalParticipants.findAll({
+			where: { session_id: this.session_id },
+			attributes: ['participant_id']
+		});
+		return allocatedParticipants.map((participant: any) => participant.participant_id);
 	}
 
 	async getAllCurrentParticipantsUsername(participants_id?: number[]): Promise<Map<number, string>> {

@@ -3,6 +3,7 @@ import { SimletGroup } from "./SimletGroup";
 import { ValidationError } from "@/lib/errors/appErrors";
 import { db } from "@/lib/db";
 import { Session } from "../session/Session";
+import { SimletParticipant } from "../simlet/SimletParticipant";
 
 export class GroupAllocatorSimletGroup extends SimletGroup {
     /**

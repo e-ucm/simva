@@ -209,6 +209,54 @@ export class SimletGroup {
         return this;
     }
 
+    private async getDefaultSessionId(): Promise<number> {
+        const session = await db.Tables.Sessions.findOne({
+            where: { simlet_id: this.simlet_id },
+            order: [
+                ['session_order', 'ASC'],
+                ['session_id', 'ASC']
+            ]
+        });
+        if (!session) {
+            throw new NotFoundError(`No sessions found for simlet ${this.simlet_id}`);
+        }
+        return session.session_id;
+    }
+
+    private async resolveTargetSessionId(participantId?: number): Promise<number> {
+        if (this.group_allocator_type === 'group' || this.group_allocator_type === 'session') {
+            const allocation = participantId !== undefined
+                ? await db.Tables.ExperimentalParticipants.findOne({
+                    where: { simlet_id: this.simlet_id, group_id: this.group_id, participant_id: participantId }
+                })
+                : this.allocation[0];
+
+            if (allocation?.session_id) {
+                return allocation.session_id;
+            }
+
+            if (this.allocation.length > 0 && this.allocation[0]?.session_id) {
+                return this.allocation[0].session_id;
+            }
+        }
+
+        return await this.getDefaultSessionId();
+    }
+
+    private async syncParticipantActivityCompletions(
+        participantId: number,
+        previousSessionId: number | null | undefined,
+        nextSessionId: number
+    ): Promise<void> {
+        if (previousSessionId && previousSessionId !== nextSessionId) {
+            const previousSession = await Session.getFromDbData(this.simlet_id, previousSessionId, this.is_admin, this.current_user_id);
+            await previousSession.removeParticipantsFromAllActivities([participantId]);
+        }
+
+        const nextSession = await Session.getFromDbData(this.simlet_id, nextSessionId, this.is_admin, this.current_user_id);
+        await nextSession.addParticipantsToAllActivities([participantId]);
+    }
+
     async delete(): Promise<void> {
         let simletGroup = await db.Tables.Group.findOne({ where: { simlet_id: this.simlet_id, group_id: this.group_id } });
         if (!simletGroup) {
@@ -300,7 +348,15 @@ export class SimletGroup {
      */
     async deleteParticipant(user_id: number, keycloakDelete : boolean): Promise<void> {
         let participant = await SimletParticipant.getFromDbData(this.group_id, user_id);
-        participant.delete(keycloakDelete);
+        const allocation = await db.Tables.ExperimentalParticipants.findOne({
+            where: { simlet_id: this.simlet_id, group_id: this.group_id, participant_id: user_id }
+        });
+        if (allocation) {
+            const session = await Session.getFromDbData(this.simlet_id, allocation.session_id, this.is_admin, this.current_user_id);
+            await session.removeParticipantsFromAllActivities([user_id]);
+            await allocation.destroy();
+        }
+        await participant.delete(keycloakDelete);
     }
 
     /**
@@ -324,6 +380,14 @@ export class SimletGroup {
      */
     async createParticipant(body: Partial<SimletParticipant>): Promise<SimletParticipant> {
         let participant = await SimletParticipant.createInDb(this.simlet_id, this.group_id, this.group_use_new_generation, body);
+        const targetSessionId = await this.resolveTargetSessionId(participant.user_id);
+        await db.Tables.ExperimentalParticipants.upsert({
+            simlet_id: this.simlet_id,
+            group_id: this.group_id,
+            participant_id: participant.user_id,
+            session_id: targetSessionId,
+        });
+        await this.syncParticipantActivityCompletions(participant.user_id, undefined, targetSessionId);
         return participant;
     }
 
@@ -400,7 +464,11 @@ export class SimletGroup {
             const oldSessionId = participantToUpdate.session_id;
             logger.debug({ sessionId, participant_id, oldSessionId }, 'Allocator.allocate updating participant session');
             await participantToUpdate.update({ session_id: sessionId });
+            await this.syncParticipantActivityCompletions(participant_id, oldSessionId, sessionId);
             logger.debug({ sessionId, participant_id, oldSessionId }, 'Allocator.allocate updated participant');
+        }
+        if(!participantToUpdate) {
+            await this.syncParticipantActivityCompletions(participant_id, undefined, sessionId);
         }
     }
 
@@ -413,8 +481,6 @@ export class SimletGroup {
             participants: this.participants 
         }, 'Allocator.allocateToDefault starting');
         
-        const session = await Session.getFromDbData(this.simlet_id, defaultSession, this.is_admin, this.current_user_id);
-        
         for (const participant_id of this.participants) {
             const existing = await db.Tables.ExperimentalParticipants.findOne({
                 where: {
@@ -425,8 +491,10 @@ export class SimletGroup {
             });
             
             if (existing) {
+                const oldSessionId = existing.session_id;
                 logger.debug({ participant_id, oldSession: existing.session_id, newSession: defaultSession }, 'Allocator.allocateToDefault updating existing');
                 await existing.update({ session_id: defaultSession });
+                await this.syncParticipantActivityCompletions(participant_id, oldSessionId, defaultSession);
             } else {
                 logger.debug({ participant_id, session_id: defaultSession }, 'Allocator.allocateToDefault creating new');
                 await db.Tables.ExperimentalParticipants.create({
@@ -435,10 +503,9 @@ export class SimletGroup {
                     participant_id: participant_id,
                     session_id: defaultSession,
                 });
+                await this.syncParticipantActivityCompletions(participant_id, undefined, defaultSession);
             }
         }
-        
-        await session.addParticipantsToAllActivities(this.participants);
         // Refresh internal allocation state from database
         this.allocation = await Allocation.getFromDbData(this.simlet_id, this.group_id, this.group_allocator_type);
         logger.debug({ defaultSession, allocationCount: this.allocation.length }, 'Allocator.allocateToDefault synchronized participants');

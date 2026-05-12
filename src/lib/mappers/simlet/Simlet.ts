@@ -345,7 +345,8 @@ export class Simlet {
     async createGroupParticipant(groupId: number, body: Partial<SimletParticipant>): Promise<SimletParticipant> {
         this.canEdit();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
-        return await group.createParticipant(body);
+        let participant = await group.createParticipant(body);
+        return participant;
     }
 
     async deleteGroupParticipant(groupId: number, participantId: number, keycloakDelete: boolean = false): Promise<void> {

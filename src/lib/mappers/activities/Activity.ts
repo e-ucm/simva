@@ -418,6 +418,11 @@ export class Activity {
 
 	async removeParticipants(participants_id: number[]): Promise<void> {
 		logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
+		for (const participant_id of participants_id) {
+			const completion = await ActivityCompletion.getFromDbData(this.activity_id, participant_id, "all");
+			await completion.delete();
+			logger.debug(`Removed participant with ID ${participant_id} from activity with ID ${this.activity_id}`);
+		}
 	}
 
 	async getAllCurrentParticipantsId(participants_id?: number[]): Promise<number[]> {

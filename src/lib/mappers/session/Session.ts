@@ -311,6 +311,12 @@ export class Session {
     async addActivity(activityData: Partial<InstanceType<typeof db.Tables.Activities>>): Promise<Activity> {
         this.canEdit();
         let activity = await createActivityFromType(activityData, this.session_id, this.activities!.length!, this.is_admin, this.current_user_id as number);
+        const participants = await this.getParticipants();
+        await activity.addParticipants(participants.map((participant) => participant.user_id));
+        logger.info(participants, `Added participants to new activity with ID ${activity.activity_id} in session with ID ${this.session_id}`);
+        if(this.session_status == this.STATUS.ACTIVE) {
+            await activity.activate(true);
+        }
         return activity;
      }
 
@@ -322,6 +328,13 @@ export class Session {
             completions = completions.concat(actCompletions);
         }
         return completions;
+    }
+
+    async removeParticipantsFromAllActivities(participants_id: number[]): Promise<void> {
+        for (const act of this.activities || []) {
+            const activity = await Activity.getFromDbData(act, false, this.is_admin, this.current_user_id);
+            await activity.removeParticipants(participants_id);
+        }
     }
     
     /**
