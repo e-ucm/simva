@@ -105,6 +105,9 @@ export class Simlet {
                 this.allocated_user_username = data.allocated_user_username;
                 this.allocated_isToken = Boolean(data.allocated_isToken);
                 this.allocated_token = data.allocated_token;
+                // Some allocated-user views expose only allocated_user_id.
+                // Keep current_user_id aligned so downstream queries always have a user id.
+                this.current_user_id = data.current_user_id ?? data.allocated_user_id;
                 break
             case false:
                 this.current_user_id = data.current_user_id; // Ensure current_user_id is included in the data
@@ -117,14 +120,15 @@ export class Simlet {
     async init() {
         const groupIds = await db.Functions.runViewQuery(db.Views.Simlet.groupIdsBySimletId, { simlet_id: this.simlet_id })
         this.groups = groupIds.map((row: any) => row.group_id) || [];
+        const effectiveUserId = this.current_user_id ?? this.allocated_user_id;
         if(this.is_admin) {
             const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id });
             this.sessions = sessionIds.map((row: any) => row.session_id) || [];
         } else {
-            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletIdAndUserId, { simlet_id: this.simlet_id, current_user_id: this.current_user_id});
+            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletIdAndUserId, { simlet_id: this.simlet_id, current_user_id: effectiveUserId});
             this.sessions = sessionIds.map((row: any) => row.session_id) || [];
         }
-        this.tags = await SessionTagList.getSessionsTags(this.sessions, this.current_user_id as number);
+        this.tags = await SessionTagList.getSessionsTags(this.sessions, effectiveUserId);
     }
     
     static async getAdminSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
