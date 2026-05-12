@@ -43,7 +43,7 @@ export class SessionScheduler {
                 acc[activity.activity_id] = activity.toJSON();
                 return acc;
             }, {} as Record<number, any>),
-            next: this.next
+            next: this.next || null
         }
     }
 }

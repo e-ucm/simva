@@ -4755,6 +4755,7 @@ components:
         next:
           type: integer
           example: 301
+          nullable: true
           description: "The next activity ID"
         simlet:
           type: integer
