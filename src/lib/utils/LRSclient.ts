@@ -151,9 +151,9 @@ export class LRSClient {
         const now = new Date();
         const simvaUrl = config.externalUrl;
         const authorityName = participant || 'lrs-manager';
-        const courseType = this.lrs.ALL.ACTIVITYTYPES.COURSE;
-        const lessonType = this.lrs.ALL.ACTIVITYTYPES.LESSON;
-        const activityType = this.lrs.ALL.ACTIVITYTYPES.ACTIVITY;
+        const simletType = `${config.externalUrl}/types#simlet`;
+        const sessionType = `${config.externalUrl}/types#session`;
+        const activityType = `${config.externalUrl}/types#activity`;
         updatedStatement=updatedStatement.withId(this.generateStatementId(trace));
         if(!trace.timestamp) {
             updatedStatement=updatedStatement.withTimestamp(now.toISOString());
@@ -179,18 +179,18 @@ export class LRSClient {
 			updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
 				`${config.externalUrl}/simlets/${simletId}`,
-				courseType
+				simletType
 			)	
 		}
 		updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
 				`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}`,
-				lessonType
+				sessionType
 			)
 			.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
 				`${config.externalUrl}/simlets/${simletId}`,
-				courseType
+				simletType
 			);
 
         return updatedStatement;
@@ -242,20 +242,18 @@ export class LRSClient {
                 traces.push(this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId));
             }
 			let response: number[] = [];
+			response = await this.sendTracesToKafka(traces, activityId);
 			if(config.lrs.enabled) {
             	 response = await this.sendTracesToLRS(traces);
-			} else {
-				response = await this.sendTracesToKafka(traces, activityId);
 			}
             toret = response;
         } else if(statement && typeof statement === 'object'){
 			const traceBuilder = this.lrs.fromXAPI(statement);
             const trace = this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId);
             let response: number[] = [];
+			response = await this.sendTracesToKafka([trace], activityId);
 			if(config.lrs.enabled) {
             	 response = await this.sendTracesToLRS([trace]);
-			} else {
-				response = await this.sendTracesToKafka([trace], activityId);
 			}
             toret = response;
         } else {
