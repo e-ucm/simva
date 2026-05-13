@@ -119,71 +119,6 @@ export class LRSClient {
 		this.filter = ScalableBloomFilter.fromJSON(data);
 	}
 
-	private normalizeStatementForLRS(statement: any): any {
-		if (!statement || typeof statement !== 'object') {
-			return statement;
-		}
-
-		const normalized = { ...statement };
-		const score = normalized?.result?.score;
-		if (score && typeof score === 'object') {
-			const toNumber = (value: any): number | undefined => {
-				if (value === null || value === undefined || value === '') {
-					return undefined;
-				}
-				const parsed = typeof value === 'number' ? value : Number(value);
-				return Number.isFinite(parsed) ? parsed : undefined;
-			};
-
-			const scaled = toNumber(score.scaled);
-			if (scaled !== undefined) {
-				score.scaled = Math.max(-1, Math.min(1, scaled));
-			}
-
-			const raw = toNumber(score.raw);
-			if (raw !== undefined) {
-				score.raw = raw;
-			}
-
-			const min = toNumber(score.min);
-			if (min !== undefined) {
-				score.min = min;
-			}
-
-			const max = toNumber(score.max);
-			if (max !== undefined) {
-				score.max = max;
-			}
-		}
-
-		const definition = normalized?.object?.definition;
-		if (definition && typeof definition === 'object') {
-			const normalizeInteractionComponents = (components: any, prefix: string): any => {
-				if (!Array.isArray(components)) {
-					return components;
-				}
-				return components.map((component: any, index: number) => {
-					const normalizedComponent = (component && typeof component === 'object') ? { ...component } : { id: component };
-					const candidateId = normalizedComponent?.id;
-					if (candidateId === null || candidateId === undefined || String(candidateId).trim() === '') {
-						normalizedComponent.id = `${prefix}_${index + 1}`;
-					} else {
-						normalizedComponent.id = String(candidateId);
-					}
-					return normalizedComponent;
-				});
-			};
-
-			definition.scale = normalizeInteractionComponents(definition.scale, 'likert');
-			definition.choices = normalizeInteractionComponents(definition.choices, 'choice');
-			definition.source = normalizeInteractionComponents(definition.source, 'source');
-			definition.target = normalizeInteractionComponents(definition.target, 'target');
-			definition.steps = normalizeInteractionComponents(definition.steps, 'step');
-		}
-
-		return normalized;
-	}
-
 	generateStatementId(trace: any): string {
 		var traceid;
 		if(trace.id == null) {
@@ -308,8 +243,7 @@ export class LRSClient {
         if(Array.isArray(statement)){
             const traces: any[] = [];
             for(let traceId = 0; traceId < statement.length; traceId++) {
-				const normalizedTrace = this.normalizeStatementForLRS(statement[traceId]);
-				const traceBuilder = this.lrs.fromXAPI(normalizedTrace);
+				const traceBuilder = this.lrs.fromXAPI(statement[traceId]);
                 traces.push(this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId));
             }
 			let response: number[] = [];
@@ -320,8 +254,7 @@ export class LRSClient {
 			}
             toret = response;
         } else if(statement && typeof statement === 'object'){
-			const normalizedTrace = this.normalizeStatementForLRS(statement);
-			const traceBuilder = this.lrs.fromXAPI(normalizedTrace);
+			const traceBuilder = this.lrs.fromXAPI(statement);
             const trace = this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId);
             let response: number[] = [];
 			if(config.lrs.enabled) {
