@@ -1381,7 +1381,13 @@ paths:
       summary: gets the list of activities for the selected session
       operationId: activateSimletSession
       description: |
-        Activate or desactivate the current session
+        Activate, desactivate or terminate the current session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sessionActivation'
       responses:
         '200':
           description: the current session
@@ -4900,6 +4906,14 @@ components:
         url:
           type: string
           example: "https://example.com/presigned-url"
+    sessionActivation:
+      type: object
+      required:
+        - activate
+      properties:
+        activate:
+          type: string
+          enum: [active, inactive, terminated]
     session:
       type: object
       properties:

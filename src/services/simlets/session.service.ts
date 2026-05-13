@@ -196,7 +196,7 @@ export async function getSimletSessionParticipants(simletId: number, sessionId: 
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session to activate/deactivate
  * @param {number} current_user_id - The ID of the user performing the action
- * @param {boolean} activate - True to activate, false to deactivate
+ * @param {string} activate - The desired state of the session ("active", "inactive", or "terminated")
  * @returns {Promise<Session>} The updated session instance
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks permissions
@@ -204,24 +204,41 @@ export async function getSimletSessionParticipants(simletId: number, sessionId: 
  * 
  * @example
  * ```typescript
- * const activeSession = await activateSession(123, 456, 789, true);
- * const inactiveSession = await activateSession(123, 456, 789, false);
+ * const activeSession = await activateSession(123, 456, 789, 'active');
+ * const inactiveSession = await activateSession(123, 456, 789, 'inactive');
+ * const terminatedSession = await activateSession(123, 456, 789, 'terminated');
  * ```
  */
-export async function activateSession(simletId: number, sessionId: number, is_admin: boolean, activate: any, current_user_id?: number): Promise<Session> {
+export async function activateSession(simletId: number, sessionId: number, is_admin: boolean, activate: string, current_user_id?: number): Promise<Session> {
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
+  switch (activate) {
+    case session.STATUS.ACTIVE:
+      if(session.session_status === session.STATUS.TERMINATED) {
+        throw new ValidationError('Session is terminated and cannot be activated');
+      }
+      if (session.session_status == session.STATUS.ACTIVE) {
+        throw new ValidationError('Session is already active');
+      } else {
+        return await session.activate();
+      }
+    case session.STATUS.INACTIVE:
+      if(session.session_status === session.STATUS.TERMINATED) {
+        throw new ValidationError('Session is terminated and cannot be deactivated');
+      }
+      if (session.session_status == session.STATUS.ACTIVE) {
+        return await session.deactivate();
+      } else {
+        throw new ValidationError('Session is already inactive');
+      }
+    case session.STATUS.TERMINATED:
+      return await session.terminate();
+    default:
+      throw new ValidationError(`Activate must be either "${session.STATUS.ACTIVE}" or "${session.STATUS.INACTIVE}" or "${session.STATUS.TERMINATED}"`);
+  }
   if (activate) {
-    if (session.session_status == session.STATUS.ACTIVE) {
-      throw new ValidationError('Session is already active');
-    } else {
-      return await session.activate();
-    }
+    
   } else {
-    if (session.session_status == session.STATUS.ACTIVE) {
-      return await session.deactivate();
-    } else {
-      throw new ValidationError('Session is already inactive');
-    }
+    
   }
 }
 

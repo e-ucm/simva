@@ -131,7 +131,7 @@ export async function activateSimletSession(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const sessionId = parseInt(req.params.session_id as string);
-    let activate = Boolean(req.body.activate);
+    let activate = req.body.activate;
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     logger.debug({simletId, userId: currentUser?.user_id, activate} , "Activare/desactivate session for simlet ID and user ID");

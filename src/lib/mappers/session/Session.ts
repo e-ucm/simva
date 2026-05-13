@@ -563,6 +563,34 @@ export class Session {
     }
 
     /**
+     * Terminates this session to end participant access and prevent further activity.
+     * Requires edit permissions and session must be configured for manual activation.
+     * 
+     * @async
+     * @method terminate
+     * @returns {Promise<void>} Promise that resolves when session is terminated
+     * @throws {AuthentificationError} When user lacks edit permissions
+     * @throws {ValidationError} When session cannot be terminated or is already terminated
+     */
+    async terminate() : Promise<Session> {
+        this.canEdit();
+        if(this.session_status == this.STATUS.TERMINATED) {
+            throw new ValidationError(`Session with ID ${this.session_id} is already terminated.`);
+        }
+        let activities = await this.getActivities();
+        activities.forEach(async (activity: Activity) => {
+            await activity.activate(false);
+        });
+        this.session_status = this.STATUS.TERMINATED;
+        let session = await db.Tables.Sessions.findOne({where:{session_id: this.session_id}});
+        if(!session) {
+            throw new NotFoundError(`Session with ID ${this.session_id} not found for termination`);
+        }
+        await session.update({ session_status: this.STATUS.TERMINATED });
+        return this;
+    }
+
+    /**
      * Retrieves all participants for this session.
      * Requires read permissions.
      * 
