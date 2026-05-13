@@ -10,10 +10,10 @@ import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity"
 import { User } from "@/lib/mappers/Users/User";
 
 let kafkaClient : KafkaClient = new KafkaClient({
-    clientId: config.kafka.clientId,
-    brokers: config.kafka.brokers,
-    groupId: config.kafka.groupId,
-    topic: config.kafka.eventsTopic
+    clientId: config.kafkaEvent.clientId,
+    brokers: config.kafkaEvent.brokers,
+    groupId: config.kafkaEvent.groupId,
+  topic: config.kafkaEvent.topic
 });
 
 export async function limesurveyWebhookHandler(req: Request, res: Response) {
@@ -30,7 +30,7 @@ export async function limesurveyWebhookHandler(req: Request, res: Response) {
     throw new NotFoundError("Event not treated");
   };
   let surveyId = req.body.event_details.surveyId;
-  let limesurvey_activity = await db.Functions.runViewQuery(db.Views.Activity.byLimesurveySurveyId, { surveyId });
+  let limesurvey_activity = await db.Functions.runViewQuery(db.Views.Activity.bySurveyId, { survey_id: surveyId });
   let messages : string[] = [];
   if (Array.isArray(limesurvey_activity) && limesurvey_activity.length > 0) {
     if(limesurvey_activity.length > 1) {

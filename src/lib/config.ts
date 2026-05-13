@@ -137,7 +137,7 @@ config.kafkaEvent.host = config.kafka.host;
 config.kafkaEvent.port = config.kafka.port;
 config.kafkaEvent.brokers = config.kafka.brokers;
 config.kafkaEvent.groupId = process.env.KAFKA_SIMVA_EVENTS_GROUP_ID || 'simva-events-group';
-config.kafka.clientId = process.env.KAFKA_SIMVA_EVENTS_CLIENT_ID || 'simva-event-client';
+config.kafkaEvent.clientId = process.env.KAFKA_SIMVA_EVENTS_CLIENT_ID || 'simva-event-client';
 config.kafkaEvent.topic = process.env.KAFKA_SIMVA_EVENTS_TOPIC || 'simva_events_topic';
 
 // LimeSurvey configuration
