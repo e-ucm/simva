@@ -132,15 +132,19 @@ export class LimesurveyActivity extends Activity {
 		return super.addParticipants(resolvedParticipantIds);
 	}
 
-	async activate(activate: boolean): Promise<void> {
+	async activate(activate: boolean, status?: string): Promise<void> {
 		await super.activate(activate);
-		try {
-			await limeSurveyClient.activateSurvey(this.survey_id);
-		} catch (error) {
-			logger.info({ error }, `Error activating survey with ID ${this.survey_id}`);
-		}
 		if(activate) {
-			await limeSurveyClient.activateTokens(this.survey_id);
+			try {
+				await limeSurveyClient.activateSurvey(this.survey_id);
+			} catch (error) {
+				logger.info({ error }, `Error activating survey with ID ${this.survey_id}`);
+			}
+			try {
+				await limeSurveyClient.activateTokens(this.survey_id);
+			} catch (error) {
+				logger.info({ error }, `Error activating survey tokens with ID ${this.survey_id}`);
+			}
 			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, `${config.api.url}/activities/${this.activity_id}/lrs`);
 		} else {
 			await limeSurveyClient.setActivityLRSEndpoint(this.survey_id, "");	
