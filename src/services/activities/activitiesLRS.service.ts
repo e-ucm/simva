@@ -8,7 +8,7 @@ export async function getStatementsLRSForActivity(currentUserId: number, is_admi
 
 export async function getMoreStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, more: string) {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
-    return await activity.getLRSMoreStatements(more);
+    return await activity.getLRSStatements({ more: more });
 }
 
 export async function sendStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, body: any, lrsmanagerUserId: number): Promise<number[]> {

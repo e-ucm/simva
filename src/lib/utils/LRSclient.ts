@@ -153,46 +153,49 @@ export class LRSClient {
 		let updatedStatement = trace;
 		logger.info('Updating missing trace elements');
         const now = new Date();
-        if(!trace.id) {
-            updatedStatement.withId(this.generateStatementId(trace));
-        }
+        const simvaUrl = config.externalUrl;
+        const authorityName = participant || 'lrs-manager';
+        const courseType = this.lrs.ALL.ACTIVITYTYPES.COURSE;
+        const lessonType = this.lrs.ALL.ACTIVITYTYPES.LESSON;
+        const activityType = this.lrs.ALL.ACTIVITYTYPES.ACTIVITY;
+        updatedStatement=updatedStatement.withId(this.generateStatementId(trace));
         if(!trace.timestamp) {
-            updatedStatement.withTimestamp(now.toISOString());
+            updatedStatement=updatedStatement.withTimestamp(now.toISOString());
         }
         if(!trace.version) {
-            updatedStatement.withVersion("1.0.3");
+            updatedStatement=updatedStatement.withVersion("1.0.3");
         }
-		//updatedStatement.withPlatform(config.externalUrl);
-		updatedStatement.withAutorityAccount(participant, config.externalUrl);
-		updatedStatement.withStored(now.toISOString());
+		updatedStatement=updatedStatement.withPlatform(simvaUrl);
+		updatedStatement=updatedStatement.withAutorityAccount(authorityName, simvaUrl);
+		updatedStatement=updatedStatement.withStored(now.toISOString());
 		if(activityId) {
-			updatedStatement.withContextActivity(
+			updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
 				`${config.externalUrl}/activities/${activityId}`,
-				'course'
+				activityType
 			)
 			.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
 				`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}/activities/${activityId}`,
-				'course'
+				activityType
 			);
 		} else {
-			updatedStatement.withContextActivity(
+			updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
 				`${config.externalUrl}/simlets/${simletId}`,
-				'course'
+				courseType
 			)	
 		}
-		updatedStatement.withContextActivity(
+		updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
 				`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}`,
-				'course'
-			);
-		updatedStatement.withContextActivity(
+				lessonType
+			)
+			.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
 				`${config.externalUrl}/simlets/${simletId}`,
-				'course'
-			)
+				courseType
+			);
 
         return updatedStatement;
     }
