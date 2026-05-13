@@ -822,7 +822,6 @@ export class Activity {
 							if(trace.result && trace.result.completion && Boolean(trace.result.completion)) {
 								await this.setCompletion(true, new Date(trace.timestamp), current_user_id);
 							}
-							lrsclient.flush();
 							break;
 						default:
 							logger.info(`OTHER VERB ${trace.verb.id} for ACTIVITY ${this.activity_type}, no state change applied`);

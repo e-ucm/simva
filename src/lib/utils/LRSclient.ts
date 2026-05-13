@@ -24,7 +24,6 @@ export class LRSClient {
 	filter: InstanceType<typeof ScalableBloomFilter>;
 	readonly #backupPath: string;
 	lrs!: LRSTracker;
-	flushLRS: boolean = false;
 
 	/**
 	 * Creates a new LRSClient instance
@@ -65,9 +64,6 @@ export class LRSClient {
 		this.lrs = lrs; // Only assign after successful initialization
 	}
 
-	flush() {
-		this.flushLRS = true;
-	}
 	/**
 	 * Loads bloom filter from backup file
 	 * @returns {InstanceType<typeof ScalableBloomFilter> | null} Loaded filter or null if not found/invalid
@@ -231,10 +227,6 @@ export class LRSClient {
 			ids.push(traceBuilder.statement?.id);
 		}
 		await this.lrs.flush();
-		if(this.flushLRS) {
-			await this.lrs.flush();
-			this.flushLRS = false;
-		}
 		return ids;
 	}
 
