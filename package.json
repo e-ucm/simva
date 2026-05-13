@@ -10,7 +10,7 @@
     "lint": "eslint",
     "updateQueryDocs": "npx tsx updateQueryDocs.ts",
     "rebuild-sqlite": "npm rebuild sqlite3",
-    "validate-openapi": "npx openapi-cli validate api.yaml",
+    "validate-openapi": "npx --yes @redocly/cli lint api.yaml",
     "test": "npm run rebuild-sqlite && NODE_ENV=test jest --verbose",
     "test:watch": "npm run rebuild-sqlite && NODE_ENV=test jest --watchAll --verbose",
     "test:coverage": "npm run rebuild-sqlite && NODE_ENV=test jest --coverage --verbose",

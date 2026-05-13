@@ -41,13 +41,18 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/HealthCheckSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
         '500':
           $ref: '#/components/responses/InternalServerError'
     head:
       summary: Health check (HEAD)
+      operationId: healthCheckHead
       responses:
         '200':
           $ref: '#/components/responses/HealthCheckSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /events:
@@ -76,6 +81,16 @@ paths:
       responses:
         '200':
           description: completion from limesurvey
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    example: Message treated
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -188,6 +203,8 @@ paths:
         Receives two valid JWT tokens and adds to the main
         account, as an external_entity, the secondary account
       responses:
+        '200':
+          description: accounts linked successfully
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -215,6 +232,8 @@ paths:
         Receives the SSO events and updates the users, both creating
         the users and updating their roles and permissions 
       responses:
+        '200':
+          description: events processed successfully
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -503,6 +522,8 @@ paths:
       description: |
         Deleted the designed simlet
       responses:
+        '200':
+          description: simlet deleted
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -2069,6 +2090,8 @@ paths:
         If the activity is openable, redirects the user to
         the activity landing.
       responses:
+        '200':
+          description: activity is openable
         '307':
           description: redirects to the valid landing
         '400':
@@ -2613,7 +2636,7 @@ paths:
         - students
         - lrsmanagers
       summary: gets the statement of the activity
-      operationId: getStatement
+      operationId: getActivityLrsStatements
       description: |
         Get the statement object of the activity for a student
       responses:
@@ -3446,7 +3469,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/lti_login_hint'
         - $ref: '#/components/parameters/lti_message_hint'
-  /lti/context/{id}/lineitems/:
+  /lti/context/{id}/lineitems:
     get:
       tags:
         - administrators
@@ -3475,7 +3498,7 @@ paths:
           $ref: '#/components/responses/NotImplementedError'
       parameters:
         - $ref: '#/components/parameters/contextId'
-  /lti/context/{id}/lineitems/{lineitem}/:
+  /lti/context/{id}/lineitems/{lineitem}:
     get:
       tags:
         - administrators
@@ -3978,14 +4001,6 @@ components:
       x-client-secret: "{{clientSecret}}"
       x-callback-url: "https://oauth.pstmn.io/v1/callback"
   parameters:
-    id:
-      in: path
-      name: id
-      required: true
-      schema:
-        type: integer
-        example: 1234567890
-      description: The ID of the resource
     userId:
       in: path
       name: userid
@@ -4190,14 +4205,6 @@ components:
         type: boolean
       description: |
         If true, the new generation of groups will be used
-    token:
-      in: query
-      name: token
-      description: |
-        the jwt token to authenticate the user for which the information is required for testing purposes
-      schema:
-        type: string
-        format: 'token1'
     keycloakDelete:
       in: query
       name: keycloakDelete
@@ -4422,7 +4429,7 @@ components:
           format: binary
     events:
       required:
-      - eventname
+      - name
       type: object
       properties:
         name:
@@ -4537,6 +4544,9 @@ components:
           user_id:
             type: integer
             example: 456
+          username:
+            type: string
+            example: "teacher1"
           isCurrentUser:
             type: boolean
             example: true
@@ -4596,7 +4606,7 @@ components:
           - participants
           - allocations
         properties:
-          groupid:
+          group_id:
             type: integer
             example: 123
           group_owner_user_id:
@@ -5015,7 +5025,7 @@ components:
         - expires
         - active
       properties:
-        id:
+        sid:
           type: integer
           example: 326392
         gsid:
@@ -5111,6 +5121,10 @@ components:
           activity_trace_storage:
             type: boolean
             example: true
+          activity_description:
+            type: string
+            nullable: true
+            example: "Activity description"
           activity_comply_with_GDPR:
             type: boolean
             example: true
@@ -5178,17 +5192,36 @@ components:
           activity_can_be_restarted:
             type: boolean
             example: false
+    manualActivityRequiredFields:
+      type: object
+      required:
+      - manual_user_managed
+      - manual_ressource_type
+      - manual_ressource_url
+      - activity_trace_storage
+      - activity_can_be_restarted
+      properties:
+        manual_user_managed:
+          type: boolean
+          example: true
+        manual_ressource_type:
+          type: string
+          enum: ["WEB", "EXTERNAL"]
+          example: "WEB"
+        manual_ressource_url:
+          type: string
+          nullable: true
+          example: "https://example.com/manual-activity-resource"
+        activity_trace_storage:
+          type: boolean
+          example: true
+        activity_can_be_restarted:
+          type: boolean
+          example: false
     manualActivityCreation:
       allOf:
-      - $ref: '#/components/schemas/manualActivity'
       - $ref: '#/components/schemas/noTypedActivityCreation'
-      - type: object
-        required:
-        - manual_user_managed
-        - manual_ressource_type
-        - manual_ressource_url
-        - activity_trace_storage
-        - activity_can_be_restarted
+      - $ref: '#/components/schemas/manualActivityRequiredFields'
     gameplayActivity:
       allOf:
       - $ref: '#/components/schemas/noTypedActivity'
@@ -5214,16 +5247,54 @@ components:
           activity_can_be_restarted:
             type: boolean
             example: false
+    gameplayActivityRequiredFields:
+      type: object
+      required:
+      - game_type
+      - game_url
+      - activity_trace_storage
+      - activity_can_be_restarted
+      properties:
+        game_type:
+          type: string
+          enum: ["WEB", "DESKTOP"]
+          example: "WEB"
+        game_url:
+          type: string
+          nullable: true
+          example: "https://example.com/gameplay-activity-resource"
+        activity_trace_storage:
+          type: boolean
+          example: true
+        activity_can_be_restarted:
+          type: boolean
+          example: false
+    gameplayActivityMapperRequiredFields:
+      type: object
+      required:
+      - game_backup
+      - game_scorm_xapi
+      - game_type
+      - game_url
+      properties:
+        game_backup:
+          type: boolean
+          example: false
+        game_scorm_xapi:
+          type: boolean
+          example: false
+        game_type:
+          type: string
+          enum: ["WEB", "DESKTOP"]
+          example: "WEB"
+        game_url:
+          type: string
+          nullable: true
+          example: "https://example.com/gameplay-activity-resource"
     gameplayActivityCreation:
       allOf:
-      - $ref: '#/components/schemas/gameplayActivity'
       - $ref: '#/components/schemas/noTypedActivityCreation'
-      - type: object
-        required:
-        - game_type
-        - game_url
-        - activity_trace_storage
-        - activity_can_be_restarted
+      - $ref: '#/components/schemas/gameplayActivityRequiredFields'
     limesurveyActivityMapper:
       allOf:
       - $ref: '#/components/schemas/limesurveyActivity'
@@ -5241,23 +5312,12 @@ components:
             example: "en"
     manualActivityMapper:
       allOf:
-      - $ref: '#/components/schemas/manualActivity'
       - $ref: '#/components/schemas/noTypedActivityMapper'
-      - type: object
-        required:
-        - manual_user_managed
-        - manual_ressource_type
-        - manual_ressource_url
+      - $ref: '#/components/schemas/manualActivityRequiredFields'
     gameplayActivityMapper:
       allOf:
-      - $ref: '#/components/schemas/gameplayActivity'
       - $ref: '#/components/schemas/noTypedActivityMapper'
-      - type: object
-        required:
-        - game_backup
-        - game_scorm_xapi
-        - game_type
-        - game_url
+      - $ref: '#/components/schemas/gameplayActivityMapperRequiredFields'
     activity:
       anyOf:
       - $ref: '#/components/schemas/limesurveyActivity'
@@ -5461,12 +5521,6 @@ components:
       additionalProperties:
         type: boolean
         nullable: true
-    activitySuspensionMapper:
-      type: object
-      description: Key/value object to store the suspension data of the activity
-      additionalProperties:
-        type: boolean
-        nullable: true
     activityHasResultMapper:
       type: object
       description: Key/value object to store the has result data of the activity
@@ -5608,10 +5662,10 @@ components:
       - platform
       type: object
       properties:
-        username:
+        tool:
           type: boolean
           example: true
-        password:
+        platform:
           type: boolean
           example: false
     link_accounts:
