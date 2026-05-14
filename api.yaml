@@ -1564,6 +1564,66 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/activityCreation'
+  /simlets/{simletid}/sessions/{sessionid}/activities/{activityid}:
+    patch:
+      tags:
+        - administrators
+        - teachers
+      summary: Modifies an activity in a session.
+      operationId: patchSessionActivity
+      description: |
+        Modifies the activity within the specified session.
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/activity'
+      responses:
+        '200':
+          description: Activity updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - administrators
+        - teachers
+      summary: Deletes an activity from a session.
+      operationId: deleteSessionActivity
+      description: |
+        Deletes the specified activity from the session.
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/activityId'
+      responses:
+        '204':
+          description: Activity deleted
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /simlets/{simletid}/sessions/{sessionid}/lrs/statements:
     get:
       tags:
@@ -1995,61 +2055,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/activityMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      parameters:
-        - $ref: '#/components/parameters/activityId'
-    patch:
-      summary: Modifies the activity.
-      tags:
-        - administrators
-        - teachers
-      operationId: patchActivity
-      description: |
-        Modifies the activity
-      parameters:
-        - $ref: '#/components/parameters/activityId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/activity'
-      responses:
-        '200':
-          description: Activity updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/activityMapper'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/AuthentificationError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '406':
-          $ref: '#/components/responses/ValidationError'
-        '409':
-          $ref: '#/components/responses/ConflictError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      tags:
-        - administrators
-        - teachers
-      summary: deletes the activity with the given ID
-      operationId: deleteActivity
-      description: |
-        Deleted the specified activity
-      responses:
-        '200':
-          description: activity deleted
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
