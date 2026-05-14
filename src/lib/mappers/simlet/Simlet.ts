@@ -330,6 +330,7 @@ export class Simlet {
 
     async createGroup(body: Partial<SimletGroup>): Promise<SimletGroup> {
       this.canEdit();
+      this.isArchived();
       if (!this.current_user_id) {
             throw new AuthentificationError("Current user ID is not set");
         }
@@ -339,6 +340,7 @@ export class Simlet {
 
     async updateGroup(groupId: number, body: Partial<SimletGroup>): Promise<SimletGroup> {
         this.canEdit();
+        this.isArchived();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         const oldAllocatorType = group.group_allocator_type;
         logger.debug({ groupId, oldAllocatorType, newAllocatorType: body.group_allocator_type }, 'updateGroup checking allocator type change');
@@ -360,12 +362,14 @@ export class Simlet {
     
     async addGroupParticipant(groupId: number, participantId: number): Promise<SimletGroup> {
         this.canEdit();
+        this.isArchived();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         return await group.addParticipant(participantId);
     }
     
     async allocateToSession(group_id: number, sessionId: number, group_id_or_participant_id: number) : Promise<SimletGroup>{
         this.canEdit();
+        this.isArchived();
         let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.is_admin, this.current_user_id);
         await group.allocateToSession(sessionId, group_id_or_participant_id);
         return group;
@@ -373,6 +377,7 @@ export class Simlet {
 
     async createGroupParticipant(groupId: number, body: Partial<SimletParticipant>): Promise<SimletParticipant> {
         this.canEdit();
+        this.isArchived();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         let participant = await group.createParticipant(body);
         return participant;
@@ -380,6 +385,7 @@ export class Simlet {
 
     async deleteGroupParticipant(groupId: number, participantId: number, keycloakDelete: boolean = false): Promise<void> {
         this.canEdit();
+        this.isArchived();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         await group.deleteParticipant(participantId, keycloakDelete);
     }
@@ -396,6 +402,7 @@ export class Simlet {
 
     async getUserPermissions() : Promise<SingleUserPermission[]> {
         this.canEdit();
+        this.isArchived();
         // Implementation for retrieving user permissions for this simlet
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return permissions.permissions;
@@ -403,6 +410,7 @@ export class Simlet {
 
     async addUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
+        this.isArchived();
         // Implementation for adding user permission to this simlet
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.addUserPermission(user_id, permission);
@@ -410,6 +418,7 @@ export class Simlet {
 
     async removeUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
+        this.isArchived();
         // Implementation for removing user permission from this simlet
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
         return await permissions.removeUserPermission(user_id, permission);
@@ -417,6 +426,7 @@ export class Simlet {
 
     async removeGroup(group_id: number): Promise<Simlet> {
         this.canEdit();
+        this.isArchived();
         // Implementation for remove a group to this simlet
         let group = await SimletGroup.getFromDbData(this.simlet_id, group_id, this.is_admin, this.current_user_id);
         await db.Tables.ExperimentalParticipants.destroy({ where: { simlet_id: this.simlet_id, group_id : group_id }});
@@ -427,6 +437,7 @@ export class Simlet {
 
     async addSession(session_data : any) : Promise<Session> {
         this.canEdit();
+        this.isArchived();
         session_data.simlet_id = this.simlet_id;
         session_data.session_order = this.sessions.length + 1;
         let session = await Session.createFromDbData(session_data, this.is_admin, this.current_user_id!);
@@ -458,6 +469,7 @@ export class Simlet {
     
     async createPermissions(body: any) {
         this.canEdit();
+        this.isArchived();
         let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id, this.is_admin);
         return await permissions.createPermissions(body);
     }
@@ -468,12 +480,14 @@ export class Simlet {
     
     async patchPermissionsForUser(userId: number, body: any) {
         this.canEdit();
+        this.isArchived();
         let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
         return await permission.update(body.permission);
     }
 
     async deletePermissionsForUser(userId: number) {
         this.canEdit();
+        this.isArchived();
         let permission = await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
         logger.debug(permission, "permission");
         return await permission.delete();
@@ -497,6 +511,7 @@ export class Simlet {
 
     async createShlinkURL(shlink: any): Promise<SimletShlink> {
         this.canEdit();
+        this.isArchived();
         shlink.longUrl = `${config.externalUrl}/scheduler/${this.simlet_id}`;
         shlink.title = `scheduler_${this.simlet_id}`;
         shlink.tag = 'simlet';
@@ -509,6 +524,7 @@ export class Simlet {
 
     async updateShlinkURL(shlink: any): Promise<SimletShlink> {
         this.canEdit();
+        this.isArchived();
         let existingShlink = await SimletShlink.getFromDbData(this.simlet_id);
         if(!existingShlink) {
             throw new NotFoundError(`Shlink URL for simlet ID ${this.simlet_id} not found.`);
@@ -518,6 +534,7 @@ export class Simlet {
 
     async deleteShlinkURL(): Promise<void> {
         this.canEdit();
+        this.isArchived();
         let shlink = await SimletShlink.getFromDbData(this.simlet_id);
         await shlink.deleteShLink();
     }
