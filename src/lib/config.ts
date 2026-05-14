@@ -96,6 +96,12 @@ config.nodeExtraCaCerts = process.env.NODE_EXTRA_CA_CERTS || '/var/lib/simva/tls
 // External URL
 config.externalUrl = process.env.EXTERNAL_URL || 'https://external.test';
 
+// CORS configuration
+config.cors = {};
+config.cors.allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map((o: string) => o.trim())
+  : [];
+
 // Admin configuration
 config.admin = {};
 config.admin.username = process.env.ADMIN_USERNAME || 'admin';

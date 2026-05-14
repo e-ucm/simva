@@ -17,6 +17,8 @@
  */
 
 import express, { NextFunction, Request, Response } from 'express';
+import cors from 'cors';
+import { dynamicCorsOrigin } from '@/lib/utils/corsOrigins';
 import * as OpenApiValidator from 'express-openapi-validator';
 import userRoutes from '@/routes/users/user.routes';
 import groupRoutes from '@/routes/groups/group.routes';
@@ -49,6 +51,15 @@ export const app: express.Express = express();
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+const corsOptions: cors.CorsOptions = {
+  origin: dynamicCorsOrigin,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Experience-API-Version'],
+  credentials: true,
+};
+app.use(cors(corsOptions));
+//app.options('*', cors(corsOptions));
 
 app.use((req: Request, _: Response, next : NextFunction) => {
   logger.debug(`${req.method} at ${req.originalUrl} with body ${req.body}`);
