@@ -22,6 +22,21 @@ export async function getStatementsLRSForActivity(req: AuthenticatedRequest, res
     }
 }
 
+export async function getTestStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+        let currentUser = req.user?.sql;
+        const activityId = parseInt(req.params.activity_id as string);
+        if(isNaN(activityId)) {
+            throw new BadRequestError("Invalid activity ID");
+        }
+        const access = getAccess(currentUser);
+        const statements = await activitiesLRSService.getTestStatementsLRSForActivity(access.currentUserId as number, access.is_admin, access.allocated, activityId, req.query);
+        return res.status(200).json(statements); 
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function getMoreStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;

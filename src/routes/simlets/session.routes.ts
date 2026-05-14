@@ -46,6 +46,7 @@ router.delete("/:session_id/tags/:tag_id", SessionControler.deleteTagForUser);
 
 // New route for getting LRS statements for a session
 router.get("/:session_id/lrs/statements", SessionControler.getLRSStatementsForSession);
+router.get("/:session_id/lrs_test_statements", SessionControler.getTestLRSStatementsForSession);
 
 // Mount sub-routers
 router.use("/:session_id/permissions", sessionPermissionsRouter);

@@ -426,7 +426,7 @@ paths:
         - teachers
         - students
       summary: gets the list of scheduler entries for the current user
-      operationId: getAllSimlets
+      operationId: getAllSchedulerSimlets
       description: |
         Obtains the list of scheduler entries for the current user.
       responses:
@@ -1673,6 +1673,53 @@ paths:
         - $ref: '#/components/parameters/lrsVerb'
         - $ref: '#/components/parameters/lrsVoidedStatementId'
         - $ref: '#/components/parameters/lrsMore'
+  /simlets/{simletid}/sessions/{sessionid}/lrs_test_statements:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - lrsmanagers
+      summary: gets the statement of the session for a student
+      operationId: getTestStatement
+      description: |
+        Get the statement object of the session for a student
+      responses:
+        '200':
+          description: the result of the students required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/lrsAgent'
+        - $ref: '#/components/parameters/lrsAttachments'
+        - $ref: '#/components/parameters/lrsAscending'
+        - $ref: '#/components/parameters/lrsActivity'
+        - $ref: '#/components/parameters/lrsFormat'
+        - $ref: '#/components/parameters/lrsRelatedAgents'
+        - $ref: '#/components/parameters/lrsRelatedActivities'
+        - $ref: '#/components/parameters/lrsLimit'
+        - $ref: '#/components/parameters/lrsFrom'
+        - $ref: '#/components/parameters/lrsRegistration'
+        - $ref: '#/components/parameters/lrsSince'
+        - $ref: '#/components/parameters/lrsStatementId'
+        - $ref: '#/components/parameters/lrsUntil'
+        - $ref: '#/components/parameters/lrsVerb'
+        - $ref: '#/components/parameters/lrsVoidedStatementId'
+        - $ref: '#/components/parameters/lrsMore'
   /simlets/{simletid}/permissions:
     get:
       tags:
@@ -2670,6 +2717,52 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/surveyId'
+  /activities/{activityid}/lrs_test_statements:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - lrsmanagers
+      summary: gets the statement of the activity
+      operationId: getTestActivityLrsStatements
+      description: |
+        Get the statement object of the activity for a teacher
+      responses:
+        '200':
+          description: the result of the students required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/lrsAgent'
+        - $ref: '#/components/parameters/lrsAttachments'
+        - $ref: '#/components/parameters/lrsAscending'
+        - $ref: '#/components/parameters/lrsActivity'
+        - $ref: '#/components/parameters/lrsFormat'
+        - $ref: '#/components/parameters/lrsRelatedAgents'
+        - $ref: '#/components/parameters/lrsRelatedActivities'
+        - $ref: '#/components/parameters/lrsLimit'
+        - $ref: '#/components/parameters/lrsFrom'
+        - $ref: '#/components/parameters/lrsRegistration'
+        - $ref: '#/components/parameters/lrsSince'
+        - $ref: '#/components/parameters/lrsStatementId'
+        - $ref: '#/components/parameters/lrsUntil'
+        - $ref: '#/components/parameters/lrsVerb'
+        - $ref: '#/components/parameters/lrsVoidedStatementId'
+        - $ref: '#/components/parameters/lrsMore'
   /activities/{activityid}/lrs/statements:
     get:
       tags:

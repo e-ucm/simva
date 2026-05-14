@@ -296,3 +296,22 @@ export async function getLRSStatementsForSession(
     next(err);
   }
 }
+
+export async function getTestLRSStatementsForSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    logger.debug({simletId, sessionId, userId: currentUser?.user_id} , "Getting LRS statements for session with simlet ID, session ID and user ID");
+    let statements= await sessionService.getTestLRSStatements(simletId, sessionId, access.is_admin, access.currentUserId, req.query);
+    logger.debug("LRS statements retrieved for session with simlet ID, session ID and user ID");
+    res.json(statements);
+  } catch (err) {
+    next(err);
+  }
+}

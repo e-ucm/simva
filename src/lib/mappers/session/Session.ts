@@ -654,7 +654,7 @@ export class Session {
         if(query.more) {
 			statements = await client.getMoreStatements(query.more);
 		} else {
-            query.activity = this.getLRSSessionId();
+            query.activity = lrsclient.getSessionUrl(this.simlet_id, this.session_id);
             query.related_activities = true;
 			statements = await client.getStatementByQuery(query);
 		}
@@ -662,8 +662,23 @@ export class Session {
         return statements;
     }
 
-    getLRSSessionId(): any {
-        return `${config.externalUrl}/simlets/${this.simlet_id}/sessions/${this.session_id}`;
+    async getTestLRSStatements(query: any): Promise<Object> {
+        let client = await lrsclient.getLRSClient();
+        let statements;
+        logger.debug({query}, "Querying LRS for statements with query:");
+        if(query.more) {
+			statements = await client.getMoreStatements(query.more);
+		} else {
+            query.activity = lrsclient.getSessionUrl(this.simlet_id, this.session_id, true);
+            query.related_activities = true;
+			statements = await client.getStatementByQuery(query);
+		}
+        logger.debug("LRS statements retrieved for session with simlet ID, session ID and user ID");
+        return statements;
+    }
+
+    getLRSSessionId(useTest: boolean): any {
+        return lrsclient.getSessionUrl(this.simlet_id, this.session_id, useTest);
     }
     
     export(withData: boolean): Promise<object> {

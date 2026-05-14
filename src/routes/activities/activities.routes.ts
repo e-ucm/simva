@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as activitiesControlers from "@/controlers/activities/activities.controlers";
+import * as activitiesLRSControlers from "@/controlers/activities/activitiesLRS.controler";
 import activitiesLRSroutes from "@/routes/activities/activities.lrs.routes";
 
 /**
@@ -42,6 +43,7 @@ router.get("/:activity_id/result", activitiesControlers.getResultsForActivity);
 router.post("/:activity_id/result", activitiesControlers.setResultForActivity);
 router.get("/:activity_id/hasResult", activitiesControlers.hasResultsForActivity);
 router.get("/:activity_id/tracker_config", activitiesControlers.getTrackerConfigForActivity);
+router.get("/:activity_id/lrs_test_statements", activitiesLRSControlers.getTestStatementsLRSForActivity);
 
 router.use("/:activity_id/lrs", activitiesLRSroutes);
 

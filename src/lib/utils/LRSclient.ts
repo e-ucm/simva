@@ -140,7 +140,27 @@ export class LRSClient {
 		});
 	}
 
-	updateMissingTraceElements(trace : any, participant: string, simletId: number, sessionId: number, activityId?: number): any {
+	getActivityUrl(simletId: number, sessionId: number, activityId: number, useTestUrls: boolean = false): string {
+		const prefix = useTestUrls ? "/test" : "";
+		return `${config.externalUrl}${prefix}/simlets/${simletId}/sessions/${sessionId}/activities/${activityId}`;
+	}
+
+	getSessionUrl(simletId: number, sessionId: number, useTestUrls: boolean = false): string {
+		const prefix = useTestUrls ? "/test" : "";
+		return `${config.externalUrl}${prefix}/simlets/${simletId}/sessions/${sessionId}`;
+	}
+
+	getSimletUrl(simletId: number, useTestUrls: boolean = false): string {
+		const prefix = useTestUrls ? "/test" : "";
+		return `${config.externalUrl}${prefix}/simlets/${simletId}`;
+	}
+
+	getStandaloneActivityUrl(activityId: number, useTestUrls: boolean = false): string {
+		const prefix = useTestUrls ? "/test" : "";
+		return `${config.externalUrl}${prefix}/activities/${activityId}`;
+	}
+
+	updateMissingTraceElements(trace : any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): any {
 		let updatedStatement = trace;
 		logger.info('Updating missing trace elements');
         const now = new Date();
@@ -162,29 +182,29 @@ export class LRSClient {
 		if(activityId) {
 			updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
-				`${config.externalUrl}/activities/${activityId}`,
+				this.getStandaloneActivityUrl(activityId, useTestUrls),
 				activityType
 			)
 			.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-				`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}/activities/${activityId}`,
+				this.getActivityUrl(simletId, sessionId, activityId, useTestUrls),
 				activityType
 			);
 		} else {
 			updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
-				`${config.externalUrl}/simlets/${simletId}`,
+				this.getSimletUrl(simletId, useTestUrls),
 				simletType
 			)	
 		}
 		updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-				`${config.externalUrl}/simlets/${simletId}/sessions/${sessionId}`,
+				this.getSessionUrl(simletId, sessionId, useTestUrls),
 				sessionType
 			)
 			.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-				`${config.externalUrl}/simlets/${simletId}`,
+				this.getSimletUrl(simletId, useTestUrls),
 				simletType
 			);
 
@@ -225,7 +245,7 @@ export class LRSClient {
 		return ids;
 	}
 
-	async setStatement(statement: any, participant: string, simletId: number, sessionId: number, activityId?: number): Promise<number[]> {
+	async setStatement(statement: any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): Promise<number[]> {
 		if (this.checkLRSEnable()) {
 			await this.initJSScormTracker();
 		}
@@ -234,19 +254,23 @@ export class LRSClient {
             const traces: any[] = [];
             for(let traceId = 0; traceId < statement.length; traceId++) {
 				const traceBuilder = this.lrs.fromXAPI(statement[traceId]);
-                traces.push(this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId));
+                traces.push(this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId, useTestUrls));
             }
 			let response: number[] = [];
-			response = await this.sendTracesToKafka(traces, activityId);
+			if(!useTestUrls) {
+				response = await this.sendTracesToKafka(traces, activityId);
+			}
 			if(config.lrs.enabled) {
             	 response = await this.sendTracesToLRS(traces);
 			}
             toret = response;
         } else if(statement && typeof statement === 'object'){
 			const traceBuilder = this.lrs.fromXAPI(statement);
-            const trace = this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId);
+            const trace = this.updateMissingTraceElements(traceBuilder, participant, simletId, sessionId, activityId, useTestUrls);
             let response: number[] = [];
-			response = await this.sendTracesToKafka([trace], activityId);
+			if(!useTestUrls) {
+				response = await this.sendTracesToKafka([trace], activityId);
+			}
 			if(config.lrs.enabled) {
             	 response = await this.sendTracesToLRS([trace]);
 			}

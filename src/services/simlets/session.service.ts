@@ -282,3 +282,8 @@ export async function getLRSStatements(simletId: number, sessionId: number, is_a
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
   return await session.getLRSStatements(query);
 }
+
+export async function getTestLRSStatements(simletId: number, sessionId: number, is_admin: boolean, currentUserId: number, query: any): Promise<Object> {
+  const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
+  return await session.getTestLRSStatements(query);
+}

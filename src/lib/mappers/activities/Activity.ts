@@ -719,7 +719,16 @@ export class Activity {
 			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/simlets/${this.simlet_id}`, jsTracker.ALL.ACTIVITYTYPES.COURSE);
 			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING, `${config.externalUrl}/sessions/${this.session_id}`, jsTracker.ALL.ACTIVITYTYPES.LESSON);
 			logger.info(statement? statement.statement.toXAPI() : "No statement generated", "XAPI Statement:");
-			lrsclient.sendTracesToLRS([lrsclient.updateMissingTraceElements(statement!, this.current_user_username?this.current_user_username:"unknown", this.simlet_id, this.session_id, this.activity_id)]);
+			lrsclient.sendTracesToLRS([
+				lrsclient.updateMissingTraceElements(
+					statement!,
+					this.current_user_username ? this.current_user_username : "unknown",
+					this.simlet_id,
+					this.session_id,
+					this.activity_id,
+					false
+				)
+			]);
 		}
 		
 	}
@@ -837,8 +846,15 @@ export class Activity {
 		}
 	}
 
-	async sendLRSStatements(current_user_id: number, statements: any): Promise<number[]> {
-		let ids = await lrsclient.setStatement(statements, (await User.getFromDbData(current_user_id)).username, this.simlet_id, this.session_id, this.activity_id);
+	async sendLRSStatements(current_user_id: number, statements: any, useTestUrls: boolean = false): Promise<number[]> {
+		let ids = await lrsclient.setStatement(
+			statements,
+			(await User.getFromDbData(current_user_id)).username,
+			this.simlet_id,
+			this.session_id,
+			this.activity_id,
+			useTestUrls
+		);
 		return ids;
 	}
 
@@ -869,6 +885,23 @@ export class Activity {
 		return statements;
 	}
 
+	async getTestLRSStatements(query: any): Promise<Object> {
+		let client = await lrsclient.getLRSClient();
+		logger.debug({query}, "Querying LRS for statements with query:");
+		let statements;
+		if(query.more) {
+			statements = await client.getMoreStatements(query.more);
+		} else {
+			query.activity = this.getLRSActivityId({ useTestUrls: true });
+			query.related_activities = true;
+			statements = await client.getStatementByQuery(query);
+		}
+		if(statements.data && statements.data.more !== '') {
+			logger.debug({moreUrl: statements.data.more}, "More statements available at URL:");
+		}
+		return statements;
+	}
+
 	async getLRSAgents(query: any): Promise<Object> {
 		let client = await lrsclient.getLRSClient();
 		let agent = await client.getAgent(query);
@@ -883,7 +916,15 @@ export class Activity {
 	}
 
 	private getLRSActivityId(params: any = {}): string {
-		return params.activityId || `${config.externalUrl}/simlets/${this.simlet_id}/sessions/${this.session_id}/activities/${this.activity_id}`;
+		return (
+			params.activityId ||
+			lrsclient.getActivityUrl(
+				this.simlet_id,
+				this.session_id,
+				this.activity_id,
+				Boolean(params.useTestUrls)
+			)
+		);
 	}
 
 	async getLRSAgentsProfile(params: any = {}): Promise<Object> {
