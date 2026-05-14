@@ -252,15 +252,37 @@ export class Simlet {
     async patch(data: any) : Promise<Simlet> {
         this.canEdit();
         let toUpdate: any = {};
+        if(typeof data.simlet_archived == "boolean") {
+            let sessions = await this.getSessions();
+            if(this.simlet_archived) {
+                if(data.simlet_archived) {
+                    throw new ValidationError(`Simlet is already archived.`);
+                } else {
+                    // If unarchiving, we don't need to check session status
+                }
+            } else {
+                if(!data.is_archived) {
+                    throw new ValidationError(`Simlet is already active.`);
+                } else {
+                    for(const session of sessions) {
+                        if(session.session_status !== session.STATUS.TERMINATED) {
+                            throw new ValidationError(`Cannot archive simlet with active sessions. Please terminate all sessions before archiving.`);
+                        }
+                    }
+                }
+            }
+            toUpdate.simlet_archived = data.simlet_archived;
+        } else {
+            // If archived status is not being updated, we need to check if the simlet is already archived before allowing other updates
+            this.isArchived();
+        }
         if(typeof data.simlet_name == "string") {
             toUpdate.simlet_name = data.simlet_name;
         }
         if(typeof data.simlet_description == "string") {
             toUpdate.simlet_description = data.simlet_description;
         }
-        if(typeof data.simlet_archived == "boolean") {
-            toUpdate.simlet_archived = data.simlet_archived;
-        }
+        
         let model = await db.Tables.Simlets.findOne({ where: { simlet_id: this.simlet_id } });
         if(!model) {
             throw new NotFoundError(`Simlet with ID ${this.simlet_id} not found.`);
@@ -268,6 +290,13 @@ export class Simlet {
         await model.update(toUpdate);
         Object.assign(this, toUpdate);
         return this;
+    }
+
+    isArchived() : boolean {
+        if(this.simlet_archived) {
+            throw new ValidationError("Archived simlets cannot be edited. Please unarchive the simlet before making changes.");
+        }
+        return this.simlet_archived;
     }
 
     canEdit() : boolean {
