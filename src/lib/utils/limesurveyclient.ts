@@ -126,6 +126,32 @@ export class LimeSurveyClient {
         });
     }
 
+    private normalizeSurveyDate(value: unknown): string | null {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+
+        if (typeof value !== 'string') {
+            return null;
+        }
+
+        const parsedDate = new Date(value.includes('T') ? value : value.replace(' ', 'T'));
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return null;
+        }
+
+        return parsedDate.toISOString();
+    }
+
+    private normalizeSurveyDates(survey: Survey): Survey {
+        return {
+            ...survey,
+            startdate: this.normalizeSurveyDate(survey.startdate),
+            expires: this.normalizeSurveyDate(survey.expires)
+        };
+    }
+
     private handleError(methodName: string, error: any): never {
         this.log(`LimeSurveyClient.${methodName} -> ERROR:`);
         this.log(error);
@@ -346,7 +372,7 @@ export class LimeSurveyClient {
         }
         
         this.log('LimeSurveyClient.getSurvey -> Completed');
-        return survey;
+        return this.normalizeSurveyDates(survey);
     }
 
     /**
@@ -357,10 +383,11 @@ export class LimeSurveyClient {
         
         await this.ensureAuthenticated();
         const result = await this.request<Survey[]>('list_surveys', [this.sessionKey]);
+        const surveys = result.map((survey) => this.normalizeSurveyDates(survey));
         
         this.log('LimeSurveyClient.getSurveyList -> Completed');
-        this.log(JSON.stringify(result, null, `\t`));
-        return result;
+        this.log(JSON.stringify(surveys, null, `\t`));
+        return surveys;
     }
 
     /**
@@ -373,7 +400,7 @@ export class LimeSurveyClient {
         const result = await this.request<Survey[]>('list_surveys', [this.sessionKey, username]);
         
         this.log('LimeSurveyClient.getSurveysFromUser -> Completed');
-        return result;
+        return result.map((survey) => this.normalizeSurveyDates(survey));
     }
     
     /**
