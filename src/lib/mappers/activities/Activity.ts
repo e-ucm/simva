@@ -1141,7 +1141,7 @@ export class Activity {
 				allocated_user_id: this.allocated_user_id,
 				allocated_username: this.allocated_username,
 				allocated_isToken: this.allocated_isToken,
-				allocated_token: this.allocated_token
+				allocated_token: this.allocated_token || null,
 			};
 		} else {
 			return obj;

@@ -55,13 +55,33 @@ export async function getAllSimlets(
     if (access.is_admin) {
       simlets = await simletService.getAllSimlets(searchString, limit, offset);
       res.json(simlets.map(s => s.toJSON()));
-    } else if (access.allocated) {
-      simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, limit, offset);
-      res.json(simlets.map(s => s.toJSON()));
     } else {
       simlets = await simletService.getSimletsByUserId(access.currentUserId, searchString, limit, offset);
       res.json(simlets.map(s => s.toJSON()));
     }
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getAllSchedulerSimlets(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const searchString = String(req.query.search || '');
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    let offset;
+    if(limit !== undefined && req.query.offset === undefined) {
+        offset = 0;
+    } else {
+        offset = parseInt(req.query.offset as string)|| undefined;
+    }
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    let simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, limit, offset);
+    res.json(simlets.map(s => s.toJSON()));
   } catch (err) {
     next(err);
   }
@@ -341,3 +361,4 @@ export function getTrackerConfig(
     next(err);
   }
 }
+

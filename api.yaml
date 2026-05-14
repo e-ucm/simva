@@ -359,7 +359,6 @@ paths:
       tags:
         - administrators
         - teachers
-        - students
       summary: gets the list of studies for the current teacher
       operationId: getAllSimlets
       description: |
@@ -419,6 +418,37 @@ paths:
             schema:
               $ref: '#/components/schemas/simletCreation'
         description: Simlet to be created
+  /simlets/scheduler:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+      summary: gets the list of scheduler entries for the current user
+      operationId: getAllSimlets
+      description: |
+        Obtains the list of scheduler entries for the current user.
+      responses:
+        '200':
+          description: the list of scheduler entries for the current user
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/simletMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
   /simlets/import:
     post:
         tags:
@@ -5368,6 +5398,7 @@ components:
               example: false
             allocated_token:
               type: string
+              nullable: true
               example: "abc123"
     activity_type:
       type: object

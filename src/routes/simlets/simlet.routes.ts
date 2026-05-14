@@ -67,6 +67,7 @@ router.get("/", SimletControler.getAllSimlets);
 router.post("/", SimletControler.createSimlet);
 //router.post('/import', importSimlet);
 router.get('/:simlet_id/export', SimletControler.exportSimlet);
+router.get("/scheduler", SimletControler.getAllSchedulerSimlets);
 
 // Individual resource endpoints
 router.get("/:simlet_id", SimletControler.getSimletById);
