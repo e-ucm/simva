@@ -38,7 +38,8 @@ async function shutdown(signal: string) {
   if (server) {
     server.close(async () => {
       logger.info('HTTP server closed');
-      try { 
+      try {
+        if (lrsclient.lrs) await lrsclient.lrs.flush();
         lrsclient.saveToFile();
         logger.debug('LRS client state saved');
       } catch (err) {

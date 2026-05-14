@@ -133,16 +133,11 @@ export class LRSClient {
 	 * Registers shutdown handlers to save filter on process exit
 	 */
 	registerShutdownHandler(): void {
-		const shutdown = () => {
-			logger.info('Shutdown signal received, flushing data and saving bloom filter...');
-			if(this.lrs) {
-				this.lrs.flush();
-			}
+		process.on('beforeExit', async () => {
+			await this.lrs.flush();
 			this.saveToFile();
-		};
-		process.on('SIGTERM', shutdown);
-		process.on('SIGINT', shutdown);
-		process.on('beforeExit', shutdown);
+			logger.debug('LRS client state saved');
+		});
 	}
 
 	updateMissingTraceElements(trace : any, participant: string, simletId: number, sessionId: number, activityId?: number): any {
