@@ -258,6 +258,7 @@ paths:
       tags:
         - administrators
         - teachers
+        - noroles
       summary: updates a user
       operationId: patchUserByUsername
       description: |
