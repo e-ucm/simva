@@ -18,6 +18,7 @@ import { AuthentificationError, ValidationError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { getAccess } from "@/controlers/users/user.helper";
 
+const INVALID_USER_QUERY_PARAM_MESSAGE = "Query param user must be a numeric user ID";
 
 function parseParticipantsId(participantsIdQuery: unknown): number[] {
   if (participantsIdQuery === undefined || participantsIdQuery === null) {
@@ -42,6 +43,46 @@ function parseParticipantsId(participantsIdQuery: unknown): number[] {
   }
 
   return participantsId;
+}
+
+function parseUserIdQueryParam(userQuery: unknown): number {
+  const participantId = userQuery ? parseInt(String(userQuery), 10) : NaN;
+
+  if (Number.isNaN(participantId)) {
+    throw new ValidationError(INVALID_USER_QUERY_PARAM_MESSAGE);
+  }
+
+  return participantId;
+}
+
+function parseBooleanStatus(value: unknown): boolean {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalizedValue = value.trim().toLowerCase();
+
+    if (normalizedValue === "true") {
+      return true;
+    }
+
+    if (normalizedValue === "false") {
+      return false;
+    }
+  }
+
+  if (typeof value === "number") {
+    if (value === 1) {
+      return true;
+    }
+
+    if (value === 0) {
+      return false;
+    }
+  }
+
+  throw new ValidationError("Body param status must be a boolean");
 }
 
 /**
@@ -156,10 +197,7 @@ export async function setProgressForActivity(
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
-      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
-      if (isNaN(participant_id)) {
-        throw new ValidationError("Query param user must be a numeric ID");
-      }
+      participant_id = parseUserIdQueryParam(req.query.user);
     }
     const result = await activitiesService.setProgressForActivity(activityId, access.allocated, access.is_admin, progress, participant_id, access.currentUserId);
     return res.json(result.toJSON());
@@ -193,14 +231,11 @@ export async function setInitializedForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const initialized = Boolean(req.body.status);
+    const initialized = parseBooleanStatus(req.body.status);
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
-      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
-      if (isNaN(participant_id)) {
-        throw new ValidationError("Query param user must be a numeric ID");
-      }
+      participant_id = parseUserIdQueryParam(req.query.user);
     }
     const result = await activitiesService.setInitializedForActivity(activityId, access.allocated, access.is_admin, initialized, participant_id, access.currentUserId);
     return res.json(result.toJSON());
@@ -234,14 +269,11 @@ export async function setCompletionForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const completed = Boolean(req.body.status);
+    const completed = parseBooleanStatus(req.body.status);
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
-      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
-      if (isNaN(participant_id)) {
-        throw new ValidationError("Query param user must be a numeric ID");
-      }
+      participant_id = parseUserIdQueryParam(req.query.user);
     }
     const result = await activitiesService.setCompletionForActivity(activityId, access.allocated, access.is_admin, completed, participant_id, access.currentUserId);
     return res.json(result.toJSON());
@@ -258,7 +290,7 @@ export async function setMultiCompletionForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const status = Boolean(req.body.status);
+    const status = parseBooleanStatus(req.body.status);
     const access = getAccess(currentUser);
     if (access.allocated) {
       throw new AuthentificationError("Students cannot set multi completion for activities");
@@ -278,14 +310,11 @@ export async function setSuspensionForActivity(
   try {
     const currentUser = req.user?.sql;
     const activityId = parseInt(req.params.activity_id as string);
-    const status = Boolean(req.body.status);
+    const status = parseBooleanStatus(req.body.status);
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
-      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
-      if (isNaN(participant_id)) {
-        throw new ValidationError("Query param user must be a numeric ID");
-      }
+      participant_id = parseUserIdQueryParam(req.query.user);
     }
     const result = await activitiesService.setSuspensionForActivity(activityId, access.allocated, access.is_admin, status, participant_id, access.currentUserId);
     return res.json(result.toJSON());
@@ -354,10 +383,7 @@ export async function setResultForActivity(
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
     if (!access.allocated) {
-      participant_id = req.query.user ? parseInt(req.query.user as string) : NaN;
-      if (isNaN(participant_id)) {
-        throw new ValidationError("Query param user must be a numeric ID");
-      }
+      participant_id = parseUserIdQueryParam(req.query.user);
     }
     await activitiesService.setResultForActivity(activityId, access.allocated, access.is_admin, type, result, participant_id, access.currentUserId);
     return res.status(204).send();
