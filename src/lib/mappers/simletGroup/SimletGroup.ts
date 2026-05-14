@@ -106,7 +106,7 @@ export class SimletGroup {
         this.group_id = data.group_id;
         this.group_name = data.group_name;
         this.participants = [];
-        this.group_sandbox = data.group_sandbox || false;
+        this.group_sandbox = data.group_sandbox ? Boolean(data.group_sandbox) : false;
         this.group_owner_id = data.group_owner_id || 0;
         this.group_owner_username = data.group_owner_username || "";
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
@@ -206,6 +206,14 @@ export class SimletGroup {
     
     async addParticipant(participantId: number) : Promise<SimletGroup> {
         await SimletParticipant.addToGroup(this.group_id, participantId);
+        const targetSessionId = await this.resolveTargetSessionId(participantId);
+        await db.Tables.ExperimentalParticipants.upsert({
+            simlet_id: this.simlet_id,
+            group_id: this.group_id,
+            participant_id: participantId,
+            session_id: targetSessionId,
+        });
+        await this.syncParticipantActivityCompletions(participantId, undefined, targetSessionId);
         return this;
     }
 
@@ -346,6 +354,18 @@ export class SimletGroup {
      * await group.deleteParticipant(456, true);
      * ```
      */
+    private async hasSimletRoleForParticipant(participantId: number): Promise<boolean> {
+        const permissionRows = await db.Functions.runViewQuery(
+            db.Views.Simlet.byUserIdAndSimletId,
+            { current_user_id: participantId, simlet_id: this.simlet_id }
+        );
+        if (!permissionRows || permissionRows.length === 0) {
+            return false;
+        }
+        const permission = String(permissionRows[0].current_user_permission || "").toUpperCase();
+        return permission.length > 0;
+    }
+
     async deleteParticipant(user_id: number, keycloakDelete : boolean): Promise<void> {
         let participant = await SimletParticipant.getFromDbData(this.group_id, user_id);
         const allocation = await db.Tables.ExperimentalParticipants.findOne({
@@ -355,6 +375,17 @@ export class SimletGroup {
             const session = await Session.getFromDbData(this.simlet_id, allocation.session_id, this.is_admin, this.current_user_id);
             await session.removeParticipantsFromAllActivities([user_id]);
             await allocation.destroy();
+        } else if (await this.hasSimletRoleForParticipant(user_id)) {
+            // User has a simlet role (e.g. teacher self-added as tester) but no allocation record —
+            // remove from all sessions' activities so LimeSurvey tokens are deleted and can be re-created later
+            const sessionRows = await db.Functions.runViewQuery(
+                db.Views.Session.IdsBySimletId,
+                { simlet_id: this.simlet_id }
+            );
+            for (const row of sessionRows || []) {
+                const session = await Session.getFromDbData(this.simlet_id, row.session_id, this.is_admin, this.current_user_id);
+                await session.removeParticipantsFromAllActivities([user_id]);
+            }
         }
         await participant.delete(keycloakDelete);
     }
