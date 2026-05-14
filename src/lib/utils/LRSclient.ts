@@ -151,9 +151,9 @@ export class LRSClient {
         const now = new Date();
         const simvaUrl = config.externalUrl;
         const authorityName = participant || 'lrs-manager';
-        const simletType = `${config.externalUrl}/types#simlet`;
-        const sessionType = `${config.externalUrl}/types#session`;
-        const activityType = `${config.externalUrl}/types#activity`;
+        const simletType = `${config.externalUrl}/about#simlet`;
+        const sessionType = `${config.externalUrl}/about#session`;
+        const activityType = `${config.externalUrl}/about#activity`;
         updatedStatement=updatedStatement.withId(this.generateStatementId(trace));
         if(!trace.timestamp) {
             updatedStatement=updatedStatement.withTimestamp(now.toISOString());
