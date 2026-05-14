@@ -180,6 +180,10 @@ config.sso.adminPassword = process.env.SSO_ADMIN_PASSWORD || 'administrator';
 config.sso.webhookSubUrl = process.env.SSO_WEBHOOK_SUBURL || '/sso-events';
 config.sso.webhookUrl = config.sso.url + config.sso.webhookSubUrl;
 
+config.sso.jwt_issuer =  process.env.SSO_JWT_ISSUER ||'simva';
+config.sso.jwt_expiresIn = process.env.SSO_JWT_EXPIRES_IN || '24h';
+config.sso.jwt_secret = process.env.SSO_JWT_SECRET || 's3cret';
+
 // LTI configuration
 config.lti = {};
 config.lti.platformClientId = process.env.LTI_PLATFORM_CLIENT_ID || 'lti_platform';

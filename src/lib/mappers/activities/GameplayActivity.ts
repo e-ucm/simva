@@ -7,6 +7,7 @@ import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResu
 import { minioClient } from "@/lib/utils/minioclient";
 import { BadRequestError, ValidationError } from "@/lib/errors/appErrors";
 import ms from "ms";
+import { User } from "@/lib/mappers/Users/User";
 
 /**
  * Gameplay Activity mapper class extending base Activity.
@@ -143,7 +144,7 @@ export class GamePlayActivity extends Activity {
 					logger.info(this.game_url);
 					if(this.game_url && this.game_url.indexOf('?') !== -1){
 						if(this.game_url.indexOf('{authToken}') !== -1){
-							//let authToken = await UsersController.generateJWT(users[participants[i]]);
+							//
 							//customUri = customUri.replace('{authToken}', authToken);
 						}
 						customUri = this.game_url;
@@ -159,17 +160,24 @@ export class GamePlayActivity extends Activity {
 						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
 							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)}`
 							+ `&backup_type=XAPI`
+							+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
 							+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
 							+ `&actor_user=${usernames.get(participant_id)}`
-							+ `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
+							+ `&batch_length=200`
+							+ `&batch_timeout=5min`
+							+ `&max_retry_delay=30min`;
+						let user = await User.getFromDbData(participant_id);
+						if(user.isToken) {
+							customUri += `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
 							+ `&sso_client_id=simva-plugin`
 							+ `&sso_login_hint=${this.simlet_id}`
 							+ `&sso_username=${usernames.get(participant_id)}`
 							+ `&sso_grant_type=password`
 							+ `&sso_scope=offline_access`
-							+ `&batch_length=200`
-							+ `&batch_timeout=5min`
-							+ `&max_retry_delay=30min`;
+						} else {
+							let authToken = await user.generateJWT();
+							customUri += `&auth_token=${authToken}`;
+						}
 					}
 					targetMap.set(participant_id, customUri);
 				default:

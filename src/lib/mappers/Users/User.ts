@@ -4,6 +4,7 @@ import { Op } from "sequelize";
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { keycloakClient } from "@/lib/utils/keycloakclient";
+import jwt from 'jsonwebtoken';
 
 /**
  * User mapper class representing a system user.
@@ -297,6 +298,24 @@ export class User {
     };
   }
 
+  async generateJWT() {
+    return jwt.sign(
+      {
+        data: {
+          id: this.user_id,
+          username: this.username,
+          email: this.email,
+          role: this.role
+        }
+      },
+      config.sso.jwt_secret,
+      {
+        expiresIn: config.sso.jwt_expiresIn,
+        issuer: config.sso.jwt_issuer
+      }
+    )
+  }
+
   /**
    * Validates if the user has a valid authentication token.
    * Checks token existence and basic format validation.
@@ -317,7 +336,6 @@ export class User {
         }
         if (!this.token || this.token.trim() === "") {
             return false;
-            
         }
         // Additional token validation logic can be added here (e.g., regex pattern, length check)
         return true;

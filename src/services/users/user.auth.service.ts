@@ -84,22 +84,13 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       if (!jwtPayload.sql.email) {
         return reject(new AuthentificationError('Email missing required user identification'));
       }
-      // Attempt verification for integrity, but do not fail if signature mismatch
-      try {
-        jwt.verify(token, config.sso.jwt_secret || 'default-secret', { ignoreExpiration: true } as any);
-      } catch (e) {
-        // Ignore verification errors to support decode-only behavior when secrets differ
-        logger.debug('JWT signature verification failed, proceeding with decoded payload');
-      }
-      // If issuer indicates Keycloak realm, try enhanced handling with key manager
-      if (jwtPayload.sso.iss) {
-        const keycloakRealmUrl = `${config.sso.url}/realms/${config.sso.realm}`;
-        if (jwtPayload.sso.iss === keycloakRealmUrl && KeycloakKeyManager.isEnabled()) {
+      switch (jwtPayload.sso.iss) {
+        case `${config.sso.url}/realms/${config.sso.realm}`:
+          logger.debug('Token issuer identified as Keycloak realm');
           const decodedWithHeader = jwt.decode(token, { complete: true }) as any;
           const header = decodedWithHeader?.header;
           logger.debug(header);
           if (!header?.kid) {
-            
             return resolve(jwtPayload);
           }
           KeycloakKeyManager.checkKey(header.kid, token)
@@ -122,9 +113,17 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
               resolve(await createOrUpdateKeycloakUser(jwtPayload));
             });
           return; // prevent continuing below until async resolves
-        }
+        case config.sso.jwt_issuer:
+          logger.debug('Token issuer identified as internal simva');
+          try {
+            jwt.verify(token, config.sso.jwt_secret, { issuer: config.sso.jwt_issuer });
+            return resolve(jwtPayload);
+          } catch (e) {
+            return reject(new AuthentificationError('Internal token verification failed'));
+          }
+        default:
+          logger.warn(`Unknown token issuer: ${jwtPayload.sso.iss}, proceeding with caution`);
       }
-
       // Default: return decoded payload with normalized username
       resolve(jwtPayload);
     } catch (error) {
