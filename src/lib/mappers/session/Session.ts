@@ -656,6 +656,7 @@ export class Session {
 		} else {
             query.activity = lrsclient.getSessionUrl(this.simlet_id, this.session_id);
             query.related_activities = true;
+            query.ascending = true;
 			statements = await client.getStatementByQuery(query);
 		}
         logger.debug("LRS statements retrieved for session with simlet ID, session ID and user ID");
@@ -671,6 +672,7 @@ export class Session {
 		} else {
             query.activity = lrsclient.getSessionUrl(this.simlet_id, this.session_id, true);
             query.related_activities = true;
+            query.ascending = true;
 			statements = await client.getStatementByQuery(query);
 		}
         logger.debug("LRS statements retrieved for session with simlet ID, session ID and user ID");

@@ -877,6 +877,7 @@ export class Activity {
 		} else {
 			query.activity = this.getLRSActivityId();
 			query.related_activities = true;
+			query.ascending = true;
 			statements = await client.getStatementByQuery(query);
 		}
 		if(statements.data && statements.data.more !== '') {
@@ -894,6 +895,7 @@ export class Activity {
 		} else {
 			query.activity = this.getLRSActivityId({ useTestUrls: true });
 			query.related_activities = true;
+			query.ascending = true;
 			statements = await client.getStatementByQuery(query);
 		}
 		if(statements.data && statements.data.more !== '') {
