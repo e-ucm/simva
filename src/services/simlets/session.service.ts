@@ -295,7 +295,7 @@ export async function getTestLRSStatements(simletId: number, sessionId: number, 
         }
     });
     if (group.createdAt) {
-      query.from = group.createdAt?.toISOString();
+      query.since = group.createdAt?.toISOString();
     }
     return await session.getTestLRSStatements(query);
   } else {

@@ -46,7 +46,7 @@ export async function getTestStatementsLRSForActivity(currentUserId: number, cur
             }
         });
         if (group.createdAt) {
-          query.from = group.createdAt?.toISOString();
+          query.since = group.createdAt?.toISOString();
         }
         return await activity.getTestLRSStatements(query);
     } else {
