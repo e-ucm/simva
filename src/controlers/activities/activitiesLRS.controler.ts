@@ -30,7 +30,7 @@ export async function getTestStatementsLRSForActivity(req: AuthenticatedRequest,
             throw new BadRequestError("Invalid activity ID");
         }
         const access = getAccess(currentUser);
-        const statements = await activitiesLRSService.getTestStatementsLRSForActivity(access.currentUserId as number, access.is_admin, access.allocated, activityId, req.query);
+        const statements = await activitiesLRSService.getTestStatementsLRSForActivity(access.currentUserId as number, currentUser?.username!, access.is_admin, access.allocated, activityId, req.query);
         return res.status(200).json(statements); 
     } catch (err) {
         next(err);

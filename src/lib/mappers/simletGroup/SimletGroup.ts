@@ -129,6 +129,16 @@ export class SimletGroup {
         logger.debug({ allocationCount: this.allocation.length, allocation: this.allocation }, 'Group initialized with allocations');
     }
 
+    static async getGroupFromCurrentUser(current_user_id: number): Promise<SimletGroup> {
+        let groupData = await db.Tables.Group.findOne({ where: { group_owner_id: current_user_id, group_sandbox: true } });
+        if(!groupData) {
+            throw new NotFoundError("Group not found for current user");
+        }
+        let group = new SimletGroup(groupData, current_user_id);
+        await group.init();
+        return group;
+    }
+
     static async createInDb(simlet_id: number, body: Partial<SimletGroup>, current_user_id: number): Promise<SimletGroup> {
         const newGroupName = typeof body.group_name === "string" ? body.group_name.trim() : null;
         if(!newGroupName) {

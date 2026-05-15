@@ -308,7 +308,7 @@ export async function getTestLRSStatementsForSession(
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     logger.debug({simletId, sessionId, userId: currentUser?.user_id} , "Getting LRS statements for session with simlet ID, session ID and user ID");
-    let statements= await sessionService.getTestLRSStatements(simletId, sessionId, access.is_admin, access.currentUserId, req.query);
+    let statements= await sessionService.getTestLRSStatements(simletId, sessionId, access.is_admin, access.currentUserId, currentUser?.username!, req.query);
     logger.debug("LRS statements retrieved for session with simlet ID, session ID and user ID");
     res.json(statements);
   } catch (err) {

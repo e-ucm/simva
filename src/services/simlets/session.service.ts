@@ -17,6 +17,7 @@ import { Session } from "@/lib/mappers/session/Session";
 import { ValidationError } from "@/lib/errors/appErrors";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { SessionTag } from "@/lib/mappers/session/SessionTagsElement";
+import { config } from "@/lib/config";
 
 /**
  * Retrieves all sessions within a simlet.
@@ -283,7 +284,21 @@ export async function getLRSStatements(simletId: number, sessionId: number, is_a
   return await session.getLRSStatements(query);
 }
 
-export async function getTestLRSStatements(simletId: number, sessionId: number, is_admin: boolean, currentUserId: number, query: any): Promise<Object> {
+export async function getTestLRSStatements(simletId: number, sessionId: number, is_admin: boolean, currentUserId: number, currentusername: string,query: any): Promise<Object> {
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
-  return await session.getTestLRSStatements(query);
+  const group = await SimletGroup.getGroupFromCurrentUser(currentUserId);
+  if (group.participants.includes(currentUserId)) {
+    query.actor = JSON.stringify({
+        account: {
+          name: currentusername,
+          homePage: config.externalUrl,
+        }
+    });
+    if (group.createdAt) {
+      query.from = group.createdAt?.toISOString();
+    }
+    return await session.getTestLRSStatements(query);
+  } else {
+      throw new ValidationError('Current user is not a tester in this session');
+  }
 }

@@ -1,7 +1,9 @@
-import { NotFoundError, NotImplementedError } from "@/lib/errors/appErrors";
+import { NotFoundError, NotImplementedError, ValidationError } from "@/lib/errors/appErrors";
 import { Activity } from "@/lib/mappers/activities/Activity";
 import { db } from "@/lib/db";
 import { get } from "node:http";
+import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
+import { config } from "@/lib/config";
 
 async function shouldUseTestUrlsForActivity(currentUserId: number, is_admin: boolean, activityId: number): Promise<boolean> {
     if (is_admin) {
@@ -33,9 +35,23 @@ async function shouldUseTestUrlsForActivity(currentUserId: number, is_admin: boo
     return permission.length > 0;
 }
 
-export async function getTestStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, query: any) {
+export async function getTestStatementsLRSForActivity(currentUserId: number, currentusername: string, is_admin: boolean, allocated: boolean, activityId: number, query: any) {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
-    return await activity.getTestLRSStatements(query);
+    const group = await SimletGroup.getGroupFromCurrentUser(currentUserId);
+    if (group.participants.includes(currentUserId)) {
+        query.actor = JSON.stringify({
+            account: {
+              name: currentusername,
+              homePage: config.externalUrl,
+            }
+        });
+        if (group.createdAt) {
+          query.from = group.createdAt?.toISOString();
+        }
+        return await activity.getTestLRSStatements(query);
+    } else {
+        throw new ValidationError('Current user is not a tester in this session');
+    }
 }
 
 export async function getStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, query: any) {
