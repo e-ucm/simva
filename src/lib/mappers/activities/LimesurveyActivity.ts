@@ -353,4 +353,23 @@ export class LimesurveyActivity extends Activity {
 			survey_lrsset: this.survey_lrsset
 		};
 	}
+
+	async export(complete: boolean): Promise<object> {
+		let activity = this.toJSON() as any;
+		try {
+			// Await the result of the survey export
+			const surveyResult = await limeSurveyClient.exportSurvey(this.survey_id);
+			activity.rawsurvey = atob(surveyResult);
+			logger.info("LSS Export successful");
+		} catch (error) {
+			logger.error(error, "LSS Export failed:");
+		}
+		if(complete) {
+			activity.participants = await this.getAllCurrentParticipantsUsername();
+			activity.results = await this.getResults("backup");
+		} else {
+			activity.copysurvey = this.survey_id;
+		}
+		return activity;
+	}
 }

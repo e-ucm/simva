@@ -530,3 +530,20 @@ export async function getTrackerConfigForActivity(
     next(err);
   }
 }
+
+export async function exportActivity(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const currentUser = req.user?.sql;
+    const activityId = parseInt(req.params.activity_id as string);
+    const access = getAccess(currentUser);
+    const completion = req.query.complete === "true";
+    const exportedData = await activitiesService.exportActivity(activityId, completion, access.allocated, access.is_admin, access.currentUserId);
+    return res.json(exportedData);
+  } catch (err) {
+    next(err);
+  }
+}

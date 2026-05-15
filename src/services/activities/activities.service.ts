@@ -151,3 +151,8 @@ export async function getAllResultForActivity(activityId: number, allocated: boo
   let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
   return await activity.getAllResults(type);
 }
+
+export async function exportActivity(activityId: number, completion: boolean, allocated: boolean, is_admin: boolean, currentUserId: number) {
+    let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    return activity.export(completion);
+}

@@ -189,4 +189,13 @@ export class ManualActivity extends Activity {
 			manual_ressource_url: this.manual_ressource_url
 		};
 	}
+
+	async export(complete: boolean): Promise<object> {
+		let exportData: any = this.toJSON();
+		if(complete) {
+			exportData.participants = await this.getAllCurrentParticipantsUsername();
+			exportData.results = await this.getResults("backup");
+		}
+		return exportData;
+	}
 }

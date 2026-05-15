@@ -2139,6 +2139,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/completionQuery'
   /activities/{activityid}/openable:
     get:
       tags:
@@ -4318,6 +4319,14 @@ components:
       schema:
         type: integer
         format: '2000'
+    completionQuery:
+      in: query
+      name: complete
+      description: |
+        If true, the completion status of the activity will be returned
+      required: false
+      schema:
+        type: boolean
     lti_login_hint:
       in: query
       name: lti_login_hint

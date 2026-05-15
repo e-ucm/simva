@@ -1189,6 +1189,15 @@ export class Activity {
 		}
 	}
 
+	async export(complete: boolean): Promise<object> {
+		let exportData: any = this.toJSON();
+		if(complete) {
+			exportData.participants = await this.getAllCurrentParticipantsUsername();
+			exportData.results = await this.getResults("backup");
+		}
+		return exportData;
+	}
+
 	getTrackerConfig() : string {
         return  JSON.stringify({
 			"online": true,
