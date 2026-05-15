@@ -136,7 +136,7 @@ export class SimletGroup {
         }
         let count = await db.Tables.Group.count({where: {simlet_id, group_name: newGroupName }});
         if(count > 0) {
-            throw new ConflictError("Group name must be unique");
+            throw new ConflictError("Group name must be unique within the simlet");
         }
         body.simlet_id = simlet_id;
         body.group_owner_id = current_user_id;
