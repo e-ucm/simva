@@ -243,7 +243,8 @@ export class GamePlayActivity extends Activity {
 
 	async setResult(type: string, result: any, participant_id: number): Promise<void> {
 		switch(type) {
-			case 'results':
+			case 'full':
+			case 'code':
 				if(!this.game_backup) {
 					throw new ValidationError('Game backup is not enabled for this activity');
 				}

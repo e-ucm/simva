@@ -1110,7 +1110,8 @@ export class Activity {
 	 */
 	async setResult(type: string, result: any, participant_id: number): Promise<void> {
 		switch(type) {
-			case 'backup':
+			case 'full':
+			case 'code':
 				await minioClient.putFile(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`, result);
 				break;
 			case 'traces':

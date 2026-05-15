@@ -382,7 +382,7 @@ export async function setResultForActivity(
     const result = req.body.result;
     const access = getAccess(currentUser);
     let participant_id = access.currentUserId;
-    if (!access.allocated) {
+    if (!access.allocated && req.query && req.query.user) {
       participant_id = parseUserIdQueryParam(req.query.user);
     }
     await activitiesService.setResultForActivity(activityId, access.allocated, access.is_admin, type, result, participant_id, access.currentUserId);

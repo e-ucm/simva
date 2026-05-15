@@ -141,6 +141,10 @@ export class ManualActivity extends Activity {
 	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean | null>> {
 		return super.getCompletion(participants_id);
 	}
+	
+	async setResult(type: string, result: any, participant_id: number): Promise<void> {
+		await super.setResult(type, result, participant_id);
+	}
 
 	async setCompletion(completed: boolean, completed_date: Date, participant_id: number): Promise<ActivityCompletion> {
 		return super.setCompletion(completed, completed_date, participant_id);
