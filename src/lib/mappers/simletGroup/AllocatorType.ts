@@ -109,7 +109,7 @@ export class AllocatorType {
 	 */
 	static async getAll(type?: string[]): Promise<AllocatorType[]> {
         if(!type) {
-            type = [SimletGroup.getType(), GroupAllocatorSimletGroup.getType(), SessionAllocatorSimletGroup.getType(), RandomAllocatorSimletGroup.getType()];
+            type = [SimletGroup.getType(), GroupAllocatorSimletGroup.getType()]; //, SessionAllocatorSimletGroup.getType(), RandomAllocatorSimletGroup.getType()
         }
         const types : any[] = [];
 		if(type.includes(SimletGroup.getType())) types.push(SimletGroup);
