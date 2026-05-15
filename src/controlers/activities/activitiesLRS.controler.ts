@@ -82,7 +82,7 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
                 throw new ValidationError("Invalid request body for lrsmanager role");
             }
         } else {
-            ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, access.allocated, activityId, body, access.currentUserId);
+            ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, true, activityId, body, access.currentUserId);
         }
         return res.status(201).json(ids);
     } catch (err) {
@@ -116,7 +116,7 @@ export async function putStatementsLRSForActivity(req: AuthenticatedRequest, res
                 throw new ValidationError("Invalid request body for lrsmanager role");
             }
         } else {
-            ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, access.allocated, activityId, body, access.currentUserId);
+            ids = await activitiesLRSService.sendStatementsLRSForActivity(access.currentUserId, access.is_admin, true, activityId, body, access.currentUserId);
         }
         return res.status(201).json(ids);
     } catch (err) {

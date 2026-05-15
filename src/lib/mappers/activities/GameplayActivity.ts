@@ -145,7 +145,7 @@ export class GamePlayActivity extends Activity {
 					const user = await User.getFromDbData(participant_id);
 					if(this.game_url && this.game_url.indexOf('?') !== -1){
 						customUri = this.game_url;
-						customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)); //OK
+						customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)); //OK
 						customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)); //OK
 						customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`)); //OK
 						customUri = customUri.replace('{activityId}', this.activity_id.toString()); //OK
@@ -166,7 +166,7 @@ export class GamePlayActivity extends Activity {
 						}
 					} else {
 						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
-							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/backup`)}`
+							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
 							+ `&backup_type=XAPI`
 							+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
 							+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
