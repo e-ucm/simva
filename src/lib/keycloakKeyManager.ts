@@ -4,24 +4,21 @@ import { config } from '@/lib/config';
 
 // Import the keycloak-public-key library
 // Note: This library is CommonJS
-import KeyCloakCerts from 'keycloak-public-key';
+import jwkToPem from 'jwk-to-pem';
 
 /**
  * KeycloakKeyManager handles Keycloak public key management and JWT verification
  * Adapted from simva project for pumva TypeScript implementation
  */
 export class KeycloakKeyManager {
-  private static keyCloakCerts: InstanceType<typeof KeyCloakCerts> | null = null;
   private static loadedKeys: { [kid: string]: string } = {};
 
   /**
    * Initialize the Keycloak certificates client
    */
+  // No-op, kept for compatibility
   static initialize(): void {
-    if (!this.keyCloakCerts && config.sso.url && config.sso.realm) {
-      this.keyCloakCerts = new KeyCloakCerts(config.sso.url, config.sso.realm);
-      this.log('KeycloakKeyManager initialized');
-    }
+    return;
   }
 
   /**
@@ -32,18 +29,23 @@ export class KeycloakKeyManager {
    */
   static async getKey(kid: string): Promise<string> {
     try {
+      // Force clear cache before every getKey (for debugging)
+      this.log('KeycloakKeyManager.getKey -> Forcing cache clear before key fetch');
+      this.clearCache();
       this.initialize();
-      
       if (!this.loadedKeys.hasOwnProperty(kid)) {
+        this.log(`KeycloakKeyManager.getKey -> Key not in cache, calling reloadKey(${kid})`);
         this.loadedKeys[kid] = await this.reloadKey(kid);
         this.log(`KeycloakKeyManager.getKey -> got key: ${this.loadedKeys[kid]}`);
+      } else {
+        this.log(`KeycloakKeyManager.getKey -> Key found in cache: ${this.loadedKeys[kid]}`);
       }
     } catch (error) {
       this.log(`KeycloakKeyManager.getKey -> catch: ${JSON.stringify(error)}`);
       this.log(error);
       throw error;
     }
-
+    this.log(`KeycloakKeyManager.getKey -> returning key for kid ${kid}: ${this.loadedKeys[kid]}`);
     return this.loadedKeys[kid];
   }
 
@@ -58,11 +60,15 @@ export class KeycloakKeyManager {
     return new Promise((resolve, reject) => {
       try {
         this.log(`KeycloakKeyManager.checkKey -> pre-getKey(${kid})`);
-        
         this.getKey(kid)
           .then((privateKey) => {
+            if (!privateKey || privateKey.trim() === '') {
+              const errMsg = `KeycloakKeyManager.checkKey -> ERROR: No public key found for kid: ${kid}`;
+              this.log(errMsg);
+              reject(new Error('No public key available for JWT verification'));
+              return;
+            }
             this.log(`KeycloakKeyManager.checkKey -> pre-jwtverify(${token}, ${privateKey})`);
-            
             jwt.verify(token, privateKey, (error, decoded) => {
               if (error && error.message === 'invalid algorithm') {
                 this.log('KeycloakKeyManager.checkKey -> ERROR: Not valid signature');
@@ -94,34 +100,34 @@ export class KeycloakKeyManager {
    * @returns Promise resolving to the public key
    */
   static async reloadKey(kid: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.log(`######### RELOADING KEYCLOAK KEY ${kid} #########`);
-      
-      try {
-        this.initialize();
-        
-        if (!this.keyCloakCerts) {
-          reject(new Error('Keycloak certificates client not initialized'));
-          return;
-        }
-
-        this.log('KeycloakKeyManager.reloadKey -> pre-fetch');
-        
-        this.keyCloakCerts.fetch(kid)
-          .then((publicKey: string) => {
-            this.log(`KeycloakKeyManager.reloadKey -> got public key: ${publicKey}`);
-            resolve(publicKey);
-          })
-          .catch((error: any) => {
-            this.log(`KeycloakKeyManager.reloadKey -> Error: ${JSON.stringify(error)}`);
-            reject(error);
-          });
-      } catch (error) {
-        this.log(`KeycloakKeyManager.reloadKey -> catch: ${JSON.stringify(error)}`);
-        this.log(error);
-        reject(error);
+    this.log(`######### RELOADING KEYCLOAK KEY ${kid} #########`);
+    try {
+      if (!config.sso.url || !config.sso.realm) {
+        throw new Error('Keycloak SSO url or realm not configured');
       }
-    });
+      const jwksUrl = `${config.sso.url}/realms/${config.sso.realm}/protocol/openid-connect/certs`;
+      this.log(`KeycloakKeyManager.reloadKey -> Fetching JWKS from: ${jwksUrl}`);
+      const res = await fetch(jwksUrl);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch JWKS: ${res.status} ${res.statusText}`);
+      }
+      const jwks = await res.json();
+      if (!jwks.keys || !Array.isArray(jwks.keys)) {
+        throw new Error('Invalid JWKS format');
+      }
+      const jwk = jwks.keys.find((k: any) => k.kid === kid);
+      if (!jwk) {
+        this.log(`KeycloakKeyManager.reloadKey -> JWKS does not contain kid: ${kid}`);
+        return '';
+      }
+      const pem = jwkToPem(jwk);
+      this.log(`KeycloakKeyManager.reloadKey -> got PEM for kid ${kid}: ${pem}`);
+      return pem;
+    } catch (error) {
+      this.log(`KeycloakKeyManager.reloadKey -> catch: ${JSON.stringify(error)}`);
+      this.log(error);
+      return '';
+    }
   }
 
   /**

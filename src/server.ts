@@ -82,8 +82,10 @@ async function shutdown(signal: string) {
  */
 // server.ts
 import { runMigrations } from "@/lib/migrate";
+import { KeycloakKeyManager } from '@/lib/keycloakKeyManager';
 
 async function start() {
+  KeycloakKeyManager.clearCache(); // Clear cache to handle potential key rotation issuesKeycloakKeyManager.clearCache(); // Clear cache to handle potential key rotation issues
   await db.sequelize.authenticate();
   await runMigrations();
   try {
