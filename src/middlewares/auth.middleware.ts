@@ -21,7 +21,7 @@ import { Request, Response, NextFunction } from 'express';
 import { logger } from '@/lib/logger';
 import fs from 'fs';
 import yaml from 'yaml';
-import { validateJWT, KeycloakJWTPayload } from '@/services/users/user.auth.service';
+import { createOrUpdateKeycloakUser, validateJWT, KeycloakJWTPayload } from '@/services/users/user.auth.service';
 import { AuthentificationError, NotFoundError } from '@/lib/errors/appErrors';
 import path from 'path';
 import { config } from '@/lib/config';
@@ -253,7 +253,9 @@ export class Authenticator {
         
         try {
           logger.debug('[AUTH] Starting JWT validation');
-          req.user = await validateJWT(token);
+          let decodedToken = await validateJWT(token);
+          logger.debug(`[AUTH] JWT validation successful for user: ${decodedToken.sql.username}`);
+          req.user = await createOrUpdateKeycloakUser(decodedToken);
           logger.debug(`[AUTH] JWT validation successful for user: ${req.user.sql.username}`);
           // After successful authentication and user resolution, proceed
           return next();

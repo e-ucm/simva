@@ -63,6 +63,7 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       let jwtPayload: KeycloakJWTPayload;
       // First, try to decode structurally
       const decodedPayloadOnly = jwt.decode(token);
+      logger.debug(decodedPayloadOnly, 'Decoded JWT payload (without verification):');
       if (!decodedPayloadOnly || typeof decodedPayloadOnly !== 'object') {
         return reject(new AuthentificationError('JWT validation failed'));
       }
@@ -76,6 +77,7 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
       }
 
       // Determine username from common claims
+      logger.debug(jwtPayload, 'Determining username from JWT claims');
       jwtPayload.sql.username = jwtPayload.sso.preferred_username || jwtPayload.sso.username || jwtPayload.sso.sub;
       if (!jwtPayload.sql.username) {
         return reject(new AuthentificationError('Token missing required user identification'));
@@ -99,10 +101,10 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
               jwt.verify(token, publicKey, async (error: Error | null, verifiedPayload: any) => {
                 if (error) {
                   // Fall back to decoded payload
-                  resolve(await createOrUpdateKeycloakUser(jwtPayload));
+                  resolve(jwtPayload);
                 } else {
                   try {
-                    resolve(await createOrUpdateKeycloakUser(jwtPayload));
+                    resolve(jwtPayload);
                   } catch (userError) {
                     reject(userError);
                   }
@@ -110,13 +112,14 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
               });
             })
             .catch(async () => {
-              resolve(await createOrUpdateKeycloakUser(jwtPayload));
+              resolve(jwtPayload);
             });
           return; // prevent continuing below until async resolves
         case config.sso.jwt_issuer:
           logger.debug('Token issuer identified as internal simva');
           try {
-            jwt.verify(token, config.sso.jwt_secret, { issuer: config.sso.jwt_issuer });
+            let verified = jwt.verify(token, config.sso.jwt_secret, { issuer: config.sso.jwt_issuer });
+            logger.debug(verified, 'Internal token verification successful');
             return resolve(jwtPayload);
           } catch (e) {
             return reject(new AuthentificationError('Internal token verification failed'));
@@ -141,7 +144,7 @@ export async function validateJWT(token: string): Promise<KeycloakJWTPayload> {
  * @param {KeycloakJWTPayload} decoded - Decoded Keycloak JWT payload
  * @returns {Promise<KeycloakJWTPayload>} Keycloak JWT payload with user data
  */
-async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<KeycloakJWTPayload> {
+export async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): Promise<KeycloakJWTPayload> {
   logger.debug("CreateOrUpdateKeycloakUser - Decoded: " + JSON.stringify(decoded));
   
   if (!KeycloakKeyManager.isEnabled()) {

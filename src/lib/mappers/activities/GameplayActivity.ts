@@ -158,9 +158,11 @@ export class GamePlayActivity extends Activity {
 							customUri = customUri.replace('{userToken}', user.username); //OK
 							customUri = customUri.replace('{username}', user.username); //OK
 						}
-						if(this.game_url.indexOf('{authToken}') !== -1){
+						if(this.game_url.indexOf('{authToken}') !== -1 || this.game_url.indexOf('{auth_token}') !== -1){
 							let authToken = await user.generateJWT();
-							customUri += customUri.replace('{auth_token}', authToken); //OK
+							// Replace both {authToken} and {auth_token} if present
+							customUri = customUri.replace('{authToken}', encodeURIComponent(`Bearer ${authToken}`));
+							customUri = customUri.replace('{auth_token}', encodeURIComponent(`Bearer ${authToken}`));
 						}
 					} else {
 						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
@@ -181,7 +183,7 @@ export class GamePlayActivity extends Activity {
 							+ `&sso_scope=offline_access`
 						} else {
 							let authToken = await user.generateJWT();
-							customUri += `&auth_token=${authToken}`
+							customUri += `&auth_token=${encodeURIComponent(`Bearer ${authToken}`)}`
 									+ `&actor_user=${user.username}`;
 						}
 					}

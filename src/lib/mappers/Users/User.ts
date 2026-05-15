@@ -301,11 +301,14 @@ export class User {
   async generateJWT() {
     return jwt.sign(
       {
-        data: {
-          id: this.user_id,
-          username: this.username,
-          email: this.email,
-          role: this.role
+        id: this.user_id,
+        username: this.username,
+        email: this.email,
+        role: this.role, 
+        realm_access: {
+          roles: [
+            this.role
+          ]
         }
       },
       config.sso.jwt_secret,
