@@ -257,18 +257,19 @@ export class Simlet {
             if(this.simlet_archived) {
                 if(data.simlet_archived) {
                     throw new ValidationError(`Simlet is already archived.`);
-                } else {
-                    // If unarchiving, we don't need to check session status
-                }
+                } // else: unarchiving, allowed
             } else {
-                if(!data.is_archived) {
-                    throw new ValidationError(`Simlet is already active.`);
-                } else {
-                    for(const session of sessions) {
-                        if(session.session_status !== session.STATUS.TERMINATED) {
-                            throw new ValidationError(`Cannot archive simlet with active sessions. Please terminate all sessions before archiving.`);
+                if(data.simlet_archived) { // archiving request
+                    // Only check sessions if there are any
+                    if (sessions.length > 0) {
+                        for(const session of sessions) {
+                            if(session.session_status !== session.STATUS.TERMINATED) {
+                                throw new ValidationError(`Cannot archive simlet with active sessions. Please terminate all sessions before archiving.`);
+                            }
                         }
                     }
+                } else {
+                    throw new ValidationError(`Simlet is already active.`);
                 }
             }
             toUpdate.simlet_archived = data.simlet_archived;
