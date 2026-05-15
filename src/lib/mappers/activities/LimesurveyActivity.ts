@@ -359,7 +359,7 @@ export class LimesurveyActivity extends Activity {
 		try {
 			// Await the result of the survey export
 			const surveyResult = await limeSurveyClient.exportSurvey(this.survey_id);
-			activity.rawsurvey = atob(surveyResult);
+			activity.rawsurvey = surveyResult;
 			logger.info("LSS Export successful");
 		} catch (error) {
 			logger.error(error, "LSS Export failed:");
