@@ -37,11 +37,11 @@ export async function getSurveyLanguagesForActivity(
   next: NextFunction
 ) {
   try {
-    const surveyId = parseInt(req.params.survey_id as string);
-    if (isNaN(surveyId)) {
-      throw new NotFoundError("Invalid survey ID");
+    const activityId = parseInt(req.params.activity_id as string);
+    if (isNaN(activityId)) {
+      throw new NotFoundError("Invalid activity ID");
     }
-    const languages = await limesurveyService.getSurveyLanguagesForActivity(surveyId, req.user!.sql.user_id as number);
+    const languages = await limesurveyService.getSurveyLanguagesForActivity(activityId, req.user!.sql.user_id as number);
     res.json(languages);
   } catch (err) {
     next(err);
@@ -54,15 +54,11 @@ export async function setSurveyOwnerForActivity(
   next: NextFunction
 ) {
   try {
-    const surveyId = parseInt(req.params.survey_id as string);
-    if (isNaN(surveyId)) {
-      throw new NotFoundError("Invalid survey ID");
+    const activityId = parseInt(req.params.activity_id as string);
+    if (isNaN(activityId)) {
+      throw new NotFoundError("Invalid activity ID");
     }
-    const { surveyOwner } = req.body;
-    if (typeof surveyOwner !== "string") {
-      throw new NotFoundError("Invalid survey owner");
-    }
-    await limesurveyService.setSurveyOwnerForActivity(surveyId, surveyOwner, req.user!.sql.user_id as number);
+    await limesurveyService.setSurveyOwnerForActivity(activityId, req.user!.sql.username!, req.user!.sql.user_id as number);
     res.status(204).send();
   } catch (err) {
     next(err);

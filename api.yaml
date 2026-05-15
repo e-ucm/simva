@@ -2665,7 +2665,7 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /limesurvey/surveys/{surveyid}/owner:
+  /limesurvey/{activityid}/surveyowner:
     patch:
       tags:
         - administrators
@@ -2690,8 +2690,8 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
-        - $ref: '#/components/parameters/surveyId'
-  /limesurvey/surveys/{surveyid}/languages:
+        - $ref: '#/components/parameters/activityId'
+  /limesurvey/{activityid}/surveylanguages:
     get:
       tags:
         - administrators
@@ -2716,7 +2716,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
-        - $ref: '#/components/parameters/surveyId'
+        - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/lrs_test_statements:
     get:
       tags:
