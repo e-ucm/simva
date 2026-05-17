@@ -419,11 +419,11 @@ export async function getResultsForActivity(
 
     let type = req.query.type as string;
     if (!type) {
-      type = "backup";
+      type = "full";
     }
-    if (type !== "backup" && type !== "traces") {
+    if (type !== "full" && type !== "code" && type !== "traces") {
       throw new ValidationError(
-        "Query param type must be either backup or traces"
+        "Query param type must be either full, code or traces"
       );
     }
     const access = getAccess(currentUser);
@@ -440,9 +440,9 @@ export async function getResultsForActivity(
       queryAll !== null &&
       queryAll !== "";
     if (!access.allocated && !hasUsers && hasAll) {
-      if (queryAll !== "full" && queryAll !== "code") {
+      if (queryAll !== "full" && queryAll !== "code" && queryAll !== "traces") {
         throw new ValidationError(
-          "Query param all must be either full or code"
+          "Query param all must be either full, code or traces"
         );
       }
       // ✅ FIXED CASE

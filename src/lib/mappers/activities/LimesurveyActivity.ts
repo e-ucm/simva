@@ -231,7 +231,7 @@ export class LimesurveyActivity extends Activity {
 				if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
 					resultData = JSON.stringify(response);
 				}
-				await super.setResult("backup", resultData, participant_id);
+				await super.setResult("full", resultData, participant_id);
 			}
 		}
 		return super.setCompletion(completed, completed_date, participant_id);
@@ -277,7 +277,7 @@ export class LimesurveyActivity extends Activity {
 					if (response && typeof response !== "string" && !Buffer.isBuffer(response)) {
 						resultData = JSON.stringify(response, null, "\t");
 					}
-					await super.setResult("backup", resultData, participant_id);
+					await super.setResult("full", resultData, participant_id);
 					results.set(participant_id, true);
 				} else {
 					results.set(participant_id, false);
@@ -366,7 +366,7 @@ export class LimesurveyActivity extends Activity {
 		}
 		if(complete) {
 			activity.participants = await this.getAllCurrentParticipantsUsername();
-			activity.results = await this.getResults("backup");
+			activity.results = await this.getResults("full");
 		} else {
 			activity.copysurvey = this.survey_id;
 		}

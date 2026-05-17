@@ -198,7 +198,7 @@ export class ManualActivity extends Activity {
 		let exportData: any = this.toJSON();
 		if(complete) {
 			exportData.participants = await this.getAllCurrentParticipantsUsername();
-			exportData.results = await this.getResults("backup");
+			exportData.results = await this.getResults("full");
 		}
 		return exportData;
 	}
