@@ -1,6 +1,9 @@
 import { logger } from "@/lib/logger";
-import {limeSurveyClient, Survey} from "@/lib/utils/limesurveyclient";
+import {limeSurveyClient, Survey, SurveyLanguages} from "@/lib/utils/limesurveyclient";
 import { User } from "@/lib/mappers/Users/User";
+import { Activity } from "@/lib/mappers/activities/Activity";
+import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
+import { ValidationError } from "@/lib/errors/appErrors";
 
 export async function getSurveys(): Promise<Survey[]> {
     return await limeSurveyClient.getSurveyList();
@@ -21,18 +24,25 @@ export async function isAdmin(user_id: number): Promise<boolean> {
     }
 }
 
-export async function getSurveyLanguagesForActivity(survey_id: number, user_id: number): Promise<string[]> {
-    // This is a placeholder implementation. Replace it with actual logic to fetch survey languages for the given activity from LimeSurvey.
-    const languages = await limeSurveyClient.getSurveyLanguages(survey_id);
-    return languages.list;
+export async function getSurveyLanguagesForActivity(activity_id: number, allocated: boolean, is_admin: boolean, current_user_id: number): Promise<SurveyLanguages> {
+    const activity = await Activity.getFromDbData(activity_id, allocated, is_admin, current_user_id);
+    if(activity instanceof LimesurveyActivity) {
+        const languages = await activity.getSurveyLanguages();
+        return languages;
+    } else {
+        throw new ValidationError(`Activity with ID ${activity_id} is not a Limesurvey activity`);
+    };
 }
 
-export async function setSurveyOwnerForActivity(survey_id: number, surveyOwner: string, user_id: number): Promise<void> {
-    // This is a placeholder implementation. Replace it with actual logic to set the survey owner for the given activity in LimeSurvey.
-    // Perform the necessary operations to set the survey owner in LimeSurvey.
+export async function setSurveyOwnerForActivity(activity_id: number, allocated: boolean, is_admin: boolean, current_user_id: number, surveyOwner: string): Promise<void> {
+    let activity = await Activity.getFromDbData(activity_id, allocated, is_admin, current_user_id);
     let userId = await limeSurveyClient.getUserIdByUsername(surveyOwner);
     if (!userId) {
         throw new Error(`User with username ${surveyOwner} not found in LimeSurvey`);
-    }   
-    await limeSurveyClient.setSurveyOwner(survey_id, userId);
+    }
+    if(activity instanceof LimesurveyActivity) {
+        await limeSurveyClient.setSurveyOwner(activity.survey_id!, userId);
+    } else {
+        throw new ValidationError(`Activity with ID ${activity_id} is not a Limesurvey activity`);
+    };
 }

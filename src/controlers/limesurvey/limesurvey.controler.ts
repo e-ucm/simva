@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import * as limesurveyService from "@/services/limesurvey/limesurvey.service";
 import { NotFoundError } from "@/lib/errors/appErrors";
+import { getAccess } from "../users/user.helper";
 
 export async function getSurveys(
   req: AuthenticatedRequest,
@@ -41,7 +42,9 @@ export async function getSurveyLanguagesForActivity(
     if (isNaN(activityId)) {
       throw new NotFoundError("Invalid activity ID");
     }
-    const languages = await limesurveyService.getSurveyLanguagesForActivity(activityId, req.user!.sql.user_id as number);
+    const access = getAccess(req.user!.sql);
+    const languages = await limesurveyService.getSurveyLanguagesForActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
+    logger.debug(languages, `Fetched languages for activity ${activityId}:`);
     res.json(languages);
   } catch (err) {
     next(err);
@@ -58,7 +61,8 @@ export async function setSurveyOwnerForActivity(
     if (isNaN(activityId)) {
       throw new NotFoundError("Invalid activity ID");
     }
-    await limesurveyService.setSurveyOwnerForActivity(activityId, req.user!.sql.username!, req.user!.sql.user_id as number);
+    const access = getAccess(req.user!.sql);
+    await limesurveyService.setSurveyOwnerForActivity(activityId, access.allocated, access.is_admin, access.currentUserId, req.user!.sql.username!);
     res.status(204).send();
   } catch (err) {
     next(err);
