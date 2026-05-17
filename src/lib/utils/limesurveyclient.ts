@@ -384,10 +384,12 @@ export class LimeSurveyClient {
         
         await this.ensureAuthenticated();
         const result = await this.request<Survey[]>('list_surveys', [this.sessionKey]);
+        if (result instanceof Array === false) {
+            throw new NotFoundError('No surveys found');
+        }
         const surveys = result.map((survey) => this.normalizeSurveyDates(survey));
         
         this.log('LimeSurveyClient.getSurveyList -> Completed');
-        this.log(JSON.stringify(surveys, null, `\t`));
         return surveys;
     }
 
