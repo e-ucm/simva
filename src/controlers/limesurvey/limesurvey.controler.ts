@@ -11,7 +11,12 @@ export async function getSurveys(
   next: NextFunction
 ) {
   try {
-    const surveys = await limesurveyService.getSurveys();
+    const user = req.user?.sql!;
+    const access = getAccess(user);
+    if (access.allocated) {
+      return res.json([]);
+    }
+    const surveys = await limesurveyService.getSurveys(access.is_admin, user.username!);
     logger.debug(`Fetched surveys: ${JSON.stringify(surveys)}`);
     res.json(surveys);
   } catch (err) {
@@ -25,7 +30,7 @@ export async function isAdmin(
   next: NextFunction
 ) {
   try {
-    const isAdmin = await limesurveyService.isAdmin(req.user!.sql.user_id as number);
+    const isAdmin = await limesurveyService.isAdmin(req.user!.sql.username as string);
     res.json({ isAdmin });
   } catch (err) {
     next(err);

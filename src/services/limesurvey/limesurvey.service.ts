@@ -5,14 +5,15 @@ import { Activity } from "@/lib/mappers/activities/Activity";
 import { LimesurveyActivity } from "@/lib/mappers/activities/LimesurveyActivity";
 import { ValidationError } from "@/lib/errors/appErrors";
 
-export async function getSurveys(): Promise<Survey[]> {
-    return await limeSurveyClient.getSurveyList();
+export async function getSurveys(is_admin: boolean,username: string): Promise<Survey[]> {
+    if(is_admin) {
+        return await limeSurveyClient.getSurveyList();
+    } else {
+        return await limeSurveyClient.getSurveysFromUser(username);
+    }
 }
 
-export async function isAdmin(user_id: number): Promise<boolean> {
-    // This is a placeholder implementation. Replace it with actual logic to check if the user is an admin in LimeSurvey.
-    const usernames = await User.getAllCurrentParticipantsUsername([user_id]);
-    const username = usernames.get(user_id);
+export async function isAdmin(username: string): Promise<boolean> {
     if (!username) {
         return false;
     }

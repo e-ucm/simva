@@ -19,6 +19,7 @@
 import { logger } from '@/lib/logger';
 import { config } from '@/lib/config';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { NotFoundError } from '../errors/appErrors';
 
 // ============================================================================
 // Interfaces
@@ -400,7 +401,11 @@ export class LimeSurveyClient {
         const result = await this.request<Survey[]>('list_surveys', [this.sessionKey, username]);
         
         this.log('LimeSurveyClient.getSurveysFromUser -> Completed');
-        return result.map((survey) => this.normalizeSurveyDates(survey));
+        if (result instanceof Array === false) {
+            throw new NotFoundError(`No surveys found for user ${username}`);
+        } else {
+            return result.map((survey) => this.normalizeSurveyDates(survey));
+        }
     }
     
     /**
