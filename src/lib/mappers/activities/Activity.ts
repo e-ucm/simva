@@ -1061,7 +1061,8 @@ export class Activity {
 	async hasResults(type: string, participants_id?: number[]): Promise<ActivityMappingResult<boolean>>{
 		let resultMap = new Map<number, boolean>();
 		switch(type) {
-			case 'backup':
+			case 'full':
+			case 'code':
 				for (const participant_id of await this.getAllCurrentParticipantsId(participants_id)) {
 					if(await minioClient.fileExists(`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`)) {
 						resultMap.set(participant_id, true);
@@ -1082,7 +1083,8 @@ export class Activity {
 		logger.debug(`Getting results for activity ${this.activity_id} and participants ${participantIds}`);
 		for (const participant_id of participantIds) {
 			switch(type) {
-				case 'backup':
+				case 'full':
+				case 'code':
 					let file=`${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`;
 					logger.debug(`Checking if file exists: ${file}`);
 					if(await minioClient.fileExists(file)) {
