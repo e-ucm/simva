@@ -156,8 +156,14 @@ export class LimesurveyActivity extends Activity {
 	async removeParticipants(participants_id: number[]): Promise<void> {
 		await super.removeParticipants(participants_id);
 		logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
-		let usernamesMap = await this.getAllCurrentParticipantsUsername(participants_id);
-		await limeSurveyClient.deleteParticipants(this.survey_id, usernamesMap ? Array.from(usernamesMap.values()) : []);
+		if(participants_id.length > 0 && participants_id.includes(this.current_user_id!)) {
+			logger.debug(`Corresponding usernames to remove from survey with ID ${this.survey_id}: ${this.current_user_username!}`);
+			try {
+				await limeSurveyClient.deleteParticipantByToken(this.survey_id, this.current_user_username!);
+			} catch (error) {
+				logger.info({ error }, `Error deleting participant with token ${this.current_user_username!} from survey with ID ${this.survey_id}`);
+			}
+		}
 	}
 
 	static async getSurveys(): Promise<Survey[]> {

@@ -5,36 +5,6 @@ import { get } from "node:http";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { config } from "@/lib/config";
 
-async function shouldUseTestUrlsForActivity(currentUserId: number, is_admin: boolean, activityId: number): Promise<boolean> {
-    if (is_admin) {
-        return false;
-    }
-
-    const participantRecord = await db.Tables.ActivityCompletion.findOne({
-        where: {
-            activity_id: activityId,
-            participant_id: currentUserId,
-        },
-        attributes: ["activity_id"],
-    });
-
-    if (!participantRecord) {
-        return false;
-    }
-
-    const permissionRows = await db.Functions.runViewQuery(
-        db.Views.Activity.byActivityIdAndUserId,
-        { activity_id: activityId, current_user_id: currentUserId }
-    );
-
-    if (!permissionRows || permissionRows.length === 0) {
-        return false;
-    }
-
-    const permission = String(permissionRows[0].current_user_permission || "").toUpperCase();
-    return permission.length > 0;
-}
-
 export async function getTestStatementsLRSForActivity(currentUserId: number, currentusername: string, is_admin: boolean, allocated: boolean, activityId: number, query: any) {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
     const group = await SimletGroup.getGroupFromCurrentUser(currentUserId);
@@ -71,7 +41,7 @@ export async function sendStatementsLRSForActivity(currentUserId: number, is_adm
     }
     if(await activity.canSendStatementsLRS()) {
         await activity.processStatementsForActivity(currentUserId, body);
-        const useTestUrls = await shouldUseTestUrlsForActivity(currentUserId, is_admin, activityId);
+        const useTestUrls = await activity.isCurrentUserParticipant();
         let ids = await activity.sendLRSStatements(lrsmanagerUserId, body, useTestUrls);
         return ids;
     } else {
@@ -156,7 +126,7 @@ export async function putStatementsLRSForActivity(currentUserId: number, is_admi
     }
     if(await activity.canSendStatementsLRS()) {
         await activity.processStatementsForActivity(currentUserId, body);
-        const useTestUrls = await shouldUseTestUrlsForActivity(currentUserId, is_admin, activityId);
+        const useTestUrls = await activity.isCurrentUserParticipant();
         let ids = await activity.sendLRSStatements(lrsmanagerUserId, body, useTestUrls);
         return ids;
     } else {

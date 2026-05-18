@@ -419,6 +419,10 @@ export class Activity {
 	async removeParticipants(participants_id: number[]): Promise<void> {
 		logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
 		for (const participant_id of participants_id) {
+			const filePath = `${config.minio.backupDir}/${this.activity_id}/${participant_id}.result`
+			if(await minioClient.fileExists(filePath)) {
+				await minioClient.removeFile(filePath);
+			}
 			const completion = await ActivityCompletion.getFromDbData(this.activity_id, participant_id, "all");
 			await completion.delete();
 			logger.debug(`Removed participant with ID ${participant_id} from activity with ID ${this.activity_id}`);
@@ -845,6 +849,37 @@ export class Activity {
 			}
 		}
 	}
+
+	async isCurrentUserParticipant(): Promise<boolean> {
+		if (!this.current_user_id) {
+			return false;
+		}
+
+		const participantRecord = await db.Tables.ActivityCompletion.findOne({
+			where: {
+				activity_id: this.activity_id,
+				participant_id: this.current_user_id,
+			},
+			attributes: ["activity_id"],
+		});
+
+		if (!participantRecord) {
+			return false;
+		}
+
+		const permissionRows = await db.Functions.runViewQuery(
+			db.Views.Activity.byActivityIdAndUserId,
+			{ activity_id: this.activity_id, current_user_id: this.current_user_id }
+		);
+
+		if (!permissionRows || permissionRows.length === 0) {
+			return false;
+		}
+
+		const permission = String(permissionRows[0].current_user_permission || "").toUpperCase();
+		return permission.length > 0;
+	}
+
 
 	async sendLRSStatements(current_user_id: number, statements: any, useTestUrls: boolean = false): Promise<number[]> {
 		let ids = await lrsclient.setStatement(
