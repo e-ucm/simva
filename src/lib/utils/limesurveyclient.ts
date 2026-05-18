@@ -632,10 +632,34 @@ export class LimeSurveyClient {
     }
 
     /**
+     * Delete all responses for a given token string.
+     */
+    async deleteParticipantResponseByToken(surveyId: number | string, token: string): Promise<void> {
+        this.log(`LimeSurveyClient.deleteParticipantResponseByToken -> Started: ${surveyId} - token: ${token}`);
+        await this.ensureAuthenticated();
+        // get response ID(s) for token
+        let response = await this.getResponseByToken(surveyId, 'en', token, 'code');
+        this.log(`LimeSurveyClient.deleteParticipantResponseByToken -> Response for token ${token}: ${JSON.stringify(response)}`);
+        const responseId = response?.id ?? response?.ID;
+        if (!responseId) {
+            this.log(`Not response to remove for token ${token}`);
+            return;
+        }
+        this.log(`Deleting response ${responseId} for token ${token}`);
+        const deleteResult = await this.request('delete_response', [
+            this.sessionKey,
+            surveyId,
+            responseId,
+        ]);
+        this.log(`delete_response result: ${JSON.stringify(deleteResult)}`);
+        this.log(`LimeSurveyClient.deleteParticipantResponseByToken -> Completed: ${surveyId} - token: ${token}`);
+    }
+
+    /**
      * Delete a participant and all their responses by token string.
      */
-    async deleteParticipantByToken(surveyId: number | string, token: string): Promise<void> {
-        this.log(`LimeSurveyClient.deleteParticipantByToken -> Started: ${surveyId} - token: ${token}`);
+    async deleteParticipantAndResponseByToken(surveyId: number | string, token: string): Promise<void> {
+        this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> Started: ${surveyId} - token: ${token}`);
         await this.ensureAuthenticated();
 
         // 1. Resolve token string → tid
@@ -646,7 +670,10 @@ export class LimeSurveyClient {
         }
         this.log(`Found participant tid=${participant.tid} for token=${token}`);
 
-        // 2. Delete participant — API expects array of tid as strings
+        // 2. Delete responses first
+        await this.deleteParticipantResponseByToken(surveyId, token);
+
+        // 3. Delete participant — API expects array of tid as strings
         const deleteResult = await this.request('delete_participants', [
             this.sessionKey,
             surveyId,
@@ -654,7 +681,7 @@ export class LimeSurveyClient {
         ]);
         this.log(`delete_participants result: ${JSON.stringify(deleteResult)}`);
 
-        this.log(`LimeSurveyClient.deleteParticipantByToken -> Completed: ${surveyId} - token: ${token}`);
+        this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> Completed: ${surveyId} - token: ${token}`);
     }
 
     // ========================================================================

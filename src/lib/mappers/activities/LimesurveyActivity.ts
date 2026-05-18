@@ -159,7 +159,7 @@ export class LimesurveyActivity extends Activity {
 		if(participants_id.length > 0 && participants_id.includes(this.current_user_id!)) {
 			logger.debug(`Corresponding usernames to remove from survey with ID ${this.survey_id}: ${this.current_user_username!}`);
 			try {
-				await limeSurveyClient.deleteParticipantByToken(this.survey_id, this.current_user_username!);
+				await limeSurveyClient.deleteParticipantAndResponseByToken(this.survey_id, this.current_user_username!);
 			} catch (error) {
 				logger.info({ error }, `Error deleting participant with token ${this.current_user_username!} from survey with ID ${this.survey_id}`);
 			}
