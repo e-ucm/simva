@@ -672,11 +672,16 @@ export class Activity {
 		if(status) {
 			update["activity_suspension_date"] = new Date();
 		} else {
-			update["activity_suspension_date"] = null;
+			await this.setInitialized(true, new Date(), participant_id);
 		}
-		logger.debug({completionData, update}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
-		await completionData.update({ activity_suspended: status });
-		await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", completionData.activity_initialization_date, reason);
+		logger.debug({completionData, update, reason}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		if(reason == "unload_page" && completionData.activity_completed) {
+			await this.sendXAPITraceForActivity("terminated", completionData.activity_initialization_date, reason);
+		} else {
+			await completionData.update(update);
+			await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
+		}
+		await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
 		return completionData;
 	}
 
@@ -704,52 +709,55 @@ export class Activity {
 		try {
 			logger.info({verb, timestamp, reasonExtension, resultScore, resultSuccess}, `Preparing to send xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
 			let isTestUrl = await this.isCurrentUserParticipantAsTester();
+			logger.info({isTestUrl}, `Determined isTestUrl for activity ID ${this.activity_id} as ${isTestUrl}`);
 			await lrsclient.initJSScormTracker();
-			lrsclient.jsScormTracker.tracker.settings.actor_name = this.allocated_username ?? this.current_user_username ?? "unknown";
-			lrsclient.jsScormTracker.tracker.settings.platform = config.externalUrl;
+			lrsclient.jsScormTracker.trackerSettings.actor_name = this.allocated_username ?? this.current_user_username ?? "unknown";
+			lrsclient.jsScormTracker.trackerSettings.platform = config.externalUrl;
+			lrsclient.jsScormTracker.trackerSettings.registration_id = this.allocated_activity_result?.activity_registration_id!;
 			lrsclient.jsScormTracker.start();
 			let scormActivityTracker = lrsclient.jsScormTracker.scorm(`${lrsclient.getActivityUrl(this.simlet_id, this.session_id, this.activity_id,isTestUrl)}`, lrsclient.jsScormTracker.ALL.ACTIVITYTYPES.LESSON);
 			let statement;
 			switch(verb) {
 				case "initialized":
 					statement = scormActivityTracker.initialized();
+					logger.info({statement}, `Generated initialized statement for activity ID ${this.activity_id}`);
+					await this.allocated_activity_result!.update({ activity_registration_id : uuidv4(), activity_initialization_date: timestamp ?? new Date() });
 					break;
 				case "resumed":
-					scormActivityTracker.IsInitialized = true;
-					logger.info({scormActivityTracker}, `SCORM activity tracker state for activity ID ${this.activity_id} before creating resumed statement`);
 					statement = scormActivityTracker.resumed();
-					logger.info({statement}, `Generated resumed statement for activity ID ${this.activity_id} with verb ${verb}`);
+					logger.info({statement}, `Generated resumed statement for activity ID ${this.activity_id}`);
 					break;
 				case "suspended":
 					scormActivityTracker.IsInitialized = true;
-					if(timestamp) {
+					if(timestamp !== undefined) {
 						scormActivityTracker.InitializedTime = timestamp;
 					}
-					logger.info({scormActivityTracker}, `SCORM activity tracker state for activity ID ${this.activity_id} before creating suspended statement`);
 					statement = scormActivityTracker.suspended();
-					logger.info({statement}, `Generated suspended statement for activity ID ${this.activity_id} with verb ${verb}`);
 					if(resultScore !== undefined) {
 						statement.withScoreScaled(resultScore);
 					}
 					if(reasonExtension !== undefined) {
 						statement.withResultExtension(lrsclient.jsScormTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
 					}
+					logger.info({statement}, `Generated suspended statement for activity ID ${this.activity_id}`);
 					break;
 				case "terminated":
 					scormActivityTracker.IsInitialized = true;
-					if(timestamp) {
+					if(timestamp !== undefined) {
 						scormActivityTracker.InitializedTime = timestamp;
 					}
 					statement = scormActivityTracker.terminated();
 					if(resultScore !== undefined) {
 						statement.withScoreScaled(resultScore);
 					}
-					if(resultSuccess) {
+					if(resultSuccess !== undefined) {
 						statement.withSuccess(resultSuccess);
 					}
 					if(reasonExtension !== undefined) {
 						statement.withResultExtension(lrsclient.jsScormTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
 					}
+					await this.allocated_activity_result!.update({ activity_registration_id : undefined });
+					logger.info({statement}, `Generated terminated statement for activity ID ${this.activity_id}`);
 					break;
 				default:
 					logger.warn(`Unsupported verb ${verb} for xAPI trace`);
@@ -770,10 +778,10 @@ export class Activity {
 				lrsclient.jsScormTracker.stop();
 			}
 		} catch (error) {
-			//if(lrsclient.jsScormTracker) {
-			//	lrsclient.jsScormTracker.stop();
-			//}
-			logger.error({error}, `Error sending xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
+			logger.error(error, `Error sending xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
+			if(lrsclient.jsScormTracker) {
+				lrsclient.jsScormTracker.stop();
+			}
 		}
 		
 	}

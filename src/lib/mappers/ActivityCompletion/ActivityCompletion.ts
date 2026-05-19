@@ -121,10 +121,10 @@ export class ActivityCompletion {
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
         switch (this.data_field) {
             case 'all':
-                this.activity_initialized = data.activity_initialized;
+                this.activity_initialized = Boolean(data.activity_initialized);
                 this.activity_progress = data.activity_progress;
-                this.activity_suspended = data.activity_suspended;
-                this.activity_completed = data.activity_completed;
+                this.activity_suspended = Boolean(data.activity_suspended);
+                this.activity_completed = Boolean(data.activity_completed);
                 this.activity_initialization_date = data.activity_initialization_date ? new Date(data.activity_initialization_date) : undefined;
                 this.activity_suspension_date = data.activity_suspension_date ? new Date(data.activity_suspension_date) : undefined;
                 this.activity_completion_date = data.activity_completion_date === null
@@ -135,7 +135,7 @@ export class ActivityCompletion {
                 this.activity_result_presigned_url_expire_at = data.activity_result_presigned_url_expire_at ? new Date(data.activity_result_presigned_url_expire_at) : undefined;
                 break;
             case 'activity_initialized':
-                this.activity_initialized = data.activity_initialized;
+                this.activity_initialized = Boolean(data.activity_initialized);
                 this.activity_initialization_date = data.activity_initialization_date ? new Date(data.activity_initialization_date) : undefined;
                 break;
             case 'activity_progress':
@@ -144,11 +144,11 @@ export class ActivityCompletion {
                 break;
             case 'activity_suspended':
                 this.activity_initialization_date = data.activity_initialization_date ? new Date(data.activity_initialization_date) : undefined;
-                this.activity_suspended = data.activity_suspended;
+                this.activity_suspended = Boolean(data.activity_suspended);
                 this.activity_suspension_date = data.activity_suspension_date ? new Date(data.activity_suspension_date) : undefined;
                 break;
             case 'activity_completed':
-                this.activity_completed = data.activity_completed;
+                this.activity_completed = Boolean(data.activity_completed);
                 this.activity_completion_date = data.activity_completion_date === null
                     ? null
                     : (data.activity_completion_date ? new Date(data.activity_completion_date) : undefined);
