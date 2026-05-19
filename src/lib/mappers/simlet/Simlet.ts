@@ -442,9 +442,13 @@ export class Simlet {
         session_data.simlet_id = this.simlet_id;
         session_data.session_order = this.sessions.length + 1;
         let session = await Session.createFromDbData(session_data, this.is_admin, this.current_user_id!);
+        if(this.sessions.length === 0) {
+            let groups = await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id);
+            for(const group of groups) {
+                await group.allocateToDefault(session.session_id);
+            }
+        }
         this.sessions.push(session.session_id);
-        // Note: allocateGroupToDefaut is now deprecated due to schema changes
-        // Allocation logic should be handled at the group level
         return session;
     }
 

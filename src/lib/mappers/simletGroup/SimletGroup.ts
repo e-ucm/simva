@@ -217,12 +217,7 @@ export class SimletGroup {
     async addParticipant(participantId: number) : Promise<SimletGroup> {
         await SimletParticipant.addToGroup(this.group_id, participantId);
         const targetSessionId = await this.resolveTargetSessionId(participantId);
-        await db.Tables.ExperimentalParticipants.upsert({
-            simlet_id: this.simlet_id,
-            group_id: this.group_id,
-            participant_id: participantId,
-            session_id: targetSessionId,
-        });
+        await this.allocateToDefault(targetSessionId);
         await this.syncParticipantActivityCompletions(participantId, undefined, targetSessionId);
         return this;
     }
@@ -236,7 +231,7 @@ export class SimletGroup {
             ]
         });
         if (!session) {
-            throw new NotFoundError(`No sessions found for simlet ${this.simlet_id}`);
+            return -1;
         }
         return session.session_id;
     }
@@ -264,13 +259,15 @@ export class SimletGroup {
     private async syncParticipantActivityCompletions(
         participantId: number,
         previousSessionId: number | null | undefined,
-        nextSessionId: number
+        nextSessionId: number | null
     ): Promise<void> {
         if (previousSessionId && previousSessionId !== nextSessionId) {
             const previousSession = await Session.getFromDbData(this.simlet_id, previousSessionId, this.is_admin, this.current_user_id);
             await previousSession.removeParticipantsFromAllActivities([participantId]);
         }
-
+        if(!nextSessionId || nextSessionId === -1) {
+            return;
+        }
         const nextSession = await Session.getFromDbData(this.simlet_id, nextSessionId, this.is_admin, this.current_user_id);
         await nextSession.addParticipantsToAllActivities([participantId]);
     }
@@ -422,6 +419,9 @@ export class SimletGroup {
     async createParticipant(body: Partial<SimletParticipant>): Promise<SimletParticipant> {
         let participant = await SimletParticipant.createInDb(this.simlet_id, this.group_id, this.group_use_new_generation, body);
         const targetSessionId = await this.resolveTargetSessionId(participant.user_id);
+        if(targetSessionId === -1) {
+            return participant;
+        }
         await db.Tables.ExperimentalParticipants.upsert({
             simlet_id: this.simlet_id,
             group_id: this.group_id,
