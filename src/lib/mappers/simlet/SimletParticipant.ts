@@ -278,7 +278,7 @@ export class SimletParticipant {
     }
 
     printInfo() {
-        logger.debug({ SimletParticipant : this }, `SimletParticipant information - Simlet ID: ${this.simlet_id}, Allocator ID: ${this.allocator_id}, Group ID: ${this.group_id}, Participant ID: ${this.user_id}, Username: ${this.username}, Role: ${this.role}`);
+        logger.debug({ SimletParticipant : this }, `SimletParticipant information - Simlet ID: ${this.simlet_id}, Group ID: ${this.group_id}, Participant ID: ${this.user_id}, Username: ${this.username}, Role: ${this.role}`);
     }
 
     toJSON(): object {
