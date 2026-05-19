@@ -178,6 +178,30 @@ export class LimesurveyActivity extends Activity {
 		return true;
 	}
 
+	async patch(data : any): Promise<void> {
+		await super.patch(data);
+		// Map frontend field names to database field names
+		const mappedData: any = {};
+		if (data.survey_language !== undefined) {
+			mappedData.survey_language = data.survey_language;
+		}
+		if (data.copysurvey !== undefined) {
+			try {
+				const newSurveyId = await limeSurveyClient.cloneSurvey(data.copysurvey, data.activity_name || `Copy of survey ${data.copysurvey}`);
+				mappedData.survey_id = newSurveyId;
+				mappedData.survey_language = (await limeSurveyClient.getSurveyLanguages(newSurveyId)).default;
+			} catch (error) {
+				logger.error(error, `Error cloning survey with ID ${data.copysurvey}`);
+			}
+		}
+		if (Object.keys(mappedData).length > 0) {
+			let activity = await db.Tables.LimesurveyActivities.findOne({ where: { activity_id: this.activity_id } });
+			if (activity) {
+				await activity.update(mappedData);
+			}
+		}
+	}
+
 	async getAllCurrentParticipantsId(participants_id?: number[]): Promise<number[]> {
 		const currentParticipantIds = await super.getAllCurrentParticipantsId(participants_id);
 		if (currentParticipantIds.length > 0 || this.allocated_user) {

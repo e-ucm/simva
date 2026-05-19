@@ -174,6 +174,41 @@ export class ManualActivity extends Activity {
 		return super.getResults(type, participants_id);
 	}
 
+	
+	/**
+	 * Patches the manual activity with provided data.
+	 * Updates both base activity fields and manual-specific fields.
+	 * 
+	 * @async
+	 * @method patch
+	 * @param {any} data - Data object containing fields to update
+	 * @returns {Promise<void>}
+	 */
+	async patch(data: any): Promise<void> {
+		// First, update base activity fields
+		await super.patch(data);
+		
+		// Now update manual-specific fields
+		const manualData: any = {};
+		if (data.manual_user_managed !== undefined) {
+			manualData.manual_user_managed = data.manual_user_managed;
+		}
+		if (data.manual_ressource_type !== undefined) {
+			manualData.manual_ressource_type = data.manual_ressource_type;
+		}
+		if (data.manual_ressource_url !== undefined) {
+			manualData.manual_ressource_url = data.manual_ressource_url;
+		}
+		if (Object.keys(manualData).length > 0) {
+			const manualActivity = await db.Tables.ManualActivities.findOne({ 
+				where: { activity_id: this.activity_id } 
+			});
+			if (manualActivity) {
+				await manualActivity.update(manualData);
+			}
+		}
+	}
+
 	async remove(): Promise<void> {
 		const manualActivity = await db.Tables.ManualActivities.findOne({
 			where: { activity_id: this.activity_id }
