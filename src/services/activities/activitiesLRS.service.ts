@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { get } from "node:http";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { config } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 export async function getTestStatementsLRSForActivity(currentUserId: number, currentusername: string, is_admin: boolean, allocated: boolean, activityId: number, query: any) {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
@@ -41,7 +42,8 @@ export async function sendStatementsLRSForActivity(currentUserId: number, is_adm
     }
     if(await activity.canSendStatementsLRS()) {
         await activity.processStatementsForActivity(currentUserId, body);
-        const useTestUrls = await activity.isCurrentUserParticipant();
+        const useTestUrls = await activity.isCurrentUserParticipantAsTester();
+        logger.debug({ useTestUrls }, "Determined whether to use test URLs for LRS statements");
         let ids = await activity.sendLRSStatements(lrsmanagerUserId, body, useTestUrls);
         return ids;
     } else {
@@ -126,7 +128,8 @@ export async function putStatementsLRSForActivity(currentUserId: number, is_admi
     }
     if(await activity.canSendStatementsLRS()) {
         await activity.processStatementsForActivity(currentUserId, body);
-        const useTestUrls = await activity.isCurrentUserParticipant();
+        const useTestUrls = await activity.isCurrentUserParticipantAsTester();
+        logger.debug({ useTestUrls }, "Determined whether to use test URLs for LRS statements");
         let ids = await activity.sendLRSStatements(lrsmanagerUserId, body, useTestUrls);
         return ids;
     } else {

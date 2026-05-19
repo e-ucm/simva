@@ -4290,7 +4290,7 @@ components:
         (if logged in student , user is not needed)
       schema:
         type: string
-        format: 'user1'
+        example: 'user1'
     users:
       in: query
       name: users
@@ -4318,7 +4318,7 @@ components:
       required: false
       schema:
         type: integer
-        format: '2000'
+        example: 2000
     completionQuery:
       in: query
       name: complete

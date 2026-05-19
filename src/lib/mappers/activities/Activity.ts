@@ -701,7 +701,7 @@ export class Activity {
 	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
 		try {
 			logger.info({verb, timestamp, reasonExtension, resultScore, resultSuccess}, `Preparing to send xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
-			let isTestUrl = await this.isCurrentUserParticipant();
+			let isTestUrl = await this.isCurrentUserParticipantAsTester();
 			await lrsclient.initJSScormTracker();
 			lrsclient.jsScormTracker.tracker.settings.actor_name = this.allocated_username ?? this.current_user_username ?? "unknown";
 			lrsclient.jsScormTracker.tracker.settings.platform = config.externalUrl;
@@ -889,15 +889,11 @@ export class Activity {
 		}
 	}
 
-	async isCurrentUserParticipant(): Promise<boolean> {
-		if (!this.current_user_id) {
-			return false;
-		}
-
+	async isCurrentUserParticipantAsTester(): Promise<boolean> {
 		const participantRecord = await db.Tables.ActivityCompletion.findOne({
 			where: {
 				activity_id: this.activity_id,
-				participant_id: this.current_user_id,
+				participant_id: this.allocated_user_id ?? this.current_user_id,
 			},
 			attributes: ["activity_id"],
 		});
@@ -908,7 +904,7 @@ export class Activity {
 
 		const permissionRows = await db.Functions.runViewQuery(
 			db.Views.Activity.byActivityIdAndUserId,
-			{ activity_id: this.activity_id, current_user_id: this.current_user_id }
+			{ activity_id: this.activity_id, current_user_id: this.allocated_user_id ?? this.current_user_id }
 		);
 
 		if (!permissionRows || permissionRows.length === 0) {
