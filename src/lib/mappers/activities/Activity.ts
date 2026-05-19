@@ -9,6 +9,7 @@ import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResu
 import { lrsclient } from "@/lib/utils/LRSclient";
 import { User } from "../Users/User";
 import KafkaClient, { KafkaOpts } from "@/lib/utils/kafkaclient";
+import { v4 as uuidv4 } from 'uuid';
 
 const kafkaEventConfig: KafkaOpts = {
 	clientId: config.kafkaEvent.clientId,
@@ -675,6 +676,7 @@ export class Activity {
 		}
 		logger.debug({completionData, update}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		await completionData.update({ activity_suspended: status });
+		await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", completionData.activity_initialization_date, reason);
 		return completionData;
 	}
 
