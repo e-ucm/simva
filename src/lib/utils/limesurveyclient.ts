@@ -615,44 +615,48 @@ export class LimeSurveyClient {
     /**
      * Find a participant's tid from their token string.
      */
-    async getParticipantByToken(surveyId: number | string, token: string): Promise<{ tid: number, token: string } | null> {
+    async getParticipantByToken(surveyId: number | string, token: string): Promise<{ tid: string, token: string, allTids: any[] } | null> {
         await this.ensureAuthenticated();
         const result = await this.request('list_participants', [
             this.sessionKey,
-            surveyId,
-            0,      // start
-            1,      // limit
-            false,  // unused
-            { token }  // filter by token string
+            surveyId
         ]);
         if (!Array.isArray(result) || result.length === 0) {
             return null;
         }
-        return { tid: parseInt(result[0].tid), token: result[0].token };
+        logger.debug(`LimeSurveyClient.getParticipantByToken -> Participants for survey ${surveyId}: ${JSON.stringify(result)}`);
+        // Find all participants with the given token (robust for duplicates)
+        const participants = result.filter((p: any) => p.token === token);
+        logger.debug(`LimeSurveyClient.getParticipantByToken -> Found participants for token ${token}: ${JSON.stringify(participants)}`);
+        if (!participants || participants.length === 0) {
+            return null;
+        }
+        // Return the first for backward compatibility, but include all tids as an array property
+        return { tid: participants[0].tid, token: participants[0].token, allTids: participants.map((p: any) => p.tid) };
     }
 
     /**
      * Delete all responses for a given token string.
      */
-    async deleteParticipantResponseByToken(surveyId: number | string, token: string): Promise<void> {
-        this.log(`LimeSurveyClient.deleteParticipantResponseByToken -> Started: ${surveyId} - token: ${token}`);
+    async deleteResponseByToken(surveyId: number | string, token: string): Promise<void> {
+        this.log(`LimeSurveyClient.deleteResponseByToken -> Started: ${surveyId} - token: ${token}`);
         await this.ensureAuthenticated();
         // get response ID(s) for token
         let response = await this.getResponseByToken(surveyId, 'en', token, 'code');
-        this.log(`LimeSurveyClient.deleteParticipantResponseByToken -> Response for token ${token}: ${JSON.stringify(response)}`);
+        this.log(`LimeSurveyClient.deleteResponseByToken -> Response for token ${token}: ${JSON.stringify(response)}`);
         const responseId = response?.id ?? response?.ID;
         if (!responseId) {
-            this.log(`Not response to remove for token ${token}`);
-            return;
+            this.log(`LimeSurveyClient.deleteResponseByToken -> No response to remove for token ${token}`);
+        } else {
+            this.log(`LimeSurveyClient.deleteResponseByToken -> Deleting response ${responseId} for token ${token}`);
+            const deleteResult = await this.request('delete_response', [
+                this.sessionKey,
+                surveyId,
+                responseId,
+            ]);
+            this.log(`LimeSurveyClient.deleteResponseByToken -> delete_response result: ${JSON.stringify(deleteResult)}`);
+            this.log(`LimeSurveyClient.deleteResponseByToken -> Completed: ${surveyId} - token: ${token}`);
         }
-        this.log(`Deleting response ${responseId} for token ${token}`);
-        const deleteResult = await this.request('delete_response', [
-            this.sessionKey,
-            surveyId,
-            responseId,
-        ]);
-        this.log(`delete_response result: ${JSON.stringify(deleteResult)}`);
-        this.log(`LimeSurveyClient.deleteParticipantResponseByToken -> Completed: ${surveyId} - token: ${token}`);
     }
 
     /**
@@ -665,21 +669,29 @@ export class LimeSurveyClient {
         // 1. Resolve token string → tid
         const participant = await this.getParticipantByToken(surveyId, token);
         if (!participant) {
-            this.log(`Participant with token ${token} not found in survey ${surveyId}, skipping deletion`);
+            this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> Participant with token ${token} not found in survey ${surveyId}, skipping deletion`);
             return;
         }
-        this.log(`Found participant tid=${participant.tid} for token=${token}`);
+        this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> Found participant tid=${participant.tid} for token=${token}`);
 
-        // 2. Delete responses first
-        await this.deleteParticipantResponseByToken(surveyId, token);
+        // 2. Delete responses first (ignore errors if not found)
+        try {
+            await this.deleteResponseByToken(surveyId, token);
+        } catch (err) {
+            this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> No responses to delete for token ${token} or error: ${err}`);
+        }
 
         // 3. Delete participant — API expects array of tid as strings
-        const deleteResult = await this.request('delete_participants', [
-            this.sessionKey,
-            surveyId,
-            [String(participant.tid)]
-        ]);
-        this.log(`delete_participants result: ${JSON.stringify(deleteResult)}`);
+        try {
+            const deleteResult = await this.request('delete_participants', [
+                this.sessionKey,
+                surveyId,
+                [participant.tid]
+            ]);
+            this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> delete_participants result: ${JSON.stringify(deleteResult)}`);
+        } catch (err) {
+            this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> Error deleting participant tid=${participant.tid}: ${err}`);
+        }
 
         this.log(`LimeSurveyClient.deleteParticipantAndResponseByToken -> Completed: ${surveyId} - token: ${token}`);
     }
