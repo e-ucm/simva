@@ -5,7 +5,7 @@ import * as path from 'path';
 import { config } from "@/lib/config";
 import { logger } from '../logger';
 import { kafkaClient } from './kafkaclient';
-import { LRSTracker } from 'js-tracker';
+import { JSScormTracker, LRSTracker } from 'js-tracker';
 
 const { ScalableBloomFilter } = BloomFilters;
 
@@ -24,6 +24,7 @@ export class LRSClient {
 	filter: InstanceType<typeof ScalableBloomFilter>;
 	readonly #backupPath: string;
 	lrs!: LRSTracker;
+	jsScormTracker!: JSScormTracker;
 
 	/**
 	 * Creates a new LRSClient instance
@@ -42,6 +43,16 @@ export class LRSClient {
 	}
 
 	async initJSScormTracker() {
+		if(!this.jsScormTracker) {
+			const jsScormTracker = new JSScormTracker();
+			jsScormTracker.trackerSettings.debug = true;
+			jsScormTracker.trackerSettings.platform = config.externalUrl;
+			this.jsScormTracker = jsScormTracker;
+		}
+		if(this.lrs && this.lrs.tracker?.online) {
+			logger.info('LRS client already initialized and online');
+			return;
+		}
 		const lrs = new LRSTracker();
 		lrs.trackerSettings.debug = true;
 		logger.info(config.lrs, 'Initializing JS SCORM Tracker with LRS settings');
@@ -62,6 +73,14 @@ export class LRSClient {
 		await lrs.login(); // Authenticate with the LRS before sending any statements
 		lrs.start(); // Initialize the tracker before using it
 		this.lrs = lrs; // Only assign after successful initialization
+		logger.info('JS SCORM Tracker initialized and authenticated with LRS');
+		///this.jsScormTracker.trackerSettings.batch_endpoint = `${lrsEndpoint}/xapi`;
+		//
+		///this.jsScormTracker.trackerSettings.oauth_type = "OAuth1";
+		///this.jsScormTracker.oauth1.username = lrsUsername;
+		///this.jsScormTracker.oauth1.password = lrsPassword;
+		//await this.jsScormTracker.login();
+		logger.info('JS SCORM Tracker initialized and authenticated with LRS');
 	}
 
 	/**
