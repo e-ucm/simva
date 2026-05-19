@@ -3,6 +3,7 @@ import { BadRequestError, ConflictError, NotFoundError } from "@/lib/errors/appE
 import { logger } from "@/lib/logger";
 import { keycloakClient, KeycloakUser } from "@/lib/utils/keycloakclient";
 import { config } from "@/lib/config";
+import { Session } from "@/lib/mappers/session/Session";
 
 /**
  * Simlet Participant mapper class representing a participant within a study (simlet).
@@ -19,11 +20,9 @@ export class SimletParticipant {
     simlet_id: number;
     
     /**
-     * ID of the allocator used to assign this participant
+     * ID of the session used to assign this participant
      */
-    allocator_id?: number;
-
-    session_id: string;
+    session_id: number;
     
     /**
      * ID of the group this participant belongs to
@@ -78,7 +77,6 @@ export class SimletParticipant {
      */
     constructor(data: any) {
         this.simlet_id = data.simlet_id;
-        this.allocator_id = data.allocator_id ?? undefined;
         this.session_id = data.session_id;
         this.group_id = data.group_id;
         this.user_id = data.user_id;
@@ -96,6 +94,17 @@ export class SimletParticipant {
         let participantsData = await db.Functions.runViewQuery(db.Views.GroupParticipant.byGroupId, {group_id: group_id});
         logger.debug({ participantsData }, `Group data retrieved for group ID ${group_id}`);
         return participantsData.map((participant: any) => new SimletParticipant(participant));
+    }
+
+    static async resetAssignedUserToSession(simlet_id: number, session_id: number): Promise<void> {
+        const default_session_id = await Session.getDefaultSessionId(simlet_id, session_id);
+        if(default_session_id === -1) {
+            logger.warn(`No default session found for simlet ${simlet_id}. Participants will be unassigned from any session.`);
+            await db.Tables.ExperimentalParticipants.destroy({ where: { simlet_id: simlet_id, session_id: session_id } });
+        } else {
+            await db.Tables.ExperimentalParticipants.update({ session_id: default_session_id }, { where: { simlet_id: simlet_id, session_id: session_id } });
+        }
+        logger.info(`Reset session assignment for participants from session ${session_id} to default session ${default_session_id}`);
     }
 
     /**

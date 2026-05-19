@@ -12,6 +12,7 @@ import { SessionTagList } from "./SessionTagsList";
 import { SessionTag } from "./SessionTagsElement";
 import { lrsclient } from "@/lib/utils/LRSclient";
 import { config } from "@/lib/config";
+import { SimletGroup } from "../simletGroup/SimletGroup";
 
 /**
  * Session mapper class representing a test session within a study (simlet).
@@ -177,6 +178,27 @@ export class Session {
         this.tags = this.tags.filter(t => t.tag_id !== tag_id);
         return this.tags || [];
     } 
+
+    static async getDefaultSessionId(simlet_id: number, session_id?: number): Promise<number> {
+        const sessions = await db.Tables.Sessions.findAll({
+            where: { simlet_id: simlet_id },
+            order: [
+                ['session_order', 'ASC'],
+                ['session_id', 'ASC']
+            ]
+        });
+        if (!sessions || sessions.length === 0) {
+            return -1;
+        }
+        if(sessions[0].session_id === session_id) {
+            if(sessions.length > 1) {
+                return sessions[1].session_id;
+            } else {
+                return -1;
+            }
+        }
+        return sessions[0].session_id;
+    }
 
     static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string): Promise<Session[]> {
         let sessions;
@@ -410,6 +432,7 @@ export class Session {
         if(!session) {
             throw new NotFoundError(`Session with ID ${this.session_id} not found for deletion`);
         }
+        await SimletParticipant.resetAssignedUserToSession(this.simlet_id, this.session_id);
         await session.destroy();
     }
 

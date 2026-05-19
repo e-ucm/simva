@@ -222,20 +222,6 @@ export class SimletGroup {
         return this;
     }
 
-    private async getDefaultSessionId(): Promise<number> {
-        const session = await db.Tables.Sessions.findOne({
-            where: { simlet_id: this.simlet_id },
-            order: [
-                ['session_order', 'ASC'],
-                ['session_id', 'ASC']
-            ]
-        });
-        if (!session) {
-            return -1;
-        }
-        return session.session_id;
-    }
-
     private async resolveTargetSessionId(participantId?: number): Promise<number> {
         if (this.group_allocator_type === 'group' || this.group_allocator_type === 'session') {
             const allocation = participantId !== undefined
@@ -253,7 +239,7 @@ export class SimletGroup {
             }
         }
 
-        return await this.getDefaultSessionId();
+        return await Session.getDefaultSessionId(this.simlet_id);
     }
 
     private async syncParticipantActivityCompletions(
