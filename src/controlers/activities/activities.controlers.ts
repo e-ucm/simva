@@ -316,7 +316,12 @@ export async function setSuspensionForActivity(
     if (!access.allocated) {
       participant_id = parseUserIdQueryParam(req.query.user);
     }
-    const result = await activitiesService.setSuspensionForActivity(activityId, access.allocated, access.is_admin, status, participant_id, access.currentUserId);
+    logger.debug({query: req.query, body : req.body, participant_id, access}, "Parsed parameters for setSuspensionForActivity");
+    let reason = "";
+    if (status) {
+      reason = req.body.reason ? String(req.body.reason) : "";
+    }
+    const result = await activitiesService.setSuspensionForActivity(activityId, access.allocated, access.is_admin, status, reason, participant_id, access.currentUserId);
     return res.json(result.toJSON());
   } catch (err) {
     next(err);

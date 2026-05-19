@@ -102,9 +102,9 @@ export async function setMultiCompletionForActivity(activityId: number, allocate
     return activity.setMultiCompletion(status);
 }
 
-export async function setSuspensionForActivity(activityId: number, allocated: boolean, is_admin: boolean, status: boolean, participant_id: number, current_user_id?: number): Promise<ActivityCompletion> {
+export async function setSuspensionForActivity(activityId: number, allocated: boolean, is_admin: boolean, status: boolean, reason: string, participant_id: number, current_user_id?: number): Promise<ActivityCompletion> {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
-    return activity.setSuspension(status, participant_id);
+    return activity.setSuspension(status, participant_id, reason);
 }
 
 export async function getSuspensionForActivity(activityId: number, allocated: boolean, is_admin: boolean, participants_id?: number[], current_user_id?: number): Promise<ActivityMappingResult<boolean>> {

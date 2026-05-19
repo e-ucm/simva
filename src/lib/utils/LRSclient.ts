@@ -160,15 +160,27 @@ export class LRSClient {
 		return `${config.externalUrl}${prefix}/activities/${activityId}`;
 	}
 
+	getSimletType() {
+		return `${config.externalUrl}/about#simlet`;
+	}
+
+	getSessionType() {
+		return `${config.externalUrl}/about#session`;
+	}
+
+	getActivityType() {
+		return `${config.externalUrl}/about#activity`;
+	}
+
 	updateMissingTraceElements(trace : any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): any {
 		let updatedStatement = trace;
 		logger.info('Updating missing trace elements');
         const now = new Date();
         const simvaUrl = config.externalUrl;
         const authorityName = participant || 'lrs-manager';
-        const simletType = `${config.externalUrl}/about#simlet`;
-        const sessionType = `${config.externalUrl}/about#session`;
-        const activityType = `${config.externalUrl}/about#activity`;
+        const simletType = this.getSimletType();
+        const sessionType = this.getSessionType();
+        const activityType = this.getActivityType();
         updatedStatement=updatedStatement.withId(this.generateStatementId(trace));
         if(!trace.timestamp) {
             updatedStatement=updatedStatement.withTimestamp(now.toISOString());
@@ -232,7 +244,7 @@ export class LRSClient {
 		return responses;
 	}
 	
-	async sendTracesToLRS(traces: any[]): Promise<number[]> {
+	async sendTracesToLRS(traces: any[], flush: boolean = true): Promise<number[]> {
 		let ids: number[] = [];
 		for (var i = traces.length - 1; i >= 0; i--) {
 			let traceBuilder = traces[i];
@@ -241,7 +253,9 @@ export class LRSClient {
 				.send();
 			ids.push(traceBuilder.statement?.id);
 		}
-		await this.lrs.flush();
+		if (flush) {
+			await this.lrs.flush();
+		}
 		return ids;
 	}
 

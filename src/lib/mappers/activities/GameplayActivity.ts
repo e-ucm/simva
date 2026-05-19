@@ -225,8 +225,8 @@ export class GamePlayActivity extends Activity {
 		return super.setMultiCompletion(status);
 	}
 
-	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
-		return super.setSuspension(status, participant_id);
+	async setSuspension(status : boolean, participant_id: number, reason?: string): Promise<ActivityCompletion> {
+		return super.setSuspension(status, participant_id, reason);
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
@@ -302,9 +302,9 @@ export class GamePlayActivity extends Activity {
 		}
 	}
 
-	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
+	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
 		if(!this.game_scorm_xapi){
-			return super.sendXAPITraceForActivity(username, verb, timestamp, resultScore, reasonExtension);
+			return super.sendXAPITraceForActivity(verb, timestamp, reasonExtension, resultScore, resultSuccess);
 		}
 	}
 

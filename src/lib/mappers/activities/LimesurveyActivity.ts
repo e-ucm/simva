@@ -247,16 +247,16 @@ export class LimesurveyActivity extends Activity {
 		return super.setMultiCompletion(status);
 	}
 
-	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
-		return super.setSuspension(status, participant_id);
+	async setSuspension(status : boolean, participant_id: number, reason?: string): Promise<ActivityCompletion> {
+		return super.setSuspension(status, participant_id, reason);
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
 		return super.getSuspension(participants_id);
 	}
 
-	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
-		return super.sendXAPITraceForActivity(username, verb, timestamp, resultScore, reasonExtension);
+	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
+		return super.sendXAPITraceForActivity(verb, timestamp, reasonExtension, resultScore, resultSuccess);
 	}
 	
 	async generatePresignedFileUrl(): Promise<string> {

@@ -529,7 +529,7 @@ export class Activity {
 		await kafkaEventClient.sendMessage(JSON.stringify(message));
 		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_initialized");
 		logger.debug({data}, `Current initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
-		await data.update({ activity_initialized: initialized, activity_initialization_date: initialized_date });
+		await data.update({ activity_initialized: initialized, activity_initialization_date: initialized_date, 	activity_registration_id: uuidv4() });
 		logger.debug({data}, `Updated initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		return data;
 	}
@@ -664,8 +664,16 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set suspension for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when suspension status is set
 	 */
-	async setSuspension(status : boolean, participant_id: number): Promise<ActivityCompletion> {
+	async setSuspension(status : boolean, participant_id: number, reason?: string): Promise<ActivityCompletion> {
 		let completionData = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_suspended");
+		let update : any;
+		update= { activity_suspended: status };
+		if(status) {
+			update["activity_suspension_date"] = new Date();
+		} else {
+			update["activity_suspension_date"] = null;
+		}
+		logger.debug({completionData, update}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		await completionData.update({ activity_suspended: status });
 		return completionData;
 	}
@@ -684,55 +692,86 @@ export class Activity {
 	 * Stub implementation - to be implemented by subclasses.
 	 * 
 	 * @method sendXAPITraceForActivity
-	 * @param {string} username - Username of the participant
 	 * @param {string} verb - xAPI verb for the trace
 	 * @param {string} timestamp - Timestamp of the activity
 	 * @param {number} resultScore - Score result for the activity
 	 * @param {string} reasonExtension - Reason extension for the trace
 	 * @returns {void}
 	 */
-	async sendXAPITraceForActivity(username: string, verb: string, timestamp : string, resultScore : number, reasonExtension : string): Promise<void> {
-		let jsTracker = new JSScormTracker();
-		jsTracker.trackerSettings.parent_activity_id = `${config.externalUrl}/simlets/${this.simlet_id}/activities/${this.activity_id}`;
-		jsTracker.start();
-		let scormActivityTracker = jsTracker.scorm(`${config.externalUrl}/simlets/${this.simlet_id}/activities/${this.activity_id}`, 'activity');
-		let statement;
-		switch(verb) {
-			case "initialized":
-				statement = scormActivityTracker.initialized();
-				break;
-			case "resumed":
-				statement = scormActivityTracker.resumed();
-				break;
-			case "suspended":
-				statement = scormActivityTracker.suspended();
-				statement.withScoreScaled(resultScore);
-				statement.withResultExtension(jsTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
-				break;
-			case "terminated":
-				scormActivityTracker.IsInitialized = true;
-				scormActivityTracker.InitializedTime = new Date(timestamp);
-				statement = scormActivityTracker.terminated();
-				statement.withScoreScaled(resultScore);
-				statement.withResultExtension(jsTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
-				break;
-			default:
-				logger.warn(`Unsupported verb ${verb} for xAPI trace`);
-		}
-		if (statement) {
-			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT, `${config.externalUrl}/simlets/${this.simlet_id}`, jsTracker.ALL.ACTIVITYTYPES.COURSE);
-			//statement.withContextActivity(jsTracker.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING, `${config.externalUrl}/sessions/${this.session_id}`, jsTracker.ALL.ACTIVITYTYPES.LESSON);
-			logger.info(statement? statement.statement.toXAPI() : "No statement generated", "XAPI Statement:");
-			lrsclient.sendTracesToLRS([
-				lrsclient.updateMissingTraceElements(
-					statement!,
-					this.current_user_username ? this.current_user_username : "unknown",
-					this.simlet_id,
-					this.session_id,
-					this.activity_id,
-					false
-				)
-			]);
+	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
+		try {
+			logger.info({verb, timestamp, reasonExtension, resultScore, resultSuccess}, `Preparing to send xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
+			let isTestUrl = await this.isCurrentUserParticipant();
+			await lrsclient.initJSScormTracker();
+			lrsclient.jsScormTracker.tracker.settings.actor_name = this.allocated_username ?? this.current_user_username ?? "unknown";
+			lrsclient.jsScormTracker.tracker.settings.platform = config.externalUrl;
+			lrsclient.jsScormTracker.start();
+			let scormActivityTracker = lrsclient.jsScormTracker.scorm(`${lrsclient.getActivityUrl(this.simlet_id, this.session_id, this.activity_id,isTestUrl)}`, lrsclient.jsScormTracker.ALL.ACTIVITYTYPES.LESSON);
+			let statement;
+			switch(verb) {
+				case "initialized":
+					statement = scormActivityTracker.initialized();
+					break;
+				case "resumed":
+					scormActivityTracker.IsInitialized = true;
+					logger.info({scormActivityTracker}, `SCORM activity tracker state for activity ID ${this.activity_id} before creating resumed statement`);
+					statement = scormActivityTracker.resumed();
+					logger.info({statement}, `Generated resumed statement for activity ID ${this.activity_id} with verb ${verb}`);
+					break;
+				case "suspended":
+					scormActivityTracker.IsInitialized = true;
+					if(timestamp) {
+						scormActivityTracker.InitializedTime = timestamp;
+					}
+					logger.info({scormActivityTracker}, `SCORM activity tracker state for activity ID ${this.activity_id} before creating suspended statement`);
+					statement = scormActivityTracker.suspended();
+					logger.info({statement}, `Generated suspended statement for activity ID ${this.activity_id} with verb ${verb}`);
+					if(resultScore !== undefined) {
+						statement.withScoreScaled(resultScore);
+					}
+					if(reasonExtension !== undefined) {
+						statement.withResultExtension(lrsclient.jsScormTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
+					}
+					break;
+				case "terminated":
+					scormActivityTracker.IsInitialized = true;
+					if(timestamp) {
+						scormActivityTracker.InitializedTime = timestamp;
+					}
+					statement = scormActivityTracker.terminated();
+					if(resultScore !== undefined) {
+						statement.withScoreScaled(resultScore);
+					}
+					if(resultSuccess) {
+						statement.withSuccess(resultSuccess);
+					}
+					if(reasonExtension !== undefined) {
+						statement.withResultExtension(lrsclient.jsScormTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
+					}
+					break;
+				default:
+					logger.warn(`Unsupported verb ${verb} for xAPI trace`);
+			}
+			if (statement) {
+				logger.debug({xapi:statement, isTestUrl}, `Generated xAPI statement for activity ID ${this.activity_id} with verb ${verb}`);
+				let trace = lrsclient.lrs.fromXAPI(statement.toXAPI());
+				await lrsclient.sendTracesToLRS([
+					await lrsclient.updateMissingTraceElements(
+						trace,
+						this.current_user_username ? this.current_user_username : "unknown",
+						this.simlet_id,
+						this.session_id,
+						this.activity_id,
+						isTestUrl
+					)
+				], false);
+				lrsclient.jsScormTracker.stop();
+			}
+		} catch (error) {
+			//if(lrsclient.jsScormTracker) {
+			//	lrsclient.jsScormTracker.stop();
+			//}
+			logger.error({error}, `Error sending xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
 		}
 		
 	}
