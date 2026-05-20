@@ -287,8 +287,9 @@ SELECT
     shlink.short_url
 FROM v_complete_allocation_participants ap
 LEFT JOIN SIMLETs s ON ap.simlet_id = s.simlet_id
+LEFT JOIN Sessions ses ON ap.session_id = ses.session_id
 LEFT JOIN SIMLETs_shlinks shlink ON s.simlet_id = shlink.simlet_id
-WHERE s.simlet_id IS NOT NULL;
+WHERE s.simlet_id IS NOT NULL AND ses.session_status = 'active';
 
 DROP VIEW IF EXISTS v_complete_activity_allocation_participants;
 CREATE VIEW v_complete_activity_allocation_participants AS
