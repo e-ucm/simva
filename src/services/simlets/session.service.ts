@@ -18,6 +18,7 @@ import { ValidationError } from "@/lib/errors/appErrors";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { SessionTag } from "@/lib/mappers/session/SessionTagsElement";
 import { config } from "@/lib/config";
+import { db } from "@/lib/db";
 
 /**
  * Retrieves all sessions within a simlet.
@@ -294,7 +295,10 @@ export async function getTestLRSStatements(simletId: number, sessionId: number, 
           homePage: config.externalUrl,
         }
     });
-    if (group.createdAt) {
+    const groupParticipant = await db.Tables.GroupParticipants.findOne({ where: { group_id: group.group_id, participant_id: currentUserId } });
+    if (groupParticipant) {
+      query.since = groupParticipant!.createdAt?.toISOString();
+    } else {
       query.since = group.createdAt?.toISOString();
     }
     return await session.getTestLRSStatements(query);

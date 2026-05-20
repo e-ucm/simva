@@ -36,13 +36,10 @@ export class SessionScheduler {
                     logger.debug({ allocated_activity_result: act.allocated_activity_result }, "Checking activity completion status for next activity scheduling");
                     if(!act.allocated_activity_result!.activity_completed) {
                         let completionData: ActivityCompletion ;
-                        if(act.allocated_activity_result != undefined) {
-                            completionData = await act.getCurrentCompletionDataForParticipant(this.session.allocated_user_id!, "activity_completed");
-                        } else {
-                            completionData = act.allocated_activity_result!;
-                        }
+                        completionData = act.allocated_activity_result!;
+                        logger.log({ completionData }, "Activity completion data for next activity scheduling");
                         this.next = act.activity_id;
-                        if(act.allocated_activity_result!.activity_initialized) {
+                        if(act.allocated_activity_result?.activity_initialized) {
                             if(act instanceof LimesurveyActivity) {
                                 await act.sendXAPITraceForActivity("resumed", completionData);
                             } else {

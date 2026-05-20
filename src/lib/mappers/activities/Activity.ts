@@ -678,13 +678,17 @@ export class Activity {
 			await this.setInitialized(true, new Date(), participant_id);
 		}
 		logger.debug({completionData, update, reason}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
-		if(reason == "unload_page" && completionData.activity_completed) {
-			await this.sendXAPITraceForActivity("terminated", completionData, completionData.activity_initialization_date, reason);
+		if(reason == "unload_page") {
+			if(completionData.activity_completed) {
+				await this.sendXAPITraceForActivity("terminated", completionData, completionData.activity_initialization_date);
+			} else {
+				await this.sendXAPITraceForActivity("suspended", completionData, completionData.activity_initialization_date, reason);
+				await completionData.update(update);
+			}
 		} else {
 			await completionData.update(update);
 			await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", completionData, status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
 		}
-		await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", completionData, status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
 		return completionData;
 	}
 
@@ -721,7 +725,7 @@ export class Activity {
 			if(user_id !== -1) {
 				lrsclient.jsScormTracker.trackerSettings.registration_id = completionData.activity_registration_id!;
 				if(timestamp === undefined) {
-					timestamp = completionData.activity_initialization_date ?? new Date();
+					timestamp = new Date();
 				}
 				logger.info({registration_id: completionData.activity_registration_id, timestamp}, `Set registration ID and timestamp for xAPI trace for activity ID ${this.activity_id}`);
 			} else {
@@ -789,7 +793,7 @@ export class Activity {
 						this.activity_id,
 						isTestUrl
 					)
-				], false);
+				]);
 				lrsclient.jsScormTracker.stop();
 			}
 		} catch (error) {

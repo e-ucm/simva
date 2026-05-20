@@ -217,7 +217,12 @@ export class SimletGroup {
     async addParticipant(participantId: number) : Promise<SimletGroup> {
         await SimletParticipant.addToGroup(this.group_id, participantId);
         const targetSessionId = await this.resolveTargetSessionId(participantId);
-        await this.allocateToDefault(targetSessionId);
+        await db.Tables.ExperimentalParticipants.upsert({
+            simlet_id: this.simlet_id,
+            group_id: this.group_id,
+            participant_id: participantId,
+            session_id: targetSessionId,
+        });
         await this.syncParticipantActivityCompletions(participantId, undefined, targetSessionId);
         return this;
     }
