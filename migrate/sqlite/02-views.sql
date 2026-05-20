@@ -100,7 +100,7 @@ SELECT
 FROM v_session_direct_permissions_users p
 JOIN Sessions s ON s.session_id = p.session_id
 WHERE NOT EXISTS (
-    SELECT 1 FROM v_session_direct_permissions_users d
+    SELECT 1 FROM v_simlet_direct_permissions_users d
     WHERE d.simlet_id = s.simlet_id AND d.user_id = p.user_id
 )
 UNION ALL
