@@ -75,6 +75,7 @@ DROP VIEW IF EXISTS vv_user_permissions;
 CREATE VIEW vv_user_permissions AS
 SELECT * FROM vv_direct_permissions_users
 UNION ALL
+-- Indirect SESSION permissions from SIMLET (if no direct SESSION permission for user)
 SELECT
     'SESSION' AS object_type,
     s.session_id AS object_id,
@@ -84,21 +85,12 @@ SELECT
     p.username
 FROM v_simlet_direct_permissions_users p
 JOIN Sessions s ON s.simlet_id = p.simlet_id
-LEFT JOIN v_simlet_direct_permissions_users psim ON s.simlet_id = psim.simlet_id
-WHERE psim.permission IS NULL
+WHERE NOT EXISTS (
+    SELECT 1 FROM v_session_direct_permissions_users d
+    WHERE d.session_id = s.session_id AND d.user_id = p.user_id
+)
 UNION ALL
-SELECT
-    'SIMLET' AS object_type,
-    s.simlet_id AS object_id,
-    'READ' AS permission,
-    'INDIRECT' AS permission_type,
-    p.user_id,
-    p.username
-FROM v_session_direct_permissions_users p
-JOIN Sessions s ON s.session_id = p.session_id
-LEFT JOIN v_simlet_direct_permissions_users psim ON s.simlet_id = psim.simlet_id
-WHERE psim.permission IS NULL
-UNION ALL
+-- Indirect ACTIVITY permissions from SIMLET (if no direct ACTIVITY or SESSION permission for user)
 SELECT
     'ACTIVITY' AS object_type,
     a.activity_id AS object_id,
@@ -109,9 +101,31 @@ SELECT
 FROM v_simlet_direct_permissions_users p
 JOIN Sessions s ON s.simlet_id = p.simlet_id
 JOIN Activities a ON a.session_id = s.session_id
-LEFT JOIN v_session_direct_permissions_users psim ON s.session_id = psim.session_id
-WHERE psim.permission IS NULL
+WHERE NOT EXISTS (
+    SELECT 1 FROM v_session_direct_permissions_users d
+    WHERE d.session_id = s.session_id AND d.user_id = p.user_id
+)
+AND NOT EXISTS (
+    SELECT 1 FROM vv_direct_permissions_users da
+    WHERE da.object_type = 'ACTIVITY' AND da.object_id = a.activity_id AND da.user_id = p.user_id
+)
 UNION ALL
+-- Indirect SIMLET permissions from SESSION (if no direct SIMLET permission for user)
+SELECT
+    'SIMLET' AS object_type,
+    s.simlet_id AS object_id,
+    'READ' AS permission,
+    'INDIRECT' AS permission_type,
+    p.user_id,
+    p.username
+FROM v_session_direct_permissions_users p
+JOIN Sessions s ON s.session_id = p.session_id
+WHERE NOT EXISTS (
+    SELECT 1 FROM v_simlet_direct_permissions_users d
+    WHERE d.simlet_id = s.simlet_id AND d.user_id = p.user_id
+)
+UNION ALL
+-- Indirect ACTIVITY permissions from SESSION (if no direct ACTIVITY permission for user, and no direct SIMLET permission)
 SELECT
     'ACTIVITY' AS object_type,
     a.activity_id AS object_id,
@@ -121,6 +135,15 @@ SELECT
     p.username
 FROM v_session_direct_permissions_users p
 JOIN Activities a ON a.session_id = p.session_id
+JOIN Sessions s ON s.session_id = a.session_id
+WHERE NOT EXISTS (
+    SELECT 1 FROM vv_direct_permissions_users da
+    WHERE da.object_type = 'ACTIVITY' AND da.object_id = a.activity_id AND da.user_id = p.user_id
+)
+AND NOT EXISTS (
+    SELECT 1 FROM v_simlet_direct_permissions_users d
+    WHERE d.simlet_id = s.simlet_id AND d.user_id = p.user_id
+)
 ORDER BY permission_type, permission, object_type;
 
 -- Views : Complete information about simlets, sessions and activities with permissions for each user
@@ -340,9 +363,10 @@ JOIN LimeSurvey_Activities la ON a.activity_id = la.activity_id
 WHERE la.survey_id IS NOT NULL;
 
 -- Views : Allocation of tags to sessions and activities with complete information about them
-DROP VIEW IF EXISTS v_session_tags;
-CREATE VIEW v_session_tags AS
-SELECT
+DROP VIEW IF EXISTS v_simlet_tags;
+CREATE VIEW v_simlet_tags AS
+SELECT DISTINCT
+    ses.simlet_id,
     tag.session_id,
     tag.tag_id,
     tag_list.tag_name,
@@ -350,25 +374,16 @@ SELECT
     tag_list.user_id as tag_creator_user_id,
     u.username as tag_creator_username,
     u.email as tag_creator_email,
-    u.role as tag_creator_role
+    u.role as tag_creator_role,
+    perm.user_id as tag_visible_user_id,
+    perm.username as tag_visible_username,
+    CASE WHEN tag_list.user_id = perm.user_id THEN 'WRITE' ELSE 'READ' END as tag_visible_permission
 FROM Sessions_tags tag
 LEFT JOIN Sessions_tags_list tag_list ON tag_list.tag_id = tag.tag_id
-LEFT JOIN Users u ON tag_list.user_id = u.user_id;
-
-DROP VIEW IF EXISTS v_simlet_tags;
-CREATE VIEW v_simlet_tags AS
-SELECT DISTINCT
-    ses.simlet_id,
-    tags.tag_id,
-    tags.tag_name,
-    tags.tag_color,
-    tags.tag_creator_user_id,
-    tags.tag_creator_username,
-    tags.tag_creator_email,
-    tags.tag_creator_role
-FROM v_session_tags tags
-LEFT JOIN Sessions ses ON ses.session_id = tags.session_id
-GROUP BY ses.simlet_id, tags.tag_id;
+LEFT JOIN Users u ON tag_list.user_id = u.user_id
+LEFT JOIN Sessions ses ON ses.session_id = tag.session_id
+JOIN vv_user_permissions perm ON perm.object_type = 'SIMLET' AND perm.object_id = ses.simlet_id
+GROUP BY ses.simlet_id, tag.tag_id, perm.user_id;
 
 DROP VIEW IF EXISTS v_activity_template_tags;
 CREATE VIEW v_activity_template_tags AS

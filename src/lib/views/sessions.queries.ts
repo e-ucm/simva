@@ -42,11 +42,18 @@ const queries: Record<string, QueryTemplate> = {
         },
     },
   tagsBySessionId: {
-    description: "Get all tags of a Session by its ID",
+    description: "Get all tags of a Session by its ID and current user access",
     sql: `
-      SELECT tag_name
-      FROM v_session_tags
+      SELECT 
+        tag_id,
+        tag_name,
+        tag_color,
+        tag_visible_user_id,
+        tag_visible_user_name,
+        tag_visible_permission
+      FROM v_simlet_tags
       WHERE session_id = :session_id
+      AND tag_visible_user_id = :current_user_id
     `,
     params: {
       session_id: {
@@ -54,6 +61,12 @@ const queries: Record<string, QueryTemplate> = {
         required: true,
         description: "Session Identifier",
         example: 1,
+      },
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "Current User Identifier",
+        example: 123,
       },
     },
   },

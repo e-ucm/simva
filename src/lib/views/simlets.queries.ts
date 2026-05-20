@@ -4,9 +4,16 @@ const queries: Record<string, QueryTemplate> = {
     tagsBySimletId: {
     description: "Get all tags of a SIMLET by its ID",
     sql: `
-      SELECT tag_name
+      SELECT 
+        tag_id,
+        tag_name,
+        tag_color,
+        tag_visible_user_id,
+        tag_visible_user_name,
+        tag_visible_permission
       FROM v_simlet_tags
       WHERE simlet_id = :simlet_id
+      AND tag_visible_user_id = :current_user_id
     `,
     params: {
       simlet_id: {
@@ -14,6 +21,34 @@ const queries: Record<string, QueryTemplate> = {
         required: true,
         description: "Simlet Identifier",
         example: 1,
+      },
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+    },
+  },
+  filteredTagsByUserId: {
+    description: "Get all tags by its ID and user ID",
+    sql: `
+      SELECT DISTINCT
+        tag_id,
+        tag_name,
+        tag_color,
+        tag_visible_user_id,
+        tag_visible_user_name,
+        tag_visible_permission
+      FROM v_simlet_tags
+      AND tag_visible_user_id = :current_user_id
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
       },
     },
   },
