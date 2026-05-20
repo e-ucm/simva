@@ -263,10 +263,7 @@ export class LRSClient {
 		return responses;
 	}
 	
-	async sendTracesToLRS(traces: any[], flush ?: boolean): Promise<number[]> {
-		if(flush == undefined) {
-			flush = true;
-		}
+	async sendTracesToLRS(traces: any[]): Promise<number[]> {
 		let ids: number[] = [];
 		for (var i = traces.length - 1; i >= 0; i--) {
 			let traceBuilder = traces[i];
@@ -275,10 +272,15 @@ export class LRSClient {
 				.send();
 			ids.push(traceBuilder.statement?.id);
 		}
-		if (flush) {
-			await this.lrs.flush();
-		}
 		return ids;
+	}
+	
+	async flushLRS(): Promise<void> {
+		if (this.lrs) {
+			await this.lrs.flush();
+		} else {
+			logger.warn('LRS client not initialized, cannot flush');
+		}
 	}
 
 	async setStatement(statement: any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): Promise<number[]> {
@@ -297,7 +299,8 @@ export class LRSClient {
 				response = await this.sendTracesToKafka(traces, activityId);
 			}
 			if(config.lrs.enabled) {
-            	 response = await this.sendTracesToLRS(traces, true);
+            	 response = await this.sendTracesToLRS(traces);
+				 await this.flushLRS();
 			}
             toret = response;
         } else if(statement && typeof statement === 'object'){
@@ -308,7 +311,8 @@ export class LRSClient {
 				response = await this.sendTracesToKafka([trace], activityId);
 			}
 			if(config.lrs.enabled) {
-            	 response = await this.sendTracesToLRS([trace], true);
+            	 response = await this.sendTracesToLRS([trace]);
+				 await this.flushLRS();
 			}
             toret = response;
         } else {
