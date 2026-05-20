@@ -35,17 +35,24 @@ print("SQLite is available!")
 cursor = sqlite_con.cursor()
 
 with open(f"{SQL_SCRIPT_FOLDER}/01-schemas.sql", "r") as f:
+    print("Creating tables...")
     schema_sql = f.read()
     cursor.executescript(schema_sql)
     sqlite_con.commit()
+    print ("Tables created!")
 
 with open(f"{SQL_SCRIPT_FOLDER}/02-views.sql", "r") as f:
+    print("Creating views...")
     views_sql = f.read()
     cursor.executescript(views_sql)
     sqlite_con.commit()
+    print ("Views created!")
 
 if not MONGO_BACKUP_FOLDER or not MONGO_BACKUP_FOLDER.strip():
-    print("MONGO_BACKUP_FOLDER is empty. Skipping migration.")
+    print("MONGO_BACKUP_FOLDER is empty. Skipping migration. Saving database with only new tables and views created.")
+    cursor.close()
+    sqlite_con.close()
+    print("Migration skipped due to missing Mongo backup folder. Database saved with new tables and views created.")
     raise SystemExit(0)
 
 required_backup_files = [
