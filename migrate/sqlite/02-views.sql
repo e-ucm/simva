@@ -90,7 +90,7 @@ WHERE NOT EXISTS (
     WHERE d.session_id = s.session_id AND d.user_id = p.user_id
 )
 UNION ALL
--- Indirect ACTIVITY permissions from SIMLET (if no direct ACTIVITY or SESSION permission for user)
+-- Indirect ACTIVITY permissions from SIMLET and sessions
 SELECT
     'ACTIVITY' AS object_type,
     a.activity_id AS object_id,
@@ -101,50 +101,7 @@ SELECT
 FROM v_simlet_direct_permissions_users p
 JOIN Sessions s ON s.simlet_id = p.simlet_id
 JOIN Activities a ON a.session_id = s.session_id
-WHERE NOT EXISTS (
-    SELECT 1 FROM v_session_direct_permissions_users d
-    WHERE d.session_id = s.session_id AND d.user_id = p.user_id
-)
-AND NOT EXISTS (
-    SELECT 1 FROM vv_direct_permissions_users da
-    WHERE da.object_type = 'ACTIVITY' AND da.object_id = a.activity_id AND da.user_id = p.user_id
-)
-UNION ALL
--- Indirect SIMLET permissions from SESSION (if no direct SIMLET permission for user)
-SELECT
-    'SIMLET' AS object_type,
-    s.simlet_id AS object_id,
-    'READ' AS permission,
-    'INDIRECT' AS permission_type,
-    p.user_id,
-    p.username
-FROM v_session_direct_permissions_users p
-JOIN Sessions s ON s.session_id = p.session_id
-WHERE NOT EXISTS (
-    SELECT 1 FROM v_simlet_direct_permissions_users d
-    WHERE d.simlet_id = s.simlet_id AND d.user_id = p.user_id
-)
-UNION ALL
--- Indirect ACTIVITY permissions from SESSION (if no direct ACTIVITY permission for user, and no direct SIMLET permission)
-SELECT
-    'ACTIVITY' AS object_type,
-    a.activity_id AS object_id,
-    p.permission AS permission,
-    'INDIRECT' AS permission_type,
-    p.user_id,
-    p.username
-FROM v_session_direct_permissions_users p
-JOIN Activities a ON a.session_id = p.session_id
-JOIN Sessions s ON s.session_id = a.session_id
-WHERE NOT EXISTS (
-    SELECT 1 FROM vv_direct_permissions_users da
-    WHERE da.object_type = 'ACTIVITY' AND da.object_id = a.activity_id AND da.user_id = p.user_id
-)
-AND NOT EXISTS (
-    SELECT 1 FROM v_simlet_direct_permissions_users d
-    WHERE d.simlet_id = s.simlet_id AND d.user_id = p.user_id
-)
-ORDER BY permission_type, permission, object_type;
+LEFT JOIN v_session_direct_permissions_users psim ON s.session_id = psim.session_id;
 
 -- Views : Complete information about simlets, sessions and activities with permissions for each user
 DROP VIEW IF EXISTS v_complete_simlets_users_permissions;
