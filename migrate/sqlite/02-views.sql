@@ -90,6 +90,20 @@ WHERE NOT EXISTS (
     WHERE d.session_id = s.session_id AND d.user_id = p.user_id
 )
 UNION ALL
+SELECT
+    'SIMLET' AS object_type,
+    s.simlet_id AS object_id,
+    p.permission AS permission,
+    'INDIRECT' AS permission_type,
+    p.user_id,
+    p.username
+FROM v_session_direct_permissions_users p
+JOIN Sessions s ON s.session_id = p.session_id
+WHERE NOT EXISTS (
+    SELECT 1 FROM v_session_direct_permissions_users d
+    WHERE d.simlet_id = s.simlet_id AND d.user_id = p.user_id
+)
+UNION ALL
 -- Indirect ACTIVITY permissions from SIMLET and sessions
 SELECT
     'ACTIVITY' AS object_type,
