@@ -76,6 +76,9 @@ if missing_backup_files:
         f"{MONGO_BACKUP_FOLDER}: {', '.join(missing_backup_files)}. "
         "Skipping migration."
     )
+    cursor.close()
+    sqlite_con.close()
+    print("Migration skipped due to missing Mongo backup files in mongo backup folder. Database saved with new tables and views created.")
     raise SystemExit(0)
 
 print("Starting migration...")
