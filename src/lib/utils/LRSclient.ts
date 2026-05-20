@@ -263,7 +263,10 @@ export class LRSClient {
 		return responses;
 	}
 	
-	async sendTracesToLRS(traces: any[], flush: boolean = true): Promise<number[]> {
+	async sendTracesToLRS(traces: any[], flush ?: boolean): Promise<number[]> {
+		if(flush == undefined) {
+			flush = true;
+		}
 		let ids: number[] = [];
 		for (var i = traces.length - 1; i >= 0; i--) {
 			let traceBuilder = traces[i];
@@ -294,7 +297,7 @@ export class LRSClient {
 				response = await this.sendTracesToKafka(traces, activityId);
 			}
 			if(config.lrs.enabled) {
-            	 response = await this.sendTracesToLRS(traces);
+            	 response = await this.sendTracesToLRS(traces, true);
 			}
             toret = response;
         } else if(statement && typeof statement === 'object'){
@@ -305,7 +308,7 @@ export class LRSClient {
 				response = await this.sendTracesToKafka([trace], activityId);
 			}
 			if(config.lrs.enabled) {
-            	 response = await this.sendTracesToLRS([trace]);
+            	 response = await this.sendTracesToLRS([trace], true);
 			}
             toret = response;
         } else {
