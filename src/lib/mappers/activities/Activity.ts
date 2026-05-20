@@ -794,6 +794,7 @@ export class Activity {
 						isTestUrl
 					)
 				]);
+				await lrsclient.flushLRS();
 				lrsclient.jsScormTracker.stop();
 			}
 		} catch (error) {
