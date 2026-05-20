@@ -279,8 +279,8 @@ export class LimesurveyActivity extends Activity {
 		return super.getSuspension(participants_id);
 	}
 
-	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
-		return super.sendXAPITraceForActivity(verb, timestamp, reasonExtension, resultScore, resultSuccess);
+	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", completionData: ActivityCompletion, timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
+		return super.sendXAPITraceForActivity(verb, completionData, timestamp, reasonExtension, resultScore, resultSuccess);
 	}
 	
 	async generatePresignedFileUrl(): Promise<string> {

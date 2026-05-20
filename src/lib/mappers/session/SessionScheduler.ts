@@ -3,6 +3,7 @@ import { config } from "@/lib/config";
 import { Session } from "./Session";
 import { logger } from "@/lib/logger";
 import { LimesurveyActivity } from "../activities/LimesurveyActivity";
+import { ActivityCompletion } from "../ActivityCompletion/ActivityCompletion";
 
 
 export class SessionScheduler {
@@ -34,31 +35,27 @@ export class SessionScheduler {
                 if(!this.next) {
                     logger.debug({ allocated_activity_result: act.allocated_activity_result }, "Checking activity completion status for next activity scheduling");
                     if(!act.allocated_activity_result!.activity_completed) {
-                        //if(previous) {
-                        //    if(previous.allocated_activity_result!.activity_initialized) {
-                        //        await act.sendXAPITraceForActivity("terminated", act.allocated_activity_result!.activity_initialization_date!);
-                        //    }
-                        //}
+                        let completionData: ActivityCompletion ;
+                        if(act.allocated_activity_result != undefined) {
+                            completionData = await act.getCurrentCompletionDataForParticipant(this.session.allocated_user_id!, "activity_completed");
+                        } else {
+                            completionData = act.allocated_activity_result!;
+                        }
                         this.next = act.activity_id;
                         if(act.allocated_activity_result!.activity_initialized) {
                             if(act instanceof LimesurveyActivity) {
-                                await act.sendXAPITraceForActivity("resumed", act.allocated_activity_result!.activity_initialization_date!);
+                                await act.sendXAPITraceForActivity("resumed", completionData);
                             } else {
-                                await act.sendXAPITraceForActivity("initialized", act.allocated_activity_result!.activity_initialization_date!);
+                                await act.sendXAPITraceForActivity("initialized", completionData);
                             }
                         } else {
-                            await act.sendXAPITraceForActivity("initialized", act.allocated_activity_result!.activity_initialization_date!);
+                            await act.sendXAPITraceForActivity("initialized", completionData);
                         }
                         logger.debug({ next: this.next }, "Next activity to be scheduled");
                     }
                 }
                 previous = act;
             }
-            //if(previous && !this.next && !previous.allocated_activity_result!.activity_completed) {
-            //    if(previous.allocated_activity_result!.activity_registration_id !== undefined) {
-            //        await previous.sendXAPITraceForActivity("terminated", previous.allocated_activity_result!.activity_initialization_date!);
-            //    }
-            //}
         }
         logger.debug(this.toJSON(), "SessionScheduler constructor - session and activities data");
     }

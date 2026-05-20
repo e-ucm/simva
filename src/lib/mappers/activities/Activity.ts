@@ -630,7 +630,7 @@ export class Activity {
 		logger.debug({data}, `Current completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		const completionUpdate: Partial<ActivityCompletion> = {
 			activity_completed: completed,
-			activity_completion_date: completed ? completed_date : null
+			activity_completion_date: completed ? completed_date : null,
 		};
 		await data.update(completionUpdate);
 		return data;
@@ -666,7 +666,10 @@ export class Activity {
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when suspension status is set
 	 */
 	async setSuspension(status : boolean, participant_id: number, reason?: string): Promise<ActivityCompletion> {
-		let completionData = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_suspended");
+		let completionData = await this.getCurrentCompletionDataForParticipant(participant_id, "all");
+		if(completionData.activity_suspended === status) {
+			throw new BadRequestError(`Activity with ID ${this.activity_id} is already ${status ? "suspended" : "resumed"} for participant ID ${participant_id}.`);
+		}
 		let update : any;
 		update= { activity_suspended: status };
 		if(status) {
@@ -676,12 +679,12 @@ export class Activity {
 		}
 		logger.debug({completionData, update, reason}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		if(reason == "unload_page" && completionData.activity_completed) {
-			await this.sendXAPITraceForActivity("terminated", completionData.activity_initialization_date, reason);
+			await this.sendXAPITraceForActivity("terminated", completionData, completionData.activity_initialization_date, reason);
 		} else {
 			await completionData.update(update);
-			await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
+			await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", completionData, status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
 		}
-		await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
+		await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", completionData, status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
 		return completionData;
 	}
 
@@ -705,15 +708,25 @@ export class Activity {
 	 * @param {string} reasonExtension - Reason extension for the trace
 	 * @returns {void}
 	 */
-	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
+	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", completionData: ActivityCompletion, timestamp?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
 		try {
-			logger.info({verb, timestamp, reasonExtension, resultScore, resultSuccess}, `Preparing to send xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
+			logger.info({verb, reasonExtension, resultScore, resultSuccess}, `Preparing to send xAPI trace for activity ID ${this.activity_id} with verb ${verb}`);
 			let isTestUrl = await this.isCurrentUserParticipantAsTester();
 			logger.info({isTestUrl}, `Determined isTestUrl for activity ID ${this.activity_id} as ${isTestUrl}`);
+			const user_name = this.allocated_username ?? this.current_user_username ?? "unknown";
+			const user_id = this.allocated_user_id ?? this.current_user_id ?? -1;
 			await lrsclient.initJSScormTracker();
-			lrsclient.jsScormTracker.trackerSettings.actor_name = this.allocated_username ?? this.current_user_username ?? "unknown";
+			lrsclient.jsScormTracker.trackerSettings.actor_name = user_name;
 			lrsclient.jsScormTracker.trackerSettings.platform = config.externalUrl;
-			lrsclient.jsScormTracker.trackerSettings.registration_id = this.allocated_activity_result?.activity_registration_id!;
+			if(user_id !== -1) {
+				lrsclient.jsScormTracker.trackerSettings.registration_id = completionData.activity_registration_id!;
+				if(timestamp === undefined) {
+					timestamp = completionData.activity_initialization_date ?? new Date();
+				}
+				logger.info({registration_id: completionData.activity_registration_id, timestamp}, `Set registration ID and timestamp for xAPI trace for activity ID ${this.activity_id}`);
+			} else {
+				logger.warn(`User ID is -1 for activity ID ${this.activity_id}, xAPI trace will not have registration ID or accurate timestamp`);
+			}
 			lrsclient.jsScormTracker.start();
 			let scormActivityTracker = lrsclient.jsScormTracker.scorm(`${lrsclient.getActivityUrl(this.simlet_id, this.session_id, this.activity_id,isTestUrl)}`, lrsclient.jsScormTracker.ALL.ACTIVITYTYPES.LESSON);
 			let statement;
@@ -721,7 +734,9 @@ export class Activity {
 				case "initialized":
 					statement = scormActivityTracker.initialized();
 					logger.info({statement}, `Generated initialized statement for activity ID ${this.activity_id}`);
-					await this.allocated_activity_result!.update({ activity_registration_id : uuidv4(), activity_initialization_date: timestamp ?? new Date() });
+					if(user_id !== -1) {
+						await completionData!.update({ activity_initialization_date: timestamp! });
+					}
 					break;
 				case "resumed":
 					statement = scormActivityTracker.resumed();
@@ -756,7 +771,7 @@ export class Activity {
 					if(reasonExtension !== undefined) {
 						statement.withResultExtension(lrsclient.jsScormTracker.ALL.RESULTEXTENSION.REASON, reasonExtension);
 					}
-					await this.allocated_activity_result!.update({ activity_registration_id : undefined });
+					await completionData.update({ activity_registration_id : undefined });
 					logger.info({statement}, `Generated terminated statement for activity ID ${this.activity_id}`);
 					break;
 				default:

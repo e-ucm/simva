@@ -302,9 +302,9 @@ export class GamePlayActivity extends Activity {
 		}
 	}
 
-	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
+	async sendXAPITraceForActivity(verb: "initialized" | "resumed" | "suspended" | "terminated", completionData: ActivityCompletion, timestamp ?: Date, reasonExtension ?: string, resultScore ?: number, resultSuccess ?: boolean): Promise<void> {
 		if(!this.game_scorm_xapi){
-			return super.sendXAPITraceForActivity(verb, timestamp, reasonExtension, resultScore, resultSuccess);
+			return super.sendXAPITraceForActivity(verb, completionData, timestamp, reasonExtension, resultScore, resultSuccess);
 		}
 	}
 
