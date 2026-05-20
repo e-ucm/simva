@@ -4560,6 +4560,9 @@ components:
         stack:
           type: string
           example: "Error: An error occurred at ... "
+        originalError:
+          type: object
+          nullable: true
         name:
           type: string
           example: "Error"

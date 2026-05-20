@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { logger } from "@/lib/logger";
-import { NotFoundError, BadRequestError, AuthentificationError, ValidationError, ConflictError, NotImplementedError} from "@/lib/errors/appErrors";
+import { NotFoundError, BadRequestError, AuthentificationError, ValidationError, ConflictError, NotImplementedError, LRSError} from "@/lib/errors/appErrors";
 
 /**
  * Express error handling middleware.
@@ -27,12 +27,17 @@ export function errorMiddleware(
 ) {
   logger.error(err);
 
-  const errorResponse = {
+  const errorResponse : any = {
     type: err.name || err.constructor?.name || 'Error',
     message: err.message || 'An error occurred',
     stack: err.stack || '',
     name: err.name || err.constructor?.name || 'Error'
-  };
+  } ;
+
+  if(err instanceof LRSError) {
+    errorResponse.oginalError = err.originalError;
+    return res.status(400).json(errorResponse);
+  }
 
   if (err instanceof NotFoundError) {
     return res.status(404).json(errorResponse);

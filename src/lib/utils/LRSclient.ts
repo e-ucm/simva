@@ -6,6 +6,7 @@ import { config } from "@/lib/config";
 import { logger } from '../logger';
 import { kafkaClient } from './kafkaclient';
 import { JSScormTracker, LRSTracker } from 'js-tracker';
+import { LRSError } from '../errors/appErrors';
 
 const { ScalableBloomFilter } = BloomFilters;
 
@@ -277,7 +278,12 @@ export class LRSClient {
 	
 	async flushLRS(): Promise<void> {
 		if (this.lrs) {
-			await this.lrs.flush();
+			try {
+				await this.lrs.flush();
+			} catch (err: any) {
+				logger.error({ err }, 'LRS flush failed');
+				throw new LRSError('Failed to flush statements to LRS', err);
+			}
 		} else {
 			logger.warn('LRS client not initialized, cannot flush');
 		}

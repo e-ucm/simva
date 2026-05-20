@@ -16,8 +16,11 @@ export async function getTestStatementsLRSForActivity(currentUserId: number, cur
               homePage: config.externalUrl,
             }
         });
-        if (group.createdAt) {
-          query.since = group.createdAt?.toISOString();
+        const groupParticipant = await db.Tables.GroupParticipants.findOne({ where: { group_id: group.group_id, participant_id: currentUserId }});
+        if (groupParticipant) {
+            query.since = groupParticipant!.createdAt?.toISOString();
+        } else {
+            query.since = group.createdAt?.toISOString();
         }
         return await activity.getTestLRSStatements(query);
     } else {
