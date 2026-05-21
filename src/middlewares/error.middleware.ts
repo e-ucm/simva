@@ -33,9 +33,10 @@ export function errorMiddleware(
     stack: err.stack || '',
     name: err.name || err.constructor?.name || 'Error'
   } ;
-
+  if(err.originalError) {
+    errorResponse.originalError = err.originalError;
+  }
   if(err instanceof LRSError) {
-    errorResponse.oginalError = err.originalError;
     return res.status(400).json(errorResponse);
   }
 
