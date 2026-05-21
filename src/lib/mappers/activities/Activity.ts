@@ -923,7 +923,7 @@ export class Activity {
 		const participantRecord = await db.Tables.ActivityCompletion.findOne({
 			where: {
 				activity_id: this.activity_id,
-				participant_id: this.allocated_user_id ?? this.current_user_id,
+				participant_id: this.allocated_user ? this.allocated_user_id : this.current_user_id,
 			},
 			attributes: ["activity_id"],
 		});

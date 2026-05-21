@@ -306,6 +306,7 @@ SELECT
     act.activity_can_be_restarted,
     act.createdAt,
     act.updatedAt,
+    ap.user_id as participant_id,
     ac.activity_initialized,
     ac.activity_initialization_date,
     ac.activity_progress,
