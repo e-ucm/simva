@@ -30,7 +30,7 @@
     "axios": "^1.13.6",
     "bloom-filters": "^3.0.4",
     "express-openapi-validator": "^5.6.2",
-    "js-tracker": "github:e-ucm/js-tracker#v2.0.4-beta",
+    "js-tracker": "github:e-ucm/js-tracker#v2.1.0-beta",
     "kafkajs": "^2.2.4",
     "minio": "^8.0.1",
     "ms": "^2.1.3",
