@@ -44,7 +44,7 @@ const queries: Record<string, QueryTemplate> = {
   tagsBySessionId: {
     description: "Get all tags of a Session by its ID and current user access",
     sql: `
-      SELECT 
+      SELECT DISTINCT ON (tag_id)
         tag_id,
         tag_name,
         tag_color,
