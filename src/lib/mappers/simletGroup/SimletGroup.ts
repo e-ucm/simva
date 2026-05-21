@@ -5,6 +5,7 @@ import { SimletParticipant } from "../simlet/SimletParticipant";
 import { Allocation } from "../allocators/Allocation";
 import { Op } from "sequelize";
 import { Session } from "../session/Session";
+import { UserPermission } from "../UserPermisions/UserPermission";
 // Note: SimletGroupAllocatorToClass is dynamically imported to avoid circular dependency
 
 /**
@@ -215,6 +216,14 @@ export class SimletGroup {
     }
     
     async addParticipant(participantId: number) : Promise<SimletGroup> {
+        if(!this.group_sandbox) {
+            let owners = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+            if(this.current_user_id === participantId) {
+                throw new NotFoundError(`Cannot add yourself as participant to your own sandbox group`);
+            } else if(owners.permissions.find((p) => p.user_id === participantId) !== undefined) {
+                throw new ValidationError(`Cannot add an coordinator as participant if you are an owner of the simlet`);
+            }
+        }
         await SimletParticipant.addToGroup(this.group_id, participantId);
         const targetSessionId = await this.resolveTargetSessionId(participantId);
         await db.Tables.ExperimentalParticipants.upsert({

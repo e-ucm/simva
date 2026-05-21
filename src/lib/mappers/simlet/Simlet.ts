@@ -365,6 +365,17 @@ export class Simlet {
         this.canEdit();
         this.isArchived();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
+        // Check if group is a sandbox group
+        if (!group.group_sandbox) {
+            // Only allow adding users who are not owner or do not have read/view permission in the simlet
+            // Fetch the participant's permissions for this simlet
+            for(const sessionId of this.sessions) {
+                const participantPermissions = await UserPermission.getFromDbData('session', sessionId, this.current_user_id, this.is_admin);
+                if(participantPermissions.permissions.find((p: SingleUserPermission) => p.user_id === participantId) === undefined) {
+                    throw new ValidationError('Cannot add user as a participant to the simlet as already a coordinator for a not sandbox group of this simlet. Please remove coordinator permission from the simlet or one of the sessions of the simlet before adding the user as a participant.');
+                }
+            }
+        }
         return await group.addParticipant(participantId);
     }
     
@@ -412,8 +423,24 @@ export class Simlet {
     async addUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         this.canEdit();
         this.isArchived();
-        // Implementation for adding user permission to this simlet
-        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
+        // Prevent adding permission if user is already a participant in the simlet
+        const groups = await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id);
+        for(const group of groups) {
+            const groupparticipants = await group.getParticipants();
+            if (groupparticipants.some((p: any) => p.user_id === user_id)) {
+                throw new ValidationError('Cannot add permission: user is already a participant in this simlet.');
+            }
+            if(!group.group_sandbox) {
+                for(const sessionId of this.sessions) {
+                    const session = await Session.getFromDbData(this.simlet_id, sessionId, this.is_admin, this.current_user_id)
+                    const permissions = await session.getPermissions();
+                    if (permissions.permissions.some((p: any) => p.user_id === user_id)) {
+                        throw new ValidationError('Cannot add permission: user is already a coordinator in a session of this simlet.');
+                    }
+                }
+            }
+        }
+        let permissions = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id, this.is_admin);
         return await permissions.addUserPermission(user_id, permission);
     }
 
