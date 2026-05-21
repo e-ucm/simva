@@ -630,7 +630,7 @@ export class Activity {
 		logger.debug({data}, `Current completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		const completionUpdate: Partial<ActivityCompletion> = {
 			activity_completed: completed,
-			activity_completion_date: completed ? completed_date : null,
+			activity_completion_date: completed ? completed_date : undefined,
 		};
 		await data.update(completionUpdate);
 		return data;
@@ -656,39 +656,34 @@ export class Activity {
 	}
 
 	/**
-	 * Sets suspension status for a specific participant.
+	 * Sets suspension activity_suspended for a specific participant.
 	 * Stub implementation - to be implemented by subclasses.
 	 * 
 	 * @async
 	 * @method setSuspension
-	 * @param {boolean} status - Suspension status to set
+	 * @param {boolean} activity_suspended - Suspension activity_suspended to set
 	 * @param {number} participant_id - Participant ID to set suspension for
-	 * @returns {Promise<ActivityCompletion>} Promise that resolves when suspension status is set
+	 * @returns {Promise<ActivityCompletion>} Promise that resolves when suspension activity_suspended is set
 	 */
-	async setSuspension(status : boolean, participant_id: number, reason?: string): Promise<ActivityCompletion> {
+	async setSuspension(activity_suspended : boolean, participant_id: number, reason?: string): Promise<ActivityCompletion> {
 		let completionData = await this.getCurrentCompletionDataForParticipant(participant_id, "all");
-		if(completionData.activity_suspended === status) {
-			throw new BadRequestError(`Activity with ID ${this.activity_id} is already ${status ? "suspended" : "resumed"} for participant ID ${participant_id}.`);
-		}
-		let update : any;
-		update= { activity_suspended: status };
-		if(status) {
-			update["activity_suspension_date"] = new Date();
+		if(reason == "unload_page" && completionData.activity_completed && activity_suspended) {
+			await this.sendXAPITraceForActivity("terminated", completionData, completionData.activity_initialization_date);
 		} else {
-			await this.setInitialized(true, new Date(), participant_id);
-		}
-		logger.debug({completionData, update, reason}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
-		if(reason == "unload_page") {
-			if(completionData.activity_completed) {
-				await this.sendXAPITraceForActivity("terminated", completionData, completionData.activity_initialization_date);
-			} else {
-				await this.sendXAPITraceForActivity("suspended", completionData, completionData.activity_initialization_date, reason);
-				await completionData.update(update);
+			if(completionData.activity_suspended === activity_suspended) {
+				throw new BadRequestError(`Activity with ID ${this.activity_id} is already ${activity_suspended ? "suspended" : "resumed"} for participant ID ${participant_id}.`);
 			}
-		} else {
+			let update : any;
+			update= { activity_suspended: activity_suspended };
+			if(activity_suspended) {
+				update["activity_suspension_date"] = new Date();
+			} else {
+				await this.setInitialized(true, new Date(), participant_id);
+			}
+			logger.debug({completionData, update, reason}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 			await completionData.update(update);
-			await this.sendXAPITraceForActivity(status ? "suspended" : "resumed", completionData, status ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
-		}
+			await this.sendXAPITraceForActivity(activity_suspended ? "suspended" : "resumed", completionData, activity_suspended ? update["activity_suspension_date"] : completionData.activity_initialization_date, reason);
+		} 
 		return completionData;
 	}
 
