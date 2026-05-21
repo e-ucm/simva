@@ -331,13 +331,17 @@ export class Simlet {
     }
 
     async createGroup(body: Partial<SimletGroup>): Promise<SimletGroup> {
-      this.canEdit();
-      this.isArchived();
-      if (!this.current_user_id) {
-            throw new AuthentificationError("Current user ID is not set");
-        }
-      let group = await SimletGroup.createInDb(this.simlet_id, body, this.current_user_id);
-      return group;
+            this.canEdit();
+            this.isArchived();
+            if (!this.current_user_id) {
+                        throw new AuthentificationError("Current user ID is not set");
+                }
+            let group = await SimletGroup.createInDb(this.simlet_id, body, this.current_user_id);
+            // Allocate to default session if group allocator type is 'group' and sessions exist
+            if (group.group_allocator_type === 'group' && this.sessions && this.sessions.length > 0) {
+                    await group.allocateToDefault(this.sessions[0]);
+            }
+            return group;
     }
 
     async updateGroup(groupId: number, body: Partial<SimletGroup>): Promise<SimletGroup> {
@@ -366,6 +370,7 @@ export class Simlet {
         this.canEdit();
         this.isArchived();
         let group = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
+        group = await group.addParticipant(participantId);
         // Check if group is a sandbox group
         if (!group.group_sandbox) {
             // Only allow adding users who are not owner or do not have read/view permission in the simlet
@@ -377,7 +382,19 @@ export class Simlet {
                 }
             }
         }
-        return await group.addParticipant(participantId);
+        // If group allocator type is 'group', try to allocate to the session in ExperimentalGroups if available
+        if (group.group_allocator_type === 'group') {
+            const expGroup = await db.Tables.ExperimentalGroups.findOne({
+                where: {
+                    simlet_id: this.simlet_id,
+                    group_id: groupId
+                }
+            });
+            if (expGroup && expGroup.session_id) {
+                await group.allocateToDefault(expGroup.session_id);
+            }
+        }
+        return group;
     }
     
     async allocateToSession(group_id: number, sessionId: number, group_id_or_participant_id: number) : Promise<SimletGroup>{

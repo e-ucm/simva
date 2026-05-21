@@ -44,14 +44,19 @@ export class Allocation {
     static async getFromDbData(simlet_id: number, group_id: number, allocator_type: string) : Promise<Allocation[]> {
         let allocations : any = [];
         switch(allocator_type) {
-            case ALLOCATOR_TYPE.GROUP:
-            case ALLOCATOR_TYPE.SESSION:
-                let allocation = await db.Tables.ExperimentalParticipants.findOne({ where: { simlet_id, group_id } });
-                if (allocation) {
-                    allocations = [allocation];
+            case ALLOCATOR_TYPE.GROUP: {
+                // If there are participants, use ExperimentalParticipants, else use ExperimentalGroups
+                const participants = await db.Tables.ExperimentalParticipants.findAll({ where: { simlet_id, group_id } });
+                if (participants && participants.length > 0) {
+                    allocations = participants;
                 } else {
-                    allocations = [];
+                    const groupAlloc = await db.Tables.ExperimentalGroups.findOne({ where: { simlet_id, group_id } });
+                    allocations = groupAlloc ? [groupAlloc] : [];
                 }
+                break;
+            }
+            case ALLOCATOR_TYPE.SESSION:
+                allocations = await db.Tables.ExperimentalParticipants.findAll({ where: { simlet_id, group_id } });
                 break;
             case ALLOCATOR_TYPE.DEFAULT:
             case ALLOCATOR_TYPE.RANDOM:

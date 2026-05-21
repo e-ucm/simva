@@ -31,6 +31,7 @@ import { SessionPermissionsFactory } from "@/lib/models/sessions/sessionPermissi
 import { SessionTagsFactory } from "@/lib/models/sessions/sessionTags.model";
 import { AllocatorFactory } from "@/lib/models/allocators/allocator.model";
 import { ExperimentalParticipantsFactory } from "@/lib/models/allocators/experimentalParticipants.model";
+import { ExperimentalGroupsFactory } from "@/lib/models/allocators/experimentalGroups.model";
 import { RandomAllocatorsFactory } from "@/lib/models/allocators/randomAllocators.model";
 import { ActivityTemplateFactory } from "@/lib/models/templates/activityTemplate.model";
 import { ActivityTemplatePermissionsFactory } from "@/lib/models/templates/activityTemplatePermissions.model";
@@ -96,6 +97,7 @@ export function initializeModels(
     SessionTagsElement: SessionTagsElementFactory(sequelize, DataTypes),
     Allocators: AllocatorFactory(sequelize, DataTypes),
     ExperimentalParticipants: ExperimentalParticipantsFactory(sequelize, DataTypes),
+    ExperimentalGroups: ExperimentalGroupsFactory(sequelize, DataTypes),
     RandomAllocators: RandomAllocatorsFactory(sequelize, DataTypes),
     ActivityTemplates: ActivityTemplateFactory(sequelize, DataTypes),
     ActivityTemplatePermissions: ActivityTemplatePermissionsFactory(sequelize, DataTypes),

@@ -89,6 +89,13 @@ async function start() {
   await db.sequelize.authenticate();
   await runMigrations();
   try {
+    await db.Functions.runSqlFile(config.db.table_file_path);
+    logger.debug('Database tables initialized successfully');
+  } catch (err) {
+    logger.error({err}, 'Error initializing database tables:', (err as Error).message);
+    throw err;
+  }
+  try {
     await db.Functions.runSqlFile(config.db.view_complete_path);
     logger.debug('Database views initialized successfully');
   } catch (err) {

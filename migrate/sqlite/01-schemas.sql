@@ -289,6 +289,25 @@ CREATE TABLE IF NOT EXISTS "Activities_completion" (
 CREATE INDEX IF NOT EXISTS "Activities_completion_index_0"
 ON "Activities_completion" ("activity_id", "participant_id");
 
+
+-- Table: Experimental_Groups
+CREATE TABLE IF NOT EXISTS "Experimental_Groups" (
+	"simlet_id" INTEGER NOT NULL,
+	"group_id" INTEGER NOT NULL,
+	"session_id" INTEGER NOT NULL,
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	PRIMARY KEY("simlet_id", "group_id", "session_id"),
+	FOREIGN KEY ("session_id") REFERENCES "Sessions"("session_id")
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY ("simlet_id") REFERENCES "SIMLETs"("simlet_id")
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY ("group_id") REFERENCES "ParticipantGroups"("group_id")
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "Experimental_Groups_index_0"
+ON "Experimental_Groups" ("simlet_id", "group_id", "session_id");
+
 -- Table: Experimental_Participants
 CREATE TABLE IF NOT EXISTS "Experimental_Participants" (
 	"simlet_id" INTEGER NOT NULL,

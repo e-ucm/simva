@@ -4,6 +4,7 @@ import { ValidationError } from "@/lib/errors/appErrors";
 import { db } from "@/lib/db";
 import { Session } from "../session/Session";
 import { SimletParticipant } from "../simlet/SimletParticipant";
+import { Allocation } from "../allocators/Allocation";
 
 export class GroupAllocatorSimletGroup extends SimletGroup {
     /**
@@ -53,6 +54,10 @@ export class GroupAllocatorSimletGroup extends SimletGroup {
 
     async getDetails(){
         return {};
+    }
+
+    async allocateToDefault(sessionId: number): Promise<void> {
+        await super.allocateToDefault(sessionId);
     }
 
     async allocateToSession(sessionId: number, group_id: number): Promise<void> {

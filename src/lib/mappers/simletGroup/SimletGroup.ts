@@ -158,20 +158,35 @@ export class SimletGroup {
         return await SimletGroup.getFromDbData(createdGroup.simlet_id, createdGroup.group_id, false, current_user_id);
     }
 
-     static async getAdminAllFromDbData(version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {
-        let groups = await db.Tables.Group.findAll({
-            where: {
-                group_name: searchString ? { [Op.iLike]: `%${searchString}%` } : { [Op.ne]: null },
-                group_use_new_generation: version? version : { [Op.ne]: null },
-            },
-            order: [['createdAt', 'DESC']],
-            limit: limit,
-            offset: offset
-        });
+    static async getAdminAllFromDbData(version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {
+        const where: any = {};
+        if (searchString) {
+            where.group_name = { [Op.like]: `%${searchString}%` };
+        }
+        if (typeof version === 'boolean') {
+            where.group_use_new_generation = version;
+        }
+        let groups;
+        try {
+            groups = await db.Tables.Group.findAll({
+                where: Object.keys(where).length > 0 ? where : undefined,
+                order: [['createdAt', 'DESC']],
+                limit: limit,
+                offset: offset
+            });
+        } catch (err) {
+            logger.error({err}, 'Error fetching groups in getAdminAllFromDbData');
+            throw err;
+        }
         return Promise.all(groups.map(async (groupData) => {
-            const group = new SimletGroup(groupData, 0);
-            await group.init();
-            return group;
+            try {
+                const group = new SimletGroup(groupData, 0);
+                await group.init();
+                return group;
+            } catch (e) {
+                logger.error({e, groupData}, 'Error initializing group in getAdminAllFromDbData');
+                throw e;
+            }
         }));
     }
 
@@ -518,34 +533,40 @@ export class SimletGroup {
             defaultSession, 
             simlet_id: this.simlet_id, 
             group_id: this.group_id,
+            allocatorType: this.group_allocator_type,
             participantsCount: this.participants.length,
             participants: this.participants 
         }, 'Allocator.allocateToDefault starting');
-        
-        for (const participant_id of this.participants) {
-            const existing = await db.Tables.ExperimentalParticipants.findOne({
+
+        // If group allocator type is 'group', use Experimental_Groups table
+        if (!(this.group_allocator_type === 'group')) {
+            // If not group mode, ensure no group assignment exists
+            await db.Tables.ExperimentalGroups.destroy({
                 where: {
                     simlet_id: this.simlet_id,
-                    group_id: this.group_id,
-                    participant_id: participant_id,
+                    group_id: this.group_id
                 }
             });
-            
-            if (existing) {
-                const oldSessionId = existing.session_id;
-                logger.debug({ participant_id, oldSession: existing.session_id, newSession: defaultSession }, 'Allocator.allocateToDefault updating existing');
-                await existing.update({ session_id: defaultSession });
-                await this.syncParticipantActivityCompletions(participant_id, oldSessionId, defaultSession);
-            } else {
-                logger.debug({ participant_id, session_id: defaultSession }, 'Allocator.allocateToDefault creating new');
-                await db.Tables.ExperimentalParticipants.create({
+            logger.debug({ simlet_id: this.simlet_id, group_id: this.group_id }, 'Allocator.allocateToDefault: not group mode, cleared Experimental_Groups');
+        } else {
+            logger.debug({ defaultSession, group_id: this.group_id }, 'GroupAllocator.allocateToDefault started');
+            // Always create group-level assignment for group allocator
+            await db.Tables.ExperimentalGroups.destroy({
+                where: {
                     simlet_id: this.simlet_id,
-                    group_id: this.group_id,
-                    participant_id: participant_id,
-                    session_id: defaultSession,
-                });
-                await this.syncParticipantActivityCompletions(participant_id, undefined, defaultSession);
-            }
+                    group_id: this.group_id
+                }
+            });
+            await db.Tables.ExperimentalGroups.create({
+                simlet_id: this.simlet_id,
+                group_id: this.group_id,
+                session_id: defaultSession
+            });
+            logger.debug({ simlet_id: this.simlet_id, group_id: this.group_id, session_id: defaultSession }, 'GroupAllocatorSimletGroup.allocateToDefault: group assignment created in Experimental_Groups');
+            // Refresh internal allocation state from database
+            this.allocation = await Allocation.getFromDbData(this.simlet_id, this.group_id, this.group_allocator_type);
+            logger.debug({ defaultSession, allocationCount: this.allocation.length }, 'GroupAllocatorSimletGroup.allocateToDefault synchronized group allocation');
+            // Call super to handle any additional logic (if needed)
         }
         // Refresh internal allocation state from database
         this.allocation = await Allocation.getFromDbData(this.simlet_id, this.group_id, this.group_allocator_type);
@@ -553,6 +574,24 @@ export class SimletGroup {
     }
 
     toJSON(): object {
+        let allocationsObj: Record<number, number> = {};
+        // If group allocator and no participants, try to fetch from ExperimentalGroups
+        if (this.group_allocator_type === 'group' && (!this.participants || this.participants.length === 0)) {
+            // allocation may be empty, so try to fetch from ExperimentalGroups
+            if (this.allocation.length === 0) {
+                // Synchronously return empty, but note: allocation should be hydrated in init()
+                // If not, fallback to last known session assignment
+                // This is a limitation of toJSON being sync, but allocation should be hydrated before
+            } else {
+                for (const alloc of this.allocation) {
+                    allocationsObj[alloc.object_id] = alloc.session_id;
+                }
+            }
+        } else {
+            for (const alloc of this.allocation) {
+                allocationsObj[alloc.object_id] = alloc.session_id;
+            }
+        }
         return {
             simlet_id: this.simlet_id,
             group_id: this.group_id,
@@ -565,11 +604,7 @@ export class SimletGroup {
             createdAt: this.createdAt,
             updatedAt: this.updatedAt, 
             group_sandbox: this.group_sandbox,
-            allocations: this.allocation.reduce((acc, curr) => {
-                const json = curr.toJSON() as any;
-                acc[json.object_id] = json.session_id;
-                return acc;
-            }, {} as Record<number, number>)
+            allocations: allocationsObj
         };
     }
 }
