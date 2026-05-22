@@ -497,10 +497,10 @@ export class SimletGroup {
             logger.debug({ participant_id, type: typeof participant_id }, 'Allocator.allocate invalid participant_id type');
             throw new ValidationError("Not valid");
         }
-        if(this.group_allocator_type !== SimletGroup.getType()) {
-            logger.debug({ allocator_type: this.group_allocator_type, expected: SimletGroup.getType() }, 'Allocator.allocate type mismatch');
-            throw new ValidationError("Not valid");
-        }
+        //if(this.group_allocator_type !== SimletGroup.getType()) {
+        //    logger.debug({ allocator_type: this.group_allocator_type, expected: SimletGroup.getType() }, 'Allocator.allocate type mismatch');
+        //    throw new ValidationError("Not valid");
+        //}
         const participantGroupFound = this.participants.find(p => p === participant_id);
         logger.debug({ participant_id, participantGroupFound }, 'Allocator.allocate participant membership check');
         if(!participantGroupFound) {

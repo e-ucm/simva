@@ -79,5 +79,9 @@ export class GroupAllocatorSimletGroup extends SimletGroup {
             throw new ValidationError("Not valid");
         }
         await super.allocateToDefault(sessionId);
+        for(const participantId of this.participants) {
+            await super.allocateToSession(sessionId, participantId);
+        }
+        logger.debug({ sessionId, group_id }, 'GroupAllocator.allocate completed');
     }
 }
