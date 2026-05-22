@@ -95,14 +95,20 @@ const queries: Record<string, QueryTemplate> = {
     sql: `
       SELECT *
       FROM v_complete_activity_allocation_participants  
-      WHERE activity_id < :activity_id AND allocated_user_id = :allocated_user_id
+      WHERE allocated_session_id = :session_id AND activity_order < :activity_order AND allocated_user_id = :allocated_user_id
       ORDER BY activity_order
     `,
     params: {
-      activity_id: {
+      session_id: {
         type: "number",
         required: true,
-        description: "Activity Identifier",
+        description: "Session Identifier",
+        example: 1,
+      },
+      activity_order: {
+        type: "number",
+        required: true,
+        description: "Activity Order",
         example: 1,
       },
       allocated_user_id: {

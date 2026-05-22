@@ -48,6 +48,7 @@ export class Activity {
 	session_active?:boolean;
 	session_start_date?:Date;
 	session_end_date?:Date;
+	session_can_be_manually_activated?:boolean;
 	activity_presignedUrl?: string;
 	activity_presignedUrl_generated_at?: Date;
 	activity_presignedUrl_expired_at?: Date;
@@ -125,6 +126,7 @@ export class Activity {
 			this.allocated_token = data.allocated_token ?? data.participant_token;
 			this.allocated_isToken = data.allocated_isToken ? Boolean(data.allocated_isToken) : false;
 			this.session_active = Boolean(data.session_status == "active");
+			this.session_can_be_manually_activated = Boolean(data.session_can_be_manually_activated);
 			this.session_start_date = data.session_start_date ? new Date(data.session_start_date) : undefined;
 			this.session_end_date = data.session_end_date ? new Date(data.session_end_date) : undefined;
 			this.allocated_activity_result = new ActivityCompletion(data, "all");
@@ -803,43 +805,45 @@ export class Activity {
 
 	async canSendStatementsLRS(): Promise<boolean> {
         if(this.session_active) {
-			if(this.session_end_date && Date.now() > this.session_end_date.getTime()) {
-				throw new AuthentificationError("The session for this activity has ended, cannot send statements to LRS.");
-			} else if(this.session_start_date && Date.now() < this.session_start_date.getTime()) {
-				throw new AuthentificationError("The session for this activity has not started yet, cannot send statements to LRS.");
+			if(!this.session_can_be_manually_activated) {
+				if(this.session_end_date && Date.now() > this.session_end_date.getTime()) {
+					throw new AuthentificationError("The session for this activity has ended, cannot send statements to LRS.");
+				} else if(this.session_start_date && Date.now() < this.session_start_date.getTime()) {
+					throw new AuthentificationError("The session for this activity has not started yet, cannot send statements to LRS.");
+				}
 			}
-			if(this.allocated_activity_result?.activity_completed && !this.activity_can_be_restarted) {
-				throw new AuthentificationError("The activity is already completed, cannot send statements to LRS.");
-			}	
-			if(this.activity_order === 1) {
-				return true; // First activity can always send statements if session is active
+			// For subsequent activities, check if the previous activity is completed
+			let previousActivities;
+			if(this.allocated_user) {
+				previousActivities = await this.getPreviousAllocatedActivity();
+				logger.debug({previousActivities}, `Previous allocated activities for activity ID ${this.activity_id} and allocated user ID ${this.allocated_user_id}`);
 			} else {
-				// For subsequent activities, check if the previous activity is completed
-				let previousActivities;
-				if(this.allocated_user) {
-					previousActivities = await Activity.getPreviousAllocatedActivity(this.activity_id, this.allocated_user_id!);
-				} else {
-					throw new AuthentificationError("Cannot verify previous activity completion for non-allocated user, cannot send statements to LRS.");
+				throw new AuthentificationError("Cannot verify previous activity completion for non-allocated user, cannot send statements to LRS.");
+			}
+			for(const previousActivity of previousActivities) {
+				logger.debug({allocated_activity_result:previousActivity.allocated_activity_result}, `Checking previous activity ID ${previousActivity.activity_id} for activity ID ${this.activity_id}`);
+				if(!previousActivity.allocated_activity_result?.activity_completed) {
+					throw new AuthentificationError(`The previous activity ${previousActivity.activity_name} is not completed, cannot send statements to LRS.`);
 				}
-				for(const previousActivity of previousActivities) {
-					if(!previousActivity.allocated_activity_result?.activity_completed && !previousActivity.activity_can_be_restarted) {
-						throw new AuthentificationError(`The previous activity ${previousActivity.activity_name} is not completed, cannot send statements to LRS.`);
-					}
-				}
+			}
+			if(this.activity_can_be_restarted) {
+				return true; // If activity can be restarted, allow sending statements even if already completed
+			} else if(this.allocated_activity_result?.activity_completed) {
+				throw new AuthentificationError("The activity is already completed, cannot send statements to LRS.");
 			}
 			return true;
 		}
         throw new AuthentificationError("The session for this activity is not active, cannot send statements to LRS.");
     }
 
-	static async getPreviousAllocatedActivity(activity_id: number, allocated_user_id: number): Promise<Activity[]> {
+	async getPreviousAllocatedActivity(): Promise<Activity[]> {
 		const previousActivitiesData = await db.Functions.runViewQuery(
 			db.Views.Activity.byPreviousActivityIdAndParticipantId,
-			{ activity_id, allocated_user_id }
+			{ session_id: this.session_id, activity_order: this.activity_order, allocated_user_id: this.allocated_user_id }
 		);
 		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
 		return await Promise.all(previousActivitiesData.map(async (activity: any) =>
-			await ActivityToClass(activity.activity_id, true, false, activity, allocated_user_id)
+			await ActivityToClass(activity.activity_id, true, false, activity, this.allocated_user_id)
 	));
 	}
 
