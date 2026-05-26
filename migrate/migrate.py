@@ -611,6 +611,14 @@ DO UPDATE SET
     session_id = excluded.session_id,
     updatedAt = datetime('now')
 """
+allocation_group_sql = """
+INSERT INTO Experimental_Groups (simlet_id, group_id, session_id)
+VALUES (?, ?, ?)
+ON CONFLICT(simlet_id, group_id)
+DO UPDATE SET
+    session_id = excluded.session_id,
+    updatedAt = datetime('now')
+"""
 
 # Build session_id to simlet_id mapping
 cursor.execute("SELECT session_id, simlet_id FROM Sessions WHERE mongo_id IS NOT NULL")
@@ -646,6 +654,7 @@ simlet_id_to_default_session_id = {simlet_id: session_id for session_id, simlet_
 print("Simlet ID to default session ID mapping:", simlet_id_to_default_session_id)
 
 allocation_values=[]
+allocation_group_values=[]
 for a in filtered_allocators:
     allocator_mongo_id=a["_id"]["$oid"]
     allocator_type=a["type"]
@@ -681,16 +690,19 @@ for a in filtered_allocators:
                 print("Processing group_id:", allocation_mongo_id, "lookup_group_id:", lookup_group_id)
                 # Only allocate if group belongs to the same simlet as the session
                 if group_id in lookup_group_id:
+                    allocation_group_values.append((simlet_id, group_id, session_id))
                     for participant_id in group_id_to_participants_ids.get(group_id, []):
                         allocation_values.append((simlet_id, group_id, participant_id, session_id))
         else:
             continue
 print(allocation_values)
 cursor.executemany(allocation_sql, allocation_values)
+cursor.executemany(allocation_group_sql, allocation_group_values)
 sqlite_con.commit()
 
 print("Inserted:")
 print("  Experimental_Participants:", len(allocation_values))
+print("  Experimental_Groups:", len(allocation_group_values))
 
 print("Migration done!")
 cursor.close()
