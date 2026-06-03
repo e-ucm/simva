@@ -34,12 +34,7 @@ export async function up({ context }: { context: QueryInterface }) {
       logger.info({ mongoId, files }, 'Uploading files to Minio backup');
       for (const fileName of files) {
         let username: string;
-        if (fileName.endsWith('.result')) {
-          username = fileName.slice(0, -7);
-        } else {
-          logger.warn({ fileName }, 'Unexpected file name format, skipping');
-          throw new Error(`Unexpected file name format: ${fileName}`);
-        }
+        username = fileName.split('.')[0];
         const localFilePath = path.join(localFolder, fileName);
         let userId = usernameToUserId.get(username);
         if (!userId) {

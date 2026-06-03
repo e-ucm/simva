@@ -18,7 +18,11 @@ export async function up({ context }: { context: QueryInterface }) {
         let activityId = row.activity_id;
         let url = `${config.api.url}/activities/${activityId}/lrs`;
         logger.info({ activityId, surveyId, url }, 'Setting LRS endpoint for activity');
-        await limeSurveyClient.setActivityLRSEndpoint(surveyId, url);
+        try {
+            await limeSurveyClient.setActivityLRSEndpoint(surveyId, url);
+        } catch (err) {
+            logger.error({ err, activityId, surveyId }, 'Failed to set LRS endpoint for activity');
+        }
     }
     //throw new Error('This migration is a no-op. The actual migration logic was moved to a separate script that should be run manually before running this migration.');
 }
