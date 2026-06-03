@@ -153,16 +153,25 @@ export async function createOrUpdateKeycloakUser(decoded: KeycloakJWTPayload): P
 
   try {
     // Look for existing user by email using model method
-    const users = await User.getFromPartialDBData(decoded.sql);
+    const users = await User.getFromPartialDBData({ username: decoded.sql.username });
     
     if (users.length !== 0) {
       const user = users[0];
       decoded.sql = user;
       const newRole = getRoleFromKeycloakJWT(decoded);
-      
+      let needsUpdate = false;
+      const updatedUser: Partial<User> = {};
+      if(user.email !== decoded.sql.email) {
+        updatedUser.email = decoded.sql.email;
+        needsUpdate = true;
+      }
       if (user.role !== newRole) {
         // Update user role using model method
-        await user.update({ role: newRole }, false); // Update role without updating Keycloak since we're already processing a Keycloak token
+        updatedUser.role = newRole;
+        needsUpdate = true;
+      }
+      if (needsUpdate) {
+        await user.update(updatedUser, false); // Update role without updating Keycloak since we're already processing a Keycloak token
         return decoded;
       } else {
         return decoded;

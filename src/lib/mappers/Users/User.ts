@@ -219,6 +219,10 @@ export class User {
     if (updateInKeycloak) {
       await this.giveRoleToUserInKeycloak(partial.role as string);
     }
+    if(partial.email && partial.email !== this.email) {
+      await user.update({ email: partial.email }, { fields: ['email'] });
+      this.email = partial.email;
+    }
     await user.update({ role : partial.role });
     this.role = partial.role as string;
     return this;

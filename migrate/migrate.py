@@ -93,11 +93,22 @@ existing_usernames = set(u[0] for u in mysql_username)  # extract string from tu
 
 # Get Users from Mongo Backup
 users=[]
+seen_usernames = set()
+duplicate_usernames = set()
+
 with open(MONGO_BACKUP_FOLDER + "/users.json", "r") as f:
     for line in f:
         if line.strip():  # skip empty lines
             obj = json.loads(line)
-            users.append(obj)
+            # Check for duplicates in the backup file
+            if obj["username"] in seen_usernames:
+                duplicate_usernames.add(obj["username"])
+            else:
+                seen_usernames.add(obj["username"])
+                users.append(obj)
+
+if duplicate_usernames:
+    print(f"Warning: Skipping duplicate usernames from backup file: {duplicate_usernames}")
 
 # Adding User into Users table
 user_sql = """
