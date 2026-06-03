@@ -681,7 +681,7 @@ group_id_to_simlet_id={
 }
 print(group_id_to_simlet_id)
 group_id_to_participants_ids={
-    group_id: set(participant_id for simlet_id, group_id, participant_id in sql_participants_ids if simlet_id == group_id_to_simlet_id[group_id])
+    group_id: set(participant_id for simlet_id, group_participant_id, participant_id in sql_participants_ids if group_participant_id == group_id)
     for group_id in group_id_to_simlet_id.keys()
 }
 print(group_id_to_participants_ids)
@@ -700,29 +700,40 @@ allocation_group_values=[]
 for a in filtered_allocators:
     allocator_mongo_id=a["_id"]["$oid"]
     allocator_type=a["type"]
+    allocations = a.get("extra_data", {}).get("allocations", {})
     for (simlet_id, group_id) in mongo_allocator_group_simlet_to_mysql_id.get(allocator_mongo_id, set()):
         print("Processing group:", group_id, "simlet_id:", simlet_id, "for allocator_mongo_id:", allocator_mongo_id, "allocator_type:", allocator_type)
-        allocations = a.get("extra_data", {}).get("allocations", {})
         print("Allocations for allocator_mongo_id:", allocator_mongo_id, "allocations:", allocations)
         if allocator_type == "default":
-            print("Processing allocation_mongo_id:", allocation_mongo_id)
-            participants_id = group_id_to_participants_ids.get(group_id, set())
-            allocations_sql_ids = {}
-            if(len(allocations.keys()) != len(participants_id)):
-                print("Warning: Number of allocations for default allocator does not match number of participants in the group. Allocations:", len(allocations), "Participants:", len(group_id_to_participants_ids.get(group_id, set())))
-                default_session_id = simlet_id_to_default_session_id.get(simlet_id, None)
-                print("Default session id for simlet_id:", simlet_id, "is:", default_session_id)
-                if default_session_id is not None:
-                    for participant_id in participants_id:
-                        if allocations.get(participant_id) is None:
-                            allocations_sql_ids[participant_id] = default_session_id  # Assign to default session
-                        else:
-                            allocations_sql_ids[participant_id] = mongo_session_to_mysql_id[allocations[mysql_id_user_to_mongo_id[participant_id]]]
-            print("Allocations SQL IDs for allocator_mongo_id:", allocator_mongo_id, "allocations_sql_ids:", allocations_sql_ids)
-            for allocation_id in allocations_sql_ids.keys():
-                session_id = allocations_sql_ids.get(allocation_id, None)
-                print("Allocation for participant:", allocation_id, "session_id:", session_id, "default_session_id:", simlet_id_to_default_session_id.get(simlet_id, None))
-                allocation_values.append((simlet_id, group_id, allocation_id, session_id))
+            # Process all (simlet_id, group_id) combinations that use this allocator
+            groups_for_allocator = mongo_allocator_group_simlet_to_mysql_id.get(allocator_mongo_id, set())
+            
+            # Process each (simlet_id, group_id) that uses this allocator
+            for (simlet_id, group_id) in groups_for_allocator:
+                # Get participants for this specific group
+                participants_for_group = group_id_to_participants_ids.get(group_id, set())
+                
+                # Process each participant in this group
+                for participant_id in participants_for_group:
+                    # Get the session assignment for this participant
+                    session_id = None
+                    
+                    # Check if participant has specific allocation
+                    if participant_id in allocations:
+                        allocation_session_id = allocations[participant_id]
+                        session_id = mongo_session_to_mysql_id.get(allocation_session_id)
+                        # Validate that the session actually exists in our database
+                        if not session_id:
+                            session_id = None
+                    else:
+                        # No specific allocation, use default session
+                        default_session_id = simlet_id_to_default_session_id.get(simlet_id)
+                        if default_session_id and default_session_id in mongo_session_to_mysql_id.values():
+                            session_id = default_session_id
+                    
+                    # Only create allocation if session exists
+                    if session_id:
+                        allocation_values.append((simlet_id, group_id, participant_id, session_id))
         elif allocator_type == "group":
             for allocation_mongo_id in allocations:
                 # Skip if the allocation reference doesn't exist in our session mapping
@@ -732,8 +743,9 @@ for a in filtered_allocators:
                     continue
                     
                 session_id = mongo_session_to_mysql_id.get(session_mongo_id)
-                if not session_id:
-                    print(f"Warning: Skipping allocation {allocation_mongo_id} - session {session_mongo_id} not found in database")
+                # Validate that the session actually exists in our database
+                if not session_id or session_id not in mongo_session_to_mysql_id.values():
+                    print(f"Warning: Skipping allocation {allocation_mongo_id} - session {session_mongo_id} not found in database or invalid")
                     continue
                     
                 print("Processing allocation_mongo_id:", allocation_mongo_id, "session_id:", session_id)
@@ -747,7 +759,7 @@ for a in filtered_allocators:
                         allocation_values.append((simlet_id, group_id, participant_id, session_id))
         else:
             continue
-print(allocation_values)
+#print(allocation_values)
 cursor.executemany(allocation_sql, allocation_values)
 cursor.executemany(allocation_group_sql, allocation_group_values)
 sqlite_con.commit()
