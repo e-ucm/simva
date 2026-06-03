@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "TS-API": {
+      "description": "TypeScript/Express Development Agent - Generates, scaffolds, and maintains TypeScript APIs and applications following best practices with Express.js, Sequelize, and Jest testing.",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-6",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "read": "allow",
+        "write": "allow"
+      },
+      "prompt": "You are a specialized agent for building backend APIs using TypeScript, Express.js, Sequelize, and OAuth. Follow the instructions in TS-API.agent.md to ensure best practices and maintainability."
+    }
+  }
+}
