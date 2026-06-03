@@ -285,7 +285,7 @@ for u in filtered_groups:
             simlet_id,
             group_mongo_id,
             u["name"],
-            True if u["version"] == "1" else False,
+            True if u.get("version") == "1" else False,
             mongo_user_to_mysql_id[u["owners"][0]],
             False,
             allocator_mongo_id,
@@ -376,10 +376,10 @@ print("----------------")
 print("Adding sessions ")
 print("----------------")
 #Dict to map Mongo Id to MySQL Id
-cursor.execute("SELECT mongo_id, simlet_supervisor_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
+cursor.execute("SELECT simlet_id, simlet_supervisor_id FROM SIMLETs WHERE mongo_id IS NOT NULL")
 mysql_simlet_owners_ids = cursor.fetchall()
-mongo_simlet_owners_to_mysql_id = {mongo_id: simlet_supervisor_id for mongo_id, simlet_supervisor_id in mysql_simlet_owners_ids}
-print(mongo_simlet_owners_to_mysql_id)
+mysql_simlet_id_to_mysql_owner = {simlet_id: simlet_supervisor_id for simlet_id, simlet_supervisor_id in mysql_simlet_owners_ids}
+print(mysql_simlet_id_to_mysql_owner)
 
 # Get Sessions from MySQL
 cursor.execute("SELECT mongo_id FROM Sessions WHERE mongo_id IS NOT NULL")
@@ -410,23 +410,33 @@ INSERT INTO Sessions (simlet_id, mongo_id, session_order, session_name, session_
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """
 
+mongo_test_to_mysql_simlet_id = {}
+for s in filtered_simlets:
+    simlet_mongo_id=s["_id"]["$oid"]
+    simlet_mysql_id=mongo_simlet_to_mysql_id[simlet_mongo_id]
+    for session_ref in s.get("tests", []):
+        session_mongo_id = get_mongo_oid(session_ref)
+        mongo_test_to_mysql_simlet_id[session_mongo_id] = simlet_mysql_id
+
 filtered_sessions = [
     ( s )
     for s in sessions
     if s["_id"]["$oid"] not in existing_session_mongo_db
+    and  mongo_test_to_mysql_simlet_id.get(s["_id"]["$oid"]) is not None
 ]
+
 print(filtered_sessions)
 
 sessions_values = [
     (
-        mongo_simlet_to_mysql_id[s["study"]],
+        mongo_test_to_mysql_simlet_id.get(s["_id"]["$oid"]),
         s["_id"]["$oid"],
         session_order_by_mongo_id.get(s["_id"]["$oid"], 0),
         s["name"],
         "",
         "inactive",
         True,
-        mongo_simlet_owners_to_mysql_id[s["study"]]
+        mysql_simlet_id_to_mysql_owner.get(mongo_test_to_mysql_simlet_id.get(s["_id"]["$oid"]))
     )
     for s in filtered_sessions
 ]
@@ -471,16 +481,25 @@ activities_sql = """
 INSERT INTO Activities (session_id, mongo_id, activity_order, activity_name, activity_type, activity_trace_storage, activity_description, activity_comply_with_GDPR, activity_can_be_restarted)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
+mongo_activities_to_mysql_session_id = {}
+for s in filtered_sessions:
+    session_mongo_id=s["_id"]["$oid"]
+    session_mysql_id=mongo_session_to_mysql_id[session_mongo_id]
+    for activity_ref in s.get("activities", []):
+        activity_mongo_id = get_mongo_oid(activity_ref)
+        mongo_activities_to_mysql_session_id[activity_mongo_id] = session_mysql_id
 
 filtered_activities = [
     ( a )
     for a in activities
     if a["_id"]["$oid"] not in existing_activities_mongo_db
+    and mongo_activities_to_mysql_session_id.get(a["_id"]["$oid"]) is not None
+    and a["type"] in ["default", "manual", "limesurvey", "gameplay"]  # Only migrate activities with supported types
 ]
 
 activities_values = [
     (
-        mongo_session_to_mysql_id[a["test"]],
+        mongo_activities_to_mysql_session_id.get(a["_id"]["$oid"]),
         a["_id"]["$oid"],
         activity_order_by_mongo_id.get(a["_id"]["$oid"], 0),
         a["name"],
@@ -593,8 +612,20 @@ VALUES (?, ?, ?, ?, ?, ?)
 activities_completion_values=[]
 for a in filtered_activities:
     activity_mongo_id=a["_id"]["$oid"]
-    for participant_mongo_id in a.get("extra_data", {}).get("participants", {}):
-        participant_value = a.get("extra_data", {}).get("participants", {})[participant_mongo_id]
+    participants_data = a.get("extra_data", {}).get("participants", {})
+    if not isinstance(participants_data, dict):
+        participants_data = {}
+    
+    for participant_mongo_id in participants_data:
+        participant_value = participants_data.get(participant_mongo_id, {})
+        if not isinstance(participant_value, dict):
+            participant_value = {}
+            
+        # Skip if participant doesn't exist in our user mapping
+        if participant_mongo_id not in mongo_user_to_mysql_id:
+            print(f"Warning: Skipping activity completion for non-existent participant {participant_mongo_id}")
+            continue
+            
         completed=participant_value.get("completion", "false") == "true"
         actual_progress=participant_value.get("progress", 0)
         progress=None if actual_progress == 0 and not completed else actual_progress
@@ -625,7 +656,7 @@ DO UPDATE SET
 allocation_group_sql = """
 INSERT INTO Experimental_Groups (simlet_id, group_id, session_id)
 VALUES (?, ?, ?)
-ON CONFLICT(simlet_id, group_id)
+ON CONFLICT(simlet_id, group_id, session_id)
 DO UPDATE SET
     session_id = excluded.session_id,
     updatedAt = datetime('now')
@@ -694,13 +725,23 @@ for a in filtered_allocators:
                 allocation_values.append((simlet_id, group_id, allocation_id, session_id))
         elif allocator_type == "group":
             for allocation_mongo_id in allocations:
-                session_id = mongo_session_to_mysql_id[allocations[allocation_mongo_id]]
+                # Skip if the allocation reference doesn't exist in our session mapping
+                session_mongo_id = allocations.get(allocation_mongo_id)
+                if not session_mongo_id:
+                    print(f"Warning: Skipping allocation {allocation_mongo_id} - session reference not found")
+                    continue
+                    
+                session_id = mongo_session_to_mysql_id.get(session_mongo_id)
+                if not session_id:
+                    print(f"Warning: Skipping allocation {allocation_mongo_id} - session {session_mongo_id} not found in database")
+                    continue
+                    
                 print("Processing allocation_mongo_id:", allocation_mongo_id, "session_id:", session_id)
                 # A mongo group can have multiple SQL group_ids (one per simlet)
                 lookup_group_id = mongo_group_to_mysql_ids.get(allocation_mongo_id)
                 print("Processing group_id:", allocation_mongo_id, "lookup_group_id:", lookup_group_id)
                 # Only allocate if group belongs to the same simlet as the session
-                if group_id in lookup_group_id:
+                if lookup_group_id is not None and group_id in lookup_group_id:
                     allocation_group_values.append((simlet_id, group_id, session_id))
                     for participant_id in group_id_to_participants_ids.get(group_id, []):
                         allocation_values.append((simlet_id, group_id, participant_id, session_id))
