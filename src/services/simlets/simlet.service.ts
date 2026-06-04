@@ -192,8 +192,8 @@ export async function getSimletParticipants(simletId: number, is_admin: boolean,
  * logger.info(`Found ${totalSimlets} experiment simlets`);
  * ```
  */
-export async function getSimletCountByUserId(searchString: string, current_user_id?: number): Promise<number> {
-  return await Simlet.getSimletCountByUserId(searchString, current_user_id);
+export async function getSimletCountByUserId(allocated: boolean, searchString: string, current_user_id?: number): Promise<number> {
+  return await Simlet.getSimletCountByUserId(allocated, searchString, current_user_id);
 }
 
 /**

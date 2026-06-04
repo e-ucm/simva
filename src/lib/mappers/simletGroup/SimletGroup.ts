@@ -306,8 +306,8 @@ export class SimletGroup {
         logger.debug({ SimletGroup : this }, `SimletGroup information - Simlet ID: ${this.simlet_id}, Group ID: ${this.group_id}, Group Name: ${this.group_name}`);
     }
 
-    static async getGroupCountForUser(current_user_id: number, searchString?: string ): Promise<number> {
-        const results = await db.Functions.runViewQuery(db.Views.Group.countByUserId, { current_user_id, search: searchString });
+    static async getGroupCountForUser(simlet_id: number, current_user_id: number, searchString?: string ): Promise<number> {
+        const results = await db.Functions.runViewQuery(db.Views.Group.countByUserId, { simlet_id, current_user_id, search: searchString });
         return results[0].count || 0;
     }
 

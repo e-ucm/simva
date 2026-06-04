@@ -129,7 +129,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_sessions_users_permissions 
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
-        LIMIT :limit OFFSET :offset
+        LIMIT :limit OFFSET :offset 
         `,
         params: {
             simlet_id: {
@@ -215,5 +215,34 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
+  countBySimletIdAndUserId: {
+        description: "Get the count of sessions for a certain User ID",
+        sql: `
+        SELECT COUNT(*) as count
+        FROM v_complete_sessions_users_permissions
+        WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
+        AND (:searchString IS NULL OR session_name LIKE '%' || :searchString || '%')
+        `,
+        params: {
+            current_user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            simlet_id: {
+                type: "number",
+                required: true,
+                description: "Simlet Identifier",
+                example: 1,
+            },
+            searchString: {
+              type: "string",
+              required: false,
+              description: "Search string to filter simlets by name or description",
+              example: "simlet",
+            },
+        },
+    },
 };
 export default queries;

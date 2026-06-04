@@ -419,6 +419,33 @@ paths:
             schema:
               $ref: '#/components/schemas/simletCreation'
         description: Simlet to be created
+  /simlets/count:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+      summary: gets the count of simlets for the current user
+      operationId: getSimletCount
+      description: |
+        Obtains the count of simlets for the current user.
+      responses:
+        '200':
+          description: the count of simlets for this user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/countMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/searchString'
   /simlets/scheduler:
     get:
       tags:
@@ -450,6 +477,33 @@ paths:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
+  /simlets/scheduler/count:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+      summary: gets the count of simlets scheduler entries for the current user
+      operationId: getSimletCount
+      description: |
+        Obtains the count of simlets scheduler entries for the current user.
+      responses:
+        '200':
+          description: the count of simlets scheduler entries for this user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/countMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/searchString'
   /simlets/import:
     post:
         tags:
@@ -1056,11 +1110,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    example: 42
+                $ref: '#/components/schemas/countMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -1071,6 +1121,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/searchString'
   /simlets/{simletid}/groups/{groupid}/participants/{userid}:
     post:
       summary: add a user to a group.
@@ -1263,6 +1314,34 @@ paths:
             schema:
               $ref: '#/components/schemas/sessionCreation'
         # required: true removed, not valid in responses
+  /simlets/{simletid}/sessions/count:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+      summary: gets the count of sessions for the current user
+      operationId: getSessionSimletCount
+      description: |
+        Obtains the count of sessions for the current user.
+      responses:
+        '200':
+          description: the count of sessions for this user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/countMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/searchString'
   /simlets/{simletid}/participants:
     get:
       tags:
@@ -4963,6 +5042,14 @@ components:
         tag_color:
           type: string
           example: "#FF5733"
+    countMapper:
+      type: object
+      required:
+        - count
+      properties:
+        count:
+          type: integer
+          example: 123
     tagsCreation:
       allOf:
       - $ref: '#/components/schemas/tags'

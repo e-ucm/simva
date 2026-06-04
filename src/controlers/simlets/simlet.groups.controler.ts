@@ -152,12 +152,13 @@ export async function getSimletGroupCount(
     const simletId = parseInt(req.params.simlet_id as string);
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
+    const searchString = req.query.search as string | undefined;
     logger.debug({simletId} , "Getting group count for simlet ID");
     let count;
     if (access.is_admin) {
-      count = await simletGroupsService.getSimletGroupCount(simletId, true);
+      count = await simletGroupsService.getSimletGroupCount(simletId, searchString, true);
     } else if (!access.allocated) {
-      count = await simletGroupsService.getSimletGroupCount(simletId, false, access.currentUserId);
+      count = await simletGroupsService.getSimletGroupCount(simletId, searchString, false, access.currentUserId);
     } else {
       throw new AuthentificationError("Invalid user role");
     }

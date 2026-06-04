@@ -22,13 +22,13 @@ export async function getSimletSessions(
   next: NextFunction
 ): Promise<void> {
   try {
-    const searchString = String(req.query.search || '');
+    const searchString = String(req.query.searchString || '');
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
     let offset;
-    if(limit !== undefined && req.query.offset === undefined) {
+    if(limit !== undefined && req.query.skip === undefined) {
         offset = 0;
     } else {
-        offset = parseInt(req.query.offset as string)|| undefined;
+        offset = parseInt(req.query.skip as string)|| undefined;
     }
     const simletId = parseInt(req.params.simlet_id as string);
     let currentUser = req.user?.sql;
@@ -57,7 +57,7 @@ export async function getSimletSessionCount(
   try {
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    const searchString = String(req.query.search || '');
+    const searchString = String(req.query.searchString || '');
     const simlet_id = parseInt(req.params.simlet_id as string);
     let count;
     if (access.is_admin || !access.allocated) {

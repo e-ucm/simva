@@ -41,13 +41,13 @@ export async function getAllSimlets(
   next: NextFunction
 ): Promise<void> {
   try {
-    const searchString = String(req.query.search || '');
+    const searchString = String(req.query.searchString || '');
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
     let offset;
-    if(limit !== undefined && req.query.offset === undefined) {
+    if(limit !== undefined && req.query.skip === undefined) {
         offset = 0;
     } else {
-        offset = parseInt(req.query.offset as string)|| undefined;
+        offset = parseInt(req.query.skip as string)|| undefined;
     }
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
@@ -70,18 +70,34 @@ export async function getAllSchedulerSimlets(
   next: NextFunction
 ): Promise<void> {
   try {
-    const searchString = String(req.query.search || '');
+    const searchString = String(req.query.searchString || '');
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
     let offset;
-    if(limit !== undefined && req.query.offset === undefined) {
+    if(limit !== undefined && req.query.skip === undefined) {
         offset = 0;
     } else {
-        offset = parseInt(req.query.offset as string)|| undefined;
+        offset = parseInt(req.query.skip as string)|| undefined;
     }
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     let simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, limit, offset);
     res.json(simlets.map(s => s.toJSON()));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSchedulerSimletCount(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const searchString = String(req.query.searchString || '');
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    let count = await simletService.getSimletCountByUserId(true, searchString, access.currentUserId);
+    res.json({ count });
   } catch (err) {
     next(err);
   }
@@ -95,13 +111,15 @@ export async function getSimletCount(
   try {
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    const searchString = String(req.query.search || '');
+    const searchString = String(req.query.searchString || '');
     let count;
     if (access.is_admin) {
-      count = await simletService.getSimletCountByUserId(searchString);
+      count = await simletService.getSimletCountByUserId(false, searchString);
+      logger.debug({count} , "Simlet count retrieved for admin");
       res.json({ count });
     } else if (!access.allocated) {
-      count = await simletService.getSimletCountByUserId(searchString, access.currentUserId);
+      count = await simletService.getSimletCountByUserId(false, searchString, access.currentUserId);
+      logger.debug({count} , "Simlet count retrieved for non-allocated user");
       res.json({ count });
     } else {
       throw new AuthentificationError("Invalid user role");

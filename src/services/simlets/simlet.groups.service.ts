@@ -96,9 +96,9 @@ export async function createSimletGroup(simletId: number, body: any, is_admin: b
   return await simlet.createGroup(body);
 }
 
-export async function getSimletGroupCount(simletId: number, is_admin: boolean, current_user_id?: number) : Promise<number> {
+export async function getSimletGroupCount(simletId: number, searchString?: string, is_admin: boolean, current_user_id?: number) : Promise<number> {
   const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
-  return await simlet.getGroupCount();
+  return await simlet.getGroupCount(searchString);
 }
 
 export async function getSimletGroupById(simletId: number, groupId: number, is_admin: boolean, current_user_id?: number) : Promise<SimletGroup> {

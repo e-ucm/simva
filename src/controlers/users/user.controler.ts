@@ -31,13 +31,13 @@ export async function getUsers(
 ) {
   try {
     let currentUser = req.user?.sql;
-    const searchString = req.query.searchstring as string | undefined;
+    const searchString = req.query.searchString as string | undefined;
     const limit = req.query.limit ? parseInt(String(req.query.limit)) : undefined;
     let offset;
-    if(limit !== undefined && req.query.offset === undefined) {
+    if(limit !== undefined && req.query.skip === undefined) {
         offset = 0;
     } else {
-        offset = req.query.offset ? parseInt(String(req.query.offset)) : undefined;
+        offset = req.query.skip ? parseInt(String(req.query.skip)) : undefined;
     }
     let username = req.query.username as string | undefined;
     //logger.debug({currentUser, searchString, limit, offset, username}, "Getting users with query parameters");

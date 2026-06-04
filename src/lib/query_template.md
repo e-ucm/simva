@@ -94,7 +94,7 @@ paginated: {
     SELECT *
     FROM user_view
     ORDER BY username
-    LIMIT :limit OFFSET :offset
+    LIMIT :limit OFFSET :offset 
   `,
   params: {
     limit: {
@@ -165,7 +165,7 @@ sql
 Copy code
 WHERE username = :username
 AND role IN (:roles)
-LIMIT :limit OFFSET :offset
+LIMIT :limit OFFSET :offset 
 ❌ Positional parameters (?) are not allowed
 ✅ Named replacements only
 

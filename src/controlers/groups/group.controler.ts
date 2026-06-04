@@ -30,13 +30,13 @@ export async function getGroups(
 ) {
   try {
     let version = req.query.use_new_generation? Boolean(req.query.use_new_generation) : undefined;
-    const searchString = req.query.searchstring as string | undefined;
+    const searchString = req.query.searchString as string | undefined;
     const limit = parseInt(req.query.limit as string) || undefined;
     let offset;
-    if(limit !== undefined && req.query.offset === undefined) {
+    if(limit !== undefined && req.query.skip === undefined) {
         offset = 0;
     } else {
-        offset = parseInt(req.query.offset as string)|| undefined;
+        offset = parseInt(req.query.skip as string)|| undefined;
     }
     let groups: SimletGroup[];
     switch(req.user?.sql.role) {

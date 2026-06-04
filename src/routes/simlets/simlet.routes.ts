@@ -66,13 +66,15 @@ const router = Router();
 router.get("/", SimletControler.getAllSimlets);
 router.post("/", SimletControler.createSimlet);
 //router.post('/import', importSimlet);
-router.get('/:simlet_id/export', SimletControler.exportSimlet);
+router.get("/count", SimletControler.getSimletCount);
 router.get("/scheduler", SimletControler.getAllSchedulerSimlets);
+router.get("/scheduler/count", SimletControler.getSchedulerSimletCount);
 
 // Individual resource endpoints
 router.get("/:simlet_id", SimletControler.getSimletById);
 router.patch("/:simlet_id", SimletControler.patchSimlet);
 router.delete("/:simlet_id", SimletControler.deleteSimlet);
+router.get('/:simlet_id/export', SimletControler.exportSimlet);
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/participants", SimletControler.getSimletParticipants);

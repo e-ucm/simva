@@ -227,17 +227,31 @@ export class Simlet {
             db.Views.Session.countBySimletIdAndUserId, 
             { simlet_id, current_user_id, search: searchString }
         );
-        return results[0].count || 0;
+        if(results.length === 0){
+            throw new NotFoundError(`Simlet ID ${simlet_id} not found for user ID ${current_user_id}.`);
+        }
+        return results[0].count;
     }
 
-    static async getSimletCountByUserId(searchString: string, current_user_id?: number): Promise<number> {
-        let results;
-        if(current_user_id) {
-            results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
+    static async getSimletCountByUserId(allocated: boolean, searchString: string, current_user_id?: number): Promise<number> {
+        let results, count;
+        if(allocated) {
+            if(!current_user_id) {
+                results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCount, { search: searchString });
+            } else {
+                results = await db.Functions.runViewQuery(db.Views.Simlet.countByAllocatedUserId, { current_user_id, search: searchString });
+            }
+            count = results[0].count;
         } else {
-            results = await db.Tables.Simlets.findAll({ where: { simlet_name: { [Op.like]: `%${searchString}%` } } });
+        if(current_user_id) {
+                results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
+                count = results[0].count;
+            } else {
+                results = await db.Tables.Simlets.count({ where: { simlet_name: { [Op.like]: `%${searchString}%` } } });
+                count = results;
+            }
         }
-        return results[0].count || 0; 
+        return count || 0 as number;
     }
     
     /**
@@ -425,8 +439,8 @@ export class Simlet {
         return group;
     }
 
-    async getGroupCount(): Promise<number> {
-        let count = await SimletGroup.getGroupCountForUser(this.simlet_id);
+    async getGroupCount(searchString?: string): Promise<number> {
+        let count = await SimletGroup.getGroupCountForUser(this.simlet_id, this.current_user_id!, searchString);
         return count;
     }
 

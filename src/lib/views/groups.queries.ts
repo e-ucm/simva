@@ -37,7 +37,42 @@ const queries: Record<string, QueryTemplate> = {
             },
         },
     },
-
+    countByUserId: {
+        description: "Get the count of Groups for a certain Version and User ID",
+        sql: `
+        SELECT COUNT(*) AS count
+        FROM v_complete_groups_user_permissions
+        WHERE group_sandbox = false AND current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
+        AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
+        AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        `,
+        params: {
+            current_user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            version: {
+                type: "boolean",
+                required: false,
+                description: "Version flag indicating whether to use new generation",
+                example: true
+            },
+            simlet_id: {
+                type: "number",
+                required: false,
+                description: "Simlet Identifier to filter groups by simlet",
+                example: 1,
+            },
+            search: {
+                type: "string",
+                required: false,
+                description: "Search string to filter groups by name or description",
+                example: "group",
+            },
+        },
+    },
     byVersionAndUserIdWithPagination: {
         description: "Get all Groups for a certain Version and User ID",
         sql: `
@@ -46,7 +81,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
-        LIMIT :limit OFFSET :offset
+        LIMIT :limit OFFSET :offset 
         `,
         params: {
             version: {

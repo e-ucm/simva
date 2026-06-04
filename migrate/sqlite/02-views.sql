@@ -134,8 +134,7 @@ SELECT
     sim.updatedAt
 FROM SIMLETs sim
 LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
-LEFT JOIN vv_user_permissions up ON sim.simlet_id = up.object_id AND up.object_type = "SIMLET"
-GROUP BY up.user_id, up.username, up.permission, sim.simlet_id;
+LEFT JOIN vv_user_permissions up ON sim.simlet_id = up.object_id AND up.object_type = "SIMLET";
 
 DROP VIEW IF EXISTS v_simlet_sessions_users_permissions;
 CREATE VIEW v_simlet_sessions_users_permissions AS
@@ -354,8 +353,7 @@ FROM Sessions_tags tag
 LEFT JOIN Sessions_tags_list tag_list ON tag_list.tag_id = tag.tag_id
 LEFT JOIN Users u ON tag_list.user_id = u.user_id
 LEFT JOIN Sessions ses ON ses.session_id = tag.session_id
-JOIN vv_user_permissions perm ON perm.object_type = 'SIMLET' AND perm.object_id = ses.simlet_id
-GROUP BY ses.simlet_id, tag.tag_id, perm.user_id;
+JOIN vv_user_permissions perm ON perm.object_type = 'SIMLET' AND perm.object_id = ses.simlet_id;
 
 DROP VIEW IF EXISTS v_activity_template_tags;
 CREATE VIEW v_activity_template_tags AS

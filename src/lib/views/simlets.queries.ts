@@ -121,7 +121,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       ORDER BY simlet_id
-      LIMIT :limit OFFSET :offset
+      LIMIT :limit OFFSET :offset 
     `,
     params: {
       current_user_id: {
@@ -181,7 +181,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE allocated_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       ORDER BY simlet_id
-      LIMIT :limit OFFSET :offset
+      LIMIT :limit OFFSET :offset 
     `,
     params: {
       current_user_id: {
@@ -229,6 +229,68 @@ const queries: Record<string, QueryTemplate> = {
         required: true,
         description: "Simlet Identifier",
         example: 1,
+      },
+    },
+  },
+  countByUserId: {
+    description: "Get count of SIMLETs for a certain User with search",
+    sql: `
+      SELECT COUNT(*) as count
+      FROM v_complete_simlets_users_permissions
+      WHERE current_user_id = :current_user_id
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+    },
+  },
+  allocationCount: {
+    description: "Get count of SIMLETs with allocated participants for a certain User with search",
+    sql: `
+      SELECT COUNT(DISTINCT simlet_id) as count
+      FROM SIMLETs
+      WHERE  (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+    `,
+    params: {
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+    },
+  },
+  countByAllocatedUserId: {
+    description: "Get count of SIMLETs for a certain Allocated User with search",
+    sql: `
+      SELECT COUNT(*) as count
+      FROM v_complete_simlet_allocation_participants
+      WHERE allocated_user_id = :current_user_id
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
       },
     },
   },
