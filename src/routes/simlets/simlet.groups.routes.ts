@@ -27,6 +27,7 @@ router.get("/", SimletGroupsControler.getSimletGroups);
 // Base group operations
 router.get("/", SimletGroupsControler.getSimletGroups);
 router.get("/count", SimletGroupsControler.getSimletGroupCount);
+router.get("/participants/count", SimletGroupsControler.getSimletGroupParticipantsCount);
 router.post("/", SimletGroupsControler.createSimletGroup);
 
 // Individual group operations
@@ -36,6 +37,7 @@ router.delete("/:group_id", SimletGroupsControler.deleteSimletGroup);
 
 // Group participant operations
 router.get("/:group_id/participants", SimletGroupsControler.getSimletGroupParticipants);
+router.get("/:group_id/participants/count", SimletGroupsControler.getSimletGroupParticipantsCount);
 router.post("/:group_id/participants", SimletGroupsControler.createSimletGroupParticipant);
 router.post("/:group_id/participants/:participant_id", SimletGroupsControler.addSimletGroupParticipant);
 // Individual participant operations

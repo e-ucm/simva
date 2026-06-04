@@ -1122,6 +1122,33 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/searchString'
+  /simlets/{simletid}/groups/participants/count:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets the total count of groups
+      operationId: getGroupCount
+      description: |
+        Gets the total number of groups available to the current user
+      responses:
+        '200':
+          description: group count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/countMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/searchString'
   /simlets/{simletid}/groups/{groupid}/participants/{userid}:
     post:
       summary: add a user to a group.
@@ -1251,6 +1278,34 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/groupAllocatorRandomizeSessionAllocation'
+  /simlets/{simletid}/groups/{groupid}/participants/count:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets the total count of groups
+      operationId: getGroupCount
+      description: |
+        Gets the total number of groups available to the current user
+      responses:
+        '200':
+          description: group count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/countMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/searchString'
   /simlets/{simletid}/sessions:
     get:
       tags:

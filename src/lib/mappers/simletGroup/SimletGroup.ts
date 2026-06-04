@@ -271,6 +271,10 @@ export class SimletGroup {
         return await Session.getDefaultSessionId(this.simlet_id);
     }
 
+    getGroupParticipantsCount(): number {
+        return this.participants.length;
+    }
+
     private async syncParticipantActivityCompletions(
         participantId: number,
         previousSessionId: number | null | undefined,

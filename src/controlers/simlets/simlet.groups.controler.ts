@@ -169,6 +169,43 @@ export async function getSimletGroupCount(
   }
 }
 
+export async function getSimletGroupParticipantsCount(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const groupId = parseInt(req.params.group_id as string);
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    logger.debug({simletId, groupId} , "Getting participant count for simlet ID and group ID");
+    let count;
+    if(groupId === undefined || isNaN(groupId)) {
+      if (access.is_admin) {
+        count = await simletGroupsService.getTotalSimletGroupParticipantsCount(simletId, true);
+      } else if (!access.allocated) {
+        count = await simletGroupsService.getTotalSimletGroupParticipantsCount(simletId, false, access.currentUserId);
+      } else {
+        throw new AuthentificationError("Invalid user role");
+      }
+    } else {
+      if (access.is_admin) {
+        count = await simletGroupsService.getSimletGroupParticipantsCount(simletId, groupId, true);
+      } else if (!access.allocated) {
+        count = await simletGroupsService.getSimletGroupParticipantsCount(simletId, groupId, false, access.currentUserId);
+      } else {
+        throw new AuthentificationError("Invalid user role");
+      }
+    }
+
+    logger.debug({count} , "Participant count retrieved for simlet ID and group ID");
+    res.json({count});
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getSimletGroupById(
   req: AuthenticatedRequest,
   res: Response,

@@ -101,6 +101,20 @@ export async function getSimletGroupCount(simletId: number, searchString?: strin
   return await simlet.getGroupCount(searchString);
 }
 
+export async function getSimletGroupParticipantsCount(simletId: number, groupId: number, is_admin: boolean, current_user_id?: number) : Promise<number> {
+  const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
+  return await simlet.getGroupParticipantsCount(groupId);
+}
+
+export async function getTotalSimletGroupParticipantsCount(simletId: number, is_admin: boolean, current_user_id?: number) : Promise<number> {
+  const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
+  let groups : { [key: number]: number } = {};
+  for await (const group of simlet.groups) {
+    groups[group] = await simlet.getGroupParticipantsCount(group);
+  }
+  return Object.values(groups).reduce((total, count) => total + count, 0);
+} 
+
 export async function getSimletGroupById(simletId: number, groupId: number, is_admin: boolean, current_user_id?: number) : Promise<SimletGroup> {
   const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.getGroupById(groupId);

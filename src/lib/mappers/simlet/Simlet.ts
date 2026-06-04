@@ -254,6 +254,15 @@ export class Simlet {
         return count || 0 as number;
     }
     
+    async getGroupParticipantsCount(groupId: number): Promise<number> {
+        const simletGroup = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
+        if(simletGroup.group_sandbox) {
+            return 0; // Sandbox groups do not have participants
+        } else {
+            return simletGroup.getGroupParticipantsCount();
+        }
+    }
+
     /**
      * Prints debugging information about this simlet instance
      * 
