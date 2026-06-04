@@ -186,7 +186,7 @@ export class Simlet {
     static async createSimlet(simletData: any, is_admin: boolean = false, current_user_id?: number): Promise<Simlet> {
         logger.debug({simletData} , "Creating simlet with data");
         if(await db.Tables.Simlets.count({where : {simlet_name : simletData.simlet_name, simlet_supervisor_id: current_user_id}}) > 0){
-            throw new ConflictError(`Simlet name ${simletData.simlet_name} is already taken. Please choose a different name.`);
+            throw new ConflictError(`Simlet name ${simletData.simlet_name} is already taken for your current account user. Please choose a different name.`);
         }
         if(simletData.simlet_description === undefined){
             simletData.simlet_description = "";
