@@ -1019,9 +1019,7 @@ export class Activity {
 	private getLRSActivityId(params: any = {}): string {
 		return (
 			params.activityId ||
-			lrsclient.getActivityUrl(
-				this.simlet_id,
-				this.session_id,
+			lrsclient.getStandaloneActivityUrl(
 				this.activity_id,
 				Boolean(params.useTestUrls)
 			)
