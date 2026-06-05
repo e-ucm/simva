@@ -119,24 +119,38 @@ export class Simlet {
     }
 
     async init() {
-        const groupIds = await db.Functions.runViewQuery(db.Views.Simlet.groupIdsBySimletId, { simlet_id: this.simlet_id })
+        const groupIds = await db.Functions.runViewQuery(
+            db.Views.Simlet.groupIdsBySimletId, 
+            { simlet_id: this.simlet_id }
+        )
         this.groups = groupIds.map((row: any) => row.group_id) || [];
         const effectiveUserId = this.current_user_id ?? this.allocated_user_id;
         if(this.is_admin) {
-            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletId, { simlet_id: this.simlet_id });
+            const sessionIds = await db.Functions.runViewQuery(
+                db.Views.Session.IdsBySimletId, 
+                { simlet_id: this.simlet_id },
+                "session_order",
+                "ASC"
+            );
             this.sessions = sessionIds.map((row: any) => row.session_id) || [];
         } else {
-            const sessionIds = await db.Functions.runViewQuery(db.Views.Session.IdsBySimletIdAndUserId, { simlet_id: this.simlet_id, current_user_id: effectiveUserId});
+            const sessionIds = await db.Functions.runViewQuery(
+                db.Views.Session.IdsBySimletIdAndUserId, 
+                { simlet_id: this.simlet_id, current_user_id: effectiveUserId },
+                "session_order",
+                "ASC"
+            );
             this.sessions = sessionIds.map((row: any) => row.session_id) || [];
         }
         this.tags = await SessionTagList.getSessionsTags(this.sessions, effectiveUserId);
     }
     
-    static async getAdminSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
+    static async getAdminSimlets(searchString: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
       let results = await db.Tables.Simlets.findAll({
         where: searchString ? { simlet_name: { [Op.like]: `%${searchString}%` } } : undefined,
         limit: limit !== undefined ? limit : undefined,
-        offset: offset !== undefined ? offset : undefined
+        offset: offset !== undefined ? offset : undefined,
+        order: [[Simlet.getOrderNameColumn(orderBy), Simlet.getOrder(order)]]
       });
       const processedResults = await Promise.all(results.map(async (simlet: any) => {
             const simletInstance = new Simlet(simlet, true, false);
@@ -146,30 +160,65 @@ export class Simlet {
         return processedResults;
     }
 
-    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString?: string, limit?: number, offset?: number): Promise<Simlet[]> {
+    static getOrderNameColumn(orderBy?: string): string {
+        if(!orderBy) {
+            return "simlet_id";
+        }
+        const orderColumns = {
+            id: "simlet_id",
+            name: "simlet_name",
+            createdAt: "createdAt",
+            updatedAt: "updatedAt",
+        } as Record<string, string>;
+        if(orderBy in orderColumns) {
+            return orderColumns[orderBy];
+        }
+        return "simlet_id";
+    }
+
+    static getOrder(order?: string): "ASC" | "DESC" {
+        if(!order) {
+            return "ASC";
+        }
+        const orderOptions = ["ASC", "DESC"];
+        if(orderOptions.includes(order.toUpperCase())) {
+            return order.toUpperCase() as "ASC" | "DESC";
+        }
+        return "ASC";
+    }
+
+    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
           let results;
           if(allocated_user) {
             if(limit !== undefined && offset !== undefined) {
                 results = await db.Functions.runViewQuery(
-                db.Views.Simlet.byAllocatedUserIdWithPagination,
-                { current_user_id, limit, offset, search: searchString }
+                    db.Views.Simlet.byAllocatedUserIdWithPagination,
+                    { current_user_id, limit, offset, search: searchString },
+                    Simlet.getOrderNameColumn(orderBy),
+                    Simlet.getOrder(order)
                 );
             } else {
                 results = await db.Functions.runViewQuery(
-                db.Views.Simlet.ByAllocatedUserId,
-                { current_user_id, search: searchString }
-                );
+                    db.Views.Simlet.ByAllocatedUserId,
+                    { current_user_id, search: searchString },
+                    Simlet.getOrderNameColumn(orderBy),
+                    Simlet.getOrder(order)
+            );
             }
         } else {
             if(limit !== undefined && offset !== undefined) {
                 results = await db.Functions.runViewQuery(
-                db.Views.Simlet.byUserIdWithPagination,
-                { current_user_id, limit, offset, search: searchString }
+                    db.Views.Simlet.byUserIdWithPagination,
+                    { current_user_id, limit, offset, search: searchString },
+                    Simlet.getOrderNameColumn(orderBy),
+                    Simlet.getOrder(order)
                 );
             } else {
                 results = await db.Functions.runViewQuery(
-                db.Views.Simlet.byUserId,
-                { current_user_id, search: searchString }
+                    db.Views.Simlet.byUserId,
+                    { current_user_id, search: searchString },
+                    Simlet.getOrderNameColumn(orderBy),
+                    Simlet.getOrder(order)
                 );
             }
         }
@@ -507,12 +556,12 @@ export class Simlet {
       return await SimletParticipant.getAllFromDbData("simlet", this.simlet_id);
     }
 
-    async getGroups(): Promise<SimletGroup[]> {
-        return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id);
+    async getGroups(searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<SimletGroup[]> {
+        return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id, searchString, limit, offset, orderBy, order);
     }
 
-    async getSessions(searchString?: string, limit?: number, offset?: number): Promise<Session[]> {
-        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString);
+    async getSessions(searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Session[]> {
+        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString, orderBy, order);
     }
 
     async getSession(sessionId: number): Promise<Session> {  

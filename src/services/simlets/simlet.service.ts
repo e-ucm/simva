@@ -39,8 +39,8 @@ import { SessionScheduler } from "@/lib/mappers/session/SessionScheduler";
  * const userSimlets = await getSimletsByUserId(123);
  * ```
  */
-export async function getSimletsByUserId(user_id: number, searchString?: string, limit?: number, offset?: number): Promise<Simlet[]> {
-  return await Simlet.getAllFromDbData(user_id, false, searchString, limit, offset);
+export async function getSimletsByUserId(user_id: number, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAllFromDbData(user_id, false, searchString, limit, offset, orderBy, order);
 }
 
 /**
@@ -54,12 +54,12 @@ export async function getSimletsByUserId(user_id: number, searchString?: string,
  * @param {number} offset - Optional offset for pagination
  * @returns {Promise<Simlet[]>} Array of simlet records accessible to the student
  */
-export async function getSimletsForStudent(current_user_id: number, searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
-  return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset);
+export async function getSimletsForStudent(current_user_id: number, searchString: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset, orderBy, order);
 }
 
-export async function getAllSimlets(searchString: string, limit?: number, offset?: number): Promise<Simlet[]> {
-  return await Simlet.getAdminSimlets(searchString, limit, offset);
+export async function getAllSimlets(searchString: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAdminSimlets(searchString, limit, offset, orderBy, order);
 }
 
 /**

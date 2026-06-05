@@ -81,7 +81,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
-        LIMIT :limit OFFSET :offset 
+        LIMIT :limit OFFSET :offset
         `,
         params: {
             version: {
@@ -140,13 +140,14 @@ const queries: Record<string, QueryTemplate> = {
             },
         },
     },
-
     bySimletId : {
         description: "Get Simlet Group By Simlet Identifier",
         sql: `
         SELECT *
         FROM v_complete_groups_simlets
         WHERE simlet_id = :simlet_id
+        AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        ORDER BY {{orderBy}} {{order}}
         `,
         params: {
             simlet_id: {
@@ -154,6 +155,49 @@ const queries: Record<string, QueryTemplate> = {
                 required: true,
                 description: "Simlet Identifier",
                 example: 1,
+            },
+            search: {
+                type: "string",
+                required: false,
+                description: "Search string to filter groups by name",
+                example: "group",
+            },
+        },
+    },
+    bySimletIdWithPagination: {
+        description: "Get Simlet Group By Simlet Identifier with Pagination",
+        sql: `
+        SELECT *
+        FROM v_complete_groups_simlets
+        WHERE simlet_id = :simlet_id
+        AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        ORDER BY {{orderBy}} {{order}}
+        LIMIT :limit OFFSET :offset
+        `,
+        params: {
+            simlet_id: {
+                type: "number",
+                required: true,
+                description: "Simlet Identifier",
+                example: 1,
+            },
+            search: {
+                type: "string",
+                required: false,
+                description: "Search string to filter groups by name or description",
+                example: "group",
+            },
+            limit: {
+                type: "number",
+                required: true,
+                description: "Maximum number of groups to return",
+                example: 10,
+            },
+            offset: {
+                type: "number",
+                required: true,
+                description: "Number of groups to skip for pagination",
+                example: 20,
             },
         },
     },

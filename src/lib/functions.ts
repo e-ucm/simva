@@ -74,14 +74,23 @@ export default (sequelize: Sequelize) => {
      * const results = await runViewQuery(query, { userId: 123 });
      * ```
      */
-    runViewQuery: async (query: QueryTemplate, params: Record<string, any> = {}) : Promise<any[]> => {
+    runViewQuery: async (query: QueryTemplate, params: Record<string, any> = {}, orderBy?: string, order?: "ASC" | "DESC") : Promise<any[]> => {
       if (!query.sql || !query.params) {
         throw new Error("Invalid query template");
       }
 
       validateParams(query.params, params);
 
-      return sequelize.query(query.sql, {
+      // Replace {{orderBy}} and {{order}} placeholders with actual values
+      let sql = query.sql;
+      if (orderBy) {
+        sql = sql.replace('{{orderBy}}', orderBy);
+      }
+      if (order) {
+        sql = sql.replace('{{order}}', order);
+      }
+
+      return sequelize.query(sql, {
         replacements: params,
         type: QueryTypes.SELECT,
       });

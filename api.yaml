@@ -134,6 +134,8 @@ paths:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/order'
     patch:
       summary: Modifies the logged user, for exemple it's role.
       tags:
@@ -323,6 +325,8 @@ paths:
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/use_new_generation'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/order'
   /tasklist:
     post:
       tags:
@@ -383,8 +387,11 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/searchTag'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/order'
     post:
       tags:
         - administrators
@@ -446,6 +453,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/searchTag'
   /simlets/scheduler:
     get:
       tags:
@@ -475,8 +483,11 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/searchTag'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/order'
   /simlets/scheduler/count:
     get:
       tags:
@@ -504,6 +515,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/searchTag'
   /simlets/import:
     post:
         tags:
@@ -913,6 +925,8 @@ paths:
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/use_new_generation'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/order'
     post:
       tags:
         - administrators
@@ -1334,6 +1348,12 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/searchTag'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/order'
     post:
       tags:
         - administrators
@@ -1397,6 +1417,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/searchTag'
   /simlets/{simletid}/participants:
     get:
       tags:
@@ -2187,6 +2208,8 @@ paths:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/order'
     post:
       tags:
         - administrators
@@ -4398,6 +4421,13 @@ components:
       required: false
       schema:
         type: string
+    searchTag:
+      in: query
+      name: searchTag
+      description: pass an optional tag for result filtering
+      required: false
+      schema:
+        type: string
     skip:
       in: query
       name: skip
@@ -4416,6 +4446,28 @@ components:
         format: int32
         minimum: 0
         maximum: 50
+    orderBy:
+      name: orderBy
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - id
+          - name
+          - createdAt
+          - updatedAt
+      description: Field by which the results should be ordered
+    order:
+      name: order
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+      description: Order of the results (ascending or descending)
     user:
       in: query
       name: user

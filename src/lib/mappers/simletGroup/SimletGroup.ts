@@ -205,12 +205,51 @@ export class SimletGroup {
         }));
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id?: number): Promise<SimletGroup[]> {
+    static getOrderNameColumn(orderBy?: string): string {
+        if(!orderBy) {
+            return "group_id";
+        }
+        const orderColumns = {
+            id: "group_id",
+            name: "group_name",
+            createdAt: "createdAt",
+            updatedAt: "updatedAt",
+        } as Record<string, string>;
+        if(orderBy in orderColumns) {
+            return orderColumns[orderBy];
+        }
+        return "group_id";
+    }
+
+    static getOrder(order?: string): "ASC" | "DESC" {
+        if(!order) {
+            return "ASC";
+        }
+        const orderOptions = ["ASC", "DESC"];
+        if(orderOptions.includes(order.toUpperCase())) {
+            return order.toUpperCase() as "ASC" | "DESC";
+        }
+        return "ASC";
+    }
+
+    static async getAllFromDbData(simlet_id: number, current_user_id?: number, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string ): Promise<SimletGroup[]> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
-        const groups = await db.Functions.runViewQuery(
-            db.Views.Group.bySimletId,
-            { simlet_id }
-        );
+        let groups; 
+        if(limit != undefined && offset != undefined) {
+            groups = await db.Functions.runViewQuery(
+                db.Views.Group.bySimletIdWithPagination,
+                { simlet_id, search: searchString, limit, offset },
+                SimletGroup.getOrderNameColumn(orderBy),
+                SimletGroup.getOrder(order)
+            );
+        } else {
+            groups = await db.Functions.runViewQuery(
+                db.Views.Group.bySimletId,
+                { simlet_id, search: searchString },
+                SimletGroup.getOrderNameColumn(orderBy),
+                SimletGroup.getOrder(order)
+            );
+        }
         logger.debug({groups} , "Groups data from view");
         return Promise.all(groups.map(async (group: any) => {
             const simletGroup = await SimletGroupAllocatorToClass(group, current_user_id);
@@ -406,7 +445,8 @@ export class SimletGroup {
             // remove from all sessions' activities so LimeSurvey tokens are deleted and can be re-created later
             const sessionRows = await db.Functions.runViewQuery(
                 db.Views.Session.IdsBySimletId,
-                { simlet_id: this.simlet_id }
+                { simlet_id: this.simlet_id },
+                "session_order", "ASC"
             );
             for (const row of sessionRows || []) {
                 const session = await Session.getFromDbData(this.simlet_id, row.session_id, this.is_admin, this.current_user_id);

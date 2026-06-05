@@ -41,9 +41,9 @@ import { db } from "@/lib/db";
  * sessions.forEach(s => logger.info(s.name, s.open_date, s.close_date));
  * ```
  */
-export async function getSimletSessions(simletId: number, is_admin: boolean, searchString?: string, limit?: number, offset?: number, current_user_id?: number): Promise<Session[]> {
+export async function getSimletSessions(simletId: number, is_admin: boolean, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string, current_user_id?: number): Promise<Session[]> {
   let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
-  return await simlet.getSessions(searchString, limit, offset);
+  return await simlet.getSessions(searchString, limit, offset, orderBy, order);
 }
 
 /**

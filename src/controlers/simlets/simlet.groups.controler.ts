@@ -22,14 +22,24 @@ export async function getSimletGroups(
 ): Promise<void> {
   try {
     const simletId = parseInt(req.params.simlet_id as string);
+    const searchString = req.query.searchString as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    let offset;
+    if(limit !== undefined && req.query.skip === undefined) {
+        offset = 0;
+    } else {
+        offset = parseInt(req.query.skip as string)|| undefined;
+    }
+    const orderBy = req.query.orderBy ? String(req.query.orderBy) : undefined;
+    const order = req.query.order ? String(req.query.order) : undefined;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     logger.debug({simletId} , "Getting groups for simlet ID");
     let groups;
     if (access.is_admin) {
-      groups = await simletGroupsService.getSimletGroups(simletId, true);
+      groups = await simletGroupsService.getSimletGroups(simletId, true, searchString, limit, offset, orderBy, order);
     } else if (!access.allocated) {
-      groups = await simletGroupsService.getSimletGroups(simletId, false, access.currentUserId);
+      groups = await simletGroupsService.getSimletGroups(simletId, false, searchString, limit, offset, orderBy, order, access.currentUserId);
     } else {
       throw new AuthentificationError("Invalid user role");
     }

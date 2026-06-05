@@ -20,6 +20,12 @@ import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
  * @async
  * @function getSimletGroups
  * @param {number} simletId - The ID of the simlet
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {string} searchString - The search string for filtering groups
+ * @param {number} limit - The maximum number of groups to return
+ * @param {number} offset - The offset for pagination
+ * @param {string} orderBy - The field to order the groups by
+ * @param {string} order - The order direction (ASC or DESC)
  * @param {number} current_user_id - The ID of the user requesting the groups
  * @returns {Promise<SimletGroup[]>} Array of groups associated with the simlet
  * @throws {NotFoundError} When simlet is not found
@@ -27,13 +33,13 @@ import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
  * 
  * @example
  * ```typescript
- * const groups = await getSimletGroups(123, false, 456);
+ * const groups = await getSimletGroups(123, false, "search", 10, 0, "group_name", "ASC", 456);
  * groups.forEach(g => logger.info(g.group_name, g.participant_count));
  * ```
  */
-export async function getSimletGroups(simletId: number, is_admin: boolean, current_user_id?: number): Promise<SimletGroup[]> {
+export async function getSimletGroups(simletId: number, is_admin: boolean, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string, current_user_id?: number): Promise<SimletGroup[]> {
   let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
-  return await simlet.getGroups();
+  return await simlet.getGroups(searchString, limit, offset, orderBy, order);
 }
 
 /**
@@ -44,6 +50,7 @@ export async function getSimletGroups(simletId: number, is_admin: boolean, curre
  * @function addSimletGroups
  * @param {number} simletId - The ID of the simlet
  * @param {Partial<SimletGroup>} body - Group data containing group name and generation settings
+ * @param {boolean} is_admin - Whether the user is an admin
  * @param {number} current_user_id - The ID of the user adding the group
  * @returns {Promise<Simlet>} The updated simlet instance
  * @throws {NotFoundError} When simlet or group is not found

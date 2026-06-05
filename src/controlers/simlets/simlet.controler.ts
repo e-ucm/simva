@@ -49,14 +49,16 @@ export async function getAllSimlets(
     } else {
         offset = parseInt(req.query.skip as string)|| undefined;
     }
+    const orderBy = req.query.orderBy;
+    const order = req.query.order;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     let simlets;
     if (access.is_admin) {
-      simlets = await simletService.getAllSimlets(searchString, limit, offset);
+      simlets = await simletService.getAllSimlets(searchString, limit, offset, orderBy, order);
       res.json(simlets.map(s => s.toJSON()));
     } else {
-      simlets = await simletService.getSimletsByUserId(access.currentUserId, searchString, limit, offset);
+      simlets = await simletService.getSimletsByUserId(access.currentUserId, searchString, limit, offset, orderBy, order);
       res.json(simlets.map(s => s.toJSON()));
     }
   } catch (err) {
@@ -78,9 +80,11 @@ export async function getAllSchedulerSimlets(
     } else {
         offset = parseInt(req.query.skip as string)|| undefined;
     }
+    const orderBy = req.query.orderBy;
+    const order = req.query.order;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    let simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, limit, offset);
+    let simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, limit, offset, orderBy, order);
     res.json(simlets.map(s => s.toJSON()));
   } catch (err) {
     next(err);

@@ -97,6 +97,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      ORDER BY {{orderBy}} {{order}}
     `,
     params: {
       current_user_id: {
@@ -120,7 +121,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-      ORDER BY simlet_id
+      ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
     `,
     params: {
@@ -157,6 +158,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlet_allocation_participants
       WHERE allocated_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      ORDER BY {{orderBy}} {{order}}
     `,
     params: {
       current_user_id: {
@@ -180,7 +182,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlet_allocation_participants
       WHERE allocated_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-      ORDER BY simlet_id
+      ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
     `,
     params: {

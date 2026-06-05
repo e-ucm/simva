@@ -31,14 +31,16 @@ export async function getSimletSessions(
         offset = parseInt(req.query.skip as string)|| undefined;
     }
     const simletId = parseInt(req.params.simlet_id as string);
+    const orderBy = req.query.orderBy ? String(req.query.orderBy) : undefined;
+    const order = req.query.order ? String(req.query.order) : undefined;
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     logger.debug({simletId, userId: currentUser?.user_id} , "Getting sessions for simlet ID and user ID");
     let sessions;
     if (access.is_admin) {
-      sessions = await sessionService.getSimletSessions(simletId, true, searchString, limit, offset);
+      sessions = await sessionService.getSimletSessions(simletId, true, searchString, limit, offset, orderBy, order);
     } else if (!access.allocated) {
-      sessions = await sessionService.getSimletSessions(simletId, false, searchString, limit, offset, access.currentUserId);
+      sessions = await sessionService.getSimletSessions(simletId, false, searchString, limit, offset, orderBy, order, access.currentUserId);
     } else {
       throw new AuthentificationError("Invalid user role");
     }

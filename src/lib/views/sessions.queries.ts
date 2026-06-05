@@ -7,7 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT session_id
         FROM Sessions
         WHERE simlet_id = :simlet_id
-        ORDER BY session_order
+        ORDER BY {{orderBy}} {{order}}
         `,
         params: {
             simlet_id: {
@@ -24,7 +24,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT session_id
         FROM v_simlet_sessions_users_permissions
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
-        ORDER BY session_order
+        ORDER BY {{orderBy}} {{order}}
         `,
         params: {
             simlet_id: {
@@ -99,6 +99,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_sessions_users_permissions 
       WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
       AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+      ORDER BY {{orderBy}} {{order}}
       `,
       params: {
           simlet_id: {
@@ -121,7 +122,6 @@ const queries: Record<string, QueryTemplate> = {
           }
       },
   },
-
   bySimletIdAndUserIdWithPagination: {
     description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions",
         sql: `
@@ -130,6 +130,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
         LIMIT :limit OFFSET :offset 
+        ORDER BY {{orderBy}} {{order}}
         `,
         params: {
             simlet_id: {
@@ -166,7 +167,7 @@ const queries: Record<string, QueryTemplate> = {
   },
 
   bySimletIdSessionIdAndUserId: {
-    description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions",
+    description: "Get current Session with users permissions of a SIMLET by its ID with user permissions",
     sql: `
       SELECT *
       FROM v_complete_sessions_users_permissions 

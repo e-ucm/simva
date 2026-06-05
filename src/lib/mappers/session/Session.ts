@@ -200,25 +200,62 @@ export class Session {
         return sessions[0].session_id;
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string): Promise<Session[]> {
+     static getOrderNameColumn(orderBy?: string): string {
+        if(!orderBy) {
+            return "session_id";
+        }
+        const orderColumns = {
+            id: "session_id",
+            name: "session_name",
+            createdAt: "createdAt",
+            updatedAt: "updatedAt",
+        } as Record<string, string>;
+        if(orderBy in orderColumns) {
+            return orderColumns[orderBy];
+        }
+        return "session_id";
+    }
+
+    static getOrder(order?: string): "ASC" | "DESC" {
+        if(!order) {
+            return "ASC";
+        }
+        const orderOptions = ["ASC", "DESC"];
+        if(orderOptions.includes(order.toUpperCase())) {
+            return order.toUpperCase() as "ASC" | "DESC";
+        }
+        return "ASC";
+    }
+
+    static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string, orderBy?: string, order?: string): Promise<Session[]> {
         let sessions;
         if(current_user_id) {
             if(limit !== undefined && offset !== undefined) {
                 sessions = await db.Functions.runViewQuery( 
                     db.Views.Session.bySimletIdAndUserIdWithPagination, 
-                    { simlet_id, current_user_id, search: searchString, limit, offset } 
+                    { simlet_id, current_user_id, search: searchString, limit, offset }, 
+                    Session.getOrderNameColumn(orderBy),
+                    Session.getOrder(order)
                 ); 
             } else {
                 sessions = await db.Functions.runViewQuery(
                     db.Views.Session.bySimletIdAndUserId,
-                    { simlet_id, current_user_id, search: searchString }
+                    { simlet_id, current_user_id, search: searchString },
+                    Session.getOrderNameColumn(orderBy),
+                    Session.getOrder(order)
                 );
             }
         } else {
             sessions = await db.Tables.Sessions.findAll({
-                where : { session_name : { [Op.like]: `%${searchString}%`}},
+                where : { 
+                    simlet_id: simlet_id,
+                    session_name : { [Op.like]: `%${searchString}%`}
+                },
                 limit : limit !== undefined ? limit : undefined,
-                offset: offset !== undefined ? offset : undefined
+                offset: offset !== undefined ? offset : undefined,
+                order: [
+                    [Session.getOrderNameColumn(orderBy), Session.getOrder(order)]
+                ]
             })
         }
         
