@@ -364,10 +364,10 @@ export class Simlet {
         return count || 0 as number;
     }
     
-    async getGroupParticipantsCount(groupId: number): Promise<number> {
+    async getGroupParticipantsCount(groupId: number): Promise<number | null> {
         const simletGroup = await SimletGroup.getFromDbData(this.simlet_id, groupId, this.is_admin, this.current_user_id);
         if(simletGroup.group_sandbox) {
-            return 0; // Sandbox groups do not have participants
+            return null; // Sandbox groups do not have participants
         } else {
             return simletGroup.getGroupParticipantsCount();
         }
