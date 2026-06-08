@@ -18,6 +18,7 @@ import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
+import { splitSearchTags } from "@/controlers/simlets/helpers";
 
 /**
  * Retrieves simlets from the database.
@@ -41,24 +42,26 @@ export async function getAllSimlets(
   next: NextFunction
 ): Promise<void> {
   try {
-    const searchString = String(req.query.searchString || '');
+    const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
+    const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
     let offset;
     if(limit !== undefined && req.query.skip === undefined) {
         offset = 0;
     } else {
-        offset = parseInt(req.query.skip as string)|| undefined;
+        offset = parseInt(req.query.skip as string);
     }
     const orderBy = req.query.orderBy;
     const order = req.query.order;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
+    logger.debug({searchString, searchTags, limit, offset, orderBy, order, userId: currentUser?.user_id} , "Getting all simlets with query parameters and user ID");
     let simlets;
     if (access.is_admin) {
-      simlets = await simletService.getAllSimlets(searchString, limit, offset, orderBy, order);
+      simlets = await simletService.getAllSimlets(searchString, searchTags, limit, offset, orderBy, order);
       res.json(simlets.map(s => s.toJSON()));
     } else {
-      simlets = await simletService.getSimletsByUserId(access.currentUserId, searchString, limit, offset, orderBy, order);
+      simlets = await simletService.getSimletsByUserId(access.currentUserId, searchString, searchTags, limit, offset, orderBy, order);
       res.json(simlets.map(s => s.toJSON()));
     }
   } catch (err) {
@@ -84,7 +87,8 @@ export async function getAllSchedulerSimlets(
     const order = req.query.order;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    let simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, limit, offset, orderBy, order);
+    const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
+    let simlets = await simletService.getSimletsForStudent(access.currentUserId, searchString, searchTags, limit, offset, orderBy, order);
     res.json(simlets.map(s => s.toJSON()));
   } catch (err) {
     next(err);
@@ -97,10 +101,11 @@ export async function getSchedulerSimletCount(
   next: NextFunction
 ): Promise<void> {
   try {
-    const searchString = String(req.query.searchString || '');
+    const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    let count = await simletService.getSimletCountByUserId(true, searchString, access.currentUserId);
+    const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
+    let count = await simletService.getSimletCountByUserId(true, searchString, searchTags, access.currentUserId);
     res.json({ count });
   } catch (err) {
     next(err);
@@ -115,14 +120,15 @@ export async function getSimletCount(
   try {
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    const searchString = String(req.query.searchString || '');
+    const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
+    const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
     let count;
     if (access.is_admin) {
-      count = await simletService.getSimletCountByUserId(false, searchString);
+      count = await simletService.getSimletCountByUserId(false, searchString, searchTags);
       logger.debug({count} , "Simlet count retrieved for admin");
       res.json({ count });
     } else if (!access.allocated) {
-      count = await simletService.getSimletCountByUserId(false, searchString, access.currentUserId);
+      count = await simletService.getSimletCountByUserId(false, searchString, searchTags, access.currentUserId);
       logger.debug({count} , "Simlet count retrieved for non-allocated user");
       res.json({ count });
     } else {
@@ -383,4 +389,3 @@ export function getTrackerConfig(
     next(err);
   }
 }
-

@@ -129,8 +129,8 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_sessions_users_permissions 
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
-        LIMIT :limit OFFSET :offset 
         ORDER BY {{orderBy}} {{order}}
+        LIMIT :limit OFFSET :offset
         `,
         params: {
             simlet_id: {
@@ -165,7 +165,97 @@ const queries: Record<string, QueryTemplate> = {
           },
         },
   },
-
+  bySimletIdAndUserIdAndTagIds: {
+      description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions and filtered by tag IDs",
+      sql: `
+      SELECT *
+      FROM v_complete_sessions_users_permissions_tags
+      WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
+      AND tag_id IN (:tag_ids)
+      AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+      GROUP BY session_id
+      ORDER BY {{orderBy}} {{order}}
+      `,
+      params: {
+          simlet_id: {
+              type: "number",
+              required: true,
+              description: "Simlet Identifier",
+              example: 1,
+          },
+          current_user_id: {
+              type: "number",
+              required: true,
+              description: "User Identifier",
+              example: 123,
+          },
+          search: {
+            type: "string",
+            required: false,
+            description: "Search string to filter sessions by name or description",
+            example: "session",
+          },
+          tag_ids: {
+            type: "array",
+            of: "number",
+            required: true,
+            description: "List of tag IDs to filter sessions",
+            example: [1, 2, 3],
+          }
+      },
+  },
+  bySimletIdAndUserIdAndTagIdsWithPagination: {
+    description: "Get all Sessions and Users permissions of a SIMLET by its ID with user permissions and filtered by tag IDs",
+        sql: `
+        SELECT *
+        FROM v_complete_sessions_users_permissions_tags
+        WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
+        AND tag_id IN (:tag_ids)
+        AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+        GROUP BY session_id
+        ORDER BY {{orderBy}} {{order}}
+        LIMIT :limit OFFSET :offset 
+        `,
+        params: {
+            simlet_id: {
+                type: "number",
+                required: true,
+                description: "Simlet Identifier",
+                example: 1,
+            },
+            current_user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            search: {
+              type: "string",
+              required: false,
+              description: "Search string to filter sessions by name or description",
+              example: "session",
+            },
+            limit: {
+              type: "number",
+              required: true,
+              description: "Maximum number of sessions to return",
+              example: 10,
+            },
+            offset: {
+              type: "number",
+              required: true,
+              description: "Number of sessions to skip for pagination",
+              example: 20,
+            },
+            tag_ids: {
+              type: "array",
+              of: "number",
+              required: true,
+              description: "List of tag IDs to filter sessions",
+              example: [1, 2, 3],
+            }
+        },
+  },
   bySimletIdSessionIdAndUserId: {
     description: "Get current Session with users permissions of a SIMLET by its ID with user permissions",
     sql: `
@@ -242,6 +332,43 @@ const queries: Record<string, QueryTemplate> = {
               required: false,
               description: "Search string to filter simlets by name or description",
               example: "simlet",
+            },
+        },
+    },
+    countBySimletIdAndUserIdAndTagIds: {
+        description: "Get the count of sessions for a certain User ID and tag IDs",
+        sql: `
+      SELECT COUNT(DISTINCT session_id) as count
+        FROM v_complete_sessions_users_permissions_tags
+        WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
+        AND tag_id IN (:tag_ids)
+        AND (:searchString IS NULL OR session_name LIKE '%' || :searchString || '%')
+        `,
+        params: {
+            current_user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            simlet_id: {
+                type: "number",
+                required: true,
+                description: "Simlet Identifier",
+                example: 1,
+            },
+            searchString: {
+              type: "string",
+              required: false,
+              description: "Search string to filter simlets by name or description",
+              example: "simlet",
+            },
+            tag_ids: {
+              type: "array",
+              of: "number",
+              required: true,
+              description: "List of tag IDs to filter sessions",
+              example: [1, 2, 3],
             },
         },
     },

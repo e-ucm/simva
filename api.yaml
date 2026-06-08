@@ -387,7 +387,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
-        - $ref: '#/components/parameters/searchTag'
+        - $ref: '#/components/parameters/searchTags'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/orderBy'
@@ -453,7 +453,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
-        - $ref: '#/components/parameters/searchTag'
+        - $ref: '#/components/parameters/searchTags'
   /simlets/scheduler:
     get:
       tags:
@@ -483,7 +483,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
-        - $ref: '#/components/parameters/searchTag'
+        - $ref: '#/components/parameters/searchTags'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/orderBy'
@@ -515,7 +515,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/searchString'
-        - $ref: '#/components/parameters/searchTag'
+        - $ref: '#/components/parameters/searchTags'
   /simlets/import:
     post:
         tags:
@@ -1349,7 +1349,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/searchString'
-        - $ref: '#/components/parameters/searchTag'
+        - $ref: '#/components/parameters/searchTags'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/orderBy'
@@ -1417,7 +1417,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/searchString'
-        - $ref: '#/components/parameters/searchTag'
+        - $ref: '#/components/parameters/searchTags'
   /simlets/{simletid}/participants:
     get:
       tags:
@@ -4421,9 +4421,9 @@ components:
       required: false
       schema:
         type: string
-    searchTag:
+    searchTags:
       in: query
-      name: searchTag
+      name: searchTags
       description: pass an optional tag for result filtering
       required: false
       schema:

@@ -126,28 +126,107 @@ const queries: Record<string, QueryTemplate> = {
     `,
     params: {
       current_user_id: {
-      type: "number",
-      required: true,
-      description: "User Identifier",
-      example: 123,
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
       },
       search: {
-      type: "string",
-      required: false,
-      description: "Search string to filter simlets by name or description",
-      example: "math",
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
       },
       limit: {
-      type: "number",
-      required: true,
-      description: "Maximum number of simlets to return",
-      example: 10,
+        type: "number",
+        required: true,
+        description: "Maximum number of simlets to return",
+        example: 10,
       },
       offset: {
-      type: "number",
-      required: true,
-      description: "Number of simlets to skip for pagination",
-      example: 20,
+        type: "number",
+        required: true,
+        description: "Number of simlets to skip for pagination",
+        example: 20,
+      },
+    },
+  },
+  byUserIdAndTagIds: {
+    description: "Get all SIMLETs for a certain User and Tag",
+    sql: `
+      SELECT *
+      FROM v_complete_simlets_users_permissions_tags
+      WHERE current_user_id = :current_user_id
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      AND tag_id IN (:tag_ids)
+      GROUP BY simlet_id
+      ORDER BY {{orderBy}} {{order}}
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+      tag_ids: {
+        type: "array",
+        of: "number",
+        required: true,
+        description: "List of tag IDs to filter simlets",
+        example: [1, 2, 3],
+      },
+    },
+  },
+  byUserIdAndTagIdsWithPagination: {
+    description: "Get all SIMLETs for a certain User and Tag with pagination and search",
+    sql: `
+      SELECT *
+      FROM v_complete_simlets_users_permissions_tags
+      WHERE current_user_id = :current_user_id
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      AND tag_id IN (:tag_ids)
+      GROUP BY simlet_id
+      ORDER BY {{orderBy}} {{order}}
+      LIMIT :limit OFFSET :offset 
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+      limit: {
+        type: "number",
+        required: true,
+        description: "Maximum number of simlets to return",
+        example: 10,
+      },
+      offset: {
+        type: "number",
+        required: true,
+        description: "Number of simlets to skip for pagination",
+        example: 20,
+      },
+      tag_ids: {
+        type: "array",
+        of: "number",
+        required: true,
+        description: "List of tag IDs to filter simlets",
+        example: [1, 2, 3],
       },
     },
   },
@@ -187,28 +266,107 @@ const queries: Record<string, QueryTemplate> = {
     `,
     params: {
       current_user_id: {
-      type: "number",
-      required: true,
-      description: "User Identifier",
-      example: 123,
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
       },
       search: {
-      type: "string",
-      required: false,
-      description: "Search string to filter simlets by name or description",
-      example: "math",
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
       },
       limit: {
-      type: "number",
-      required: true,
-      description: "Maximum number of simlets to return",
-      example: 10,
+        type: "number",
+        required: true,
+        description: "Maximum number of simlets to return",
+        example: 10,
       },
       offset: {
-      type: "number",
-      required: true,
-      description: "Number of simlets to skip for pagination",
-      example: 20,
+        type: "number",
+        required: true,
+        description: "Number of simlets to skip for pagination",
+        example: 20,
+      },
+    },
+  },
+  ByAllocatedUserIdAndTagIds: {
+    description: "Get all SIMLETs for a certain Allocated User and Tag",
+    sql: `
+      SELECT *
+      FROM v_complete_simlet_allocation_participants_tags
+      WHERE allocated_user_id = :current_user_id
+      AND tag_id IN (:tag_ids)
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      GROUP BY simlet_id
+      ORDER BY {{orderBy}} {{order}}
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+      tag_ids: {
+        type: "array",
+        of: "number",
+        required: true,
+        description: "List of tag IDs to filter simlets",
+        example: [1, 2, 3],
+      },
+    },
+  },
+  byAllocatedUserIdAndTagIdsWithPagination: {
+    description: "Get all SIMLETs for a certain Allocated User with pagination and search",
+    sql: `
+      SELECT *
+      FROM v_complete_simlet_allocation_participants_tags
+      WHERE allocated_user_id = :current_user_id
+      AND tag_id IN (:tag_ids)
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      GROUP BY simlet_id
+      ORDER BY {{orderBy}} {{order}}
+      LIMIT :limit OFFSET :offset 
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+      limit: {
+        type: "number",
+        required: true,
+        description: "Maximum number of simlets to return",
+        example: 10,
+      },
+      offset: {
+        type: "number",
+        required: true,
+        description: "Number of simlets to skip for pagination",
+        example: 20,
+      },
+      tag_ids: {
+        type: "array",
+        of: "number",
+        required: true,
+        description: "List of tag IDs to filter simlets",
+        example: [1, 2, 3],
       },
     },
   },
@@ -257,6 +415,37 @@ const queries: Record<string, QueryTemplate> = {
       },
     },
   },
+  countByUserIdAndTagIds: {
+    description: "Get count of SIMLETs for a certain User with search and tag filtering",
+    sql: `
+      SELECT COUNT(DISTINCT simlet_id) as count
+      FROM v_complete_simlets_users_permissions_tags
+      WHERE current_user_id = :current_user_id
+      AND tag_id IN (:tag_ids)
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+      tag_ids: {
+        type: "array",
+        of: "number",
+        required: true,
+        description: "List of tag IDs to filter simlets",
+        example: [1, 2, 3],
+      },
+    },
+  },
   allocationCount: {
     description: "Get count of SIMLETs with allocated participants for a certain User with search",
     sql: `
@@ -293,6 +482,37 @@ const queries: Record<string, QueryTemplate> = {
         required: false,
         description: "Search string to filter simlets by name or description",
         example: "math",
+      },
+    },
+  },
+  countByAllocatedUserIdAndTagIds: {
+    description: "Get count of SIMLETs for a certain Allocated User with search and tag filtering",
+    sql: `
+      SELECT COUNT(DISTINCT simlet_id) as count
+      FROM v_complete_simlet_allocation_participants_tags
+      WHERE allocated_user_id = :current_user_id
+      AND tag_id IN (:tag_ids)
+      AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+    `,
+    params: {
+      current_user_id: {
+        type: "number",
+        required: true,
+        description: "User Identifier",
+        example: 123,
+      },
+      search: {
+        type: "string",
+        required: false,
+        description: "Search string to filter simlets by name or description",
+        example: "math",
+      },
+      tag_ids: {
+        type: "array",
+        of: "number",
+        required: true,
+        description: "List of tag IDs to filter simlets",
+        example: [1, 2, 3],
       },
     },
   },

@@ -41,9 +41,9 @@ import { db } from "@/lib/db";
  * sessions.forEach(s => logger.info(s.name, s.open_date, s.close_date));
  * ```
  */
-export async function getSimletSessions(simletId: number, is_admin: boolean, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string, current_user_id?: number): Promise<Session[]> {
+export async function getSimletSessions(simletId: number, is_admin: boolean, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string, current_user_id?: number): Promise<Session[]> {
   let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
-  return await simlet.getSessions(searchString, limit, offset, orderBy, order);
+  return await simlet.getSessions(searchString, searchTags, limit, offset, orderBy, order);
 }
 
 /**
@@ -64,8 +64,8 @@ export async function getSimletSessions(simletId: number, is_admin: boolean, sea
  * logger.info(`Found ${sessionCount} test sessions`);
  * ```
  */
-export async function getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString: string): Promise<number> {
-  return await Simlet.getSimletSessionCountByUserId(simlet_id, current_user_id, searchString);
+export async function getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString?: string, searchTags?: number[]): Promise<number> {
+  return await Simlet.getSimletSessionCountByUserId(simlet_id, current_user_id, searchString, searchTags);
 }
 
 /**

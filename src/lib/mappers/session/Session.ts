@@ -227,25 +227,44 @@ export class Session {
         return "ASC";
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string, orderBy?: string, order?: string): Promise<Session[]> {
+    static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string, searchTags?: number[], orderBy?: string, order?: string): Promise<Session[]> {
         let sessions;
         if(current_user_id) {
             if(limit !== undefined && offset !== undefined) {
-                sessions = await db.Functions.runViewQuery( 
-                    db.Views.Session.bySimletIdAndUserIdWithPagination, 
-                    { simlet_id, current_user_id, search: searchString, limit, offset }, 
-                    Session.getOrderNameColumn(orderBy),
-                    Session.getOrder(order)
-                ); 
+                if(searchTags && searchTags.length > 0) {
+                    sessions = await db.Functions.runViewQuery(
+                        db.Views.Session.bySimletIdAndUserIdAndTagIdsWithPagination,
+                        { simlet_id, current_user_id, search: searchString, tag_ids: searchTags, limit, offset },
+                        Session.getOrderNameColumn(orderBy),
+                        Session.getOrder(order)
+                    );
+                } else {
+                    sessions = await db.Functions.runViewQuery( 
+                        db.Views.Session.bySimletIdAndUserIdWithPagination, 
+                        { simlet_id, current_user_id, search: searchString, limit, offset }, 
+                        Session.getOrderNameColumn(orderBy),
+                        Session.getOrder(order)
+                    ); 
+                }
             } else {
-                sessions = await db.Functions.runViewQuery(
-                    db.Views.Session.bySimletIdAndUserId,
-                    { simlet_id, current_user_id, search: searchString },
-                    Session.getOrderNameColumn(orderBy),
-                    Session.getOrder(order)
-                );
+                if(searchTags && searchTags.length > 0) {
+                    sessions = await db.Functions.runViewQuery(
+                        db.Views.Session.bySimletIdAndUserIdAndTagIds,
+                        { simlet_id, current_user_id, search: searchString, tag_ids: searchTags },  
+                        Session.getOrderNameColumn(orderBy),
+                        Session.getOrder(order)
+                    );
+                } else {
+                    sessions = await db.Functions.runViewQuery(
+                        db.Views.Session.bySimletIdAndUserId,
+                        { simlet_id, current_user_id, search: searchString },
+                        Session.getOrderNameColumn(orderBy),
+                        Session.getOrder(order)
+                    );
+                }
             }
         } else {
+            // TODO : add search tag filtering for admin user as well
             sessions = await db.Tables.Sessions.findAll({
                 where : { 
                     simlet_id: simlet_id,

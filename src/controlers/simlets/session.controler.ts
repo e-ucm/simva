@@ -14,7 +14,7 @@ import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { logger } from "@/lib/logger";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
-import { ParsedQs } from "qs";
+import { splitSearchTags } from "@/controlers/simlets/helpers";
 
 export async function getSimletSessions(
   req: AuthenticatedRequest,
@@ -22,25 +22,26 @@ export async function getSimletSessions(
   next: NextFunction
 ): Promise<void> {
   try {
-    const searchString = String(req.query.searchString || '');
+    const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
+    const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
     let offset;
     if(limit !== undefined && req.query.skip === undefined) {
         offset = 0;
     } else {
-        offset = parseInt(req.query.skip as string)|| undefined;
+        offset = parseInt(req.query.skip as string);
     }
     const simletId = parseInt(req.params.simlet_id as string);
     const orderBy = req.query.orderBy ? String(req.query.orderBy) : undefined;
     const order = req.query.order ? String(req.query.order) : undefined;
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    logger.debug({simletId, userId: currentUser?.user_id} , "Getting sessions for simlet ID and user ID");
+    logger.debug({simletId, userId: currentUser?.user_id, searchString, searchTags, limit, offset, orderBy, order} , "Getting sessions for simlet ID and user ID");
     let sessions;
     if (access.is_admin) {
-      sessions = await sessionService.getSimletSessions(simletId, true, searchString, limit, offset, orderBy, order);
+      sessions = await sessionService.getSimletSessions(simletId, true, searchString, searchTags, limit, offset, orderBy, order);
     } else if (!access.allocated) {
-      sessions = await sessionService.getSimletSessions(simletId, false, searchString, limit, offset, orderBy, order, access.currentUserId);
+      sessions = await sessionService.getSimletSessions(simletId, false, searchString, searchTags, limit, offset, orderBy, order, access.currentUserId);
     } else {
       throw new AuthentificationError("Invalid user role");
     }
@@ -59,11 +60,12 @@ export async function getSimletSessionCount(
   try {
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    const searchString = String(req.query.searchString || '');
+    const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
+    const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
     const simlet_id = parseInt(req.params.simlet_id as string);
     let count;
     if (access.is_admin || !access.allocated) {
-      count = await sessionService.getSimletSessionCountByUserId(simlet_id, access.currentUserId, searchString);
+      count = await sessionService.getSimletSessionCountByUserId(simlet_id, access.currentUserId, searchString, searchTags);
       res.json({ count });
     } else {
       throw new AuthentificationError("Invalid user role");

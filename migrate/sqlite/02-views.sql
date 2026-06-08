@@ -136,6 +136,17 @@ FROM SIMLETs sim
 LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
 LEFT JOIN vv_user_permissions up ON sim.simlet_id = up.object_id AND up.object_type = "SIMLET";
 
+DROP VIEW IF EXISTS v_complete_simlets_users_permissions_tags;
+CREATE VIEW v_complete_simlets_users_permissions_tags AS
+    SELECT 
+        st.tag_id, 
+        st.tag_name, 
+        st.tag_color,
+        st.tag_visible_permission,
+        sup.*
+    FROM v_simlet_tags st
+    LEFT JOIN v_complete_simlets_users_permissions sup ON st.simlet_id = sup.simlet_id AND st.tag_visible_user_id = sup.current_user_id;
+
 DROP VIEW IF EXISTS v_simlet_sessions_users_permissions;
 CREATE VIEW v_simlet_sessions_users_permissions AS
 SELECT 
@@ -171,6 +182,17 @@ SELECT
 FROM Sessions ses
 LEFT JOIN vv_user_permissions up ON ses.session_id = up.object_id AND up.object_type = "SESSION"
 LEFT JOIN Users u ON ses.session_sandbox_user_id = u.user_id;
+
+DROP VIEW IF EXISTS v_complete_sessions_users_permissions_tags;
+CREATE VIEW v_complete_sessions_users_permissions_tags AS
+    SELECT 
+        st.tag_id, 
+        st.tag_name, 
+        st.tag_color,
+        st.tag_visible_permission,
+        sup.*
+    FROM v_simlet_tags st
+    LEFT JOIN v_complete_sessions_users_permissions sup ON st.simlet_id = sup.simlet_id AND st.session_id = sup.session_id AND st.tag_visible_user_id = sup.current_user_id;
 
 DROP VIEW IF EXISTS v_complete_activities_users_permissions;
 CREATE VIEW v_complete_activities_users_permissions AS
@@ -274,15 +296,30 @@ SELECT
     ap.token as allocated_token,
     ap.simlet_id,
     s.simlet_name,
+    s.simlet_description,
     s.createdAt,
     s.updatedAt,
-    s.simlet_description,
+    ses.session_id as allocated_session_id,
+    ses.session_name,
     shlink.short_url
 FROM v_complete_allocation_participants ap
 LEFT JOIN SIMLETs s ON ap.simlet_id = s.simlet_id
 LEFT JOIN Sessions ses ON ap.session_id = ses.session_id
 LEFT JOIN SIMLETs_shlinks shlink ON s.simlet_id = shlink.simlet_id
 WHERE s.simlet_id IS NOT NULL AND ses.session_status = 'active';
+
+DROP VIEW IF EXISTS v_complete_session_allocation_participants_tags;
+CREATE VIEW v_complete_session_allocation_participants_tags AS
+    SELECT 
+        st.tag_id, 
+        st.tag_name, 
+        st.tag_color,
+        st.tag_visible_permission,
+        sup.*
+    FROM v_simlet_tags st
+    LEFT JOIN v_complete_simlet_allocation_participants sup 
+    ON st.simlet_id = sup.simlet_id and st.session_id = sup.allocated_session_id AND st.tag_visible_user_id = sup.allocated_user_id
+    WHERE sup.allocated_session_id IS NOT NULL;
 
 DROP VIEW IF EXISTS v_complete_activity_allocation_participants;
 CREATE VIEW v_complete_activity_allocation_participants AS

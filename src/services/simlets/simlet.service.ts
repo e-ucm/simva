@@ -39,8 +39,8 @@ import { SessionScheduler } from "@/lib/mappers/session/SessionScheduler";
  * const userSimlets = await getSimletsByUserId(123);
  * ```
  */
-export async function getSimletsByUserId(user_id: number, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
-  return await Simlet.getAllFromDbData(user_id, false, searchString, limit, offset, orderBy, order);
+export async function getSimletsByUserId(user_id: number, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAllFromDbData(user_id, false, searchString, limit, offset, searchTags, orderBy, order);
 }
 
 /**
@@ -54,12 +54,12 @@ export async function getSimletsByUserId(user_id: number, searchString?: string,
  * @param {number} offset - Optional offset for pagination
  * @returns {Promise<Simlet[]>} Array of simlet records accessible to the student
  */
-export async function getSimletsForStudent(current_user_id: number, searchString: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
-  return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset, orderBy, order);
+export async function getSimletsForStudent(current_user_id: number, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset, searchTags, orderBy, order);
 }
 
-export async function getAllSimlets(searchString: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
-  return await Simlet.getAdminSimlets(searchString, limit, offset, orderBy, order);
+export async function getAllSimlets(searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAdminSimlets(searchString, searchTags, limit, offset, orderBy, order);
 }
 
 /**
@@ -183,6 +183,7 @@ export async function getSimletParticipants(simletId: number, is_admin: boolean,
  * @function getSimletCountByUserId
  * @param {number} current_user_id - The ID of the user requesting simlet count
  * @param {string} searchString - Optional search string to filter simlets
+ * @param {number[]} searchTags - Optional array of tag IDs to filter simlets
  * @returns {Promise<number>} The total number of accessible simlets
  * @throws {Error} If database query fails
  * 
@@ -192,8 +193,8 @@ export async function getSimletParticipants(simletId: number, is_admin: boolean,
  * logger.info(`Found ${totalSimlets} experiment simlets`);
  * ```
  */
-export async function getSimletCountByUserId(allocated: boolean, searchString: string, current_user_id?: number): Promise<number> {
-  return await Simlet.getSimletCountByUserId(allocated, searchString, current_user_id);
+export async function getSimletCountByUserId(allocated: boolean, searchString?: string, searchTags?: number[], current_user_id?: number): Promise<number> {
+  return await Simlet.getSimletCountByUserId(allocated, searchString, searchTags, current_user_id);
 }
 
 /**

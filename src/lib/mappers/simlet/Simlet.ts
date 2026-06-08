@@ -145,7 +145,8 @@ export class Simlet {
         this.tags = await SessionTagList.getSessionsTags(this.sessions, effectiveUserId);
     }
     
-    static async getAdminSimlets(searchString: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+    static async getAdminSimlets(searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+        // TODO : add search tag filtering for admin user as well
       let results = await db.Tables.Simlets.findAll({
         where: searchString ? { simlet_name: { [Op.like]: `%${searchString}%` } } : undefined,
         limit: limit !== undefined ? limit : undefined,
@@ -187,39 +188,75 @@ export class Simlet {
         return "ASC";
     }
 
-    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString?: string, limit?: number, offset?: number, searchTag?: number[], orderBy?: string, order?: string): Promise<Simlet[]> {
           let results;
           if(allocated_user) {
             if(limit !== undefined && offset !== undefined) {
-                results = await db.Functions.runViewQuery(
-                    db.Views.Simlet.byAllocatedUserIdWithPagination,
-                    { current_user_id, limit, offset, search: searchString },
-                    Simlet.getOrderNameColumn(orderBy),
-                    Simlet.getOrder(order)
-                );
+                if(searchTag) {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.byAllocatedUserIdAndTagIdsWithPagination,
+                        { current_user_id, limit, offset, search: searchString, tag_ids: searchTag },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                } else {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.byAllocatedUserIdWithPagination,
+                        { current_user_id, limit, offset, search: searchString },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                }
             } else {
-                results = await db.Functions.runViewQuery(
-                    db.Views.Simlet.ByAllocatedUserId,
-                    { current_user_id, search: searchString },
-                    Simlet.getOrderNameColumn(orderBy),
-                    Simlet.getOrder(order)
-            );
+                if(searchTag) {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.byAllocatedUserIdAndTagIds,
+                        { current_user_id, search: searchString, tag_ids: searchTag },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                } else {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.ByAllocatedUserId,
+                        { current_user_id, search: searchString },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                }
             }
         } else {
             if(limit !== undefined && offset !== undefined) {
-                results = await db.Functions.runViewQuery(
-                    db.Views.Simlet.byUserIdWithPagination,
-                    { current_user_id, limit, offset, search: searchString },
-                    Simlet.getOrderNameColumn(orderBy),
-                    Simlet.getOrder(order)
-                );
+                if(searchTag) {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.byUserIdAndTagIdsWithPagination,
+                        { current_user_id, limit, offset, search: searchString, tag_ids: searchTag },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                } else {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.byUserIdWithPagination,
+                        { current_user_id, limit, offset, search: searchString },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                }
             } else {
-                results = await db.Functions.runViewQuery(
-                    db.Views.Simlet.byUserId,
-                    { current_user_id, search: searchString },
-                    Simlet.getOrderNameColumn(orderBy),
-                    Simlet.getOrder(order)
-                );
+                if(searchTag) {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.byUserIdAndTagIds,
+                        { current_user_id, search: searchString, tag_ids: searchTag },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                } else {
+                    results = await db.Functions.runViewQuery(
+                        db.Views.Simlet.byUserId,
+                        { current_user_id, search: searchString },
+                        Simlet.getOrderNameColumn(orderBy),
+                        Simlet.getOrder(order)
+                    );
+                }
             }
         }
         logger.debug({results} , "getSimletsByUserId results");
@@ -271,32 +308,56 @@ export class Simlet {
         return simlet;
     }
 
-    static async getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString: string): Promise<number> {
-        const results = await db.Functions.runViewQuery(
-            db.Views.Session.countBySimletIdAndUserId, 
-            { simlet_id, current_user_id, search: searchString }
-        );
+    static async getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString?: string, searchTags?: number[]): Promise<number> {
+        let results;
+        if(searchTags && searchTags.length > 0) {
+            results = await db.Functions.runViewQuery(
+                db.Views.Session.countBySimletIdAndUserIdAndTagIds,
+                { simlet_id, current_user_id, search: searchString, tag_ids: searchTags }
+            );
+        } else {
+            results = await db.Functions.runViewQuery(
+                db.Views.Session.countBySimletIdAndUserId,
+                { simlet_id, current_user_id, search: searchString }
+            );
+        }
         if(results.length === 0){
             throw new NotFoundError(`Simlet ID ${simlet_id} not found for user ID ${current_user_id}.`);
         }
         return results[0].count;
     }
 
-    static async getSimletCountByUserId(allocated: boolean, searchString: string, current_user_id?: number): Promise<number> {
+    static async getSimletCountByUserId(allocated: boolean, searchString?: string, searchTags?: number[], current_user_id?: number): Promise<number> {
         let results, count;
         if(allocated) {
             if(!current_user_id) {
-                results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCount, { search: searchString });
+                if(searchTags && searchTags.length > 0) {
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCountByTagIds, { search: searchString, tag_ids: searchTags });
+                } else {
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCount, { search: searchString });
+                }
             } else {
-                results = await db.Functions.runViewQuery(db.Views.Simlet.countByAllocatedUserId, { current_user_id, search: searchString });
+                if(searchTags && searchTags.length > 0) {
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByAllocatedUserIdAndTagIds, { current_user_id, search: searchString, tag_ids: searchTags });
+                } else {
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByAllocatedUserId, { current_user_id, search: searchString });
+                }
             }
             count = results[0].count;
         } else {
-        if(current_user_id) {
-                results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
+            if(current_user_id) {
+                if(searchTags && searchTags.length > 0) {
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserIdAndTagIds, { current_user_id, search: searchString, tag_ids: searchTags });
+                } else {
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
+                }
                 count = results[0].count;
             } else {
-                results = await db.Tables.Simlets.count({ where: { simlet_name: { [Op.like]: `%${searchString}%` } } });
+                if(searchTags && searchTags.length > 0) {
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByTagIds, { search: searchString, tag_ids: searchTags });
+                } else {
+                    results = await db.Tables.Simlets.count({ where: { simlet_name: { [Op.like]: `%${searchString}%` } } });
+                }
                 count = results;
             }
         }
@@ -560,8 +621,8 @@ export class Simlet {
         return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id, searchString, limit, offset, orderBy, order);
     }
 
-    async getSessions(searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Session[]> {
-        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString, orderBy, order);
+    async getSessions(searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Session[]> {
+        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString, searchTags, orderBy, order);
     }
 
     async getSession(sessionId: number): Promise<Session> {  
