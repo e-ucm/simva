@@ -199,6 +199,8 @@ export async function getSimletGroupParticipantsCount(
       } else {
         throw new AuthentificationError("Invalid user role");
       }
+      logger.debug({count} , "Total participant count retrieved for simlet ID");
+      res.json(count);
     } else {
       if (access.is_admin) {
         count = await simletGroupsService.getSimletGroupParticipantsCount(simletId, groupId, true);
@@ -207,10 +209,9 @@ export async function getSimletGroupParticipantsCount(
       } else {
         throw new AuthentificationError("Invalid user role");
       }
+      logger.debug({count} , "Participant count retrieved for simlet ID and group ID");
+      res.json({count});
     }
-
-    logger.debug({count} , "Participant count retrieved for simlet ID and group ID");
-    res.json({count});
   } catch (err) {
     next(err);
   }

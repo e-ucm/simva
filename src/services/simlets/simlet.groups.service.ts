@@ -113,13 +113,13 @@ export async function getSimletGroupParticipantsCount(simletId: number, groupId:
   return await simlet.getGroupParticipantsCount(groupId);
 }
 
-export async function getTotalSimletGroupParticipantsCount(simletId: number, is_admin: boolean, current_user_id?: number) : Promise<number> {
+export async function getTotalSimletGroupParticipantsCount(simletId: number, is_admin: boolean, current_user_id?: number) : Promise<Record<number, number>> {
   const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
-  let groups : { [key: number]: number } = {};
-  for await (const group of simlet.groups) {
-    groups[group] = await simlet.getGroupParticipantsCount(group);
+  const counts: Record<number, number> = {};
+  for (const groupId of simlet.groups) {
+    counts[groupId] = await simlet.getGroupParticipantsCount(groupId);
   }
-  return Object.values(groups).reduce((total, count) => total + count, 0);
+  return counts;
 } 
 
 export async function getSimletGroupById(simletId: number, groupId: number, is_admin: boolean, current_user_id?: number) : Promise<SimletGroup> {

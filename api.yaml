@@ -1151,7 +1151,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/countMapper'
+                $ref: '#/components/schemas/totalCountMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -5157,6 +5157,11 @@ components:
         count:
           type: integer
           example: 123
+    totalCountMapper:
+      type: object
+      additionalProperties:
+        type: integer
+        example: 123
     tagsCreation:
       allOf:
       - $ref: '#/components/schemas/tags'
