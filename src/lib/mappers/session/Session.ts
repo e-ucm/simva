@@ -227,21 +227,21 @@ export class Session {
         return "ASC";
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, searchString?: string, searchTags?: number[], orderBy?: string, order?: string): Promise<Session[]> {
+    static async getAllFromDbData(simlet_id: number, current_user_id?: number, limit?: number, offset?: number, status?: string, searchString?: string, searchTags?: number[], orderBy?: string, order?: string): Promise<Session[]> {
         let sessions;
         if(current_user_id) {
             if(limit !== undefined && offset !== undefined) {
                 if(searchTags && searchTags.length > 0) {
                     sessions = await db.Functions.runViewQuery(
                         db.Views.Session.bySimletIdAndUserIdAndTagIdsWithPagination,
-                        { simlet_id, current_user_id, search: searchString, tag_ids: searchTags, limit, offset },
+                        { simlet_id, current_user_id, session_status: status, search: searchString, tag_ids: searchTags, limit, offset },
                         Session.getOrderNameColumn(orderBy),
                         Session.getOrder(order)
                     );
                 } else {
                     sessions = await db.Functions.runViewQuery( 
                         db.Views.Session.bySimletIdAndUserIdWithPagination, 
-                        { simlet_id, current_user_id, search: searchString, limit, offset }, 
+                        { simlet_id, current_user_id, session_status: status, search: searchString, limit, offset }, 
                         Session.getOrderNameColumn(orderBy),
                         Session.getOrder(order)
                     ); 
@@ -250,14 +250,14 @@ export class Session {
                 if(searchTags && searchTags.length > 0) {
                     sessions = await db.Functions.runViewQuery(
                         db.Views.Session.bySimletIdAndUserIdAndTagIds,
-                        { simlet_id, current_user_id, search: searchString, tag_ids: searchTags },  
+                        { simlet_id, current_user_id, session_status: status, search: searchString, tag_ids: searchTags },  
                         Session.getOrderNameColumn(orderBy),
                         Session.getOrder(order)
                     );
                 } else {
                     sessions = await db.Functions.runViewQuery(
                         db.Views.Session.bySimletIdAndUserId,
-                        { simlet_id, current_user_id, search: searchString },
+                        { simlet_id, current_user_id, session_status: status, search: searchString },
                         Session.getOrderNameColumn(orderBy),
                         Session.getOrder(order)
                     );
@@ -268,7 +268,8 @@ export class Session {
             sessions = await db.Tables.Sessions.findAll({
                 where : { 
                     simlet_id: simlet_id,
-                    session_name : { [Op.like]: `%${searchString}%`}
+                    session_name : searchString != undefined ? { [Op.like]: `%${searchString}%`} : undefined,
+                    session_status : status != undefined ? status : undefined,
                 },
                 limit : limit !== undefined ? limit : undefined,
                 offset: offset !== undefined ? offset : undefined,
@@ -284,6 +285,25 @@ export class Session {
             await sessionInstance.init();
             return sessionInstance;
         }));
+    }
+
+    static async getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, status?: string, searchString?: string, searchTags?: number[]): Promise<number> {
+        let results;
+        if(searchTags && searchTags.length > 0) {
+            results = await db.Functions.runViewQuery(
+                db.Views.Session.countBySimletIdAndUserIdAndTagIds,
+                { simlet_id, current_user_id, session_status: status, search: searchString, tag_ids: searchTags }
+            );
+        } else {
+            results = await db.Functions.runViewQuery(
+                db.Views.Session.countBySimletIdAndUserId,
+                { simlet_id, current_user_id, session_status: status, search: searchString }
+            );
+        }
+        if(results.length === 0){
+            throw new NotFoundError(`Simlet ID ${simlet_id} not found for user ID ${current_user_id}.`);
+        }
+        return results[0].count;
     }
 
     static async getFromDbData(simlet_id: number, session_id: number, is_admin: boolean, current_user_id?: number) : Promise<Session> {

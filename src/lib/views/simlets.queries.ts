@@ -97,6 +97,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       ORDER BY {{orderBy}} {{order}}
     `,
     params: {
@@ -112,6 +113,12 @@ const queries: Record<string, QueryTemplate> = {
         description: "Search string to filter simlets by name or description",
         example: "math",
       },
+      simlet_archived: {
+        type: "boolean",
+        required: false,
+        description: "Filter simlets by archived status",
+        example: false,
+      },
     },
   },
   byUserIdWithPagination: {
@@ -121,6 +128,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
+      AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
     `,
@@ -136,6 +144,12 @@ const queries: Record<string, QueryTemplate> = {
         required: false,
         description: "Search string to filter simlets by name or description",
         example: "math",
+      },
+      simlet_archived: {
+        type: "boolean",
+        required: false,
+        description: "Filter simlets by archived status",
+        example: false,
       },
       limit: {
         type: "number",
@@ -159,6 +173,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       AND tag_id IN (:tag_ids)
+      AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       GROUP BY simlet_id
       ORDER BY {{orderBy}} {{order}}
     `,
@@ -182,6 +197,12 @@ const queries: Record<string, QueryTemplate> = {
         description: "List of tag IDs to filter simlets",
         example: [1, 2, 3],
       },
+      simlet_archived: {
+        type: "boolean",
+        required: false,
+        description: "Filter simlets by archived status",
+        example: false,
+      }
     },
   },
   byUserIdAndTagIdsWithPagination: {
@@ -192,6 +213,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       AND tag_id IN (:tag_ids)
+      AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       GROUP BY simlet_id
       ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
@@ -202,6 +224,12 @@ const queries: Record<string, QueryTemplate> = {
         required: true,
         description: "User Identifier",
         example: 123,
+      },
+      simlet_archived: {
+        type: "boolean",
+        required: false,
+        description: "Filter simlets by archived status",
+        example: false,
       },
       search: {
         type: "string",
@@ -398,6 +426,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT COUNT(*) as count
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id
+      AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
     `,
     params: {
@@ -412,6 +441,12 @@ const queries: Record<string, QueryTemplate> = {
         required: false,
         description: "Search string to filter simlets by name or description",
         example: "math",
+      },
+      simlet_archived: {
+        type: "boolean",
+        required: false,
+        description: "Filter simlets by archived status",
+        example: false,
       },
     },
   },
@@ -422,6 +457,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlets_users_permissions_tags
       WHERE current_user_id = :current_user_id
       AND tag_id IN (:tag_ids)
+      AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
     `,
     params: {
@@ -436,6 +472,12 @@ const queries: Record<string, QueryTemplate> = {
         required: false,
         description: "Search string to filter simlets by name or description",
         example: "math",
+      },
+      simlet_archived: {
+        type: "boolean",
+        required: false,
+        description: "Filter simlets by archived status",
+        example: false,
       },
       tag_ids: {
         type: "array",

@@ -145,10 +145,13 @@ export class Simlet {
         this.tags = await SessionTagList.getSessionsTags(this.sessions, effectiveUserId);
     }
     
-    static async getAdminSimlets(searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+    static async getAdminSimlets(archived?: boolean, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
         // TODO : add search tag filtering for admin user as well
-      let results = await db.Tables.Simlets.findAll({
-        where: searchString ? { simlet_name: { [Op.like]: `%${searchString}%` } } : undefined,
+      let results = await db.Tables.Simlets.findAll({ // TODO simlet_archived or null to take in account
+        where: { 
+            simlet_name: searchString != undefined  ? { [Op.like]: `%${searchString}%` } : undefined,
+            simlet_archived : archived != undefined ? archived : undefined, 
+        },
         limit: limit !== undefined ? limit : undefined,
         offset: offset !== undefined ? offset : undefined,
         order: [[Simlet.getOrderNameColumn(orderBy), Simlet.getOrder(order)]]
@@ -188,7 +191,7 @@ export class Simlet {
         return "ASC";
     }
 
-    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, searchString?: string, limit?: number, offset?: number, searchTag?: number[], orderBy?: string, order?: string): Promise<Simlet[]> {
+    static async getAllFromDbData(current_user_id: number, allocated_user: boolean, archived?: boolean, searchString?: string, limit?: number, offset?: number, searchTag?: number[], orderBy?: string, order?: string): Promise<Simlet[]> {
           let results;
           if(allocated_user) {
             if(limit !== undefined && offset !== undefined) {
@@ -229,14 +232,14 @@ export class Simlet {
                 if(searchTag) {
                     results = await db.Functions.runViewQuery(
                         db.Views.Simlet.byUserIdAndTagIdsWithPagination,
-                        { current_user_id, limit, offset, search: searchString, tag_ids: searchTag },
+                        { current_user_id, limit, offset, search: searchString, tag_ids: searchTag, simlet_archived: archived },
                         Simlet.getOrderNameColumn(orderBy),
                         Simlet.getOrder(order)
                     );
                 } else {
                     results = await db.Functions.runViewQuery(
                         db.Views.Simlet.byUserIdWithPagination,
-                        { current_user_id, limit, offset, search: searchString },
+                        { current_user_id, limit, offset, search: searchString, simlet_archived: archived },
                         Simlet.getOrderNameColumn(orderBy),
                         Simlet.getOrder(order)
                     );
@@ -245,14 +248,14 @@ export class Simlet {
                 if(searchTag) {
                     results = await db.Functions.runViewQuery(
                         db.Views.Simlet.byUserIdAndTagIds,
-                        { current_user_id, search: searchString, tag_ids: searchTag },
+                        { current_user_id, search: searchString, tag_ids: searchTag, simlet_archived: archived },
                         Simlet.getOrderNameColumn(orderBy),
                         Simlet.getOrder(order)
                     );
                 } else {
                     results = await db.Functions.runViewQuery(
                         db.Views.Simlet.byUserId,
-                        { current_user_id, search: searchString },
+                        { current_user_id, search: searchString, simlet_archived: archived },
                         Simlet.getOrderNameColumn(orderBy),
                         Simlet.getOrder(order)
                     );
@@ -308,33 +311,14 @@ export class Simlet {
         return simlet;
     }
 
-    static async getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, searchString?: string, searchTags?: number[]): Promise<number> {
-        let results;
-        if(searchTags && searchTags.length > 0) {
-            results = await db.Functions.runViewQuery(
-                db.Views.Session.countBySimletIdAndUserIdAndTagIds,
-                { simlet_id, current_user_id, search: searchString, tag_ids: searchTags }
-            );
-        } else {
-            results = await db.Functions.runViewQuery(
-                db.Views.Session.countBySimletIdAndUserId,
-                { simlet_id, current_user_id, search: searchString }
-            );
-        }
-        if(results.length === 0){
-            throw new NotFoundError(`Simlet ID ${simlet_id} not found for user ID ${current_user_id}.`);
-        }
-        return results[0].count;
-    }
-
-    static async getSimletCountByUserId(allocated: boolean, searchString?: string, searchTags?: number[], current_user_id?: number): Promise<number> {
+    static async getSimletCountByUserId(allocated: boolean, archived?: boolean, searchString?: string, searchTags?: number[], current_user_id?: number): Promise<number> {
         let results, count;
         if(allocated) {
             if(!current_user_id) {
                 if(searchTags && searchTags.length > 0) {
-                    results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCountByTagIds, { search: searchString, tag_ids: searchTags });
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCountByTagIds, { search: searchString, simlet_archived: archived, tag_ids: searchTags });
                 } else {
-                    results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCount, { search: searchString });
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.allocationCount, { search: searchString, simlet_archived: archived });
                 }
             } else {
                 if(searchTags && searchTags.length > 0) {
@@ -347,16 +331,16 @@ export class Simlet {
         } else {
             if(current_user_id) {
                 if(searchTags && searchTags.length > 0) {
-                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserIdAndTagIds, { current_user_id, search: searchString, tag_ids: searchTags });
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserIdAndTagIds, { current_user_id, search: searchString, tag_ids: searchTags, simlet_archived: archived });
                 } else {
-                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString });
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByUserId, { current_user_id, search: searchString, simlet_archived: archived });
                 }
                 count = results[0].count;
             } else {
                 if(searchTags && searchTags.length > 0) {
-                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByTagIds, { search: searchString, tag_ids: searchTags });
+                    results = await db.Functions.runViewQuery(db.Views.Simlet.countByTagIds, { search: searchString, tag_ids: searchTags, simlet_archived: archived });
                 } else {
-                    results = await db.Tables.Simlets.count({ where: { simlet_name: { [Op.like]: `%${searchString}%` } } });
+                    results = await db.Tables.Simlets.count({ where: { simlet_name: { [Op.like]: `%${searchString}%` }, simlet_archived: archived } });
                 }
                 count = results;
             }
@@ -621,8 +605,8 @@ export class Simlet {
         return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id, searchString, limit, offset, orderBy, order);
     }
 
-    async getSessions(searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Session[]> {
-        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, searchString, searchTags, orderBy, order);
+    async getSessions(status ?: string, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Session[]> {
+        return await Session.getAllFromDbData(this.simlet_id, this.current_user_id, limit, offset, status, searchString, searchTags, orderBy, order);
     }
 
     async getSession(sessionId: number): Promise<Session> {  

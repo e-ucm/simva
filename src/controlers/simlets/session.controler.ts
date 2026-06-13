@@ -24,6 +24,7 @@ export async function getSimletSessions(
   try {
     const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
     const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
+    const status = req.query.status ? String(req.query.status) : undefined;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
     let offset;
     if(limit !== undefined && req.query.skip === undefined) {
@@ -39,9 +40,9 @@ export async function getSimletSessions(
     logger.debug({simletId, userId: currentUser?.user_id, searchString, searchTags, limit, offset, orderBy, order} , "Getting sessions for simlet ID and user ID");
     let sessions;
     if (access.is_admin) {
-      sessions = await sessionService.getSimletSessions(simletId, true, searchString, searchTags, limit, offset, orderBy, order);
+      sessions = await sessionService.getSimletSessions(simletId, true, status, searchString, searchTags, limit, offset, orderBy, order);
     } else if (!access.allocated) {
-      sessions = await sessionService.getSimletSessions(simletId, false, searchString, searchTags, limit, offset, orderBy, order, access.currentUserId);
+      sessions = await sessionService.getSimletSessions(simletId, false, status, searchString, searchTags, limit, offset, orderBy, order, access.currentUserId);
     } else {
       throw new AuthentificationError("Invalid user role");
     }
@@ -62,10 +63,11 @@ export async function getSimletSessionCount(
     const access = getAccess(currentUser);
     const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
     const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
+    const status = req.query.status ? String(req.query.status) : undefined;
     const simlet_id = parseInt(req.params.simlet_id as string);
     let count;
     if (access.is_admin || !access.allocated) {
-      count = await sessionService.getSimletSessionCountByUserId(simlet_id, access.currentUserId, searchString, searchTags);
+      count = await sessionService.getSimletSessionCountByUserId(simlet_id, access.currentUserId, status, searchString, searchTags);
       res.json({ count });
     } else {
       throw new AuthentificationError("Invalid user role");

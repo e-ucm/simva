@@ -99,6 +99,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_sessions_users_permissions 
       WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
       AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+      AND (:status IS NULL OR session_status = :status)
       ORDER BY {{orderBy}} {{order}}
       `,
       params: {
@@ -113,6 +114,12 @@ const queries: Record<string, QueryTemplate> = {
               required: true,
               description: "User Identifier",
               example: 123,
+          },
+          status: {
+            type: "string",
+            required: false,
+            description: "Filter sessions by status (active, paused or archived)",
+            example: "active",
           },
           search: {
             type: "string",
@@ -129,6 +136,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_sessions_users_permissions 
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+        AND (:status IS NULL OR session_status = :status)
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset
         `,
@@ -150,6 +158,12 @@ const queries: Record<string, QueryTemplate> = {
               required: false,
               description: "Search string to filter sessions by name or description",
               example: "session",
+            },
+            status: {
+              type: "string",
+              required: false,
+              description: "Filter sessions by status (active, paused or archived)",
+              example: "active",
             },
             limit: {
               type: "number",
@@ -173,6 +187,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
       AND tag_id IN (:tag_ids)
       AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+      AND (:status IS NULL OR session_status = :status)
       GROUP BY session_id
       ORDER BY {{orderBy}} {{order}}
       `,
@@ -188,6 +203,12 @@ const queries: Record<string, QueryTemplate> = {
               required: true,
               description: "User Identifier",
               example: 123,
+          },
+          status: {
+              type: "string",
+              required: false,
+              description: "Filter sessions by status (active, paused or archived)",
+              example: "active",
           },
           search: {
             type: "string",
@@ -212,6 +233,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND tag_id IN (:tag_ids)
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
+        AND (:status IS NULL OR session_status = :status)
         GROUP BY session_id
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset 
@@ -228,6 +250,12 @@ const queries: Record<string, QueryTemplate> = {
                 required: true,
                 description: "User Identifier",
                 example: 123,
+            },
+            status: {
+              type: "string",
+              required: false,
+              description: "Filter sessions by status (active, paused or archived)",
+              example: "active",
             },
             search: {
               type: "string",
@@ -313,6 +341,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_sessions_users_permissions
         WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
         AND (:searchString IS NULL OR session_name LIKE '%' || :searchString || '%')
+        AND (:status IS NULL OR session_status = :status)
         `,
         params: {
             current_user_id: {
@@ -333,6 +362,12 @@ const queries: Record<string, QueryTemplate> = {
               description: "Search string to filter simlets by name or description",
               example: "simlet",
             },
+            status: {
+              type: "string",
+              required: false,
+              description: "Filter sessions by status (active, paused or archived)",
+              example: "active",
+            },
         },
     },
     countBySimletIdAndUserIdAndTagIds: {
@@ -342,6 +377,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_sessions_users_permissions_tags
         WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
         AND tag_id IN (:tag_ids)
+        AND (:status IS NULL OR session_status = :status)
         AND (:searchString IS NULL OR session_name LIKE '%' || :searchString || '%')
         `,
         params: {
@@ -369,6 +405,12 @@ const queries: Record<string, QueryTemplate> = {
               required: true,
               description: "List of tag IDs to filter sessions",
               example: [1, 2, 3],
+            },
+            status: {
+              type: "string",
+              required: false,
+              description: "Filter sessions by status (active, paused or archived)",
+              example: "active",
             },
         },
     },

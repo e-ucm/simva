@@ -388,6 +388,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/searchTags'
+        - $ref: '#/components/parameters/simletStatus'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/orderBy'
@@ -454,6 +455,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/searchTags'
+        - $ref: '#/components/parameters/simletStatus'
   /simlets/scheduler:
     get:
       tags:
@@ -1350,6 +1352,7 @@ paths:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/searchTags'
+        - $ref: '#/components/parameters/sessionStatus'
         - $ref: '#/components/parameters/skip'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/orderBy'
@@ -1418,6 +1421,7 @@ paths:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/searchString'
         - $ref: '#/components/parameters/searchTags'
+        - $ref: '#/components/parameters/sessionStatus'
   /simlets/{simletid}/participants:
     get:
       tags:
@@ -4446,6 +4450,25 @@ components:
         format: int32
         minimum: 0
         maximum: 50
+    simletStatus:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - active
+          - archived
+    sessionStatus:
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - active
+          - paused
+          - finished
     orderBy:
       name: orderBy
       in: query

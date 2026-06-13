@@ -39,8 +39,8 @@ import { SessionScheduler } from "@/lib/mappers/session/SessionScheduler";
  * const userSimlets = await getSimletsByUserId(123);
  * ```
  */
-export async function getSimletsByUserId(user_id: number, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
-  return await Simlet.getAllFromDbData(user_id, false, searchString, limit, offset, searchTags, orderBy, order);
+export async function getSimletsByUserId(user_id: number, archived?: boolean, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAllFromDbData(user_id, false, archived, searchString, limit, offset, searchTags, orderBy, order);
 }
 
 /**
@@ -55,11 +55,11 @@ export async function getSimletsByUserId(user_id: number, searchString?: string,
  * @returns {Promise<Simlet[]>} Array of simlet records accessible to the student
  */
 export async function getSimletsForStudent(current_user_id: number, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
-  return await Simlet.getAllFromDbData(current_user_id, true, searchString, limit, offset, searchTags, orderBy, order);
+  return await Simlet.getAllFromDbData(current_user_id, true, undefined, searchString, limit, offset, searchTags, orderBy, order);
 }
 
-export async function getAllSimlets(searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
-  return await Simlet.getAdminSimlets(searchString, searchTags, limit, offset, orderBy, order);
+export async function getAllSimlets(archived?: boolean, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+  return await Simlet.getAdminSimlets(archived, searchString, searchTags, limit, offset, orderBy, order);
 }
 
 /**
@@ -193,8 +193,8 @@ export async function getSimletParticipants(simletId: number, is_admin: boolean,
  * logger.info(`Found ${totalSimlets} experiment simlets`);
  * ```
  */
-export async function getSimletCountByUserId(allocated: boolean, searchString?: string, searchTags?: number[], current_user_id?: number): Promise<number> {
-  return await Simlet.getSimletCountByUserId(allocated, searchString, searchTags, current_user_id);
+export async function getSimletCountByUserId(allocated: boolean, archived?: boolean, searchString?: string, searchTags?: number[], current_user_id?: number): Promise<number> {
+  return await Simlet.getSimletCountByUserId(allocated, archived, searchString, searchTags, current_user_id);
 }
 
 /**
