@@ -146,12 +146,16 @@ export class Simlet {
     }
     
     static async getAdminSimlets(archived?: boolean, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
+        let where: any = {};
+        if(searchString != undefined) {
+            where.simlet_name = { [Op.like]: `%${searchString}%` };
+        }
+        if(archived != undefined) {
+            where.simlet_archived = archived;
+        }
         // TODO : add search tag filtering for admin user as well
       let results = await db.Tables.Simlets.findAll({ // TODO simlet_archived or null to take in account
-        where: { 
-            simlet_name: searchString != undefined  ? { [Op.like]: `%${searchString}%` } : undefined,
-            simlet_archived : archived != undefined ? archived : undefined, 
-        },
+        where: where,
         limit: limit !== undefined ? limit : undefined,
         offset: offset !== undefined ? offset : undefined,
         order: [[Simlet.getOrderNameColumn(orderBy), Simlet.getOrder(order)]]
@@ -340,7 +344,14 @@ export class Simlet {
                 if(searchTags && searchTags.length > 0) {
                     results = await db.Functions.runViewQuery(db.Views.Simlet.countByTagIds, { search: searchString, tag_ids: searchTags, simlet_archived: archived });
                 } else {
-                    results = await db.Tables.Simlets.count({ where: { simlet_name: { [Op.like]: `%${searchString}%` }, simlet_archived: archived } });
+                    let where: any = {};
+                    if(searchString != undefined) {
+                        where.simlet_name = { [Op.like]: `%${searchString}%` };
+                    }
+                    if(archived != undefined) {
+                        where.simlet_archived = archived;
+                    }
+                    results = await db.Tables.Simlets.count({ where: where });
                 }
                 count = results;
             }

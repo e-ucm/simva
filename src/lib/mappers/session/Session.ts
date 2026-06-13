@@ -264,13 +264,18 @@ export class Session {
                 }
             }
         } else {
+            let where: any = {
+                simlet_id: simlet_id
+            };
+            if(searchString != undefined) {
+                where.simlet_name = { [Op.like]: `%${searchString}%` };
+            }
+            if(status != undefined) {
+                where.session_status = status;
+            }
             // TODO : add search tag filtering for admin user as well
             sessions = await db.Tables.Sessions.findAll({
-                where : { 
-                    simlet_id: simlet_id,
-                    session_name : searchString != undefined ? { [Op.like]: `%${searchString}%`} : undefined,
-                    session_status : status != undefined ? status : undefined,
-                },
+                where : where,
                 limit : limit !== undefined ? limit : undefined,
                 offset: offset !== undefined ? offset : undefined,
                 order: [
@@ -289,16 +294,30 @@ export class Session {
 
     static async getSimletSessionCountByUserId(simlet_id: number, current_user_id: number, status?: string, searchString?: string, searchTags?: number[]): Promise<number> {
         let results;
-        if(searchTags && searchTags.length > 0) {
-            results = await db.Functions.runViewQuery(
-                db.Views.Session.countBySimletIdAndUserIdAndTagIds,
-                { simlet_id, current_user_id, session_status: status, search: searchString, tag_ids: searchTags }
-            );
+        if(current_user_id) {
+            if(searchTags && searchTags.length > 0) {
+                results = await db.Functions.runViewQuery(
+                    db.Views.Session.countBySimletIdAndUserIdAndTagIds,
+                    { simlet_id, current_user_id, session_status: status, search: searchString, tag_ids: searchTags }
+                );
+            } else {
+                results = await db.Functions.runViewQuery(
+                    db.Views.Session.countBySimletIdAndUserId,
+                    { simlet_id, current_user_id, session_status: status, search: searchString }
+                );
+            }
         } else {
-            results = await db.Functions.runViewQuery(
-                db.Views.Session.countBySimletIdAndUserId,
-                { simlet_id, current_user_id, session_status: status, search: searchString }
-            );
+            let where: any = {
+                simlet_id: simlet_id
+            };
+            if(searchString != undefined) {
+                where.simlet_name = { [Op.like]: `%${searchString}%` };
+            }
+            if(status != undefined) {
+                where.session_status = status;
+            }
+            // TODO : add search tag filtering for admin user as well
+            results = await db.Tables.Sessions.count({ where: where });
         }
         if(results.length === 0){
             throw new NotFoundError(`Simlet ID ${simlet_id} not found for user ID ${current_user_id}.`);
