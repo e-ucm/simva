@@ -162,7 +162,7 @@ export async function getSimletGroupCount(
     const simletId = parseInt(req.params.simlet_id as string);
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    const searchString = req.query.search as string | undefined;
+    const searchString = req.query.searchString as string | undefined;
     logger.debug({simletId} , "Getting group count for simlet ID");
     let count;
     if (access.is_admin) {
