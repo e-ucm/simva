@@ -31,12 +31,12 @@ export async function getGroups(
   try {
     let version = req.query.use_new_generation? Boolean(req.query.use_new_generation) : undefined;
     const searchString = req.query.searchString as string | undefined;
-    const limit = parseInt(req.query.limit as string) || undefined;
+    const limit = req.query.limit ? (Number.isNaN(Number(req.query.limit)) ? undefined : parseInt(req.query.limit as string)) : undefined;
     let offset;
-    if(limit !== undefined && req.query.skip === undefined) {
+    if(limit !== undefined && (req.query.skip === undefined || Number.isNaN(Number(req.query.skip)))) {
         offset = 0;
     } else {
-        offset = parseInt(req.query.skip as string)|| undefined;
+        offset = parseInt(req.query.skip as string);
     }
     let groups: SimletGroup[];
     switch(req.user?.sql.role) {

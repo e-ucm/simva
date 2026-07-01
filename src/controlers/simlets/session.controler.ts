@@ -25,9 +25,9 @@ export async function getSimletSessions(
     const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
     const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
     const status = req.query.status ? String(req.query.status) : undefined;
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const limit = req.query.limit ? (Number.isNaN(Number(req.query.limit)) ? undefined : parseInt(req.query.limit as string)) : undefined;
     let offset;
-    if(limit !== undefined && req.query.skip === undefined) {
+    if(limit !== undefined && (req.query.skip === undefined || Number.isNaN(Number(req.query.skip)))) {
         offset = 0;
     } else {
         offset = parseInt(req.query.skip as string);
