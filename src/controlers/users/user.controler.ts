@@ -32,9 +32,10 @@ export async function getUsers(
   try {
     let currentUser = req.user?.sql;
     const searchString = req.query.searchString as string | undefined;
+    logger.debug(req.query , "Query parameters for getting users");
     const limit = req.query.limit ? (Number.isNaN(Number(req.query.limit)) ? undefined : parseInt(req.query.limit as string)) : undefined;
     let offset;
-    if(limit !== undefined && (req.query.skip === undefined || Number.isNaN(Number(req.query.skip)))) {
+    if(limit !== undefined && req.query.skip === undefined && Number.isNaN(Number(req.query.skip))) {
         offset = 0;
     } else {
         offset = parseInt(req.query.skip as string);

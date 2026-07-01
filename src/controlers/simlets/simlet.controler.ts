@@ -45,9 +45,10 @@ export async function getAllSimlets(
     const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
     const archived = req.query.status ? Boolean(req.query.status == "archived") : undefined;
     const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;
+    logger.debug(req.query , "Query parameters for getting simlet");
     const limit = req.query.limit ? (Number.isNaN(Number(req.query.limit)) ? undefined : parseInt(req.query.limit as string)) : undefined;
     let offset;
-    if(limit !== undefined && (req.query.skip === undefined || Number.isNaN(Number(req.query.skip)))) {
+    if(limit !== undefined && req.query.skip === undefined && Number.isNaN(Number(req.query.skip))) {
         offset = 0;
     } else {
         offset = parseInt(req.query.skip as string);
@@ -77,9 +78,10 @@ export async function getAllSchedulerSimlets(
 ): Promise<void> {
   try {
     const searchString = String(req.query.searchString || '');
+    logger.debug(req.query , "Query parameters for getting simlet scheduler simlets");
     const limit = req.query.limit ? (Number.isNaN(Number(req.query.limit)) ? undefined : parseInt(req.query.limit as string)) : undefined;
     let offset;
-    if(limit !== undefined && (req.query.skip === undefined || Number.isNaN(Number(req.query.skip)))) {
+    if(limit !== undefined && req.query.skip === undefined && Number.isNaN(Number(req.query.skip))) {
         offset = 0;
     } else {
         offset = parseInt(req.query.skip as string);
