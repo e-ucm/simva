@@ -340,7 +340,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT COUNT(*) as count
         FROM v_complete_sessions_users_permissions
         WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
-        AND (:searchString IS NULL OR session_name LIKE '%' || :searchString || '%')
+        AND (:search IS NULL OR session_name LIKE '%' || :search || '%')
         AND (:session_status IS NULL OR session_status = :session_status)
         `,
         params: {
@@ -356,7 +356,7 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Simlet Identifier",
                 example: 1,
             },
-            searchString: {
+            search: {
               type: "string",
               required: false,
               description: "Search string to filter simlets by name or description",
@@ -378,7 +378,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
         AND tag_id IN (:tag_ids)
         AND (:session_status IS NULL OR session_status = :session_status)
-        AND (:searchString IS NULL OR session_name LIKE '%' || :searchString || '%')
+        AND (:search IS NULL OR session_name LIKE '%' || :search || '%')
         `,
         params: {
             current_user_id: {
@@ -393,7 +393,7 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Simlet Identifier",
                 example: 1,
             },
-            searchString: {
+            search: {
               type: "string",
               required: false,
               description: "Search string to filter simlets by name or description",
