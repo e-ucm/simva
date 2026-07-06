@@ -232,20 +232,20 @@ export class SimletGroup {
         return "ASC";
     }
 
-    static async getAllFromDbData(simlet_id: number, current_user_id?: number, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string ): Promise<SimletGroup[]> {
+    static async getAllFromDbData(simlet_id: number, current_user_id?: number, searchString?: string, sandbox?: string, limit?: number, offset?: number, orderBy?: string, order?: string ): Promise<SimletGroup[]> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         let groups; 
         if(limit != undefined && offset != undefined) {
             groups = await db.Functions.runViewQuery(
                 db.Views.Group.bySimletIdWithPagination,
-                { simlet_id, search: searchString, limit, offset },
+                { simlet_id, search: searchString, sandbox, limit, offset },
                 SimletGroup.getOrderNameColumn(orderBy),
                 SimletGroup.getOrder(order)
             );
         } else {
             groups = await db.Functions.runViewQuery(
                 db.Views.Group.bySimletId,
-                { simlet_id, search: searchString },
+                { simlet_id, search: searchString, sandbox },
                 SimletGroup.getOrderNameColumn(orderBy),
                 SimletGroup.getOrder(order)
             );
@@ -349,8 +349,8 @@ export class SimletGroup {
         logger.debug({ SimletGroup : this }, `SimletGroup information - Simlet ID: ${this.simlet_id}, Group ID: ${this.group_id}, Group Name: ${this.group_name}`);
     }
 
-    static async getGroupCountForUser(simlet_id: number, current_user_id: number, searchString?: string ): Promise<number> {
-        const results = await db.Functions.runViewQuery(db.Views.Group.countByUserId, { simlet_id, current_user_id, search: searchString });
+    static async getGroupCountForUser(simlet_id: number, current_user_id: number, searchString?: string, sandbox?: string): Promise<number> {
+        const results = await db.Functions.runViewQuery(db.Views.Group.countByUserId, { simlet_id, current_user_id, search: searchString, sandbox });
         return results[0].count || 0;
     }
 

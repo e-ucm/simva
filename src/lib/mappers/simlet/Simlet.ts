@@ -553,8 +553,8 @@ export class Simlet {
         return group;
     }
 
-    async getGroupCount(searchString?: string): Promise<number> {
-        let count = await SimletGroup.getGroupCountForUser(this.simlet_id, this.current_user_id!, searchString);
+    async getGroupCount(searchString?: string, sandbox?: string): Promise<number> {
+        let count = await SimletGroup.getGroupCountForUser(this.simlet_id, this.current_user_id!, searchString, sandbox);
         return count;
     }
 
@@ -612,8 +612,8 @@ export class Simlet {
       return await SimletParticipant.getAllFromDbData("simlet", this.simlet_id);
     }
 
-    async getGroups(searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<SimletGroup[]> {
-        return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id, searchString, limit, offset, orderBy, order);
+    async getGroups(searchString?: string, sandbox?: string, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<SimletGroup[]> {
+        return await SimletGroup.getAllFromDbData(this.simlet_id, this.current_user_id, searchString, sandbox, limit, offset, orderBy, order);
     }
 
     async getSessions(status ?: string, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Session[]> {

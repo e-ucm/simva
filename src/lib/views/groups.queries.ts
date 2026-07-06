@@ -9,6 +9,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        AND (:sandbox IS NULL OR group_sandbox = :sandbox)
         `,
         params: {
             current_user_id: {
@@ -35,6 +36,12 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Search string to filter groups by name or description",
                 example: "group",
             },
+            sandbox: {
+                type: "boolean",
+                required: false,
+                description: "Sandbox boolean to filter groups by sandbox",
+                example: "true",
+            }
         },
     },
     countByUserId: {
@@ -42,9 +49,10 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT COUNT(*) AS count
         FROM v_complete_groups_user_permissions
-        WHERE group_sandbox = false AND current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
+        WHERE current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        AND (:sandbox IS NULL OR group_sandbox = :sandbox)
         `,
         params: {
             current_user_id: {
@@ -71,6 +79,12 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Search string to filter groups by name or description",
                 example: "group",
             },
+            sandbox: {
+                type: "boolean",
+                required: false,
+                description: "Sandbox boolean to filter groups by sandbox",
+                example: "true",
+            }
         },
     },
     byVersionAndUserIdWithPagination: {
@@ -81,6 +95,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE current_user_id = :current_user_id AND (:version IS NULL OR group_use_new_generation = :version)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
+        AND (:sandbox IS NULL OR group_sandbox = :sandbox)
         LIMIT :limit OFFSET :offset
         `,
         params: {
@@ -114,6 +129,18 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Number of groups to skip for pagination",
                 example: 20,
             },
+            current_user_id: {
+                type: "number",
+                required: true,
+                description: "User Identifier",
+                example: 123,
+            },
+            sandbox: {
+                type: "boolean",
+                required: false,
+                description: "Sandbox boolean to filter groups by sandbox",
+                example: "true",
+            }
         },
     },
 
@@ -147,6 +174,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_groups_simlets
         WHERE simlet_id = :simlet_id
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        AND (:sandbox IS NULL OR group_sandbox = :sandbox)
         ORDER BY {{orderBy}} {{order}}
         `,
         params: {
@@ -162,6 +190,12 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Search string to filter groups by name",
                 example: "group",
             },
+            sandbox: {
+                type: "boolean",
+                required: false,
+                description: "Sandbox boolean to filter groups by sandbox",
+                example: "true",
+            }
         },
     },
     bySimletIdWithPagination: {
@@ -171,6 +205,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_groups_simlets
         WHERE simlet_id = :simlet_id
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
+        AND (:sandbox IS NULL OR group_sandbox = :sandbox)
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset
         `,
@@ -199,6 +234,12 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Number of groups to skip for pagination",
                 example: 20,
             },
+            sandbox: {
+                type: "boolean",
+                required: false,
+                description: "Sandbox boolean to filter groups by sandbox",
+                example: "true",
+            }
         },
     },
     directPermissionsByGroupId: {

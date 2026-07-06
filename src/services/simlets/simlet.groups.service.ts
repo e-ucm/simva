@@ -37,9 +37,9 @@ import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
  * groups.forEach(g => logger.info(g.group_name, g.participant_count));
  * ```
  */
-export async function getSimletGroups(simletId: number, is_admin: boolean, searchString?: string, limit?: number, offset?: number, orderBy?: string, order?: string, current_user_id?: number): Promise<SimletGroup[]> {
+export async function getSimletGroups(simletId: number, is_admin: boolean, searchString?: string, sandbox?: string, limit?: number, offset?: number, orderBy?: string, order?: string, current_user_id?: number): Promise<SimletGroup[]> {
   let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
-  return await simlet.getGroups(searchString, limit, offset, orderBy, order);
+  return await simlet.getGroups(searchString, sandbox, limit, offset, orderBy, order);
 }
 
 /**
@@ -103,9 +103,9 @@ export async function createSimletGroup(simletId: number, body: any, is_admin: b
   return await simlet.createGroup(body);
 }
 
-export async function getSimletGroupCount(simletId: number, searchString?: string, is_admin: boolean, current_user_id?: number) : Promise<number> {
+export async function getSimletGroupCount(simletId: number, searchString?: string, sandbox?: string, is_admin: boolean, current_user_id?: number) : Promise<number> {
   const simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
-  return await simlet.getGroupCount(searchString);
+  return await simlet.getGroupCount(searchString, sandbox);
 }
 
 export async function getSimletGroupParticipantsCount(simletId: number, groupId: number, is_admin: boolean, current_user_id?: number) : Promise<number | null> {
