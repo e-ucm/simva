@@ -25,7 +25,7 @@ import { getAccess } from "@/controlers/users/user.helper";
  * @async
  * @function getActivityTypes
  * @param {AuthenticatedRequest} req - Express request object
- * @param {Response} res - Express response object  
+ * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
  * @returns {Promise<void>}
  * @throws {Error} Passes errors to next middleware
@@ -38,6 +38,8 @@ import { getAccess } from "@/controlers/users/user.helper";
  * //   { type: "limesurvey", name: "LimeSurvey Activity", description: "...", utils: {...} },
  * //   { type: "manual", name: "Manual Activity", description: "...", utils: {...} }
  * // ]
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 export async function getActivityTypes(
   req: AuthenticatedRequest,

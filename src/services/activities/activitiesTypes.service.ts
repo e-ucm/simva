@@ -22,7 +22,7 @@ export { ActivityType };
  * 
  * @async
  * @function getActivityTypes
- * @param {string[]} types - Array of activity type identifiers to retrieve
+ * @param {string[]} [types] - Array of activity type identifiers to retrieve
  * @returns {Promise<ActivityType[]>} Array of activity type objects with metadata
  * 
  * @throws {Error} If activity type utilities cannot be loaded

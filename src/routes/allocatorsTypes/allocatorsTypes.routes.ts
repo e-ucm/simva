@@ -6,6 +6,12 @@ import { getAllocatorTypes } from "@/controlers/allocatorTypes/allocatorTypes.co
  * 
  * Routes:
  * - GET / - Retrieve all allocator types
+ * 
+ * @module routes/allocatorsTypes/allocatorsTypes
+ * @requires express
+ * @requires @/controlers/allocatorTypes/allocatorTypes.controler
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ * 
  * @type {Router}
  * 
  * @example

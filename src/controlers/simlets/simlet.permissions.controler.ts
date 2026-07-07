@@ -15,6 +15,24 @@ import { logger } from "@/lib/logger";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
 
+/**
+ * Retrieves all permissions for a specific simlet.
+ * 
+ * @async
+ * @function getSimletPermissions
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/permissions
+ * // Returns simlet permissions object
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getSimletPermissions(
   req: AuthenticatedRequest,
   res: Response,
@@ -40,6 +58,23 @@ export async function getSimletPermissions(
   }
 }
 
+/**
+ * Creates permissions for a simlet.
+ * 
+ * @async
+ * @function createSimletPermissions
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and permission data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/permissions
+ * // Body: { user_id: 123, permission: "READ" }
+ * // Returns: created permissions object
+ */
 export async function createSimletPermissions(
   req: AuthenticatedRequest,
   res: Response,
@@ -66,6 +101,22 @@ export async function createSimletPermissions(
   }
 }
 
+/**
+ * Retrieves permissions for a specific user on a specific simlet.
+ * 
+ * @async
+ * @function getSimletPermissionsForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and user_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/permissions/:user_id
+ * // Returns: user's permissions object
+ */
 export async function getSimletPermissionsForUser(
   req: AuthenticatedRequest,
   res: Response,
@@ -92,6 +143,23 @@ export async function getSimletPermissionsForUser(
   }
 }
 
+/**
+ * Updates permissions for a specific user on a specific simlet.
+ * 
+ * @async
+ * @function patchSimletPermissionsForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and user_id in URL parameters and updated permission data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PATCH /simlets/:simlet_id/permissions/:user_id
+ * // Body: { permission: "WRITE" }
+ * // Returns: updated permissions object
+ */
 export async function patchSimletPermissionsForUser(
   req: AuthenticatedRequest,
   res: Response,
@@ -119,6 +187,22 @@ export async function patchSimletPermissionsForUser(
   }
 }
 
+/**
+ * Deletes permissions for a specific user on a specific simlet.
+ * 
+ * @async
+ * @function deleteSimletPermissionsForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and user_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/permissions/:user_id
+ * // Returns: 204 No Content
+ */
 export async function deleteSimletPermissionsForUser(
   req: AuthenticatedRequest,
   res: Response,

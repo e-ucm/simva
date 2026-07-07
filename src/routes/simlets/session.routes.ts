@@ -5,6 +5,7 @@
  * @module routes/simlets/session
  * @requires express
  * @requires @/controlers/simlets/simlet.controller
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 
 import { Router } from "express";

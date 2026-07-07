@@ -15,6 +15,25 @@ import { logger } from "@/lib/logger";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
 
+/**
+ * Retrieves all groups associated with a specific simlet.
+ * Supports filtering by search string and sandbox status with pagination.
+ * 
+ * @async
+ * @function getSimletGroups
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and optional query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/groups
+ * // Returns array of group objects
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getSimletGroups(
   req: AuthenticatedRequest,
   res: Response,
@@ -52,6 +71,23 @@ export async function getSimletGroups(
   }
 }
 
+/**
+ * Adds an existing group to a simlet.
+ * 
+ * @async
+ * @function addSimletGroup
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and group data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/groups
+ * // Body: { group_id: 456 }
+ * // Returns: created simlet-group relationship object
+ */
 export async function addSimletGroup(
   req: AuthenticatedRequest,
   res: Response,
@@ -78,6 +114,22 @@ export async function addSimletGroup(
   }
 }
 
+/**
+ * Deletes a group association from a simlet.
+ * 
+ * @async
+ * @function deleteSimletGroup
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and group_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/groups/:group_id
+ * // Returns: 204 No Content
+ */
 export async function deleteSimletGroup(
   req: AuthenticatedRequest,
   res: Response,
@@ -102,6 +154,23 @@ export async function deleteSimletGroup(
   }
 }
 
+/**
+ * Updates group association details for a simlet.
+ * 
+ * @async
+ * @function updateSimletGroup
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and group_id in URL parameters and update data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /simlets/:simlet_id/groups/:group_id
+ * // Body: { name: "Updated Group Name" }
+ * // Returns: updated simlet-group relationship object
+ */
 export async function updateSimletGroup(
   req: AuthenticatedRequest,
   res: Response,
@@ -129,6 +198,23 @@ export async function updateSimletGroup(
   }
 }
 
+/**
+ * Creates a new group and associates it with a simlet.
+ * 
+ * @async
+ * @function createSimletGroup
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and group data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/groups/create
+ * // Body: { name: "New Group", description: "Group description" }
+ * // Returns: created group object
+ */
 export async function createSimletGroup(
   req: AuthenticatedRequest,
   res: Response,
@@ -155,6 +241,23 @@ export async function createSimletGroup(
   }
 }
 
+/**
+ * Gets the count of groups associated with a specific simlet.
+ * Supports filtering by search string and sandbox status.
+ * 
+ * @async
+ * @function getSimletGroupCount
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and optional query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/groups/count
+ * // Returns: { count: 5 }
+ */
 export async function getSimletGroupCount(
   req: AuthenticatedRequest,
   res: Response,
@@ -183,6 +286,24 @@ export async function getSimletGroupCount(
   }
 }
 
+/**
+ * Gets the count of participants across all groups in a simlet or within a specific group.
+ * 
+ * @async
+ * @function getSimletGroupParticipantsCount
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and optionally group_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/groups/participants/count
+ * // Returns: { count: 25 }
+ * // GET /simlets/:simlet_id/groups/:group_id/participants/count
+ * // Returns: { count: 10 }
+ */
 export async function getSimletGroupParticipantsCount(
   req: AuthenticatedRequest,
   res: Response,
@@ -221,6 +342,22 @@ export async function getSimletGroupParticipantsCount(
   }
 }
 
+/**
+ * Retrieves a specific group associated with a simlet by group ID.
+ * 
+ * @async
+ * @function getSimletGroupById
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and group_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/groups/:group_id
+ * // Returns: group object
+ */
 export async function getSimletGroupById(
   req: AuthenticatedRequest,
   res: Response,
@@ -247,6 +384,23 @@ export async function getSimletGroupById(
   }
 }
 
+/**
+ * Creates a new participant and assigns them to a specific group within a simlet.
+ * 
+ * @async
+ * @function createSimletGroupParticipant
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and group_id in URL parameters and participant data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/groups/:group_id/participants
+ * // Body: { user_id: 789 }
+ * // Returns: created participant object
+ */
 export async function createSimletGroupParticipant(
   req: AuthenticatedRequest,
   res: Response,
@@ -274,6 +428,22 @@ export async function createSimletGroupParticipant(
   }
 }
 
+/**
+ * Adds an existing participant to a specific group within a simlet.
+ * 
+ * @async
+ * @function addSimletGroupParticipant
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, group_id, and participant_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/groups/:group_id/participants/:participant_id
+ * // Returns: updated group object
+ */
 export async function addSimletGroupParticipant(
   req: AuthenticatedRequest,
   res: Response,
@@ -301,6 +471,22 @@ export async function addSimletGroupParticipant(
   }
 } 
 
+/**
+ * Retrieves all participants assigned to a specific group within a simlet.
+ * 
+ * @async
+ * @function getSimletGroupParticipants
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and group_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/groups/:group_id/participants
+ * // Returns: array of participant objects
+ */
 export async function getSimletGroupParticipants(
   req: AuthenticatedRequest,
   res: Response,
@@ -327,6 +513,22 @@ export async function getSimletGroupParticipants(
   }
 }
 
+/**
+ * Deletes a participant from a specific group within a simlet.
+ * 
+ * @async
+ * @function deleteGroupParticipant
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, group_id, and participant_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/groups/:group_id/participants/:participant_id
+ * // Returns: 204 No Content
+ */
 export async function deleteGroupParticipant(
   req: AuthenticatedRequest,
   res: Response,
@@ -353,6 +555,23 @@ export async function deleteGroupParticipant(
   }
 }
 
+/**
+ * Allocates a group or participant to a session within a simlet.
+ * 
+ * @async
+ * @function allocateToSessionSimlet
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, group_id, and session_id in URL parameters and optional participant_id in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/groups/:group_id/sessions/:session_id/allocate
+ * // Body: { participant_id: 789 }
+ * // Returns: 204 No Content
+ */
 export async function allocateToSessionSimlet(
   req: AuthenticatedRequest,
   res: Response,

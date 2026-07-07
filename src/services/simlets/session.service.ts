@@ -27,17 +27,22 @@ import { db } from "@/lib/db";
  * @async
  * @function getSimletSessions
  * @param {number} simletId - The ID of the simlet
- * @param {number} current_user_id - The ID of the user requesting the sessions
- * @param {string} searchString - Optional search string to filter sessions
- * @param {number} limit - Optional limit for pagination
- * @param {number} offset - Optional offset for pagination
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {string} [status] - Optional status filter for sessions (active, inactive, terminated)
+ * @param {string} [searchString] - Optional search string to filter sessions
+ * @param {number[]} [searchTags] - Optional array of tag IDs to filter sessions
+ * @param {number} [limit] - Optional limit for pagination
+ * @param {number} [offset] - Optional offset for pagination
+ * @param {string} [orderBy] - The field to order the sessions by
+ * @param {string} [order] - The order direction (ASC or DESC)
+ * @param {number} [current_user_id] - The ID of the user requesting the sessions
  * @returns {Promise<Session[]>} Array of sessions within the simlet
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks read permissions
  * 
  * @example
  * ```typescript
- * const sessions = await getSimletSessions(123, 456);
+ * const sessions = await getSimletSessions(123, false, 'active', 'test', undefined, 10, 0, 'name', 'ASC', 456);
  * sessions.forEach(s => logger.info(s.name, s.open_date, s.close_date));
  * ```
  */
@@ -54,13 +59,15 @@ export async function getSimletSessions(simletId: number, is_admin: boolean, sta
  * @function getSimletSessionCountByUserId
  * @param {number} simlet_id - The ID of the simlet
  * @param {number} current_user_id - The ID of the user requesting session count
- * @param {string} searchString - Optional search string to filter sessions
+ * @param {string} [status] - Optional status filter for sessions
+ * @param {string} [searchString] - Optional search string to filter sessions
+ * @param {number[]} [searchTags] - Optional array of tag IDs to filter sessions
  * @returns {Promise<number>} The total number of sessions in the simlet
  * @throws {Error} If database query fails or simlet access is denied
  * 
  * @example
  * ```typescript
- * const sessionCount = await getSimletSessionCountByUserId(456, 123, 'test');
+ * const sessionCount = await getSimletSessionCountByUserId(456, 123, 'active', 'test');
  * logger.info(`Found ${sessionCount} test sessions`);
  * ```
  */
@@ -75,14 +82,15 @@ export async function getSimletSessionCountByUserId(simlet_id: number, current_u
  * @function getSimletSession
  * @param {number} simletId - The ID of the simlet
  * @param {number} sessionId - The ID of the session to retrieve
- * @param {number} current_user_id - The ID of the user requesting the session
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user requesting the session
  * @returns {Promise<Session>} The requested session instance
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks read permissions
  * 
  * @example
  * ```typescript
- * const session = await getSimletSession(123, 789, 456);
+ * const session = await getSimletSession(123, 789, false, 456);
  * logger.info(session.name, session.status);
  * ```
  */
@@ -98,21 +106,22 @@ export async function getSimletSession(simletId: number, sessionId: number, is_a
  * @async
  * @function createSimletSession
  * @param {number} simletId - The ID of the parent simlet
- * @param {number} current_user_id - The ID of the user creating the session
- * @param {Object} body - Session configuration data including name, dates, etc.
- * @returns {Promise<Simlet>} The parent simlet with the newly created session
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {any} body - Session configuration data including name, dates, etc.
+ * @param {number} [current_user_id] - The ID of the user creating the session
+ * @returns {Promise<Session>} The newly created session instance
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks create permissions
  * @throws {ValidationError} When session configuration is invalid
  * 
  * @example
  * ```typescript
- * const session = await createSimletSession(123, 456, {
+ * const session = await createSimletSession(123, false, {
  *   name: 'Phase 1: Pre-assessment',
  *   description: 'Initial evaluation phase',
  *   open_date: '2024-01-15',
  *   close_date: '2024-02-15'
- * });
+ * }, 456);
  * ```
  */
 export async function createSimletSession(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Session> {
@@ -128,8 +137,9 @@ export async function createSimletSession(simletId: number, is_admin: boolean, b
  * @function patchSimletSession
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session to update
- * @param {number} current_user_id - The ID of the user updating the session
- * @param {Object} body - Update data containing new session properties
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {any} body - Update data containing new session properties
+ * @param {number} [current_user_id] - The ID of the user updating the session
  * @returns {Promise<Session>} The updated session instance
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks update permissions
@@ -137,10 +147,10 @@ export async function createSimletSession(simletId: number, is_admin: boolean, b
  * 
  * @example
  * ```typescript
- * const updatedSession = await patchSimletSession(123, 456, 789, {
+ * const updatedSession = await patchSimletSession(123, 456, false, {
  *   name: 'Updated Session Name',
  *   close_date: '2024-12-31'
- * });
+ * }, 789);
  * ```
  */
 export async function patchSimletSession(simletId: number, sessionId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Session> {
@@ -156,7 +166,8 @@ export async function patchSimletSession(simletId: number, sessionId: number, is
  * @function deleteSimletSession
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session to delete
- * @param {number} current_user_id - The ID of the user deleting the session
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user deleting the session
  * @returns {Promise<void>} No return value on successful deletion
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks delete permissions
@@ -164,7 +175,7 @@ export async function patchSimletSession(simletId: number, sessionId: number, is
  * 
  * @example
  * ```typescript
- * await deleteSimletSession(123, 456, 789);
+ * await deleteSimletSession(123, 456, false, 789);
  * ```
  */
 export async function deleteSimletSession(simletId: number, sessionId: number, is_admin: boolean, current_user_id?: number): Promise<void> {
@@ -179,7 +190,8 @@ export async function deleteSimletSession(simletId: number, sessionId: number, i
  * @function getSimletSessionParticipants
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session
- * @param {number} current_user_id - The ID of the user requesting participants
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user requesting participants
  * @returns {Promise<SimletParticipant[]>} Array of participants in the session
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks read permissions
@@ -197,8 +209,9 @@ export async function getSimletSessionParticipants(simletId: number, sessionId: 
  * @function activateSession
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session to activate/deactivate
- * @param {number} current_user_id - The ID of the user performing the action
+ * @param {boolean} is_admin - Whether the user is an admin
  * @param {string} activate - The desired state of the session ("active", "inactive", or "terminated")
+ * @param {number} [current_user_id] - The ID of the user performing the action
  * @returns {Promise<Session>} The updated session instance
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks permissions
@@ -206,9 +219,9 @@ export async function getSimletSessionParticipants(simletId: number, sessionId: 
  * 
  * @example
  * ```typescript
- * const activeSession = await activateSession(123, 456, 789, 'active');
- * const inactiveSession = await activateSession(123, 456, 789, 'inactive');
- * const terminatedSession = await activateSession(123, 456, 789, 'terminated');
+ * const activeSession = await activateSession(123, 456, false, 'active', 789);
+ * const inactiveSession = await activateSession(123, 456, false, 'inactive', 789);
+ * const terminatedSession = await activateSession(123, 456, false, 'terminated', 789);
  * ```
  */
 export async function activateSession(simletId: number, sessionId: number, is_admin: boolean, activate: string, current_user_id?: number): Promise<Session> {
@@ -237,11 +250,6 @@ export async function activateSession(simletId: number, sessionId: number, is_ad
     default:
       throw new ValidationError(`Activate must be either "${session.STATUS.ACTIVE}" or "${session.STATUS.INACTIVE}" or "${session.STATUS.TERMINATED}"`);
   }
-  if (activate) {
-    
-  } else {
-    
-  }
 }
 
 /**
@@ -251,16 +259,18 @@ export async function activateSession(simletId: number, sessionId: number, is_ad
  * @async
  * @function allocateToSessionSimlet
  * @param {number} simletId - The ID of the parent simlet
+ * @param {number} group_id - The ID of the group to allocate
  * @param {number} sessionId - The ID of the session to allocate to
- * @param {number} current_user_id - The ID of the user performing allocation
+ * @param {boolean} is_admin - Whether the user is an admin
  * @param {number} id - The ID of the object being allocated (participant/group)
- * @returns {Promise<Allocator>} The updated allocator with fresh allocation data
+ * @param {number} [current_user_id] - The ID of the user performing allocation
+ * @returns {Promise<SimletGroup>} The updated group instance
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks allocation permissions
  * 
  * @example
  * ```typescript
- * const allocator = await allocateToSessionSimlet(123, 456, 789, 555);
+ * const allocator = await allocateToSessionSimlet(123, 456, 789, false, 555, 101);
  * ```
  */
 export async function allocateToSessionSimlet(simletId: number, group_id: number, sessionId: number, is_admin: boolean, id: number, current_user_id?: number): Promise<SimletGroup> {
@@ -268,23 +278,100 @@ export async function allocateToSessionSimlet(simletId: number, group_id: number
   return await simlet.allocateToSession(group_id, sessionId, id);
 }
 
+/**
+ * Adds a tag to a session for a specific user.
+ * 
+ * @async
+ * @function addTagForUser
+ * @param {number} simletId - The ID of the parent simlet
+ * @param {number} sessionId - The ID of the session
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} current_user_id - The ID of the user adding the tag
+ * @param {number} tag_id - The ID of the tag to add
+ * @returns {Promise<SessionTag[]>} Array of tags associated with the session
+ * 
+ * @example
+ * ```typescript
+ * const tags = await addTagForUser(123, 456, false, 789, 101);
+ * ```
+ */
 export async function addTagForUser(simletId: number, sessionId: number, is_admin: boolean, current_user_id: number, tag_id: number): Promise<SessionTag[]> {
    const session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
    let tags = await session.addTagToList(tag_id);
    return tags;
 }
 
+/**
+ * Deletes a tag from a session for a specific user.
+ * 
+ * @async
+ * @function deleteSimletTagForUser
+ * @param {number} simletId - The ID of the parent simlet
+ * @param {number} sessionId - The ID of the session
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} current_user_id - The ID of the user deleting the tag
+ * @param {number} tag_id - The ID of the tag to delete
+ * @returns {Promise<SessionTag[]>} Array of remaining tags associated with the session
+ * 
+ * @example
+ * ```typescript
+ * const tags = await deleteSimletTagForUser(123, 456, false, 789, 101);
+ * ```
+ */
 export async function deleteSimletTagForUser(simletId: number, sessionId: number, is_admin: boolean, current_user_id: number, tag_id: number): Promise<SessionTag[]> {
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, current_user_id);
   const tags = await session.deleteTagFromList(tag_id);
   return tags;
 }
 
+/**
+ * Retrieves xAPI statements for a session from the LRS.
+ * 
+ * @async
+ * @function getLRSStatements
+ * @param {number} simletId - The ID of the parent simlet
+ * @param {number} sessionId - The ID of the session
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} currentUserId - The ID of the user requesting statements
+ * @param {any} query - LRS query parameters for filtering statements
+ * @returns {Promise<Object>} Array of xAPI statements matching the query
+ * 
+ * @example
+ * ```typescript
+ * const statements = await getLRSStatements(123, 456, false, 789, {
+ *   actor: 'user123',
+ *   verb: 'completed'
+ * });
+ * ```
+ */
 export async function getLRSStatements(simletId: number, sessionId: number, is_admin: boolean, currentUserId: number, query: any): Promise<Object> {
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
   return await session.getLRSStatements(query);
 }
 
+/**
+ * Retrieves test xAPI statements for a session from the LRS for a specific user.
+ * 
+ * @async
+ * @function getTestLRSStatements
+ * @param {number} simletId - The ID of the parent simlet
+ * @param {number} sessionId - The ID of the session
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} currentUserId - The ID of the user requesting statements
+ * @param {string} currentusername - The username of the user requesting statements
+ * @param {any} query - LRS query parameters for filtering statements
+ * @returns {Promise<Object>} Array of test xAPI statements matching the query
+ * 
+ * @throws {ValidationError} If the current user is not a tester in the session
+ * 
+ * @example
+ * ```typescript
+ * const statements = await getTestLRSStatements(123, 456, false, 789, 'user123', {
+ *   actor: 'user123',
+ *   verb: 'completed'
+ * });
+ * ```
+ */
 export async function getTestLRSStatements(simletId: number, sessionId: number, is_admin: boolean, currentUserId: number, currentusername: string,query: any): Promise<Object> {
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
   const group = await SimletGroup.getGroupFromCurrentUser(currentUserId);
@@ -305,4 +392,4 @@ export async function getTestLRSStatements(simletId: number, sessionId: number, 
   } else {
       throw new ValidationError('Current user is not a tester in this session');
   }
-}
+} 

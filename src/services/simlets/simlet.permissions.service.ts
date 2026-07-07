@@ -19,13 +19,14 @@ import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPer
  * @async
  * @function getSimletPermissions
  * @param {number} simletId - The ID of the simlet
- * @param {number} current_user_id - The ID of the user requesting permissions list
+ * @param {boolean} is_admin - Whether the user has admin privileges
+ * @param {number} [current_user_id] - The ID of the user requesting permissions list
  * @returns {Promise<UserPermission>} Array of all simlet permissions
  * @throws {NotFoundError} When simlet is not found or user lacks access
  * 
  * @example
  * ```typescript
- * const permissions = await getSimletPermissions(123, 456);
+ * const permissions = await getSimletPermissions(123, false, 456);
  * permissions.forEach(perm => {
  *   logger.info(`User ${perm.user_id}: ${perm.permission_level}`);
  * });
@@ -43,8 +44,9 @@ export async function getSimletPermissions(simletId: number, is_admin: boolean, 
  * @async
  * @function createSimletPermissions
  * @param {number} simletId - The ID of the simlet
- * @param {number} current_user_id - The ID of the user creating the permissions
+ * @param {boolean} is_admin - Whether the user has admin privileges
  * @param {Object} body - Permission data containing user ID and permission level
+ * @param {number} [current_user_id] - The ID of the user creating the permissions
  * @returns {Promise<UserPermission>} The newly created permission object
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks admin permissions
@@ -52,10 +54,10 @@ export async function getSimletPermissions(simletId: number, is_admin: boolean, 
  * 
  * @example
  * ```typescript
- * const permission = await createSimletPermissions(123, 456, {
+ * const permission = await createSimletPermissions(123, false, {
  *   user_id: 789,
  *   permission_level: 'read'
- * });
+ * }, 456);
  * ```
  */
 export async function createSimletPermissions(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<UserPermission> {
@@ -71,14 +73,15 @@ export async function createSimletPermissions(simletId: number, is_admin: boolea
  * @function getSimletPermissionsForUser
  * @param {number} simletId - The ID of the simlet
  * @param {number} userId - The ID of the user whose permissions to retrieve
- * @param {number} current_user_id - The ID of the user requesting permission info
+ * @param {boolean} is_admin - Whether the user has admin privileges
+ * @param {number} [current_user_id] - The ID of the user requesting permission info
  * @returns {Promise<SingleUserPermission>} The user's permission object for the simlet
  * @throws {NotFoundError} When simlet or user is not found
  * @throws {PermissionError} When current user lacks access to view permissions
  * 
  * @example
  * ```typescript
- * const permissions = await getSimletPermissionsForUser(123, 789, 456);
+ * const permissions = await getSimletPermissionsForUser(123, 789, false, 456);
  * logger.info('User permission level:', permissions.permission_level);
  * ```
  */
@@ -95,8 +98,9 @@ export async function getSimletPermissionsForUser(simletId: number, userId: numb
  * @function patchSimletPermissionsForUser
  * @param {number} simletId - The ID of the simlet
  * @param {number} userId - The ID of the user whose permissions to update
- * @param {number} current_user_id - The ID of the user performing the update
+ * @param {boolean} is_admin - Whether the user has admin privileges
  * @param {Object} body - Permission update data
+ * @param {number} [current_user_id] - The ID of the user performing the update
  * @returns {Promise<SingleUserPermission>} The updated permission object
  * @throws {NotFoundError} When simlet or user is not found
  * @throws {PermissionError} When current user lacks admin permissions
@@ -105,9 +109,9 @@ export async function getSimletPermissionsForUser(simletId: number, userId: numb
  * @example
  * ```typescript
  * const permission = await patchSimletPermissionsForUser(
- *   123, 789, 456,
- *   { permission_level: 'write' }
- * );
+ *   123, 789, false, {
+ *     permission_level: 'write'
+ *   }, 456);
  * ```
  */
 export async function patchSimletPermissionsForUser(simletId: number, userId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<SingleUserPermission> {
@@ -123,14 +127,15 @@ export async function patchSimletPermissionsForUser(simletId: number, userId: nu
  * @function deleteSimletPermissionsForUser
  * @param {number} simletId - The ID of the simlet
  * @param {number} userId - The ID of the user whose permissions to remove
- * @param {number} current_user_id - The ID of the user performing the deletion
+ * @param {boolean} is_admin - Whether the user has admin privileges
+ * @param {number} [current_user_id] - The ID of the user performing the deletion
  * @returns {Promise<void>} No return value on successful deletion
  * @throws {NotFoundError} When simlet or user is not found
  * @throws {PermissionError} When current user lacks admin permissions
  * 
  * @example
  * ```typescript
- * await deleteSimletPermissionsForUser(123, 789, 456);
+ * await deleteSimletPermissionsForUser(123, 789, false, 456);
  * ```
  */
 export async function deleteSimletPermissionsForUser(simletId: number, userId: number, is_admin: boolean, current_user_id?: number): Promise<void> {

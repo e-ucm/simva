@@ -1,10 +1,22 @@
 
-import { Response, NextFunction } from "express";
-import * as simletShlinkService from "@/services/simlets/simlet.shlink.service";
-import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
-import { logger } from "@/lib/logger";
-import { getAccess } from "@/controlers/users/user.helper";
-
+/**
+ * Creates a short link (shlink) for a specific simlet.
+ * 
+ * @async
+ * @function createShlinkURL
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and shlink configuration in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/shlink
+ * // Body: { "url": "https://example.com", "customSlug": "my-simlet" }
+ * // Returns: created shlink URL object
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function createShlinkURL(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let simletId = parseInt(req.params.simlet_id as string);
@@ -17,6 +29,23 @@ export async function createShlinkURL(req: AuthenticatedRequest, res: Response, 
     }
 }
 
+/**
+ * Retrieves the short link (shlink) for a specific simlet.
+ * 
+ * @async
+ * @function getShlinkURL
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/shlink
+ * // Returns: shlink URL object
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getShlinkURL(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let simletId = parseInt(req.params.simlet_id as string);
@@ -29,6 +58,24 @@ export async function getShlinkURL(req: AuthenticatedRequest, res: Response, nex
     }
 }
 
+/**
+ * Updates the short link (shlink) for a specific simlet.
+ * 
+ * @async
+ * @function updateShlinkURL
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and shlink configuration in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // PUT /simlets/:simlet_id/shlink
+ * // Body: { "url": "https://example.com", "customSlug": "updated-simlet" }
+ * // Returns: updated shlink URL object
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function updateShlinkURL(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let simletId = parseInt(req.params.simlet_id as string);
@@ -41,6 +88,23 @@ export async function updateShlinkURL(req: AuthenticatedRequest, res: Response, 
     }
 }
 
+/**
+ * Deletes the short link (shlink) for a specific simlet.
+ * 
+ * @async
+ * @function deleteShlinkURL
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/shlink
+ * // Returns: 204 No Content on success
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function deleteShlinkURL(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let simletId = parseInt(req.params.simlet_id as string);

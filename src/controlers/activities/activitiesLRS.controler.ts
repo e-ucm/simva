@@ -1,12 +1,22 @@
 
-import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
-import { NextFunction, Response } from "express";
-import * as activitiesLRSService from "@/services/activities/activitiesLRS.service";
-import { AuthentificationError, BadRequestError, NotFoundError, NotImplementedError, ValidationError } from "@/lib/errors/appErrors";
-import { logger } from "@/lib/logger";
-import { User } from "@/lib/mappers/Users/User";
-import { getAccess } from "@/controlers/users/user.helper";
-
+/**
+ * Retrieves xAPI statements for a specific activity.
+ * 
+ * @async
+ * @function getStatementsLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/statements
+ * // Returns array of xAPI statements
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -22,6 +32,24 @@ export async function getStatementsLRSForActivity(req: AuthenticatedRequest, res
     }
 }
 
+/**
+ * Retrieves test xAPI statements for a specific activity.
+ * 
+ * @async
+ * @function getTestStatementsLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs_test_statements
+ * // Returns array of test xAPI statements
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getTestStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -37,6 +65,24 @@ export async function getTestStatementsLRSForActivity(req: AuthenticatedRequest,
     }
 }
 
+/**
+ * Retrieves additional xAPI statements for a specific activity using a continuation token.
+ * 
+ * @async
+ * @function getMoreStatementsLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and 'more' query parameter
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or 'more' parameter is missing
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/more?more=token
+ * // Returns additional xAPI statements using continuation token
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getMoreStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -56,6 +102,25 @@ export async function getMoreStatementsLRSForActivity(req: AuthenticatedRequest,
     }
 }
 
+/**
+ * Posts xAPI statements to a specific activity.
+ * 
+ * @async
+ * @function postStatementsLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and array of xAPI statements in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /activities/:activity_id/lrs/statements
+ * // Body: [{"id":"1","actor":{},"verb":{},"object":{}}]
+ * // Returns: 201 Created with array of statement IDs
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function postStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -90,6 +155,25 @@ export async function postStatementsLRSForActivity(req: AuthenticatedRequest, re
     }
 }
 
+/**
+ * Updates xAPI statements for a specific activity.
+ * 
+ * @async
+ * @function putStatementsLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and array of xAPI statements in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /activities/:activity_id/lrs/statements
+ * // Body: [{"id":"1","actor":{},"verb":{},"object":{}}]
+ * // Returns: 201 Created with array of statement IDs
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function putStatementsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -124,6 +208,24 @@ export async function putStatementsLRSForActivity(req: AuthenticatedRequest, res
     }
 }
 
+/**
+ * Retrieves agents associated with xAPI statements for a specific activity.
+ * 
+ * @async
+ * @function getAgentsLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/agents
+ * // Returns array of agent objects
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getAgentsLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -139,6 +241,24 @@ export async function getAgentsLRSForActivity(req: AuthenticatedRequest, res: Re
     }
 }
 
+/**
+ * Retrieves agent profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function getAgentsProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/agents/profile
+ * // Returns array of agent profile objects
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -154,6 +274,25 @@ export async function getAgentsProfileLRSForActivity(req: AuthenticatedRequest, 
     }
 }
 
+/**
+ * Posts agent profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function postAgentsProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and agent profile data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /activities/:activity_id/lrs/agents/profile
+ * // Body: {"mbox":"mailto:example@example.com","name":"Example User"}
+ * // Returns: 204 No Content on success
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function postAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -173,6 +312,25 @@ export async function postAgentsProfileLRSForActivity(req: AuthenticatedRequest,
     }
 }
 
+/**
+ * Updates agent profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function updateAgentsProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and agent profile data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /activities/:activity_id/lrs/agents/profile
+ * // Body: {"mbox":"mailto:example@example.com","name":"Updated Name"}
+ * // Returns: 204 No Content on success
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function updateAgentsProfileLRSForActivity(req: AuthenticatedRequest, res:  Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -192,6 +350,24 @@ export async function updateAgentsProfileLRSForActivity(req: AuthenticatedReques
     }
 }
 
+/**
+ * Deletes agent profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function deleteAgentsProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /activities/:activity_id/lrs/agents/profile
+ * // Returns: 204 No Content on success
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function deleteAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -207,6 +383,24 @@ export async function deleteAgentsProfileLRSForActivity(req: AuthenticatedReques
     }
 }
 
+/**
+ * Retrieves activities associated with xAPI statements for a specific activity.
+ * 
+ * @async
+ * @function getActivitiesLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/activities
+ * // Returns array of activity objects
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getActivitiesLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -222,6 +416,24 @@ export async function getActivitiesLRSForActivity(req: AuthenticatedRequest, res
     }
 }
 
+/**
+ * Retrieves activity profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function getActivitiesProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/activities/profile
+ * // Returns array of activity profile objects
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -237,6 +449,25 @@ export async function getActivitiesProfileLRSForActivity(req: AuthenticatedReque
     }
 }
 
+/**
+ * Posts activity profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function postActivitiesProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and activity profile data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /activities/:activity_id/lrs/activities/profile
+ * // Body: {"id":"http://example.com/activity","name":"Example Activity"}
+ * // Returns: 201 Created with created activity profile
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function postActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -252,6 +483,25 @@ export async function postActivitiesProfileLRSForActivity(req: AuthenticatedRequ
     }
 }
 
+/**
+ * Updates activity profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function updateActivitiesProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and activity profile data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /activities/:activity_id/lrs/activities/profile
+ * // Body: {"id":"http://example.com/activity","name":"Updated Name"}
+ * // Returns: 200 OK with updated activity profile
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function updateActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -267,6 +517,24 @@ export async function updateActivitiesProfileLRSForActivity(req: AuthenticatedRe
     }
 }
 
+/**
+ * Deletes activity profiles for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function deleteActivitiesProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /activities/:activity_id/lrs/activities/profile
+ * // Returns: 204 No Content on success
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function deleteActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -282,6 +550,24 @@ export async function deleteActivitiesProfileLRSForActivity(req: AuthenticatedRe
     }
 }
 
+/**
+ * Retrieves activity states for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function getActivitiesStateLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/activities/state
+ * // Returns array of activity state objects
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -297,6 +583,27 @@ export async function getActivitiesStateLRSForActivity(req: AuthenticatedRequest
     }
 }
 
+/**
+ * Posts activity states for xAPI statements associated with a specific activity.
+ * Requires admin or impersonation privileges.
+ * 
+ * @async
+ * @function postActivitiesStateLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and activity state data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {AuthentificationError} If user lacks sufficient permissions
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /activities/:activity_id/lrs/activities/state
+ * // Body: {"stateId":"1","content":"{\"key\":\"value\"}"}
+ * // Returns: 201 Created with created activity state
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function postActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -315,6 +622,27 @@ export async function postActivitiesStateLRSForActivity(req: AuthenticatedReques
     }   
 }
 
+/**
+ * Updates activity states for xAPI statements associated with a specific activity.
+ * Requires admin or impersonation privileges.
+ * 
+ * @async
+ * @function updateActivitiesStateLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and activity state data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {AuthentificationError} If user lacks sufficient permissions
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /activities/:activity_id/lrs/activities/state
+ * // Body: {"stateId":"1","content":"{\"key\":\"updated_value\"}"}
+ * // Returns: 200 OK with updated activity state
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function updateActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -333,6 +661,26 @@ export async function updateActivitiesStateLRSForActivity(req: AuthenticatedRequ
     }
 }
 
+/**
+ * Deletes activity states for xAPI statements associated with a specific activity.
+ * Requires admin or impersonation privileges.
+ * 
+ * @async
+ * @function deleteActivitiesStateLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {AuthentificationError} If user lacks sufficient permissions
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /activities/:activity_id/lrs/activities/state
+ * // Returns: 204 No Content on success
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function deleteActivitiesStateLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -351,6 +699,24 @@ export async function deleteActivitiesStateLRSForActivity(req: AuthenticatedRequ
     }
 }
 
+/**
+ * Retrieves activity information (about) for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function getAboutLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/about
+ * // Returns activity information object
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getAboutLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -366,6 +732,24 @@ export async function getAboutLRSForActivity(req: AuthenticatedRequest, res: Res
     }
 }
 
+/**
+ * Retrieves a specific extension for xAPI statements associated with a specific activity.
+ * 
+ * @async
+ * @function getExtensionLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id and extension_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /activities/:activity_id/lrs/extensions/:extension_id
+ * // Returns extension data object
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
  export async function getExtensionLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -381,6 +765,27 @@ export async function getAboutLRSForActivity(req: AuthenticatedRequest, res: Res
     }
 }
 
+/**
+ * Updates agent profiles for xAPI statements associated with a specific activity.
+ * Requires admin or impersonation privileges.
+ * 
+ * @async
+ * @function putAgentsProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and agent profile data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {AuthentificationError} If user lacks sufficient permissions
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /activities/:activity_id/lrs/agents/profile
+ * // Body: {"mbox":"mailto:example@example.com","name":"Updated Name"}
+ * // Returns: 200 OK with updated agent profile
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function putAgentsProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;
@@ -399,6 +804,27 @@ export async function putAgentsProfileLRSForActivity(req: AuthenticatedRequest, 
     }
 }
 
+/**
+ * Updates activity profiles for xAPI statements associated with a specific activity.
+ * Requires admin or impersonation privileges.
+ * 
+ * @async
+ * @function putActivitiesProfileLRSForActivity
+ * @param {AuthenticatedRequest} req - Express request object with activity_id in URL parameters and activity profile data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {BadRequestError} If activity ID is invalid or request body is invalid
+ * @throws {AuthentificationError} If user lacks sufficient permissions
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /activities/:activity_id/lrs/activities/profile
+ * // Body: {"id":"http://example.com/activity","name":"Updated Name"}
+ * // Returns: 200 OK with updated activity profile
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function putActivitiesProfileLRSForActivity(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
         let currentUser = req.user?.sql;

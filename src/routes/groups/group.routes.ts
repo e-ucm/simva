@@ -20,6 +20,11 @@ import {
  * - PATCH /:group_id/permissions/:user_id - Update permissions for a user in a group
  * - DELETE /:group_id/permissions/:user_id - Delete permissions for a user in a group
  * 
+ * @module routes/groups/group
+ * @requires express
+ * @requires @/controlers/groups/group.controler
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ * 
  * @type {Router}
  * 
  * @example

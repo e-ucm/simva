@@ -8,6 +8,12 @@ import {
  * 
  * Routes:
  * - GET / - Retrieve all activity types
+ * 
+ * @module routes/activitiesTypes/activitiesTypes
+ * @requires express
+ * @requires @/controlers/activitiesTypes/activitiesTypes.controler
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ * 
  * @type {Router}
  * 
  * @example

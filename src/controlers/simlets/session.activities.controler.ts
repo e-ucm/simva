@@ -16,16 +16,22 @@ import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
 
 /**
- * @route /simlets/:simlet_id/sessions/:session_id/activities
- * @method GET
- * @description Get activities for a session in a simlet
- * @access Protected (requires authentication)
+ * Retrieves all activities associated with a specific session in a simlet.
  * 
- * @param {AuthenticatedRequest} req - Express request object containing simlet_id and session_id in URL params and authenticated user info
- * @param {Response} res - Express response object for sending the list of activities
+ * @async
+ * @function getSessionActivities
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters
+ * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
- * @returns {Promise<void>} - Returns a promise that resolves when the response is sent
- * @throws {Error} - Passes any errors to the next middleware for handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/:session_id/activities
+ * // Returns array of activity objects
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 export async function getSessionActivities(
   req: AuthenticatedRequest,
@@ -50,6 +56,24 @@ export async function getSessionActivities(
     next(err);
   }
 }
+
+/**
+ * Creates a new activity within a specific session in a simlet.
+ * 
+ * @async
+ * @function createSessionActivity
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters and activity data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/sessions/:session_id/activities
+ * // Body: { "name": "New Activity", "type": "manual" }
+ * // Returns: created activity object
+ */
 
 export async function createSessionActivity(
   req: AuthenticatedRequest,
@@ -77,6 +101,23 @@ export async function createSessionActivity(
   }
 }
 
+/**
+ * Updates an existing activity within a specific session in a simlet.
+ * 
+ * @async
+ * @function updateSessionActivity
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, session_id, and activity_id in URL parameters and update data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PUT /simlets/:simlet_id/sessions/:session_id/activities/:activity_id
+ * // Body: { "name": "Updated Activity Name" }
+ * // Returns: updated activity object
+ */
 export async function updateSessionActivity(
   req: AuthenticatedRequest,
   res: Response,
@@ -103,6 +144,23 @@ export async function updateSessionActivity(
   }
 }
 
+
+/**
+ * Deletes an activity from a specific session in a simlet.
+ * 
+ * @async
+ * @function deleteSessionActivity
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, session_id, and activity_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/sessions/:session_id/activities/:activity_id
+ * // Returns: 204 No Content
+ */
 export async function deleteSessionActivity(
   req: AuthenticatedRequest,
   res: Response,

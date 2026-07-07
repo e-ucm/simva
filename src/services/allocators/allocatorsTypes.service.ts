@@ -23,6 +23,7 @@ export { AllocatorType };
  * 
  * @async
  * @function getAllocatorTypes
+ * @param {string[]} [types] - Array of allocator type identifiers to retrieve
  * @returns {Promise<AllocatorType[]>} Array of allocator type objects with metadata
  * 
  * @throws {Error} If allocator type utilities cannot be loaded

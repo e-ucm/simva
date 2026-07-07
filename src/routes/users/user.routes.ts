@@ -11,6 +11,11 @@ import * as UserControler from "@/controlers/users/user.controler";
  * - PATCH /:username - Modify user (e.g., role)
  * - GET /me - Get current user information
  * 
+ * @module routes/users/user
+ * @requires express
+ * @requires @/controlers/users/user.controler
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ * 
  * @type {Router}
  * 
  * @example

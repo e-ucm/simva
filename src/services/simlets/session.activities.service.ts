@@ -21,14 +21,15 @@ import { Activity } from "@/lib/mappers/activities/Activity";
  * @function getSessionActivities
  * @param {number} simlet_id - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session containing the activities
- * @param {number} current_user_id - The ID of the user requesting the activities
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user requesting the activities
  * @returns {Promise<Activity[]>} Array of activities within the session
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks read permissions
  * 
  * @example
  * ```typescript
- * const activities = await getSessionActivities(123, 789, 456);
+ * const activities = await getSessionActivities(123, 789, false, 456);
  * activities.forEach(a => logger.info(a.name, a.type, a.url));
  * ```
  */
@@ -45,8 +46,9 @@ export async function getSessionActivities(simlet_id: number, sessionId: number,
  * @function addSessionActivities
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session to add activities to
- * @param {number} current_user_id - The ID of the user adding the activities
- * @param {Object} body - Activity configuration data
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {any} body - Activity configuration data
+ * @param {number} [current_user_id] - The ID of the user adding the activities
  * @returns {Promise<Activity>} The newly created activity instance
  * @throws {NotFoundError} When simlet or session is not found
  * @throws {PermissionError} When user lacks create permissions
@@ -54,11 +56,11 @@ export async function getSessionActivities(simlet_id: number, sessionId: number,
  * 
  * @example
  * ```typescript
- * const activity = await addSessionActivities(123, 456, 789, {
+ * const activity = await addSessionActivities(123, 456, false, {
  *   name: 'Pre-test Survey',
  *   type: 'limesurvey',
  *   url: 'https://survey.example.com/123'
- * });
+ * }, 789);
  * ```
  */
 export async function addSessionActivities(simletId: number, sessionId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Activity> {
@@ -75,8 +77,9 @@ export async function addSessionActivities(simletId: number, sessionId: number, 
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session containing the activity
  * @param {number} activityId - The ID of the activity to update
- * @param {number} current_user_id - The ID of the user updating the activity
- * @param {Object} body - Update data containing new activity properties
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {any} body - Update data containing new activity properties
+ * @param {number} [current_user_id] - The ID of the user updating the activity
  * @returns {Promise<Activity>} The updated activity instance
  * @throws {NotFoundError} When simlet, session, or activity is not found
  * @throws {PermissionError} When user lacks update permissions
@@ -84,9 +87,9 @@ export async function addSessionActivities(simletId: number, sessionId: number, 
  * 
  * @example
  * ```typescript
- * const activity = await updateSessionActivity(123, 456, 789, 555, {
+ * const activity = await updateSessionActivity(123, 456, 789, false, {
  *   name: 'Updated Survey Name'
- * });
+ * }, 555);
  * ```
  */
 export async function updateSessionActivity(simletId: number, sessionId: number, activityId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<Activity> {
@@ -108,14 +111,15 @@ export async function updateSessionActivity(simletId: number, sessionId: number,
  * @param {number} simletId - The ID of the parent simlet
  * @param {number} sessionId - The ID of the session containing the activity
  * @param {number} activityId - The ID of the activity to delete
- * @param {number} current_user_id - The ID of the user deleting the activity
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user deleting the activity
  * @returns {Promise<void>} No return value on successful deletion
  * @throws {NotFoundError} When simlet, session, or activity is not found
  * @throws {PermissionError} When user lacks delete permissions
  * 
  * @example
  * ```typescript
- * await deleteSessionActivity(123, 456, 789, 555);
+ * await deleteSessionActivity(123, 456, 789, false, 555);
  * ```
  */
 export async function deleteSessionActivity(simletId: number, sessionId: number, activityId: number, is_admin: boolean, current_user_id: number | undefined): Promise<void> {

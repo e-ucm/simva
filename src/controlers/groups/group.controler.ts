@@ -9,6 +9,7 @@ import { AuthentificationError } from "@/lib/errors/appErrors";
  * Supports optional pagination through limit and offset query parameters.
  * 
  * @async
+ * @function getGroups
  * @param {AuthenticatedRequest} req - Express request object with optional limit and offset query parameters
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
@@ -22,6 +23,8 @@ import { AuthentificationError } from "@/lib/errors/appErrors";
  * @example
  * // GET /groups?limit=10&offset=20
  * // Returns 10 groups starting from offset 20
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 export async function getGroups(
   req: AuthenticatedRequest,

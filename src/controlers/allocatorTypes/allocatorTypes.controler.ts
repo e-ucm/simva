@@ -39,6 +39,8 @@ import { getAccess } from "@/controlers/users/user.helper";
  * //   { type: "group", name: "Group Allocator", description: "...", utils: {...} },
  * //   { type: "session", name: "Session Allocator", description: "...", utils: {...} }
  * // ]
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 export async function getAllocatorTypes(
   req: AuthenticatedRequest,

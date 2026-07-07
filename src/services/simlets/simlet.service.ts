@@ -29,9 +29,13 @@ import { SessionScheduler } from "@/lib/mappers/session/SessionScheduler";
  * @async
  * @function getSimletsByUserId
  * @param {number} user_id - The user ID to search for
- * @param {string} searchString - Optional search string to filter simlets
- * @param {number} limit - Optional limit for pagination
- * @param {number} offset - Optional offset for pagination
+ * @param {boolean} [archived] - Whether to include archived simlets
+ * @param {string} [searchString] - Optional search string to filter simlets
+ * @param {number[]} [searchTags] - Optional array of tag IDs to filter simlets
+ * @param {number} [limit] - Optional limit for pagination
+ * @param {number} [offset] - Optional offset for pagination
+ * @param {string} [orderBy] - The field to order simlets by
+ * @param {string} [order] - The order direction (ASC or DESC)
  * @returns {Promise<Simlet[]>} Array of simlet records with permission information
  * 
  * @example
@@ -49,15 +53,42 @@ export async function getSimletsByUserId(user_id: number, archived?: boolean, se
  * @async
  * @function getSimletsForStudent
  * @param {number} current_user_id - The student user ID
- * @param {string} searchString - Optional search string to filter simlets
- * @param {number} limit - Optional limit for pagination
- * @param {number} offset - Optional offset for pagination
+ * @param {string} [searchString] - Optional search string to filter simlets
+ * @param {number[]} [searchTags] - Optional array of tag IDs to filter simlets
+ * @param {number} [limit] - Optional limit for pagination
+ * @param {number} [offset] - Optional offset for pagination
+ * @param {string} [orderBy] - The field to order simlets by
+ * @param {string} [order] - The order direction (ASC or DESC)
  * @returns {Promise<Simlet[]>} Array of simlet records accessible to the student
+ * 
+ * @example
+ * ```typescript
+ * const studentSimlets = await getSimletsForStudent(123);
+ * ```
  */
 export async function getSimletsForStudent(current_user_id: number, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
   return await Simlet.getAllFromDbData(current_user_id, true, undefined, searchString, limit, offset, searchTags, orderBy, order);
 }
 
+/**
+ * Retrieves all simlets for admin users.
+ * 
+ * @async
+ * @function getAllSimlets
+ * @param {boolean} [archived] - Whether to include archived simlets
+ * @param {string} [searchString] - Optional search string to filter simlets
+ * @param {number[]} [searchTags] - Optional array of tag IDs to filter simlets
+ * @param {number} [limit] - Optional limit for pagination
+ * @param {number} [offset] - Optional offset for pagination
+ * @param {string} [orderBy] - The field to order simlets by
+ * @param {string} [order] - The order direction (ASC or DESC)
+ * @returns {Promise<Simlet[]>} Array of all simlet records
+ * 
+ * @example
+ * ```typescript
+ * const allSimlets = await getAllSimlets();
+ * ```
+ */
 export async function getAllSimlets(archived?: boolean, searchString?: string, searchTags?: number[], limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Simlet[]> {
   return await Simlet.getAdminSimlets(archived, searchString, searchTags, limit, offset, orderBy, order);
 }
@@ -69,12 +100,13 @@ export async function getAllSimlets(archived?: boolean, searchString?: string, s
  * @async
  * @function getSimletBySimletIdAndUserId
  * @param {number} simlet_id - The simlet ID to search for
- * @param {number} current_user_id - The user ID to search for
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The user ID to search for
  * @returns {Promise<Simlet>} simlet record with permission information
  * 
  * @example
  * ```typescript
- * const userSimlet = await getSimletBySimletIdAndUserId(123, 456);
+ * const userSimlet = await getSimletBySimletIdAndUserId(123, false, 456);
  * ```
  */
 export async function getSimletBySimletIdAndUserId(simlet_id: number, is_admin: boolean, current_user_id?: number): Promise<Simlet> {
@@ -89,6 +121,8 @@ export async function getSimletBySimletIdAndUserId(simlet_id: number, is_admin: 
  * @async
  * @function createSimlet
  * @param {any} simletData - The simlet data to create
+ * @param {boolean} isAdmin - Whether the user creating the simlet is an admin
+ * @param {number} [currentUserId] - The ID of the user creating the simlet
  * @returns {Promise<Simlet>} The created simlet instance
  * @throws {ValidationError} When simlet data is invalid
  * 
@@ -98,7 +132,7 @@ export async function getSimletBySimletIdAndUserId(simlet_id: number, is_admin: 
  *   name: 'My Study',
  *   description: 'A comprehensive learning study',
  *   owner_id: 123
- * });
+ * }, false, 456);
  * ```
  */
 export async function createSimlet(simletData: any, isAdmin: boolean, currentUserId?: number): Promise<Simlet> {
@@ -111,8 +145,9 @@ export async function createSimlet(simletData: any, isAdmin: boolean, currentUse
  * @async
  * @function patch
  * @param {number} simletId - The ID of the simlet to update
- * @param {number} current_user_id - The ID of the user requesting the update
  * @param {any} simletData - Partial simlet data to update
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user requesting the update
  * @returns {Promise<Simlet>} The updated simlet instance
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks update permissions
@@ -120,10 +155,10 @@ export async function createSimlet(simletData: any, isAdmin: boolean, currentUse
  * 
  * @example
  * ```typescript
- * const updatedSimlet = await patch(123, 456, {
+ * const updatedSimlet = await patch(123, {
  *   name: 'Updated Study Name',
  *   description: 'New description'
- * });
+ * }, false, 456);
  * ```
  */
 export async function patch(simletId: number, simletData: any, is_admin: boolean, current_user_id?: number): Promise<Simlet> {
@@ -137,14 +172,15 @@ export async function patch(simletId: number, simletData: any, is_admin: boolean
  * @async
  * @function deleteSimlet
  * @param {number} simletId - The ID of the simlet to delete
- * @param {number} current_user_id - The ID of the user requesting the deletion
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user requesting the deletion
  * @returns {Promise<void>} Promise that resolves when deletion is complete
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks delete permissions
  * 
  * @example
  * ```typescript
- * await deleteSimlet(123, 456);
+ * await deleteSimlet(123, false, 456);
  * ```
  */
 export async function deleteSimlet(simletId: number, is_admin: boolean, current_user_id?: number): Promise<void> {
@@ -159,14 +195,15 @@ export async function deleteSimlet(simletId: number, is_admin: boolean, current_
  * @async
  * @function getSimletParticipants
  * @param {number} simletId - The ID of the simlet
- * @param {number} current_user_id - The ID of the user requesting the participants
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {number} [current_user_id] - The ID of the user requesting the participants
  * @returns {Promise<SimletParticipant[]>} Array of allocated participants
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks read permissions
  * 
  * @example
  * ```typescript
- * const participants = await getSimletParticipants(123, 456);
+ * const participants = await getSimletParticipants(123, false, 456);
  * participants.forEach(p => logger.info(p.user_id, p.allocated_group));
  * ```
  */
@@ -181,15 +218,17 @@ export async function getSimletParticipants(simletId: number, is_admin: boolean,
  * 
  * @async
  * @function getSimletCountByUserId
- * @param {number} current_user_id - The ID of the user requesting simlet count
- * @param {string} searchString - Optional search string to filter simlets
- * @param {number[]} searchTags - Optional array of tag IDs to filter simlets
+ * @param {boolean} allocated - Whether the user is allocated to the simlet
+ * @param {boolean} [archived] - Whether to count archived simlets
+ * @param {string} [searchString] - Optional search string to filter simlets
+ * @param {number[]} [searchTags] - Optional array of tag IDs to filter simlets
+ * @param {number} [current_user_id] - The ID of the user requesting simlet count
  * @returns {Promise<number>} The total number of accessible simlets
  * @throws {Error} If database query fails
  * 
  * @example
  * ```typescript
- * const totalSimlets = await getSimletCountByUserId(123, 'experiment');
+ * const totalSimlets = await getSimletCountByUserId(true, undefined, 'experiment', undefined, 123);
  * logger.info(`Found ${totalSimlets} experiment simlets`);
  * ```
  */
@@ -204,6 +243,7 @@ export async function getSimletCountByUserId(allocated: boolean, archived?: bool
  * @async
  * @function getSimletSchedule
  * @param {number} simletId - The ID of the simlet
+ * @param {boolean} is_admin - Whether the user is an admin
  * @param {number} current_user_id - The ID of the user requesting the schedule
  * @returns {Promise<SessionScheduler>} The schedule information for the simlet
  * @throws {NotFoundError} When simlet is not found
@@ -220,15 +260,16 @@ export async function getSimletSchedule(simletId: number, is_admin: boolean, cur
  * @async
  * @function exportSimlet
  * @param {number} simletId - The ID of the simlet to export
- * @param {number} currentUserId - The ID of the user performing the export
- * @param {boolean} withData - Whether to include participant data in export
+ * @param {boolean} is_admin - Whether the user is an admin
+ * @param {boolean} [withData=false] - Whether to include participant data in export
+ * @param {number} [currentUserId] - The ID of the user performing the export
  * @returns {Promise<string>} JSON string containing the exported simlet data
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks export permissions
  * 
  * @example
  * ```typescript
- * const exportedData = await exportSimlet(123, 456);
+ * const exportedData = await exportSimlet(123, false, true, 456);
  * fs.writeFileSync('simlet-backup.json', exportedData);
  * ```
  */
@@ -238,6 +279,20 @@ export async function exportSimlet(simletId: number, is_admin: boolean, withData
   return JSON.stringify(exported);
 }
 
+/**
+ * Retrieves the tracker configuration for a simlet.
+ * 
+ * @async
+ * @function getTrackerConfigForSimlet
+ * @param {number} simletId - The ID of the simlet
+ * @param {number} userId - The ID of the user requesting the configuration
+ * @returns {Promise<object>} The tracker configuration object
+ * 
+ * @example
+ * ```typescript
+ * const config = await getTrackerConfigForSimlet(123, 456);
+ * ```
+ */
 export async function getTrackerConfigForSimlet(simletId: number, userId: number): Promise<object> {
   let simlet = await Simlet.getFromDbData(simletId, false, userId);
   return simlet.getTrackerConfig();

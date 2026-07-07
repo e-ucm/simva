@@ -10,6 +10,7 @@
  * @requires @/lib/errors/appErrors
  * @requires @/middlewares/auth.middleware
  * @requires express
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 
 import { Response, NextFunction } from "express";
@@ -71,6 +72,22 @@ export async function getAllSimlets(
   }
 }
 
+/**
+ * Retrieves simlets for scheduler view.
+ * Filters simlets accessible to students based on search string, tags, and pagination.
+ * 
+ * @async
+ * @function getAllSchedulerSimlets
+ * @param {AuthenticatedRequest} req - Express request object with optional query parameters (searchString, searchTags, limit, offset, orderBy, order)
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/scheduler
+ * // Returns simlets accessible to students
+ */
 export async function getAllSchedulerSimlets(
   req: AuthenticatedRequest,
   res: Response,
@@ -98,6 +115,22 @@ export async function getAllSchedulerSimlets(
   }
 }
 
+/**
+ * Gets the count of simlets available for scheduler view.
+ * Filters simlets accessible to students based on search string and tags.
+ * 
+ * @async
+ * @function getSchedulerSimletCount
+ * @param {AuthenticatedRequest} req - Express request object with optional query parameters (searchString, searchTags)
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/scheduler/count
+ * // Returns count of simlets accessible to students
+ */
 export async function getSchedulerSimletCount(
   req: AuthenticatedRequest,
   res: Response,
@@ -115,6 +148,23 @@ export async function getSchedulerSimletCount(
   }
 }
 
+/**
+ * Gets the total count of simlets accessible to the current user.
+ * Filters by archived status, search string, and tags based on user role.
+ * 
+ * @async
+ * @function getSimletCount
+ * @param {AuthenticatedRequest} req - Express request object with optional query parameters (searchString, searchTags, status)
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/count
+ * // Returns total count of simlets accessible to user
+ */
 export async function getSimletCount(
   req: AuthenticatedRequest,
   res: Response,
@@ -145,6 +195,7 @@ export async function getSimletCount(
 
 /**
  * Retrieves a single simlet by ID.
+ * Access control based on user role (admin vs non-admin).
  * 
  * @async
  * @function getSimletById
@@ -184,6 +235,7 @@ export async function getSimletById(
 
 /**
  * Creates a new simlet in the database.
+ * Assigns ownership based on user role.
  * 
  * @async
  * @function createSimlet
@@ -265,8 +317,10 @@ export async function patchSimlet(
   }
 }
 
+
 /**
  * Deletes a simlet from the database by ID.
+ * Access control based on user role.
  * 
  * @async
  * @function deleteSimlet
@@ -302,6 +356,23 @@ export async function deleteSimlet(
   }
 }
 
+/**
+ * Retrieves all participants assigned to a specific simlet.
+ * Access control based on user role.
+ * 
+ * @async
+ * @function getSimletParticipants
+ * @param {AuthenticatedRequest} req - Express request object containing simlet ID in URL params
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/123/participants
+ * // Returns array of participant objects
+ */
 export async function getSimletParticipants(
   req: AuthenticatedRequest,
   res: Response,
@@ -327,6 +398,23 @@ export async function getSimletParticipants(
   }
 }
 
+/**
+ * Retrieves the schedule for a specific simlet.
+ * Access control based on user role.
+ * 
+ * @async
+ * @function getSimletSchedule
+ * @param {AuthenticatedRequest} req - Express request object containing simlet ID in URL params
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/123/schedule
+ * // Returns simlet schedule object
+ */
 export async function getSimletSchedule(
   req: AuthenticatedRequest,
   res: Response,
@@ -352,6 +440,23 @@ export async function getSimletSchedule(
   }
 }
 
+/**
+ * Exports complete simlet data including all related entities.
+ * Access control based on user role.
+ * 
+ * @async
+ * @function exportSimlet
+ * @param {AuthenticatedRequest} req - Express request object containing simlet ID in URL params
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/123/export
+ * // Returns exported simlet data as JSON
+ */
 export async function exportSimlet(
   req: AuthenticatedRequest,
   res: Response,
@@ -377,6 +482,21 @@ export async function exportSimlet(
   }
 }
 
+/**
+ * Gets tracker configuration for a specific simlet and user.
+ * Used for learning analytics and progress tracking.
+ * 
+ * @function getTrackerConfig
+ * @param {AuthenticatedRequest} req - Express request object containing simlet ID in URL params
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {void}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/123/tracker/config
+ * // Returns tracker configuration object
+ */
 export function getTrackerConfig(
   req: AuthenticatedRequest,
   res: Response,

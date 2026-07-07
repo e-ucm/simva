@@ -20,9 +20,12 @@ import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
  * 
  * @async
  * @function getGroups
- * @param {number} user_id - The ID of the user requesting groups
- * @param {boolean | null} [version=null] - Optional version filter for group generation type
- * @returns {Promise<Group[]>} Array of Group objects the user has access to
+ * @param {number} current_user_id - The ID of the user requesting groups
+ * @param {boolean} [version] - Optional version filter for group generation type
+ * @param {string} [searchString] - Optional search string to filter groups
+ * @param {number} [limit] - Optional limit for pagination
+ * @param {number} [offset] - Optional offset for pagination
+ * @returns {Promise<SimletGroup[]>} Array of SimletGroup objects the user has access to
  * 
  * @throws {Error} If database query fails or user permissions cannot be validated
  * 
@@ -33,12 +36,35 @@ import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
  * 
  * // Get groups filtered by generation version
  * const newGenGroups = await getGroups(123, true);
+ * 
+ * // Get groups with search string and pagination
+ * const filteredGroups = await getGroups(123, undefined, 'research', 10, 0);
  * ```
  */
 export async function getGroups(current_user_id: number, version?: boolean, searchString?: string, limit?: number, offset?: number): Promise<SimletGroup[]> {
     return await SimletGroup.getCurrentUserAllFromDbData(current_user_id, version, limit, offset, searchString);
 }
 
+/**
+ * Retrieves all groups for admin users.
+ * 
+ * @async
+ * @function getAdminGroups
+ * @param {boolean} [version] - Optional version filter for group generation type
+ * @param {string} [searchString] - Optional search string to filter groups
+ * @param {number} [limit] - Optional limit for pagination
+ * @param {number} [offset] - Optional offset for pagination
+ * @returns {Promise<SimletGroup[]>} Array of all SimletGroup objects
+ * 
+ * @example
+ * ```typescript
+ * // Get all groups for admin
+ * const allGroups = await getAdminGroups();
+ * 
+ * // Get groups with search string and pagination
+ * const filteredGroups = await getAdminGroups(true, 'research', 10, 0);
+ * ```
+ */
 export async function getAdminGroups(version: boolean | undefined, searchString: string | undefined, limit: number | undefined, offset: number | undefined): Promise<SimletGroup[] | PromiseLike<SimletGroup[]>> {
   return await SimletGroup.getAdminAllFromDbData(version, limit, offset, searchString);
-}
+} 

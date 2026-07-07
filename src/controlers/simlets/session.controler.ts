@@ -6,6 +6,7 @@
  * @requires @/services/simlets/simlet.service
  * @requires @/middlewares/auth.middleware
  * @requires express
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 
 import { Response, NextFunction } from "express";
@@ -16,6 +17,24 @@ import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
 import { splitSearchTags } from "@/controlers/simlets/helpers";
 
+
+/**
+ * Retrieves all sessions associated with a specific simlet.
+ * Supports filtering by status, search string, tags, and pagination.
+ * 
+ * @async
+ * @function getSimletSessions
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and optional query parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions
+ * // Returns array of session objects
+ */
 export async function getSimletSessions(
   req: AuthenticatedRequest,
   res: Response,
@@ -54,6 +73,23 @@ export async function getSimletSessions(
   }
 }
 
+/**
+ * Gets the count of sessions associated with a specific simlet.
+ * Filters by status, search string, and tags.
+ * 
+ * @async
+ * @function getSimletSessionCount
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and optional query parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/count
+ * // Returns: { count: 5 }
+ */
 export async function getSimletSessionCount(
   req: AuthenticatedRequest,
   res: Response,
@@ -78,6 +114,22 @@ export async function getSimletSessionCount(
   }
 }
 
+/**
+ * Retrieves a specific session by ID within a simlet.
+ * 
+ * @async
+ * @function getSimletSession
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/:session_id
+ * // Returns: session object
+ */
 export async function getSimletSession(
   req: AuthenticatedRequest,
   res: Response,
@@ -104,6 +156,22 @@ export async function getSimletSession(
   }
 }
 
+/**
+ * Retrieves all participants assigned to a specific session within a simlet.
+ * 
+ * @async
+ * @function getSimletSessionParticipants
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/:session_id/participants
+ * // Returns: array of participant objects
+ */
 export async function getSimletSessionParticipants(
   req: AuthenticatedRequest,
   res: Response,
@@ -130,6 +198,23 @@ export async function getSimletSessionParticipants(
   }
 }
 
+/**
+ * Activates or deactivates a session within a simlet.
+ * 
+ * @async
+ * @function activateSimletSession
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters and activate flag in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PATCH /simlets/:simlet_id/sessions/:session_id/activate
+ * // Body: { "activate": true }
+ * // Returns: updated session object
+ */
 export async function activateSimletSession(
   req: AuthenticatedRequest,
   res: Response,
@@ -157,6 +242,23 @@ export async function activateSimletSession(
   }
 }
 
+/**
+ * Creates a new session within a simlet.
+ * 
+ * @async
+ * @function createSimletSession
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id in URL parameters and session data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/sessions
+ * // Body: { "name": "New Session", "description": "Session description" }
+ * // Returns: created session object
+ */
 export async function createSimletSession(
   req: AuthenticatedRequest,
   res: Response,
@@ -183,6 +285,24 @@ export async function createSimletSession(
   }
 }
 
+
+/**
+ * Updates an existing session within a simlet.
+ * 
+ * @async
+ * @function patchSimletSession
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters and update data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PATCH /simlets/:simlet_id/sessions/:session_id
+ * // Body: { "name": "Updated Name", "description": "Updated description" }
+ * // Returns: updated session object
+ */
 export async function patchSimletSession(
   req: AuthenticatedRequest,
   res: Response,
@@ -210,6 +330,22 @@ export async function patchSimletSession(
   }
 }
 
+/**
+ * Deletes a session from a simlet.
+ * 
+ * @async
+ * @function deleteSimletSession
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/sessions/:session_id
+ * // Returns: 204 No Content
+ */
 export async function deleteSimletSession(
   req: AuthenticatedRequest,
   res: Response,
@@ -235,6 +371,22 @@ export async function deleteSimletSession(
   }
 }
 
+/**
+ * Adds a tag to a specific session for the current user.
+ * 
+ * @async
+ * @function addTagForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, session_id, and tag_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/sessions/:session_id/tags/:tag_id
+ * // Returns: array of tag objects
+ */
 export async function addTagForUser(
   req: AuthenticatedRequest,
   res: Response,
@@ -260,6 +412,22 @@ export async function addTagForUser(
   }
 }
 
+/**
+ * Deletes a tag from a specific session for the current user.
+ * 
+ * @async
+ * @function deleteTagForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, session_id, and tag_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/sessions/:session_id/tags/:tag_id
+ * // Returns: array of tag objects
+ */
 export async function deleteTagForUser(
   req: AuthenticatedRequest,
   res: Response,
@@ -285,6 +453,22 @@ export async function deleteTagForUser(
   }
 }
 
+/**
+ * Retrieves LRS (Learning Record Store) statements for a specific session.
+ * Supports filtering via query parameters.
+ * 
+ * @async
+ * @function getLRSStatementsForSession
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters and optional query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/:session_id/lrs
+ * // Returns: array of xAPI statements
+ */
 export async function getLRSStatementsForSession(
   req: AuthenticatedRequest,
   res: Response,
@@ -304,6 +488,22 @@ export async function getLRSStatementsForSession(
   }
 }
 
+/**
+ * Retrieves test LRS (Learning Record Store) statements for a specific session.
+ * Includes username in query for test-specific filtering.
+ * 
+ * @async
+ * @function getTestLRSStatementsForSession
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters and optional query filters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {Error} Passes errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/:session_id/test/lrs
+ * // Returns: array of test-specific xAPI statements
+ */
 export async function getTestLRSStatementsForSession(
   req: AuthenticatedRequest,
   res: Response,

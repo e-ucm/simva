@@ -10,6 +10,7 @@ import * as userService from "@/services/users/user.service";
  * Otherwise, returns all users.
  * 
  * @async
+ * @function getUsers
  * @param {AuthenticatedRequest} req - Express request object with optional username query parameter
  * @param {Response} res - Express response object
  * @param {NextFunction} next - Express next middleware function for error handling
@@ -21,8 +22,10 @@ import * as userService from "@/services/users/user.service";
  * // Returns all users
  * 
  * @example
-* // GET /users?username=john
+ * // GET /users?username=john
  * // Returns user with username 'john'
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
 export async function getUsers(
   req: AuthenticatedRequest,
