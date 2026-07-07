@@ -10,6 +10,12 @@ import { BadRequestError } from "@/lib/errors/appErrors";
  * @class UserPermission
  * @description Simple mapper for associating usernames with permission strings.
  * Used for authorization and access control throughout the application.
+ * 
+ * @module lib/mappers/UserPermisions/UserPermission
+ * @requires @/lib/db
+ * @requires @/lib/mappers/UserPermisions/SingleUserPermission
+ * @requires @/lib/logger
+ * @requires @/lib/errors/appErrors
  */
 export class UserPermission {
     /**

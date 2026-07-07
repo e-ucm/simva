@@ -4,7 +4,6 @@
  *
  * @class NotFoundError
  * @extends {Error}
- *
  * @example
  * throw new NotFoundError("User not found");
  */
@@ -27,7 +26,6 @@ export class NotFoundError extends Error {
  *
  * @class BadRequestError
  * @extends {Error}
- *
  * @example
  * throw new BadRequestError("Invalid request parameters");
  */
@@ -50,7 +48,6 @@ export class BadRequestError extends Error {
  *
  * @class AuthentificationError
  * @extends {Error}
- *
  * @example
  * throw new AuthentificationError("Invalid credentials");
  */
@@ -88,14 +85,16 @@ export class ValidationError extends Error {
 }
 
 /**
- * Custom error class for handling conflict errors.
- * Extends the standard Error class and sets the error name to "ConflictError".
+ * Custom error class for handling LRS (Learning Record Store) errors.
+ * Extends the standard Error class and sets the error name to "LRSError".
+ * This error is used to wrap errors that occur during LRS operations, providing a consistent error type for handling LRS-related issues.
+ * The original error is included as a property for debugging purposes, allowing developers to access the underlying error details when handling LRSErrors.
  * 
- * @class ConflictError
+ * @class LRSError
  * @extends {Error}
  * @example
- * throw new ConflictError("Resource already exists");
- */ 
+ * throw new LRSError("Failed to flush statements to LRS", originalError);
+ */
 export class ConflictError extends Error {
   /**
    * Creates a new ConflictError instance.

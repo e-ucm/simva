@@ -15,6 +15,24 @@ import { logger } from "@/lib/logger";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 import { getAccess } from "@/controlers/users/user.helper";
 
+/**
+ * Retrieves all permissions for a specific session in a simlet.
+ * 
+ * @async
+ * @function getSessionPermissions
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/:session_id/permissions
+ * // Returns session permissions object
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
 export async function getSessionPermissions(
   req: AuthenticatedRequest,
   res: Response,
@@ -41,6 +59,23 @@ export async function getSessionPermissions(
   }
 }
 
+/**
+ * Creates permissions for a session.
+ * 
+ * @async
+ * @function createSessionPermissions
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id and session_id in URL parameters and permission data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // POST /simlets/:simlet_id/sessions/:session_id/permissions
+ * // Body: { user_id: 123, permission: "READ" }
+ * // Returns: created permissions object
+ */
 export async function createSessionPermissions(
   req: AuthenticatedRequest,
   res: Response,
@@ -68,6 +103,22 @@ export async function createSessionPermissions(
   }
 }
 
+/**
+ * Retrieves permissions for a specific user on a specific session.
+ * 
+ * @async
+ * @function getSessionPermissionsForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, session_id and user_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // GET /simlets/:simlet_id/sessions/:session_id/permissions/:user_id
+ * // Returns: user's permissions object
+ */
 export async function getSessionPermissionsForUser(
   req: AuthenticatedRequest,
   res: Response,
@@ -95,6 +146,23 @@ export async function getSessionPermissionsForUser(
   }
 }
 
+/**
+ * Updates permissions for a specific user on a specific session.
+ * 
+ * @async
+ * @function patchSessionPermissionsForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, session_id and user_id in URL parameters and updated permission data in body
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // PATCH /simlets/:simlet_id/sessions/:session_id/permissions/:user_id
+ * // Body: { permission: "WRITE" }
+ * // Returns: updated permissions object
+ */
 export async function patchSessionPermissionsForUser(
   req: AuthenticatedRequest,
   res: Response,
@@ -123,6 +191,22 @@ export async function patchSessionPermissionsForUser(
   }
 }
 
+/**
+ * Deletes permissions for a specific user on a specific session.
+ * 
+ * @async
+ * @function deleteSessionPermissionsForUser
+ * @param {AuthenticatedRequest} req - Express request object with simlet_id, session_id and user_id in URL parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If user has invalid role
+ * @throws {Error} Passes other errors to next middleware
+ * 
+ * @example
+ * // DELETE /simlets/:simlet_id/sessions/:session_id/permissions/:user_id
+ * // Returns: 204 No Content
+ */
 export async function deleteSessionPermissionsForUser(
   req: AuthenticatedRequest,
   res: Response,

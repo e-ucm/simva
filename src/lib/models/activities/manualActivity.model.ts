@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Manual Activity model for SIMVA API.
+ * Represents manual learning activities that require user interaction with external resources.
+ * 
+ * @module models/activities/manualActivity
+ */
 import { Sequelize, Model } from "sequelize";
 
 export class ManualActivity extends Model {

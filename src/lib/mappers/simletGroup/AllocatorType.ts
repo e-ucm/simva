@@ -2,11 +2,11 @@
  * @fileoverview Mapper class for Allocator Type metadata.
  * Provides structured representation of allocator types with serialization support.
  * 
- * @module lib/mappers/allocators/AllocatorType
- * @requires @/lib/mappers/allocators/Allocator
- * @requires @/lib/mappers/allocators/GroupAllocator
- * @requires @/lib/mappers/allocators/SessionAllocator
- * @requires @/lib/mappers/allocators/RandomAllocator
+ * @module lib/mappers/simletGroup/AllocatorType
+ * @requires @/lib/mappers/simletGroup/SimletGroup
+ * @requires @/lib/mappers/simletGroup/GroupAllocatorSimletGroup
+ * @requires @/lib/mappers/simletGroup/SessionAllocatorSimletGroup
+ * @requires @/lib/mappers/simletGroup/RandomAllocatorSimletGroup
  * @requires @/lib/logger
  */
 

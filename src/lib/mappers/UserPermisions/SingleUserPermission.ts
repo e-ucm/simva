@@ -6,9 +6,14 @@ import { logger } from "@/lib/logger";
  * User Permission mapper class representing user access permissions.
  * Maps users to their permission levels within the system.
  * 
- * @class SingleSimletUserPermission
+ * @class SingleUserPermission
  * @description Simple mapper for associating usernames with permission strings.
  * Used for authorization and access control throughout the application.
+ * 
+ * @module lib/mappers/UserPermisions/SingleUserPermission
+ * @requires @/lib/db
+ * @requires @/lib/errors/appErrors
+ * @requires @/lib/logger
  */
 export class SingleUserPermission {
     object_id: number;

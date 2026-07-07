@@ -3,13 +3,18 @@ import { SimletGroup } from "./SimletGroup";
 import { logger } from "@/lib/logger";
 
 /**
- * Session Allocator mapper class extending base Allocator.
+ * Session Allocator mapper class extending base SimletGroup.
  * Implements session-based assignment ensuring no date overlaps between sessions.
  * 
  * @class SessionAllocatorSimletGroup
  * @extends SimletGroup
  * @description Handles session allocation with date validation to prevent conflicts.
  * Ensures participants are assigned to non-overlapping session schedules.
+ * 
+ * @module lib/mappers/simletGroup/SessionAllocatorSimletGroup
+ * @requires @/lib/errors/appErrors
+ * @requires @/lib/mappers/simletGroup/SimletGroup
+ * @requires @/lib/logger
  */
 export class SessionAllocatorSimletGroup extends SimletGroup {
     /**

@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Allocation mapper for SIMVA API.
+ * Manages participant and group allocations within studies (simlets) for experimental research.
+ * 
+ * @module mappers/allocators/Allocation
+ * @requires @/lib/db
+ * @requires @/lib/errors/appErrors
+ * @requires @/lib/logger
+ */
+
 import { db } from "@/lib/db";
 import { BadRequestError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
@@ -10,13 +20,56 @@ const ALLOCATOR_TYPE = {
     SESSION: 'session'
 } as const;
 
+/**
+ * Allocation mapper class representing participant or group assignments to sessions within studies.
+ * Used for managing experimental allocations in educational research studies.
+ * 
+ * @class Allocation
+ * @description Handles the mapping of participants or groups to specific sessions
+ * for experimental research studies. Supports different allocation strategies.
+ */
 export class Allocation {
-    session_id: number
-    object_id: number
-    object_type: string
-    createdAt?: Date
-    updatedAt?: Date
+    /**
+     * ID of the session this allocation is assigned to
+     */
+    session_id: number;
+    
+    /**
+     * ID of the allocated object (participant or group)
+     */
+    object_id: number;
+    
+    /**
+     * Type of allocated object (participant or group)
+     */
+    object_type: string;
+    
+    /**
+     * Timestamp when the allocation was created
+     */
+    createdAt?: Date;
+    
+    /**
+     * Timestamp when the allocation was last updated
+     */
+    updatedAt?: Date;
 
+    /**
+     * Creates a new Allocation instance
+     * 
+     * @param {string} object_type - Type of allocated object ('group', 'participant', etc.)
+     * @param {any} data - Raw data object containing allocation properties
+     * @description Initializes allocation properties based on object type.
+     * Assigns object_id based on the allocation strategy (group or participant).
+     * 
+     * @example
+     * ```typescript
+     * const allocation = new Allocation('group', {
+     *   session_id: 123,
+     *   group_id: 456
+     * });
+     * ```
+     */
     constructor(object_type: string, data: any) {
         this.object_type = object_type;
         this.session_id = data.session_id;
@@ -41,6 +94,23 @@ export class Allocation {
         logger.debug({ object_type, session_id: this.session_id, object_id: this.object_id }, 'Allocation instance created');
     }
 
+    /**
+     * Retrieves allocation data from database for a specific simlet and group.
+     * 
+     * @static
+     * @async
+     * @method getFromDbData
+     * @param {number} simlet_id - ID of the simlet to get allocations for
+     * @param {number} group_id - ID of the group to get allocations for
+     * @param {string} allocator_type - Type of allocator to use ('default', 'group', 'random', 'session')
+     * @returns {Promise<Allocation[]>} Promise resolving to array of Allocation instances
+     * @throws {BadRequestError} When unknown allocator type is specified
+     * 
+     * @example
+     * ```typescript
+     * const allocations = await Allocation.getFromDbData(123, 456, 'group');
+     * ```
+     */
     static async getFromDbData(simlet_id: number, group_id: number, allocator_type: string) : Promise<Allocation[]> {
         let allocations : any = [];
         switch(allocator_type) {
@@ -69,6 +139,18 @@ export class Allocation {
         return allocations.map((allocation: any) => new Allocation(allocator_type, allocation));
     }
 
+    /**
+     * Converts the Allocation instance to a JSON representation.
+     * 
+     * @method toJSON
+     * @returns {object} Plain object containing allocation properties
+     * 
+     * @example
+     * ```typescript
+     * const allocationData = allocation.toJSON();
+     * logger.info('Allocation data:', allocationData);
+     * ```
+     */
     toJSON(): object {
         return { 
             object_id: this.object_id,

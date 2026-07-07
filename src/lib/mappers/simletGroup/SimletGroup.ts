@@ -15,6 +15,15 @@ import { UserPermission } from "../UserPermisions/UserPermission";
  * @class SimletGroup
  * @description Manages the relationship between groups and studies,
  * including participant lists and permission management.
+ * 
+ * @module lib/mappers/simletGroup/SimletGroup
+ * @requires @/lib/db
+ * @requires @/lib/errors/appErrors
+ * @requires @/lib/logger
+ * @requires @/lib/mappers/simlet/SimletParticipant
+ * @requires @/lib/mappers/allocators/Allocation
+ * @requires @/lib/mappers/session/Session
+ * @requires @/lib/mappers/UserPermisions/UserPermission
  */
 export class SimletGroup {
     /**

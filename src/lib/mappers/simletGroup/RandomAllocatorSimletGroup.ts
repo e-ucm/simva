@@ -5,13 +5,20 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 /**
- * Random Allocator mapper class extending base Allocator.
+ * Random Allocator mapper class extending base SimletGroup.
  * Implements random assignment of participants to sessions/conditions.
  * 
  * @class RandomAllocatorSimletGroup
  * @extends SimletGroup
  * @description Handles random allocation strategies for distributing participants
  * across different experimental conditions or sessions in a study.
+ * 
+ * @module lib/mappers/simletGroup/RandomAllocatorSimletGroup
+ * @requires @/lib/errors/appErrors
+ * @requires @/lib/mappers/simletGroup/RandomPercentages
+ * @requires @/lib/mappers/simletGroup/SimletGroup
+ * @requires @/lib/db
+ * @requires @/lib/logger
  */
 export class RandomAllocatorSimletGroup extends SimletGroup {
     percentages: RandomPercentages[] = [];

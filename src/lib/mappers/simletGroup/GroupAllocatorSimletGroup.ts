@@ -6,6 +6,24 @@ import { Session } from "../session/Session";
 import { SimletParticipant } from "../simlet/SimletParticipant";
 import { Allocation } from "../allocators/Allocation";
 
+/**
+ * Group Allocator mapper class extending base SimletGroup.
+ * Implements group-based assignment of participants to sessions.
+ * 
+ * @class GroupAllocatorSimletGroup
+ * @extends SimletGroup
+ * @description Handles group-based allocation strategies for assigning
+ * entire groups of participants to specific sessions in a study.
+ * 
+ * @module lib/mappers/simletGroup/GroupAllocatorSimletGroup
+ * @requires @/lib/logger
+ * @requires @/lib/mappers/simletGroup/SimletGroup
+ * @requires @/lib/errors/appErrors
+ * @requires @/lib/db
+ * @requires @/lib/mappers/session/Session
+ * @requires @/lib/mappers/simlet/SimletParticipant
+ * @requires @/lib/mappers/allocators/Allocation
+ */
 export class GroupAllocatorSimletGroup extends SimletGroup {
     /**
      * Gets the allocator type identifier

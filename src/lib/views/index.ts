@@ -12,9 +12,12 @@
  * require multiple table joins when accessed directly.
  * 
  * @module views/index
- * @requires @/lib/views/userView.queries
- * @requires @/lib/views/v_complete_simlets.queries  
- * @requires @/lib/views/v_complete_sessions.queries
+ * @requires @/lib/views/simlets.queries
+ * @requires @/lib/views/activities.queries
+ * @requires @/lib/views/groups.queries
+ * @requires @/lib/views/groupParticipants.queries
+ * @requires @/lib/views/allocator.queries
+ * @requires @/lib/views/sessions.queries
  */
 
 import Simlet from "@/lib/views/simlets.queries";
