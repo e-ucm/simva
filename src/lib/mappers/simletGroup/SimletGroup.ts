@@ -287,6 +287,18 @@ export class SimletGroup {
                 throw new ValidationError(`Cannot add an coordinator as participant if you are an owner of the simlet`);
             }
         }
+        
+        // Check if participant is already assigned to any group within this simlet
+        const existingAssignment = await db.Tables.ExperimentalParticipants.findOne({
+            where: { 
+                simlet_id: this.simlet_id, 
+                participant_id: participantId 
+            }
+        });
+        if (existingAssignment) {
+            throw new ConflictError(`Participant with ID ${participantId} is already assigned to a group within this simlet`);
+        }
+        
         await SimletParticipant.addToGroup(this.group_id, participantId);
         const targetSessionId = await this.resolveTargetSessionId(participantId);
         await db.Tables.ExperimentalParticipants.upsert({
