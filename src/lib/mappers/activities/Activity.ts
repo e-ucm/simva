@@ -628,7 +628,7 @@ export class Activity {
 			timestamp: completed_date.toISOString()
 		}
 		await kafkaEventClient.sendMessage(JSON.stringify(message));
-		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_completed");
+		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "all");
 		logger.debug({data}, `Current completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		const completionUpdate: Partial<ActivityCompletion> = {
 			activity_completed: completed,

@@ -183,15 +183,15 @@ export class ActivityCompletion {
          switch (this.data_field) {
             case 'all':
                 json.activity_initialized = this.activity_initialized;
-                json.activity_progress = this.activity_progress;
+                json.activity_progress = this.activity_progress ?? null;
                 json.activity_suspended = this.activity_suspended;
                 json.activity_completed = this.activity_completed;
-                json.activity_initialization_date = this.activity_initialization_date;
-                json.activity_suspension_date = this.activity_suspension_date;
-                json.activity_completion_date = this.activity_completion_date;
-                json.activity_result_presigned_url = this.activity_result_presigned_url || undefined;
-                json.activity_result_presigned_url_generated_at = this.activity_result_presigned_url_generated_at ? new Date(this.activity_result_presigned_url_generated_at) : undefined;
-                json.activity_result_presigned_url_expire_at = this.activity_result_presigned_url_expire_at ? new Date(this.activity_result_presigned_url_expire_at) : undefined;
+                json.activity_initialization_date = this.activity_initialization_date ?? null;
+                json.activity_suspension_date = this.activity_suspension_date ?? null;
+                json.activity_completion_date = this.activity_completion_date ?? null;
+                json.activity_result_presigned_url = this.activity_result_presigned_url ?? null;
+                json.activity_result_presigned_url_generated_at = this.activity_result_presigned_url_generated_at ?? null;
+                json.activity_result_presigned_url_expire_at = this.activity_result_presigned_url_expire_at ?? null;
                 break;
             case 'activity_initialized':
                 json.activity_initialized = this.activity_initialized;

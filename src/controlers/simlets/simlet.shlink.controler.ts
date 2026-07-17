@@ -1,4 +1,10 @@
 
+import { Response, NextFunction } from "express";
+import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
+import { getAccess } from "@/controlers/users/user.helper";
+import * as simletShlinkService from "@/services/simlets/simlet.shlink.service";
+import { logger } from "@/lib/logger";
+
 /**
  * Creates a short link (shlink) for a specific simlet.
  * 

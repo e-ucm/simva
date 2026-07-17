@@ -1,3 +1,7 @@
+import { Response, NextFunction } from "express";
+import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
+import * as tagService from "@/services/simlets/tags.services";
+import { logger } from "@/lib/logger";
 
 /**
  * Retrieves all simlet tags for the current user.
