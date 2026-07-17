@@ -34,6 +34,9 @@ import { logger } from '@/lib/logger';
 import { checkDatabaseConnection } from '@/lib/db';
 import { limesurveyWebhookHandler, verifyHookdeckSignature } from '@/lib/utils/limesurveyWebhook';
 import { config } from '@/lib/config';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json');
 
 /**
  * Main Express application instance for SIMVA API.
@@ -82,6 +85,10 @@ app.post('/limesurvey-completion-webhooks', verifyHookdeckSignature, limesurveyW
 // Health check endpoint
 app.get('/health', async (_req: Request, res: Response) => {
   res.json({ status: true, db: { status: await checkDatabaseConnection() } });
+});
+
+app.get('/version', async (_req: Request, res: Response) => {
+  res.json({ version: pkg.version });
 });
 
 app.use('/users', userRoutes);

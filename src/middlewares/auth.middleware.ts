@@ -210,6 +210,7 @@ export class Authenticator {
   static isPublicEndpoint(path: string): boolean {
     const publicEndpoints = [
       '/health',
+      '/version',
       '/limesurvey-completion-webhooks'
     ];
     

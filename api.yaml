@@ -55,6 +55,19 @@ paths:
           $ref: '#/components/responses/BadRequestError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /version:
+    get:
+      summary: version check endpoint
+      operationId: versionCheck
+      description: |
+        Simple version check endpoint to verify that the API is running
+      responses:
+        '200':
+          $ref: '#/components/responses/VersionCheckSuccess'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /events:
     get:
       summary: send Server Side Events to Client
@@ -4691,6 +4704,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/health_check_response'
+    VersionCheckSuccess:
+      description: Version check successful
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/version_check_response'
     AuthentificationError:
       description: Authentification error
       content:
@@ -4751,6 +4770,14 @@ components:
             status:
               type: boolean
               example: true
+    version_check_response:
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          type: string
+          example: "1.0.0"
     error:
       description: An error occurred
       type: object
