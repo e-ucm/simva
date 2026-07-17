@@ -61,39 +61,27 @@ export async function isAdmin(username: string): Promise<boolean> {
  * Retrieves available survey languages for a specific Limesurvey activity.
  * 
  * @async
- * @function getSurveyLanguagesForActivity
- * @param {number} activity_id - The ID of the activity
- * @param {boolean} allocated - Whether the user is allocated to the activity
- * @param {boolean} is_admin - Whether the requesting user has admin privileges
- * @param {number} current_user_id - The ID of the requesting user
+ * @function getSurveyLanguagesForSurvey
+ * @param {number} survey_id - The ID of the survey
  * @returns {Promise<SurveyLanguages>} Object containing available survey languages
  * @throws {ValidationError} If the activity is not a Limesurvey activity
  * 
  * @example
  * ```typescript
- * const languages = await getSurveyLanguagesForActivity(123, true, false, 456);
+ * const languages = await getSurveyLanguagesForSurvey(123);
  * console.log(languages.languages);
  * ```
  */
-export async function getSurveyLanguagesForActivity(activity_id: number, allocated: boolean, is_admin: boolean, current_user_id: number): Promise<SurveyLanguages> {
-    const activity = await Activity.getFromDbData(activity_id, allocated, is_admin, current_user_id);
-    if (activity instanceof LimesurveyActivity) {
-        const languages = await activity.getSurveyLanguages();
-        return languages;
-    } else {
-        throw new ValidationError(`Activity with ID ${activity_id} is not a Limesurvey activity`);
-    }
+export async function getSurveyLanguagesForSurvey(survey_id: number): Promise<SurveyLanguages> {
+    return await limeSurveyClient.getSurveyLanguages(survey_id);
 }
 
 /**
  * Sets the owner of a LimeSurvey for a specific activity.
  * 
  * @async
- * @function setSurveyOwnerForActivity
- * @param {number} activity_id - The ID of the activity
- * @param {boolean} allocated - Whether the user is allocated to the activity
- * @param {boolean} is_admin - Whether the requesting user has admin privileges
- * @param {number} current_user_id - The ID of the requesting user
+ * @function setSurveyOwnerForSurvey
+ * @param {number} survey_id - The ID of the survey
  * @param {string} surveyOwner - The username of the LimeSurvey owner to assign
  * @returns {Promise<void>} Resolves when owner is successfully set
  * @throws {ValidationError} If the activity is not a Limesurvey activity
@@ -101,18 +89,13 @@ export async function getSurveyLanguagesForActivity(activity_id: number, allocat
  * 
  * @example
  * ```typescript
- * await setSurveyOwnerForActivity(123, true, false, 456, 'new_owner');
+ * await setSurveyOwnerForSurvey(123, 'new_owner');
  * ```
  */
-export async function setSurveyOwnerForActivity(activity_id: number, allocated: boolean, is_admin: boolean, current_user_id: number, surveyOwner: string): Promise<void> {
-    let activity = await Activity.getFromDbData(activity_id, allocated, is_admin, current_user_id);
+export async function setSurveyOwnerForSurvey(survey_id: number, surveyOwner: string): Promise<void> {
     let userId = await limeSurveyClient.getUserIdByUsername(surveyOwner);
     if (!userId) {
         throw new Error(`User with username ${surveyOwner} not found in LimeSurvey`);
     }
-    if (activity instanceof LimesurveyActivity) {
-        await limeSurveyClient.setSurveyOwner(activity.survey_id!, userId);
-    } else {
-        throw new ValidationError(`Activity with ID ${activity_id} is not a Limesurvey activity`);
-    }
+    await limeSurveyClient.setSurveyOwner(survey_id, userId);
 }

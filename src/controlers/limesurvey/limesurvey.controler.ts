@@ -82,19 +82,18 @@ export async function isAdmin(
  * 
  * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
-export async function getSurveyLanguagesForActivity(
+export async function getSurveyLanguagesForSurvey(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const activityId = parseInt(req.params.activity_id as string);
-    if (isNaN(activityId)) {
-      throw new NotFoundError("Invalid activity ID");
+    const surveyId = parseInt(req.params.survey_id as string);
+    if (isNaN(surveyId)) {
+      throw new NotFoundError("Invalid survey ID");
     }
-    const access = getAccess(req.user!.sql);
-    const languages = await limesurveyService.getSurveyLanguagesForActivity(activityId, access.allocated, access.is_admin, access.currentUserId);
-    logger.debug(languages, `Fetched languages for activity ${activityId}:`);
+    const languages = await limesurveyService.getSurveyLanguagesForSurvey(surveyId);
+    logger.debug(languages, `Fetched languages for survey ${surveyId}:`);
     res.json(languages);
   } catch (err) {
     next(err);
@@ -120,18 +119,17 @@ export async function getSurveyLanguagesForActivity(
  * 
  * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
  */
-export async function setSurveyOwnerForActivity(
+export async function setSurveyOwnerForSurvey(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const activityId = parseInt(req.params.activity_id as string);
-    if (isNaN(activityId)) {
-      throw new NotFoundError("Invalid activity ID");
+    const surveyId = parseInt(req.params.survey_id as string);
+    if (isNaN(surveyId)) {
+      throw new NotFoundError("Invalid survey ID");
     }
-    const access = getAccess(req.user!.sql);
-    await limesurveyService.setSurveyOwnerForActivity(activityId, access.allocated, access.is_admin, access.currentUserId, req.user!.sql.username!);
+    await limesurveyService.setSurveyOwnerForSurvey(surveyId, req.user!.sql.username!);
     res.status(204).send();
   } catch (err) {
     next(err);

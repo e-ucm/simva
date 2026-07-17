@@ -2840,7 +2840,7 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/InternalServerError'
-  /limesurvey/{activityid}/surveyowner:
+  /limesurvey/{surveyid}/surveyowner:
     patch:
       tags:
         - administrators
@@ -2865,13 +2865,13 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
-        - $ref: '#/components/parameters/activityId'
-  /limesurvey/{activityid}/surveylanguages:
+        - $ref: '#/components/parameters/surveyId'
+  /limesurvey/{surveyid}/surveylanguages:
     get:
       tags:
         - administrators
         - teachers
-      summary: get the survey languages for a Limesurvey activity
+      summary: get the survey languages for a Limesurvey survey
       operationId: getSurveyLanguages
       description: |
         getSurveyLanguages
@@ -2891,7 +2891,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       parameters:
-        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/surveyId'
   /activities/{activityid}/lrs_test_statements:
     get:
       tags:
