@@ -4774,10 +4774,39 @@ components:
       type: object
       required:
         - version
+        - features
       properties:
         version:
           type: string
           example: "1.0.0"
+        features:
+          type: object
+          required:
+            - simlets
+            - sessions
+            - activities
+            - groups
+            - users
+            - lrs_prefix
+          properties:
+            simlets:
+              type: boolean
+              example: true
+            sessions:
+              type: boolean
+              example: true
+            activities:
+              type: boolean
+              example: true
+            groups:
+              type: boolean
+              example: true
+            users:
+              type: boolean
+              example: true
+            lrs_prefix:
+              type: boolean
+              example: true
     error:
       description: An error occurred
       type: object

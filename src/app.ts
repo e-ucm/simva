@@ -88,7 +88,7 @@ app.get('/health', async (_req: Request, res: Response) => {
 });
 
 app.get('/version', async (_req: Request, res: Response) => {
-  res.json({ version: pkg.version });
+  res.json({ "version": pkg.version, "features": { "simlets": true, "sessions": true, "activities": true, "lrs_prefix": true, "groups": true, "users": true } });
 });
 
 app.use('/users', userRoutes);
