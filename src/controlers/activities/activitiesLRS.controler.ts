@@ -1,3 +1,9 @@
+import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
+import { NextFunction, Response } from "express";
+import { BadRequestError, ValidationError, AuthentificationError } from "@/lib/errors/appErrors";
+import { getAccess } from "@/controlers/users/user.helper";
+import * as activitiesLRSService from "@/services/activities/activitiesLRS.service";
+import { User } from "@/lib/mappers/Users/User";
 
 /**
  * Retrieves xAPI statements for a specific activity.
