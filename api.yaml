@@ -943,6 +943,7 @@ paths:
         - $ref: '#/components/parameters/use_new_generation'
         - $ref: '#/components/parameters/orderBy'
         - $ref: '#/components/parameters/order'
+        - $ref: '#/components/parameters/group_sandbox'
     post:
       tags:
         - administrators
@@ -1152,6 +1153,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/searchString'
+        - $ref: '#/components/parameters/group_sandbox'
   /simlets/{simletid}/groups/participants/count:
     get:
       tags:
