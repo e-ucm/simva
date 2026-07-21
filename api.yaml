@@ -340,6 +340,7 @@ paths:
         - $ref: '#/components/parameters/use_new_generation'
         - $ref: '#/components/parameters/orderBy'
         - $ref: '#/components/parameters/order'
+        - $ref: '#/components/parameters/group_sandbox'
   /tasklist:
     post:
       tags:
@@ -4566,6 +4567,14 @@ components:
     use_new_generation:
       in: query
       name: use_new_generation
+      required: false
+      schema:
+        type: boolean
+      description: |
+        If true, the new generation of groups will be used
+    group_sandbox:
+      in: query
+      name: sandbox
       required: false
       schema:
         type: boolean
