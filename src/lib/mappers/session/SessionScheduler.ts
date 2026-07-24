@@ -62,6 +62,7 @@ export class SessionScheduler {
             simlet: this.simlet,
             session: this.session.allocated_session_id,
             url: this.url,
+            replayableActivities: this.activities.filter(activity => activity.activity_can_be_restarted && activity.allocated_activity_result?.activity_completed).map(activity => activity.activity_id),
             activities: this.activities.reduce((acc, activity) => {
                 acc[activity.activity_id] = activity.toJSON();
                 return acc;

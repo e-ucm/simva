@@ -255,6 +255,7 @@ export async function getCompletionForActivity(
     const access = getAccess(currentUser);
     const participants_id = access.allocated ? [access.currentUserId] : parseParticipantsId(req.query.users);
     const completion = await activitiesService.getCompletionForActivity(activityId, access.allocated, access.is_admin, participants_id, access.currentUserId);
+    logger.debug(completion.toJSON(), "Fetched completion for activity with ID: " + activityId);
     return res.json(completion.toJSON());
   } catch (err) {
     next(err);

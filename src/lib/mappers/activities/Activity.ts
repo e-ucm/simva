@@ -478,10 +478,7 @@ export class Activity {
 
 	async getCurrentCompletionData(data_field: string, participants_id?: number[]): Promise<ActivityCompletion[]> {
 		let data;
-		if(this.allocated_user) {
-			participants_id = [this.allocated_user_id!];
-			data = await ActivityCompletion.getAllFromDbData(this.activity_id, data_field, participants_id);
-		} else if (!participants_id || participants_id.length === 0) {
+		if (!participants_id || participants_id.length === 0) {
 			data = await ActivityCompletion.getAllFromDbData(this.activity_id, data_field);
 		} else {
 			data = await ActivityCompletion.getAllFromDbData(this.activity_id, data_field, participants_id);
@@ -547,12 +544,16 @@ export class Activity {
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
 	async getProgress(participants_id?: number[]): Promise<ActivityMappingResult<number | null>>{
-		let data= await this.getCurrentCompletionData("activity_progress", participants_id);
-		let progressMap = new Map<number, number | null>();
-		for (const cd of data) {
-			progressMap.set(cd.participant_id, cd.activity_progress ?? null);
+		if(this.allocated_user_id) {
+			return new ActivityMappingResult(new Map<number, number | null>([[this.allocated_user_id, this.allocated_activity_result?.activity_progress ?? null]]));
+		} else {
+			let data= await this.getCurrentCompletionData("activity_progress", participants_id);
+			let progressMap = new Map<number, number | null>();
+			for (const cd of data) {
+				progressMap.set(cd.participant_id, cd.activity_progress ?? null);
+			}
+			return new ActivityMappingResult(progressMap);
 		}
-		return new ActivityMappingResult(progressMap);
 	}
 	
 	/**
@@ -586,7 +587,7 @@ export class Activity {
 		return data;
 	}
 
-		/**
+	/**
 	 * Retrieves progress information for participants.
 	 * Stub implementation - to be implemented by subclasses.
 	 * 
@@ -596,12 +597,18 @@ export class Activity {
 	 * @returns {Promise<number[]>} Promise resolving to array of progress values
 	 */
 	async getCompletion(participants_id?: number[]): Promise<ActivityMappingResult<boolean | null>>{
-		let data= await this.getCurrentCompletionData("activity_completed", participants_id);
-		let progressMap = new Map<number, boolean | null>();
-		for (const cd of data) {
-			progressMap.set(cd.participant_id, cd.activity_completed ?? null);
+		if(this.allocated_user_id) {
+			logger.debug(this.allocated_activity_result, `Returning completion for allocated user ID ${this.allocated_user_id} in activity ID ${this.activity_id}`);
+			logger.debug(`Returning completion for allocated user ID ${this.allocated_user_id} in activity ID ${this.activity_id} : ${this.allocated_activity_result?.activity_completed ?? false}`);
+			return new ActivityMappingResult(new Map<number, boolean>([[this.allocated_user_id, this.allocated_activity_result?.activity_completed ?? false]]));
+		} else {
+			let data= await this.getCurrentCompletionData("activity_completed", participants_id);
+			let progressMap = new Map<number, boolean | null>();
+			for (const cd of data) {
+				progressMap.set(cd.participant_id, cd.activity_completed ?? null);
+			}
+			return new ActivityMappingResult(progressMap);
 		}
-		return new ActivityMappingResult(progressMap);
 	}
 
 	/**
@@ -690,12 +697,16 @@ export class Activity {
 	}
 
 	async getSuspension(participants_id?: number[]): Promise<ActivityMappingResult<boolean>> {
-		let suspensionData= await this.getCurrentCompletionData("activity_suspended", participants_id);
-		let suspensionMap = new Map<number, boolean>();
-		for (const cd of suspensionData) {
-			suspensionMap.set(cd.participant_id, cd.activity_suspended ?? false);
+		if(this.allocated_user_id) {
+			return new ActivityMappingResult(new Map<number, boolean>([[this.allocated_user_id, this.allocated_activity_result?.activity_suspended ?? false]]));
+		} else {
+			let suspensionData= await this.getCurrentCompletionData("activity_suspended", participants_id);
+			let suspensionMap = new Map<number, boolean>();
+			for (const cd of suspensionData) {
+				suspensionMap.set(cd.participant_id, cd.activity_suspended ?? false);
+			}
+			return new ActivityMappingResult(suspensionMap);
 		}
-		return new ActivityMappingResult(suspensionMap);
 	}
 
 	/**
