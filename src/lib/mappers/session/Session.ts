@@ -318,8 +318,12 @@ export class Session {
             }
             // TODO : add search tag filtering for admin user as well
             results = await db.Tables.Sessions.count({ where: where });
+            if (results === 0) {
+                throw new NotFoundError(`Simlet ID ${simlet_id} not found for user ID ${current_user_id}.`);
+            }
+            return results;
         }
-        if(results.length === 0){
+        if (results.length === 0) {
             throw new NotFoundError(`Simlet ID ${simlet_id} not found for user ID ${current_user_id}.`);
         }
         return results[0].count;

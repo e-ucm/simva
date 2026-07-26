@@ -54,8 +54,8 @@ export async function getAllSimlets(
     } else {
         offset = parseInt(req.query.skip as string);
     }
-    const orderBy = req.query.orderBy;
-    const order = req.query.order;
+    const orderBy = req.query.orderBy ? String(req.query.orderBy) : undefined;
+    const order = req.query.order ? String(req.query.order) : undefined;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     logger.debug({archived, searchString, searchTags, limit, offset, orderBy, order, userId: currentUser?.user_id} , "Getting all simlets with query parameters and user ID");
@@ -103,8 +103,8 @@ export async function getAllSchedulerSimlets(
     } else {
         offset = parseInt(req.query.skip as string);
     }
-    const orderBy = req.query.orderBy;
-    const order = req.query.order;
+    const orderBy = req.query.orderBy ? String(req.query.orderBy) : undefined;
+    const order = req.query.order ? String(req.query.order) : undefined;
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     const searchTags = req.query.searchTags ? splitSearchTags(req.query.searchTags) : undefined;

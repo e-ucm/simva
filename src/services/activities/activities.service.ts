@@ -499,6 +499,10 @@ export async function getPresignedUrlForActivity(activityId: number, allocated: 
  * const config = await getTrackerConfigForActivity(789, true, false, 101);
  * ```
  */
+export async function getTrackerConfigForActivity(activityId: number, allocated: boolean, is_admin: boolean, currentUserId: number): Promise<string> {
+  let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+  return activity.getTrackerConfig();
+}
 
 /**
  * Retrieves all results for a specific activity type.
