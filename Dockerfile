@@ -6,7 +6,7 @@ FROM timbru31/node-alpine-git:22 AS base
 WORKDIR /app
 
 # Common dependencies
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl ca-certificates bash
 
 FROM base AS deps
 
