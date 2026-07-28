@@ -42,7 +42,7 @@ export async function getSimletGroups(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const searchString = req.query.searchString as string | undefined;
-    const sandbox = req.query.sandbox !== undefined ? req.query.sandbox === 'true' : undefined;
+    const sandbox = req.query.sandbox !== undefined ? Boolean(req.query.sandbox) : undefined;
     logger.debug(req.query , "Query parameters for getting simlet groups");
     const limit = req.query.limit ? (Number.isNaN(Number(req.query.limit)) ? undefined : parseInt(req.query.limit as string)) : undefined;
     let offset;
@@ -268,9 +268,9 @@ export async function getSimletGroupCount(
     const currentUser = req.user?.sql;
     const access = getAccess(currentUser);
     const searchString = req.query.searchString as string | undefined;
-    const sandbox = req.query.sandbox !== undefined ? req.query.sandbox === 'true' : undefined;
+    const sandbox = req.query.sandbox !== undefined ? Boolean(req.query.sandbox) : undefined;
     logger.debug(req.query , "Query parameters for getting simlet group count");
-    logger.debug({simletId} , "Getting group count for simlet ID");
+    logger.debug({simletId, searchString, sandbox} , "Getting group count for simlet ID");
     let count;
     if (access.is_admin) {
       count = await simletGroupsService.getSimletGroupCount(simletId, true, searchString, sandbox);

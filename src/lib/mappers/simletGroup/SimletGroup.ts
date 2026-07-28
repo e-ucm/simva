@@ -371,6 +371,7 @@ export class SimletGroup {
     }
 
     static async getGroupCountForUser(simlet_id: number, current_user_id: number, searchString?: string, sandbox?: boolean): Promise<number> {
+        logger.debug({ simlet_id, current_user_id, searchString, sandbox }, 'Fetching group count for user');
         const results = await db.Functions.runViewQuery(db.Views.Group.countByUserId, { simlet_id, current_user_id, search: searchString, sandbox });
         return results[0].count || 0;
     }
