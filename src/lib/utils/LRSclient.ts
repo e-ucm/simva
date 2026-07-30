@@ -206,7 +206,7 @@ export class LRSClient {
             updatedStatement=updatedStatement.withTimestamp(now.toISOString());
         }
         if(!trace.version) {
-            updatedStatement=updatedStatement.withVersion("1.0.3");
+            updatedStatement=updatedStatement.withVersion("2.0.0");
         }
 		updatedStatement=updatedStatement.withPlatform(simvaUrl);
 		updatedStatement=updatedStatement.withAutorityAccount(authorityName, simvaUrl);
