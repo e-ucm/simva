@@ -202,9 +202,6 @@ export class LRSClient {
         const sessionType = this.getSessionType();
         const activityType = this.getActivityType();
         updatedStatement=updatedStatement.withId(this.generateStatementId(trace));
-        if(!trace.timestamp) {
-            updatedStatement=updatedStatement.withTimestamp(now.toISOString());
-        }
         if(!trace.version) {
             updatedStatement=updatedStatement.withVersion("1.0.3");
         }
