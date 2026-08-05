@@ -2,55 +2,52 @@
 import { QueryInterface, DataTypes, Transaction } from 'sequelize';
 
 export async function up({ context }: { context: QueryInterface }) {
-//    const t: Transaction = await context.sequelize.transaction();
-//    try {
-//        // Remove mongo_id columns in FK-safe order for SQLite
-//        await context.removeColumn('ParticipantGroups', 'mongo_id', { transaction: t });
-//        await context.removeColumn('Activities', 'mongo_id', { transaction: t });
-//        await context.removeColumn('Sessions', 'mongo_id', { transaction: t });
-//        await context.removeColumn('Allocators', 'mongo_id', { transaction: t });
-//        await context.removeColumn('SIMLETs', 'mongo_id', { transaction: t });
-//        //await context.removeColumn('Users', 'mongo_id', { transaction: t });
-//        await t.commit();
-//    } catch (error) {
-//        await t.rollback();
-//        throw error;
-//    }
+    await context.sequelize.query('PRAGMA foreign_keys = OFF;');
+    const t: Transaction = await context.sequelize.transaction();
+    try {
+        // Remove mongo_id columns in FK-safe order for SQLite
+        await context.removeColumn('ParticipantGroups', 'mongo_id', { transaction: t });
+        await context.removeColumn('Activities', 'mongo_id', { transaction: t });
+        await context.removeColumn('Sessions', 'mongo_id', { transaction: t });
+        await context.removeColumn('SIMLETs', 'mongo_id', { transaction: t });
+        await context.removeColumn('Users', 'mongo_id', { transaction: t });
+        await t.commit();
+    } catch (error) {
+        await t.rollback();
+        throw error;
+    }
+    await context.sequelize.query('PRAGMA foreign_keys = ON;');
 }
 
 export async function down({ context }: { context: QueryInterface }) {
-//    const t: Transaction = await context.sequelize.transaction();
-//    try {
-//        // Add mongo_id columns back in reverse order
-//        //await context.addColumn('Users', 'mongo_id', {
-//        //    type: DataTypes.STRING,
-//        //    allowNull: true
-//        //}, { transaction: t });
-//        await context.addColumn('SIMLETs', 'mongo_id', {
-//            type: DataTypes.STRING,
-//            allowNull: true
-//        }, { transaction: t });
-//        await context.addColumn('Allocators', 'mongo_id', {
-//            type: DataTypes.STRING,
-//            allowNull: true
-//        }, { transaction: t });
-//        await context.addColumn('Sessions', 'mongo_id', {
-//            type: DataTypes.STRING,
-//            allowNull: true
-//        }, { transaction: t });
-//        await context.addColumn('Activities', 'mongo_id', {
-//            type: DataTypes.STRING,
-//            allowNull: true
-//        }, { transaction: t });
-//        await context.addColumn('ParticipantGroups', 'mongo_id', {
-//            type: DataTypes.STRING,
-//            allowNull: true
-//        }, { transaction: t });
-//        await t.commit();
-//    } catch (error) {
-//        await t.rollback();
-//        throw error;
-//    }
+    const t: Transaction = await context.sequelize.transaction();
+    try {
+        // Add mongo_id columns back in reverse order
+        await context.addColumn('Users', 'mongo_id', {
+            type: DataTypes.STRING,
+            allowNull: true
+        }, { transaction: t });
+        await context.addColumn('SIMLETs', 'mongo_id', {
+            type: DataTypes.STRING,
+            allowNull: true
+        }, { transaction: t });
+        await context.addColumn('Sessions', 'mongo_id', {
+            type: DataTypes.STRING,
+            allowNull: true
+        }, { transaction: t });
+        await context.addColumn('Activities', 'mongo_id', {
+            type: DataTypes.STRING,
+            allowNull: true
+        }, { transaction: t });
+        await context.addColumn('ParticipantGroups', 'mongo_id', {
+            type: DataTypes.STRING,
+            allowNull: true
+        }, { transaction: t });
+        await t.commit();
+    } catch (error) {
+        await t.rollback();
+        throw error;
+    }
 }
 
 /*
