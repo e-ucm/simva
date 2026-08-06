@@ -6,6 +6,7 @@ export class GameplayActivity extends Model {
   declare game_scorm_xapi: boolean;
   declare game_type: "WEB" | "DESKTOP";
   declare game_url: string;
+  declare game_trackerTechnology: string;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare deletedAt: Date | null;
@@ -38,6 +39,16 @@ export function GameplayActivityFactory(
     game_url: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    game_technology: {
+      type: DataTypes.STRING,
+      allowNull: true,      
+      validate: { isIn: [["Godot", "Unity", "Phaser", "Unreal Engine"]] },
+    },
+    game_tracker_technology: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: { isIn: [["Xasu", "Xasu+Simva_Plugin", "uAdventure"]] },
     },
     createdAt: {
       type: DataTypes.DATE,

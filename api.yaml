@@ -5685,6 +5685,15 @@ components:
             type: string
             nullable: true
             example: "https://example.com/gameplay-activity-resource"
+          game_technology:
+            type: string
+            nullable: true
+            exemple: "Godot"
+            enum: ["Godot", "Unity", "Phaser", "Unreal Engine"]
+          game_tracker_technology:
+            type: string
+            nullable: true
+            enum: ["Xasu", "Xasu+Simva_Plugin", "uAdventure"]
           activity_trace_storage:
             type: boolean
             example: true
