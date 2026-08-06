@@ -169,9 +169,9 @@ export class ActivityCompletion {
     }
 
     async delete(): Promise<void> {
-        await db.Tables.ActivityCompletion.destroy(
-            { where: { activity_id: this.activity_id, participant_id: this.participant_id } }
-        );
+        //await db.Tables.ActivityCompletion.destroy(
+        //    { where: { activity_id: this.activity_id, participant_id: this.participant_id } }
+        //);
     }
 
     toJSON(): object {
