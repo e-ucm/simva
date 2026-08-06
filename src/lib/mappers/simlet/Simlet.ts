@@ -755,16 +755,4 @@ export class Simlet {
             }
         }
     }
-
-    getTrackerConfig() : object {
-        return  {
-            "study": `${this.simlet_id}`,
-            "host": `${config.api.host}`,
-            "protocol": `${config.api.protocol}`,
-            "port": `${config.api.port}`,
-            "url": `${config.api.url}`,
-            "sso": `${config.sso.openIdUrl}`,
-            "client_id": `${config.sso.uadventureClientId}`
-        }
-    }
 }

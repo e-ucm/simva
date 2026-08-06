@@ -278,22 +278,3 @@ export async function exportSimlet(simletId: number, is_admin: boolean, withData
   let exported = await simlet.export(withData);
   return JSON.stringify(exported);
 }
-
-/**
- * Retrieves the tracker configuration for a simlet.
- * 
- * @async
- * @function getTrackerConfigForSimlet
- * @param {number} simletId - The ID of the simlet
- * @param {number} userId - The ID of the user requesting the configuration
- * @returns {Promise<object>} The tracker configuration object
- * 
- * @example
- * ```typescript
- * const config = await getTrackerConfigForSimlet(123, 456);
- * ```
- */
-export async function getTrackerConfigForSimlet(simletId: number, userId: number): Promise<object> {
-  let simlet = await Simlet.getFromDbData(simletId, false, userId);
-  return simlet.getTrackerConfig();
-}

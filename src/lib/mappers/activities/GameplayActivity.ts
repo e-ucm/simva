@@ -40,6 +40,10 @@ export class GamePlayActivity extends Activity {
 	 * URL where the game can be accessed
 	 */
 	game_url: string;
+
+	game_tracker_technology: string;
+
+	game_technology: string;
 	
 	/**
 	 * Creates a new GamePlayActivity instance
@@ -55,6 +59,8 @@ export class GamePlayActivity extends Activity {
 		this.game_scorm_xapi = data.game_scorm_xapi ?? false;
 		this.game_type = data.game_type;
 		this.game_url = data.game_url;
+		this.game_tracker_technology=data.game_tracker_technology;
+		this.game_technology=data.game_technology;
 	}
 	
 	/**
@@ -84,13 +90,17 @@ export class GamePlayActivity extends Activity {
 				game_backup: activityData.game_backup || false,
 				game_scorm_xapi: activityData.game_scorm_xapi || false,
 				game_type: activityData.game_type || "WEB",
-				game_url: activityData.game_url
+				game_url: activityData.game_url,
+				game_tracker_technology: activityData.game_tracker_technology,
+				game_technology: activityData.game_technology
 			});
 		}
 		instance.game_backup = gameplayData.game_backup ?? false;
 		instance.game_scorm_xapi = gameplayData.game_scorm_xapi ?? false;
 		instance.game_type = gameplayData.game_type;
 		instance.game_url = gameplayData.game_url;
+		instance.game_tracker_technology = gameplayData.game_tracker_technology;
+		instance.game_technology = gameplayData.game_technology;
 		
 		return instance;
 	}
@@ -345,4 +355,45 @@ export class GamePlayActivity extends Activity {
 		}
 		return exportData;
 	}
+
+	getTrackerConfig() : string {
+		switch(this.game_tracker_technology){
+			case "uAdventure":
+			case "Xasu+Simva_Plugin":
+				let simvaConfig : any = {
+					"study": `${this.simlet_id}`,
+					"host": `${config.api.host}`,
+					"protocol": `${config.api.protocol}`,
+					"port": `${config.api.port}`,
+					"url": `${config.api.url}`,
+					"sso": `${config.sso.openIdUrl}`,
+					"client_id": `${config.sso.uadventureClientId}`
+				};
+				return  JSON.stringify(simvaConfig);
+			case "Xasu":
+			default:
+				let xasuConfig : any = {
+					"online": true,
+					"homepage": `${config.externalUrl}`,
+					"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
+					"auth_protocol": "oauth2",
+					"auth_parameters": {
+						"grant_type": "code",
+						"auth_endpoint": `${config.sso.authUrl}`,
+						"token_endpoint": `${config.sso.tokenUrl}`,
+						"client_id": `${config.sso.pluginClientId}`,
+						"code_challenge_method": "S256",
+						"simva_user_token": "true",
+						"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
+					}
+				}
+				if(this.game_backup) {
+					xasuConfig.backup = true;
+					xasuConfig.backup_trace_format = "XAPI";
+					xasuConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/lrs`;
+					xasuConfig.backup_auth_protocol="same";
+				}
+				return JSON.stringify(xasuConfig);
+		}
+    }
 } 

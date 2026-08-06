@@ -2290,6 +2290,32 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
+  /activities/{activityid}/tracker_config:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets the config tracker for the activity
+      operationId: getActivityConfig
+      description: |
+        Obtains the requested tracker config
+      responses:
+        '200':
+          description: tracker config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/trackerConfigMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
   /activities/{activityid}/export:
     get:
       tags:
@@ -5688,7 +5714,7 @@ components:
           game_technology:
             type: string
             nullable: true
-            exemple: "Godot"
+            example: "Godot"
             enum: ["Godot", "Unity", "Phaser", "Unreal Engine"]
           game_tracker_technology:
             type: string
@@ -5809,6 +5835,72 @@ components:
               type: string
               nullable: true
               example: "abc123"
+    trackerConfigMapper:
+      type: object
+      oneOf:
+        - type: object
+          required:
+            - study
+            - host
+            - protocol
+            - port
+            - url
+            - sso
+            - client_id
+          properties:
+            study:
+              type: string
+            host:
+              type: string
+            protocol:
+              type: string
+            port:
+              type: string
+            url:
+              type: string
+            sso:
+              type: string
+            client_id:
+              type: string     
+        - type: object
+          properties:
+            online: 
+              type: boolean
+            homepage: 
+              type: string
+            lrs_endpoint: 
+              type: string
+            auth_protocol: 
+              type: string
+            backup: 
+              type: boolean
+              nullable: true
+            backup_trace_format: 
+              type: string
+              nullable: true
+            backup_endpoint: 
+              type: string
+              nullable: true
+            backup_auth_protocol:
+              type: string
+              nullable: true
+            auth_parameters:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                auth_endpoint:
+                  type: string
+                token_endpoint:
+                  type: string
+                client_id:
+                  type: string
+                code_challenge_method: 
+                  type: string
+                simva_user_token: 
+                  type: boolean
+                login_hint: 
+                  type: string
     activity_type:
       type: object
       required:

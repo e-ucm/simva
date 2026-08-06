@@ -80,7 +80,6 @@ router.get('/:simlet_id/export', SimletControler.exportSimlet);
 // Additional simlet-related endpoints
 router.get("/:simlet_id/participants", SimletControler.getSimletParticipants);
 router.get("/:simlet_id/schedule", SimletControler.getSimletSchedule);
-router.get("/:simlet_id/tracker_config", SimletControler.getTrackerConfig);
 
 // Mount sub-routers
 router.use("/:simlet_id/permissions", simletPermissionsRouter);

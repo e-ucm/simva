@@ -13,8 +13,9 @@
  * @requires @/lib/errors/appErrors
  */
 
-import { NotFoundError } from "@/lib/errors/appErrors";
+import { BadRequestError, NotFoundError } from "@/lib/errors/appErrors";
 import { Activity } from "@/lib/mappers/activities/Activity";
+import { GamePlayActivity } from "@/lib/mappers/activities/GameplayActivity";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "@/lib/mappers/ActivityCompletion/ActivityMappingResult";
 
@@ -501,7 +502,11 @@ export async function getPresignedUrlForActivity(activityId: number, allocated: 
  */
 export async function getTrackerConfigForActivity(activityId: number, allocated: boolean, is_admin: boolean, currentUserId: number): Promise<string> {
   let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
-  return activity.getTrackerConfig();
+  if(activity instanceof GamePlayActivity) {
+      return activity.getTrackerConfig();
+  } else {
+     throw new BadRequestError("Activity is not of type gameplay.");
+  }
 }
 
 /**

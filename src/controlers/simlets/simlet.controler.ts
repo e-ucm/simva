@@ -481,35 +481,3 @@ export async function exportSimlet(
     next(err);
   }
 }
-
-/**
- * Gets tracker configuration for a specific simlet and user.
- * Used for learning analytics and progress tracking.
- * 
- * @function getTrackerConfig
- * @param {AuthenticatedRequest} req - Express request object containing simlet ID in URL params
- * @param {Response} res - Express response object
- * @param {NextFunction} next - Express next middleware function for error handling
- * @returns {void}
- * @throws {Error} Passes errors to next middleware
- * 
- * @example
- * // GET /simlets/123/tracker/config
- * // Returns tracker configuration object
- */
-export function getTrackerConfig(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) {
-  try {
-    const simletId = parseInt(req.params.simlet_id as string);
-    const userId = req.user?.sql.user_id!;
-    logger.debug({simletId} , "Getting tracker config for simlet ID");
-    const trackerConfig = simletService.getTrackerConfigForSimlet(simletId, userId);
-    logger.debug({trackerConfig} , "Tracker config retrieved for simlet ID");
-    res.json(trackerConfig);
-  } catch (err) {
-    next(err);
-  }
-}
