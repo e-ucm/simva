@@ -24,6 +24,7 @@ export class GroupPermissions extends Model {
     declare permission: "READ" | "WRITE";
     declare createdAt: Date;
     declare updatedAt: Date;
+    declare deletedAt: Date | null;
 }
 
 /**
@@ -78,11 +79,16 @@ export function GroupPermissionsFactory(
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      deletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     }, {
       sequelize,
       modelName: "GroupPermissions",
       tableName: "ParticipantGroups_permissions",
       timestamps: true,
+      paranoid: true,
       freezeTableName: true,
     });
 

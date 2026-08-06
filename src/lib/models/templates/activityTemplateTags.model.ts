@@ -17,12 +17,14 @@ import { Sequelize, Model } from "sequelize";
  * @property {number} tag_id - Foreign key to the tag
  * @property {Date} createdAt - Timestamp when the record was created
  * @property {Date} updatedAt - Timestamp when the record was last updated
+ * @property {Date|null} deletedAt - Timestamp when the record was soft-deleted
  */
 export class ActivityTemplateTags extends Model {
   declare activity_template_id: number;
   declare tag_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -58,11 +60,16 @@ export function ActivityTemplateTagsFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "ActivityTemplateTags",
     tableName: "Activities_template_tags",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

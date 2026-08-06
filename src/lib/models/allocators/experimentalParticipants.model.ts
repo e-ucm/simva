@@ -29,6 +29,7 @@ export class ExperimentalParticipants extends Model {
   declare session_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -87,11 +88,16 @@ export function ExperimentalParticipantsFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "ExperimentalParticipants",
     tableName: "Experimental_Participants",
     timestamps: true,
+    paranoid: true,
   });
 
   return ExperimentalParticipants;

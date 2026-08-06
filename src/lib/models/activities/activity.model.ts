@@ -29,6 +29,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {boolean} activity_can_be_restarted - Whether the activity can be restarted
  * @property {Date} createdAt - Timestamp when the activity was created
  * @property {Date} updatedAt - Timestamp when the activity was last updated
+ * @property {Date|null} deletedAt - Timestamp when the activity was soft-deleted
  */
 export class Activity extends Model {
   declare session_id: number;
@@ -46,6 +47,7 @@ export class Activity extends Model {
   declare activity_can_be_restarted: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -135,11 +137,16 @@ export function ActivityFactory(
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      deletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     }, {
       sequelize,
       modelName: "Activity",
       tableName: "Activities",
       timestamps: true,
+      paranoid: true,
     });
 
   return Activity;

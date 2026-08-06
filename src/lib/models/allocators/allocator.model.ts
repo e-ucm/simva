@@ -20,12 +20,14 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {string} allocator_type - Type of allocation strategy (default, group, random)
  * @property {Date} createdAt - Timestamp when the allocator was created
  * @property {Date} updatedAt - Timestamp when the allocator was last updated
+ * @property {Date|null} deletedAt - Timestamp when the allocator was soft-deleted
  */
 export class Allocator extends Model {
   declare allocator_id: number;
   declare allocator_type: "default" | "group" | "random";
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -72,11 +74,16 @@ export function AllocatorFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "Allocator",
     tableName: "Allocators",
     timestamps: true,
+    paranoid: true,
   });
   return Allocator;
 }

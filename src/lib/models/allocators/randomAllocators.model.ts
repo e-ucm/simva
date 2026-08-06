@@ -24,6 +24,7 @@ export class RandomAllocators extends Model {
   declare allocator_percentage: number;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -75,11 +76,16 @@ export function RandomAllocatorsFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "RandomAllocators",
     tableName: "Random_Allocators",
     timestamps: true,
+    paranoid: true,
   });
 
   return RandomAllocators;

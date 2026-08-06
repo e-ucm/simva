@@ -23,6 +23,7 @@ export class GroupParticipants extends Model {
   declare participant_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -68,11 +69,16 @@ export function GroupParticipantsFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "GroupParticipants",
     tableName: "ParticipantGroups_participants",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

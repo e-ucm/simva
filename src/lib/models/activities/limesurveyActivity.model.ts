@@ -7,6 +7,7 @@ export class LimesurveyActivity extends Model {
   declare survey_lrsset: number | null;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 export function LimesurveyActivityFactory(
@@ -42,11 +43,16 @@ export function LimesurveyActivityFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "LimesurveyActivity",
     tableName: "Limesurvey_Activities",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

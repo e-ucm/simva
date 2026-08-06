@@ -19,6 +19,7 @@ import { Sequelize, Model } from "sequelize";
  * @property {Date|null} session_end_date - When the session should end
  * @property {Date} createdAt - Timestamp when the record was created
  * @property {Date} updatedAt - Timestamp when the record was last updated
+ * @property {Date|null} deletedAt - Timestamp when the record was soft-deleted
  */
 export class SessionDates extends Model {
   declare session_id: number;
@@ -26,6 +27,7 @@ export class SessionDates extends Model {
   declare session_end_date: Date | null;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -76,11 +78,16 @@ export function SessionDatesFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "SessionDates",
     tableName: "Sessions_dates",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

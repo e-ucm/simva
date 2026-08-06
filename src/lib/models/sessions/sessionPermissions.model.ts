@@ -6,6 +6,7 @@ export class SessionPermissions extends Model {
   declare permission: "READ" | "WRITE";
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 export function SessionPermissionsFactory(
@@ -40,11 +41,16 @@ export function SessionPermissionsFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "SessionPermissions",
     tableName: "Sessions_permissions",
     timestamps: true,
+    paranoid: true,
   });
 
   return SessionPermissions;

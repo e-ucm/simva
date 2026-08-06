@@ -8,6 +8,7 @@ export class GameplayActivity extends Model {
   declare game_url: string;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 export function GameplayActivityFactory(
@@ -48,11 +49,16 @@ export function GameplayActivityFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "GameplayActivity",
     tableName: "GamePlay_Activities",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

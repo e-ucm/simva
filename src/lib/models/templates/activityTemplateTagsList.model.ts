@@ -20,6 +20,7 @@ import { Sequelize, Model } from "sequelize";
  * @property {boolean} public - Whether the tag is publicly visible
  * @property {Date} createdAt - Timestamp when the tag was created
  * @property {Date} updatedAt - Timestamp when the tag was last updated
+ * @property {Date|null} deletedAt - Timestamp when the tag was soft-deleted
  */
 export class ActivityTemplateTagsList extends Model {
   declare tag_id: number;
@@ -29,6 +30,7 @@ export class ActivityTemplateTagsList extends Model {
   declare public: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -77,11 +79,16 @@ export function ActivityTemplateTagsListFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "ActivityTemplateTagsList",
     tableName: "Activities_template_tags_list",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

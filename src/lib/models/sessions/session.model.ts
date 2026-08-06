@@ -22,6 +22,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {string} session_description - Detailed description of the session
  * @property {Date} createdAt - Timestamp when the session was created
  * @property {Date} updatedAt - Timestamp when the session was last updated
+ * @property {Date|null} deletedAt - Timestamp when the session was soft-deleted
  * @property {string|null} session_experimental_method - Research methodology for the session
  * @property {boolean|null} session_active - Whether the session is currently active
  * @property {Date|null} session_start_date - When the session should start
@@ -41,6 +42,7 @@ export class Session extends Model {
   declare session_sandbox_user_id: number | null;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -123,11 +125,16 @@ export function SessionFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "Session",
     tableName: "Sessions",
     timestamps: true,
+    paranoid: true,
   });
 
   return Session;

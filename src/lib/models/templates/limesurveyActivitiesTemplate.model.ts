@@ -24,6 +24,7 @@ export class LimesurveyActivitiesTemplate extends Model {
   declare survey_owner: number | null;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -74,11 +75,16 @@ export function LimesurveyActivitiesTemplateFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "LimesurveyActivitiesTemplate",
     tableName: "Limesurvey_Activities_Template",
     timestamps: true,
+    paranoid: true,
   });
 
   return LimesurveyActivitiesTemplate;

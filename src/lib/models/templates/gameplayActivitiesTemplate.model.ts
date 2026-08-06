@@ -31,6 +31,7 @@ export class GameplayActivitiesTemplate extends Model {
   declare game_url: string;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -95,11 +96,16 @@ export function GameplayActivitiesTemplateFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "GameplayActivitiesTemplate",
     tableName: "GamePlay_Activities_Template",
     timestamps: true,
+    paranoid: true,
   });
 
   return GameplayActivitiesTemplate;

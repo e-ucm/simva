@@ -13,6 +13,7 @@ export class ManualActivity extends Model {
   declare manual_ressource_url: string;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 export function ManualActivityFactory(
@@ -49,11 +50,16 @@ export function ManualActivityFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "ManualActivity",
     tableName: "Manual_Activities",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

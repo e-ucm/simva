@@ -16,6 +16,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {string} role - User role (admin, teacher, student, etc.)
  * @property {Date} createdAt - Timestamp when the user was created
  * @property {Date} updatedAt - Timestamp when the user was last updated
+ * @property {Date|null} deletedAt - Timestamp when the user was soft-deleted
  */
 export class User extends Model {
   declare user_id: number;
@@ -27,6 +28,7 @@ export class User extends Model {
   declare role: string;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -91,11 +93,16 @@ export function UserFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "User",
     tableName: "Users",
     timestamps: true,
+    paranoid: true,
     freezeTableName: true,
   });
 

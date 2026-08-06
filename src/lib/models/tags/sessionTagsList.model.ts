@@ -25,6 +25,7 @@ export class SessionTagsElement extends Model {
   declare user_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -78,11 +79,16 @@ export function SessionTagsElementFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "SessionTagsList",
     tableName: "Sessions_tags_list",
     timestamps: true,
+    paranoid: true,
   });
 
   return SessionTagsElement;

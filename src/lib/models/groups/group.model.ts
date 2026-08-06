@@ -22,6 +22,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {number|null} group_owner_id - Foreign key to the group owner (teacher/admin)
  * @property {Date} createdAt - Timestamp when the group was created
  * @property {Date} updatedAt - Timestamp when the group was last updated
+ * @property {Date|null} deletedAt - Timestamp when the group was soft-deleted
  */
 export class Group extends Model {
   declare simlet_id: number;
@@ -35,6 +36,7 @@ export class Group extends Model {
   declare group_allocator_type: "default" | "group" | "random" | "session";
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -111,11 +113,16 @@ export function GroupFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "Group",
     tableName: "ParticipantGroups",
     timestamps: true,
+    paranoid: true,
   });
 
   return Group;

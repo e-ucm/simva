@@ -22,6 +22,7 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @property {boolean} activity_template_public - Whether this template is publicly available
  * @property {Date} createdAt - Timestamp when the template was created
  * @property {Date} updatedAt - Timestamp when the template was last updated
+ * @property {Date|null} deletedAt - Timestamp when the template was soft-deleted
  * @property {number} activity_template_owner_id - Foreign key to the template owner (teacher/admin)
  */
 export class ActivityTemplate extends Model {
@@ -32,6 +33,7 @@ export class ActivityTemplate extends Model {
   declare activity_template_public: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
   declare activity_template_owner_id: number;
 }
 
@@ -93,6 +95,10 @@ export function ActivityTemplateFactory(
       type: DataTypes.DATE,
       allowNull: false
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     activity_template_owner_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -102,6 +108,7 @@ export function ActivityTemplateFactory(
     modelName: "ActivityTemplate",
     tableName: "Activities_template",
     timestamps: true,
+    paranoid: true,
   });
 
   return ActivityTemplate;

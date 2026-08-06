@@ -19,6 +19,7 @@ import { Sequelize, Model, Op } from "sequelize";
  * @property {string} simlet_name - Display name of the SIMLET
  * @property {Date} createdAt - Timestamp when the SIMLET was created
  * @property {Date} updatedAt - Timestamp when the SIMLET was last updated
+ * @property {Date|null} deletedAt - Timestamp when the SIMLET was soft-deleted
  * @property {number|null} simlet_sandbox_session_id - Optional reference to sandbox session for testing
  * @property {string} simlet_description - Detailed description of the SIMLET
  * @property {string|null} simlet_objective - Learning objective of the SIMLET
@@ -35,6 +36,7 @@ export class Simlet extends Model {
   declare simlet_supervisor_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -99,11 +101,16 @@ export function SimletFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "Simlet",
     tableName: "SIMLETs",
     timestamps: true,
+    paranoid: true,
   });
 
   return Simlet;

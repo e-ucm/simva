@@ -24,6 +24,7 @@ export class ActivityTemplatePermissions extends Model {
   declare permission: "READ" | "WRITE";
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare deletedAt: Date | null;
 }
 
 /**
@@ -78,11 +79,16 @@ export function ActivityTemplatePermissionsFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: "ActivityTemplatePermissions",
     tableName: "Activities_template_permissions",
     timestamps: true,
+    paranoid: true,
   });
 
   return ActivityTemplatePermissions;

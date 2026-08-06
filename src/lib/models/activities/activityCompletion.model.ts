@@ -16,6 +16,7 @@ export class ActivityCompletion extends Model {
     declare activity_result_presigned_url_expire_at: Date | null;
     declare createdAt: Date;
     declare updatedAt: Date;
+    declare deletedAt: Date | null;
 }
 
 export function ActivityCompletionFactory(
@@ -86,12 +87,17 @@ export function ActivityCompletionFactory(
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
-    }
-  }, {
+      },
+      deletedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+    }, {
     sequelize,
     modelName: "ActivityCompletion",
     tableName: "Activities_completion",
     timestamps: true,
+    paranoid: true,
   });
 
   return ActivityCompletion;
