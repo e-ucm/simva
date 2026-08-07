@@ -5863,6 +5863,12 @@ components:
             client_id:
               type: string     
         - type: object
+          required:
+            - online
+            - homepage
+            - lrs_endpoint
+            - auth_protocol
+            - auth_parameters
           properties:
             online: 
               type: boolean

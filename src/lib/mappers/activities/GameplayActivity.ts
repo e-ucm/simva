@@ -356,7 +356,7 @@ export class GamePlayActivity extends Activity {
 		return exportData;
 	}
 
-	getTrackerConfig() : string {
+	getTrackerConfig() : object {
 		switch(this.game_tracker_technology){
 			case "uAdventure":
 			case "Xasu+Simva_Plugin":
@@ -369,7 +369,7 @@ export class GamePlayActivity extends Activity {
 					"sso": `${config.sso.openIdUrl}`,
 					"client_id": `${config.sso.uadventureClientId}`
 				};
-				return  JSON.stringify(simvaConfig);
+				return  simvaConfig;
 			case "Xasu":
 			default:
 				let xasuConfig : any = {
@@ -383,7 +383,7 @@ export class GamePlayActivity extends Activity {
 						"token_endpoint": `${config.sso.tokenUrl}`,
 						"client_id": `${config.sso.pluginClientId}`,
 						"code_challenge_method": "S256",
-						"simva_user_token": "true",
+						"simva_user_token": true,
 						"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
 					}
 				}
@@ -393,7 +393,7 @@ export class GamePlayActivity extends Activity {
 					xasuConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/lrs`;
 					xasuConfig.backup_auth_protocol="same";
 				}
-				return JSON.stringify(xasuConfig);
+				return xasuConfig;
 		}
     }
 } 
