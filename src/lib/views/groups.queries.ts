@@ -10,6 +10,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
+        AND deletedAt IS NULL
         `,
         params: {
             current_user_id: {
@@ -53,6 +54,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
+        AND deletedAt IS NULL
         `,
         params: {
             current_user_id: {
@@ -96,6 +98,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
+        AND deletedAt IS NULL
         LIMIT :limit OFFSET :offset
         `,
         params: {
@@ -151,6 +154,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_groups_user_permissions
         WHERE current_user_id = :current_user_id AND group_id = :group_id
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
+        AND deletedAt IS NULL
         `,
         params: {
             simlet_id: {
@@ -175,6 +179,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
+        AND deletedAt IS NULL
         ORDER BY {{orderBy}} {{order}}
         `,
         params: {
@@ -206,6 +211,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
+        AND deletedAt IS NULL
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset
         `,
@@ -248,6 +254,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM vv_group_total_permissions
         WHERE group_id = :group_id AND (:user_id IS NULL OR user_id = :user_id)
+        AND deletedAt IS NULL
         `,
         params: {
             group_id: {

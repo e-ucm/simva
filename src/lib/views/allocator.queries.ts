@@ -7,6 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_allocation_participants 
         WHERE simlet_id = :simlet_id
+        AND deletedAt IS NULL
         `,
         params: {
             simlet_id: {
@@ -23,6 +24,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_allocation_participants 
         WHERE session_id = :session_id
+        AND deletedAt IS NULL
         `,
         params: {
             session_id: {
@@ -42,6 +44,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:group_id IS NULL or group_id = :group_id)
         AND (:groups_id IS NULL or group_id IN (:groups_id))
         AND (:user_id IS NULL or user_id = :user_id)
+        AND deletedAt IS NULL
         `,
         params: {
             allocator_id: {

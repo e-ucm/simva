@@ -131,7 +131,8 @@ SELECT
     sim.simlet_archived,
     shlink.short_url,
     sim.createdAt,
-    sim.updatedAt
+    sim.updatedAt,
+    sim.deletedAt
 FROM SIMLETs sim
 LEFT JOIN SIMLETs_shlinks shlink ON sim.simlet_id = shlink.simlet_id
 LEFT JOIN vv_user_permissions up ON sim.simlet_id = up.object_id AND up.object_type = "SIMLET";
@@ -178,7 +179,8 @@ SELECT
     u.username as session_sandbox_username,
     u.role as session_sandbox_user_role,
     ses.createdAt,
-    ses.updatedAt
+    ses.updatedAt,
+    ses.deletedAt
 FROM Sessions ses
 LEFT JOIN vv_user_permissions up ON ses.session_id = up.object_id AND up.object_type = "SESSION"
 LEFT JOIN Users u ON ses.session_sandbox_user_id = u.user_id;
@@ -208,6 +210,7 @@ SELECT
     act.activity_name,
     act.createdAt,
     act.updatedAt,
+    act.deletedAt,
     act.activity_type,
     act.activity_trace_storage,
     act.activity_description,
@@ -226,6 +229,7 @@ SELECT
     g.group_name,
     g.createdAt,
     g.updatedAt,
+    g.deletedAt,
     g.group_use_new_generation,
     g.group_allocator_type,
     g.group_sandbox,
@@ -245,7 +249,8 @@ SELECT
     u.email,
     u.role,
     u.createdAt,
-    u.updatedAt
+    u.updatedAt,
+    u.deletedAt
 FROM ParticipantGroups_participants p
 JOIN ParticipantGroups g ON g.group_id = p.group_id
 JOIN Users u ON u.user_id = p.participant_id
@@ -298,6 +303,7 @@ SELECT
     s.simlet_description,
     s.createdAt,
     s.updatedAt,
+    s.deletedAt,
     ses.session_id as allocated_session_id,
     ses.session_name,
     shlink.short_url
@@ -341,6 +347,7 @@ SELECT
     act.activity_can_be_restarted,
     act.createdAt,
     act.updatedAt,
+    act.deletedAt,
     ap.user_id as participant_id,
     ac.activity_initialized,
     ac.activity_initialization_date,

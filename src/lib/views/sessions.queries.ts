@@ -7,6 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT session_id
         FROM Sessions
         WHERE simlet_id = :simlet_id
+        AND deletedAt IS NULL
         ORDER BY {{orderBy}} {{order}}
         `,
         params: {
@@ -54,6 +55,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_simlet_tags
       WHERE session_id = :session_id
       AND tag_visible_user_id = :current_user_id
+        AND deletedAt IS NULL
     `,
     params: {
       session_id: {
@@ -76,6 +78,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_session_direct_permissions_users
       WHERE session_id = :session_id  AND (:user_id IS NULL OR user_id = :user_id)
+        AND deletedAt IS NULL
     `,
     params: {
       session_id: {
@@ -100,6 +103,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
       AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
       AND (:session_status IS NULL OR session_status = :session_status)
+        AND deletedAt IS NULL
       ORDER BY {{orderBy}} {{order}}
       `,
       params: {
@@ -137,6 +141,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
         AND (:session_status IS NULL OR session_status = :session_status)
+        AND deletedAt IS NULL
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset
         `,
@@ -188,6 +193,7 @@ const queries: Record<string, QueryTemplate> = {
       AND tag_id IN (:tag_ids)
       AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
       AND (:session_status IS NULL OR session_status = :session_status)
+        AND deletedAt IS NULL
       GROUP BY session_id
       ORDER BY {{orderBy}} {{order}}
       `,
@@ -234,6 +240,7 @@ const queries: Record<string, QueryTemplate> = {
         AND tag_id IN (:tag_ids)
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
         AND (:session_status IS NULL OR session_status = :session_status)
+        AND deletedAt IS NULL
         GROUP BY session_id
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset 
@@ -290,6 +297,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_sessions_users_permissions 
       WHERE simlet_id = :simlet_id AND session_id = :session_id AND current_user_id = :current_user_id
+        AND deletedAt IS NULL
     `,
     params: {
       simlet_id: {
@@ -318,6 +326,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants 
       WHERE allocated_user_id = :current_user_id AND simlet_id = :simlet_id
+      AND deletedAt IS NULL
     `,
     params: {
       current_user_id: {
@@ -342,6 +351,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%')
         AND (:session_status IS NULL OR session_status = :session_status)
+        AND deletedAt IS NULL
         `,
         params: {
             current_user_id: {
@@ -379,6 +389,7 @@ const queries: Record<string, QueryTemplate> = {
         AND tag_id IN (:tag_ids)
         AND (:session_status IS NULL OR session_status = :session_status)
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%')
+        AND deletedAt IS NULL
         `,
         params: {
             current_user_id: {

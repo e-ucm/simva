@@ -7,6 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT participant_id
         FROM ParticipantGroups_participants
         WHERE group_id = :group_id
+        AND deletedAt IS NULL
         `,
         params: {
             group_id: {
@@ -23,6 +24,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_group_participants 
         WHERE group_id = :group_id
+        AND deletedAt IS NULL
         `,
         params: {
             group_id: {
@@ -40,6 +42,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_group_participants 
         WHERE group_id = :group_id AND user_id = :user_id
+        AND deletedAt IS NULL
         `,
         params: {
             group_id: {
@@ -63,6 +66,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_group_participants 
         WHERE allocator_id = :allocator_id
+        AND deletedAt IS NULL
         `,
         params: {
             allocator_id: {

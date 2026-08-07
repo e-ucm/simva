@@ -7,6 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT activity_id
         FROM Activities
         WHERE session_id = :session_id
+        AND deletedAt IS NULL
         ORDER BY activity_order
         `,
         params: {
@@ -24,6 +25,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activities_users_permissions
       WHERE current_user_id = :current_user_id AND (:session_id IS NULL OR session_id = :session_id)
+      AND deletedAt IS NULL
       ORDER BY activity_order
     `,
     params: {
@@ -48,6 +50,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activities_users_permissions 
       WHERE activity_id = :activity_id AND current_user_id = :current_user_id
+      AND deletedAt IS NULL
       ORDER BY activity_order
     `,
     params: {
@@ -72,6 +75,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants  
       WHERE activity_id = :activity_id AND allocated_user_id = :allocated_user_id
+      AND deletedAt IS NULL
       ORDER BY activity_order
     `,
     params: {
@@ -96,6 +100,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants  
       WHERE allocated_session_id = :session_id AND activity_order < :activity_order AND allocated_user_id = :allocated_user_id
+      AND deletedAt IS NULL
       ORDER BY activity_order
     `,
     params: {
@@ -126,6 +131,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_activities_by_survey_id
         WHERE survey_id = :survey_id
+        AND deletedAt IS NULL
         `,
         params: {
             survey_id: {
