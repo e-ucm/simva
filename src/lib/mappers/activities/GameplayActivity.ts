@@ -301,6 +301,14 @@ export class GamePlayActivity extends Activity {
 		if (data.game_type !== undefined) {
 			gameplayData.game_type = data.game_type;
 		}
+
+		if (data.game_tracker_technology !== undefined) {
+			gameplayData.game_tracker_technology = data.game_tracker_technology;
+		}
+		
+		if (data.game_technology !== undefined) {
+			gameplayData.game_technology = data.game_technology;
+		}
 		
 		if (Object.keys(gameplayData).length > 0) {
 			const gameplayActivity = await db.Tables.GamePlayActivities.findOne({ 
@@ -343,7 +351,9 @@ export class GamePlayActivity extends Activity {
 			game_backup: this.game_backup,
 			game_scorm_xapi: this.game_scorm_xapi,
 			game_type: this.game_type,
-			game_url: this.game_url
+			game_url: this.game_url,
+			game_tracker_technology: this.game_tracker_technology,
+			game_technology: this.game_technology
 		};
 	}
 	
