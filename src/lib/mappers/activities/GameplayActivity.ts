@@ -369,7 +369,7 @@ export class GamePlayActivity extends Activity {
 					"sso": `${config.sso.openIdUrl}`,
 					"client_id": `${config.sso.uadventureClientId}`
 				};
-				return  simvaConfig;
+				return { "file_name" : "simva.conf", "file_content": simvaConfig };
 			case "Xasu":
 			default:
 				let xasuConfig : any = {
@@ -393,7 +393,7 @@ export class GamePlayActivity extends Activity {
 					xasuConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/lrs`;
 					xasuConfig.backup_auth_protocol="same";
 				}
-				return xasuConfig;
+				return { "file_name" : "tracker_config.json", "file_content": xasuConfig};
 		}
     }
 } 

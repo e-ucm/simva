@@ -5837,76 +5837,84 @@ components:
               example: "abc123"
     trackerConfigMapper:
       type: object
-      oneOf:
-        - type: object
-          required:
-            - study
-            - host
-            - protocol
-            - port
-            - url
-            - sso
-            - client_id
-          properties:
-            study:
-              type: string
-            host:
-              type: string
-            protocol:
-              type: string
-            port:
-              type: string
-            url:
-              type: string
-            sso:
-              type: string
-            client_id:
-              type: string     
-        - type: object
-          required:
-            - online
-            - homepage
-            - lrs_endpoint
-            - auth_protocol
-            - auth_parameters
-          properties:
-            online: 
-              type: boolean
-            homepage: 
-              type: string
-            lrs_endpoint: 
-              type: string
-            auth_protocol: 
-              type: string
-            backup: 
-              type: boolean
-              nullable: true
-            backup_trace_format: 
-              type: string
-              nullable: true
-            backup_endpoint: 
-              type: string
-              nullable: true
-            backup_auth_protocol:
-              type: string
-              nullable: true
-            auth_parameters:
-              type: object
+      required:
+        - file_name
+        - file_content
+      properties:
+        file_name: 
+          type: string
+        file_content:
+          type: object
+          oneOf:
+            - type: object
+              required:
+                - study
+                - host
+                - protocol
+                - port
+                - url
+                - sso
+                - client_id
               properties:
-                grant_type:
+                study:
                   type: string
-                auth_endpoint:
+                host:
                   type: string
-                token_endpoint:
+                protocol:
+                  type: string
+                port:
+                  type: string
+                url:
+                  type: string
+                sso:
                   type: string
                 client_id:
-                  type: string
-                code_challenge_method: 
-                  type: string
-                simva_user_token: 
+                  type: string     
+            - type: object
+              required:
+                - online
+                - homepage
+                - lrs_endpoint
+                - auth_protocol
+                - auth_parameters
+              properties:
+                online: 
                   type: boolean
-                login_hint: 
+                homepage: 
                   type: string
+                lrs_endpoint: 
+                  type: string
+                auth_protocol: 
+                  type: string
+                backup: 
+                  type: boolean
+                  nullable: true
+                backup_trace_format: 
+                  type: string
+                  nullable: true
+                backup_endpoint: 
+                  type: string
+                  nullable: true
+                backup_auth_protocol:
+                  type: string
+                  nullable: true
+                auth_parameters:
+                  type: object
+                  properties:
+                    grant_type:
+                      type: string
+                    auth_endpoint:
+                      type: string
+                    token_endpoint:
+                      type: string
+                    client_id:
+                      type: string
+                    code_challenge_method: 
+                      type: string
+                    simva_user_token: 
+                      type: boolean
+                    login_hint: 
+                      type: string
     activity_type:
       type: object
       required:
