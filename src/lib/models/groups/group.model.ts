@@ -27,12 +27,10 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class Group extends Model {
   declare simlet_id: number;
   declare group_id: number;
-  declare mongo_id: string | null;
   declare group_name: string;
   declare group_use_new_generation: boolean;
   declare group_owner_id: number;
   declare group_sandbox: boolean;
-  declare group_allocator_mongo_id: string | null;
   declare group_allocator_type: "default" | "group" | "random" | "session";
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -74,10 +72,6 @@ export function GroupFactory(
       autoIncrement: true,
       unique: true,
     },
-    mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     group_name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -93,10 +87,6 @@ export function GroupFactory(
     group_sandbox: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-    },
-    group_allocator_mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
     },
     group_allocator_type: {
       type: DataTypes.STRING,

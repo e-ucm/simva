@@ -205,7 +205,6 @@ SELECT
     act.session_id,
     act.activity_id,
     act.activity_order,
-    act.mongo_id,
     act.activity_name,
     act.createdAt,
     act.updatedAt,

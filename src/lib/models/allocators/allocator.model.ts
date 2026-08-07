@@ -16,7 +16,6 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * @extends Model
  * 
  * @property {number} allocator_id - Primary key identifier for the allocator
- * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
  * @property {string} allocator_type - Type of allocation strategy (default, group, random)
  * @property {Date} createdAt - Timestamp when the allocator was created
  * @property {Date} updatedAt - Timestamp when the allocator was last updated

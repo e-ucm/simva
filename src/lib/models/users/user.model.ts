@@ -20,7 +20,6 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  */
 export class User extends Model {
   declare user_id: number;
-  declare mongo_id: string | null;
   declare username: string;
   declare isToken: boolean;
   declare token: string | null;
@@ -57,10 +56,6 @@ export function UserFactory(
       allowNull: false,
       autoIncrement: true,
       unique: true,
-    },
-    mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
     },
     username: {
       type: DataTypes.STRING,

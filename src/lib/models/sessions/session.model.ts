@@ -17,7 +17,6 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * 
  * @property {number} simlet_id - Foreign key to the parent SIMLET
  * @property {number} session_id - Primary key identifier for the session
- * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
  * @property {string} session_name - Display name of the session
  * @property {string} session_description - Detailed description of the session
  * @property {Date} createdAt - Timestamp when the session was created
@@ -32,7 +31,6 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class Session extends Model {
   declare simlet_id: number;
   declare session_id: number;
-  declare mongo_id: string | null;
   declare session_order: number;
   declare session_name: string;
   declare session_description: string;
@@ -80,10 +78,6 @@ export function SessionFactory(
       allowNull: false,
       autoIncrement: true,
       unique: true,
-    },
-    mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
     },
     session_order: {
       type: DataTypes.INTEGER,

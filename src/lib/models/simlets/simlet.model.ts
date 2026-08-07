@@ -15,7 +15,6 @@ import { Sequelize, Model, Op } from "sequelize";
  * @extends Model
  * 
  * @property {number} simlet_id - Primary key identifier for the SIMLET
- * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
  * @property {string} simlet_name - Display name of the SIMLET
  * @property {Date} createdAt - Timestamp when the SIMLET was created
  * @property {Date} updatedAt - Timestamp when the SIMLET was last updated
@@ -29,7 +28,6 @@ import { Sequelize, Model, Op } from "sequelize";
 export class Simlet extends Model {
   
   declare simlet_id: number;
-  declare mongo_id: string | null;
   declare simlet_name: string;
   declare simlet_archived: boolean;
   declare simlet_description: string;
@@ -70,10 +68,6 @@ export function SimletFactory(
       allowNull: false,
       autoIncrement: true,
       unique: true,
-    },
-    mongo_id: {
-      type: DataTypes.STRING,
-      allowNull: true,
     },
     simlet_name: {
       type: DataTypes.STRING,

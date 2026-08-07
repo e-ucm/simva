@@ -11,6 +11,7 @@ export async function up({ context }: { context: QueryInterface }) {
         await context.removeColumn('Sessions', 'mongo_id', { transaction: t });
         await context.removeColumn('SIMLETs', 'mongo_id', { transaction: t });
         await context.removeColumn('Users', 'mongo_id', { transaction: t });
+        await context.removeColumn('ParticipantGroups', 'group_allocator_mongo_id', { transaction: t });
         await t.commit();
     } catch (error) {
         await t.rollback();
@@ -40,6 +41,10 @@ export async function down({ context }: { context: QueryInterface }) {
             allowNull: true
         }, { transaction: t });
         await context.addColumn('ParticipantGroups', 'mongo_id', {
+            type: DataTypes.STRING,
+            allowNull: true
+        }, { transaction: t });
+        await context.addColumn('ParticipantGroups', 'group_allocator_mongo_id', {
             type: DataTypes.STRING,
             allowNull: true
         }, { transaction: t });

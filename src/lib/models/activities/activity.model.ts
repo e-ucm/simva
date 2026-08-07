@@ -17,7 +17,6 @@ import { NotFoundError } from "@/lib/errors/appErrors";
  * 
  * @property {number} session_id - Foreign key to the session containing this activity
  * @property {number} activity_id - Primary key identifier for the activity
- * @property {string|null} mongo_id - Optional MongoDB identifier for external data storage
  * @property {string} name - Display name of the activity
  * @property {string} activity_type - Type of activity (default, manual, limesurvey, gameplay, lti_tool)
  * @property {string|null} activity_presignedUrl - Pre-signed URL for activity resources
@@ -34,7 +33,6 @@ import { NotFoundError } from "@/lib/errors/appErrors";
 export class Activity extends Model {
   declare session_id: number;
   declare activity_id: number;
-  declare mongo_id: string | null;
   declare activity_order: number;
   declare activity_name: string;
   declare activity_type: "default" | "manual" | "limesurvey" | "gameplay" | "lti_tool";
