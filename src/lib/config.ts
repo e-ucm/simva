@@ -179,6 +179,7 @@ config.sso.port = process.env.SSO_PORT || '443';
 config.sso.url = config.sso.protocol + '://' + config.sso.host + ((ignored_ports.indexOf(Number(config.sso.port)) !== -1) ? '' : (':' + config.sso.port));
 config.sso.openIdUrl = config.sso.url + '/realms/' + config.sso.realm + '/protocol/openid-connect';
 config.sso.tokenUrl = config.sso.openIdUrl + '/token';
+config.sso.deviceAuthUrl = config.sso.openIdUrl + '/auth/device';
 config.sso.authUrl = config.sso.openIdUrl + '/auth';
 config.sso.pluginClientId = process.env.SSO_PLUGIN_CLIENT_ID || 'simva-plugin';
 config.sso.uadventureClientId = process.env.SSO_UADVENTURE_CLIENT_ID || 'uadventure';

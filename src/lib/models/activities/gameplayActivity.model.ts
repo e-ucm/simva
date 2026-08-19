@@ -6,8 +6,8 @@ export class GameplayActivity extends Model {
   declare game_scorm_xapi: boolean;
   declare game_type: "WEB" | "DESKTOP";
   declare game_url: string;
-  declare game_technology:"Godot"|"Unity"|"Phaser"|"Unreal Engine";
-  declare game_tracker_technology:"Xasu"|"Xasu+Simva_Plugin"|"other";
+  declare game_technology:string|null;
+  declare game_tracker_technology:string|null;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare deletedAt: Date | null;

@@ -79,6 +79,7 @@ export class GamePlayActivity extends Activity {
 		let gameplayData = await db.Tables.GamePlayActivities.findOne({ 
 			where: { activity_id: activity_id } 
 		});
+		logger.info(gameplayData);
 		
 		if (!gameplayData) {
 			if(!activityData.game_url) {
@@ -140,9 +141,11 @@ export class GamePlayActivity extends Activity {
 	async getAllCurrentParticipantsId(participants_id?: number[]): Promise<number[]> {
 		return super.getAllCurrentParticipantsId(participants_id);
 	}
+
 	async getAllCurrentParticipantsUsername(participants_id?: number[]): Promise<Map<number, string>> {
 		return super.getAllCurrentParticipantsUsername(participants_id);
 	}
+
 	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {
 		participants_id = await this.getAllCurrentParticipantsId(participants_id);
 		let targetMap = new Map<number, string>();
@@ -153,50 +156,32 @@ export class GamePlayActivity extends Activity {
 				case "WEB":
 					logger.info(this.game_url);
 					const user = await User.getFromDbData(participant_id);
-					if(this.game_url && this.game_url.indexOf('?') !== -1){
-						customUri = this.game_url;
-						customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)); //OK
-						customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)); //OK
-						customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`)); //OK
-						customUri = customUri.replace('{activityId}', this.activity_id.toString()); //OK
-						customUri = customUri.replace('{studyId}', this.simlet_id.toString()); //OK
-						if(user.isToken) {
-							customUri = customUri.replace('{tokenEndpoint}', encodeURIComponent(`${config.sso.tokenUrl}`)); //OK
-							customUri = customUri.replace('{userToken}', user.token!); //OK
-							customUri = customUri.replace('{username}', user.token!); //OK
-						} else {
-							customUri = customUri.replace('{userToken}', user.username); //OK
-							customUri = customUri.replace('{username}', user.username); //OK
-						}
-						if(this.game_url.indexOf('{authToken}') !== -1 || this.game_url.indexOf('{auth_token}') !== -1){
-							let authToken = await user.generateJWT();
-							// Replace both {authToken} and {auth_token} if present
-							customUri = customUri.replace('{authToken}', encodeURIComponent(`Bearer ${authToken}`));
-							customUri = customUri.replace('{auth_token}', encodeURIComponent(`Bearer ${authToken}`));
-						}
-					} else {
-						customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
-							+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
-							+ `&backup_type=XAPI`
-							+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
-							+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
-							+ `&batch_length=200`
-							+ `&batch_timeout=5min`
-							+ `&max_retry_delay=30min`;
-						if(user.isToken) {
-							customUri += `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
+					customUri = `${this.game_url.split("?")[0]}${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
+						+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
+						+ `&backup_type=XAPI`
+						+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
+						+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
+						+ `&batch_length=200`
+						+ `&batch_timeout=5min`
+						+ `&max_retry_delay=30min`;
+						+ `&sso_device_authorization_endpoint=${encodeURIComponent(`${config.sso.deviceAuthUrl}`)}`
+						+ `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
+						+ `&sso_client_id=simva-plugin`
+						+ `&sso_grant_type=urn:ietf:params:oauth:grant-type:device_code`;
+					/**if(user.isToken) {
+						customUri += `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
 							+ `&sso_client_id=simva-plugin`
 							+ `&sso_login_hint=${this.simlet_id}`
 							+ `&sso_username=${user.token}`
 							+ `&actor_user=${user.token}`
 							+ `&sso_grant_type=password`
-							+ `&sso_scope=offline_access`
-						} else {
-							let authToken = await user.generateJWT();
-							customUri += `&auth_token=${encodeURIComponent(`Bearer ${authToken}`)}`
-									+ `&actor_user=${user.username}`;
-						}
+							+ `&sso_scope=offline_access`;
+					} else {
+						let authToken = await user.generateJWT();
+						customUri += `&auth_token=${encodeURIComponent(`Bearer ${authToken}`)}`
+							+ `&actor_user=${user.username}`;
 					}
+					*/
 					targetMap.set(participant_id, customUri);
 				default:
 					break;
@@ -367,43 +352,45 @@ export class GamePlayActivity extends Activity {
 	}
 
 	getTrackerConfig() : object {
+		logger.info(this.game_tracker_technology);
 		switch(this.game_tracker_technology){
-			case "uAdventure":
 			case "Xasu+Simva_Plugin":
 				let simvaConfig : any = {
-					"study": `${this.simlet_id}`,
-					"host": `${config.api.host}`,
-					"protocol": `${config.api.protocol}`,
-					"port": `${config.api.port}`,
-					"url": `${config.api.url}`,
-					"sso": `${config.sso.openIdUrl}`,
-					"client_id": `${config.sso.uadventureClientId}`
+					"simlet": `${this.simlet_id}`,
+					"api_url": `${config.api.url}`,
+					"homepage": `${config.externalUrl}`,
+					"auth_protocol": "device",
+					"auth_parameters": {
+						"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
+						"token_endpoint": `${config.sso.tokenUrl}`,
+						"client_id": `${config.sso.uadventureClientId}`,
+						"poll_interval": 5,
+						"max_poll_attempts": 60
+					}
 				};
 				return { "file_name" : "simva.conf", "file_content": simvaConfig };
 			case "Xasu":
 			default:
-				let xasuConfig : any = {
+				let deviceConfig : any = {
 					"online": true,
 					"homepage": `${config.externalUrl}`,
 					"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
-					"auth_protocol": "oauth2",
+					"auth_protocol": "device",
 					"auth_parameters": {
-						"grant_type": "code",
-						"auth_endpoint": `${config.sso.authUrl}`,
+						"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
 						"token_endpoint": `${config.sso.tokenUrl}`,
 						"client_id": `${config.sso.pluginClientId}`,
-						"code_challenge_method": "S256",
-						"simva_user_token": true,
-						"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
+						"poll_interval": 5,
+						"max_poll_attempts": 60
 					}
-				}
+				};
 				if(this.game_backup) {
-					xasuConfig.backup = true;
-					xasuConfig.backup_trace_format = "XAPI";
-					xasuConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/lrs`;
-					xasuConfig.backup_auth_protocol="same";
+					deviceConfig.backup = true;
+					deviceConfig.backup_trace_format = "XAPI";
+					deviceConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/result`;
+					deviceConfig.backup_auth_protocol="same";
 				}
-				return { "file_name" : "tracker_config.json", "file_content": xasuConfig};
+				return { "file_name" : "tracker_config.json", "file_content": deviceConfig};
 		}
     }
-} 
+}
