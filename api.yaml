@@ -5927,28 +5927,37 @@ components:
           oneOf:
             - type: object
               required:
-                - study
-                - host
-                - protocol
-                - port
-                - url
-                - sso
-                - client_id
+                - simlet
+                - api_url
+                - homepage
+                - auth_protocol
+                - auth_parameters
               properties:
-                study:
+                simlet:
                   type: string
-                host:
+                api_url:
                   type: string
-                protocol:
+                homepage:
                   type: string
-                port:
+                auth_protocol: 
                   type: string
-                url:
-                  type: string
-                sso:
-                  type: string
-                client_id:
-                  type: string     
+                auth_parameters:
+                  type: object
+                  properties:
+                    grant_type:
+                      type: string
+                    auth_endpoint:
+                      type: string
+                    token_endpoint:
+                      type: string
+                    client_id:
+                      type: string
+                    code_challenge_method: 
+                      type: string
+                    simva_user_token: 
+                      type: boolean
+                    login_hint: 
+                      type: string
             - type: object
               required:
                 - online
