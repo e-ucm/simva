@@ -131,7 +131,6 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_activities_by_survey_id
         WHERE survey_id = :survey_id
-        AND deletedAt IS NULL
         `,
         params: {
             survey_id: {
