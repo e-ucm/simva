@@ -29,7 +29,6 @@ export class ExperimentalParticipants extends Model {
   declare session_id: number;
   declare createdAt: Date;
   declare updatedAt: Date;
-  declare deletedAt: Date | null;
 }
 
 /**
@@ -97,7 +96,6 @@ export function ExperimentalParticipantsFactory(
     modelName: "ExperimentalParticipants",
     tableName: "Experimental_Participants",
     timestamps: true,
-    paranoid: true,
   });
 
   return ExperimentalParticipants;

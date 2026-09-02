@@ -5,8 +5,7 @@ export class ExperimentalGroups extends Model {
   declare group_id: number;
   declare session_id: number;
   declare createdAt: Date;
-  declare updatedAt: Date;
-  declare deletedAt: Date | null;
+  declare updatedAt: Date
 }
 
 export function ExperimentalGroupsFactory(
@@ -38,19 +37,12 @@ export function ExperimentalGroupsFactory(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-    },
-    deletedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
+    }
   }, {
     sequelize,
     modelName: "ExperimentalGroups",
     tableName: "Experimental_Groups",
-    timestamps: true,
-    paranoid: true,
-    updatedAt: "updatedAt",
-    createdAt: "createdAt",
+    timestamps: true
   });
   return ExperimentalGroups;
 }
