@@ -22,39 +22,56 @@ export async function limesurveyWebhookHandler(req: Request, res: Response) {
 
   logger.info(JSON.stringify(req.body));
   var type;
+  let surveyId = req.body.event_details.surveyId;
+  let messages : string[] = [];
   if(req.body.event == "beforeSurveyPage") {
     type='activity_initialized';
   } else if(req.body.event == "afterSurveyComplete") {
     type='activity_completed';
+  } else  if(req.body.event == "afterSurveySave") {
+    type='survey_saved';
+    
   } else {
     throw new NotFoundError("Event not treated");
   };
-  let surveyId = req.body.event_details.surveyId;
-  let limesurvey_activity = await db.Functions.runViewQuery(db.Views.Activity.bySurveyId, { survey_id: surveyId });
-  let messages : string[] = [];
-  if (Array.isArray(limesurvey_activity) && limesurvey_activity.length > 0) {
-    if(limesurvey_activity.length > 1) {
-        logger.warn({ surveyId, count: limesurvey_activity.length }, 'Multiple activities found for the same surveyId, this should not happen');
-    }
-    const activity = limesurvey_activity[0];
-    const token: string = req.body.event_details.token;
-    let participant_id: number | undefined;
-    try {
-      const user = await User.getFromDbData(undefined, token);
-      participant_id = user.user_id;
-    } catch (e) {
-      logger.warn({ token }, 'Could not resolve participant_id for limesurvey token');
-    }
-    const message = {
-      type: type,
-      activity_type: LimesurveyActivity.getType(),
-      survey_id: surveyId,
-      activity_id: activity.activity_id,
-      simlet_id: activity.simlet_id,
-      username: token,
-      ...(participant_id !== undefined ? { participant_id } : {})
-    };
-    messages.push(JSON.stringify(message));
+  if(type == "survey_saved") {
+      logger.info({ body : req.body }, "Survey saved :");
+      if(req.body.event_details.action == "created") {
+        const message = {
+          type: type,
+          activity_type: LimesurveyActivity.getType(),
+          surveyId: surveyId,
+          username : req.body.event_details.adminUsername
+        };
+        logger.info(message, "survey created:")
+        messages.push(JSON.stringify(message));
+      }
+  } else {
+    let limesurvey_activity = await db.Functions.runViewQuery(db.Views.Activity.bySurveyId, { survey_id: surveyId });
+    if (Array.isArray(limesurvey_activity) && limesurvey_activity.length > 0) {
+        if(limesurvey_activity.length > 1) {
+            logger.warn({ surveyId, count: limesurvey_activity.length }, 'Multiple activities found for the same surveyId, this should not happen');
+        }
+        const activity = limesurvey_activity[0];
+        const token: string = req.body.event_details.token;
+        let participant_id: number | undefined;
+        try {
+          const user = await User.getFromDbData(undefined, token);
+          participant_id = user.user_id;
+        } catch (e) {
+          logger.warn({ token }, 'Could not resolve participant_id for limesurvey token');
+        }
+        const message = {
+          type: type,
+          activity_type: LimesurveyActivity.getType(),
+          survey_id: surveyId,
+          activity_id: activity.activity_id,
+          simlet_id: activity.simlet_id,
+          username: token,
+          ...(participant_id !== undefined ? { participant_id } : {})
+        };
+        messages.push(JSON.stringify(message));
+    } 
   }
   if(messages.length > 0) {
     await kafkaClient.connectToProducer();
@@ -62,7 +79,6 @@ export async function limesurveyWebhookHandler(req: Request, res: Response) {
   }
   res.status(200).send({ message: 'Message treated' });
 }
-
 
 export async function verifyHookdeckSignature(
   req : Request,
