@@ -374,10 +374,10 @@ export class GamePlayActivity extends Activity {
 					"study": `${this.simlet_id}`,
 					"host": `${config.api.host}`,
 					"protocol": `${config.api.protocol}`,
-					"port": `${config.api.port}`,
-					"url": `${config.api.url}`,
+					"port": `${config.api.protocol == "https" ? 443 : config.api.port}`,
+					"url": `${config.externalUrl}`,
 					"sso": `${config.sso.openIdUrl}`,
-					"client_id": `${config.sso.uadventureClientId}`
+					"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`
 				};
 				return { "file_name" : "simva.conf", "file_content": simvaConfig };
 			case "Xasu":
