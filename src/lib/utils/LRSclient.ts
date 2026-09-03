@@ -207,7 +207,7 @@ export class LRSClient {
         }
 		updatedStatement=updatedStatement.withPlatform(simvaUrl);
 		updatedStatement=updatedStatement.withAutorityAccount(authorityName, simvaUrl);
-		updatedStatement=updatedStatement.withStored(now.toISOString());
+		updatedStatement=updatedStatement.withStored(now);
 		if(activityId) {
 			updatedStatement=updatedStatement.withContextActivity(
 				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
