@@ -45,6 +45,10 @@ router.post("/:session_id/activate", SessionControler.activateSimletSession);
 router.post("/:session_id/tags/:tag_id", SessionControler.addTagForUser);
 router.delete("/:session_id/tags/:tag_id", SessionControler.deleteTagForUser);
 
+router.post("/:session_id/tester", SessionControler.setTesterForSession);
+router.patch("/:session_id/tester", SessionControler.resetTesterForSession);
+router.delete("/:session_id/tester", SessionControler.deleteTesterForSession);
+
 // New route for getting LRS statements for a session
 router.get("/:session_id/lrs/statements", SessionControler.getLRSStatementsForSession);
 router.get("/:session_id/lrs_test_statements", SessionControler.getTestLRSStatementsForSession);

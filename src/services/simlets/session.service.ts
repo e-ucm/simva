@@ -14,11 +14,12 @@
 
 import { Simlet } from "@/lib/mappers/simlet/Simlet";
 import { Session } from "@/lib/mappers/session/Session";
-import { ValidationError } from "@/lib/errors/appErrors";
+import { NotFoundError, ValidationError } from "@/lib/errors/appErrors";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { SessionTag } from "@/lib/mappers/session/SessionTagsElement";
 import { config } from "@/lib/config";
 import { db } from "@/lib/db";
+import { Group } from "@/lib/models/groups/group.model";
 
 /**
  * Retrieves all sessions within a simlet.
@@ -393,3 +394,27 @@ export async function getTestLRSStatements(simletId: number, sessionId: number, 
       throw new ValidationError('Current user is not a tester in this session');
   }
 } 
+
+
+export async function setTesterForSession(simletId: number, sessionId: number, currentUserId: number | undefined, username: string | undefined, allocated: boolean, is_admin: boolean) {
+  
+  const group = await SimletGroup.getSandboxGroup(simletId, currentUserId!, username!, true)
+  let participant = await group.participants.some(p => p === currentUserId);
+  if(!participant) {
+    await group.addParticipant(currentUserId!);
+  }
+  await group.allocateToDefault(sessionId);
+  return group;
+}
+
+export async function resetTesterForSession(simletId: number, sessionId: number, currentUserId: number | undefined, username: string | undefined, allocated: boolean, is_admin: boolean) {
+  const group = await SimletGroup.getSandboxGroup(simletId, currentUserId!, username!);
+  await group.resetAllocatedParticipant(currentUserId);
+  return group;
+}
+
+export async function deleteTesterForSession(simletId: number, sessionId: number, currentUserId: number | undefined, username: string | undefined, allocated: boolean, is_admin: boolean) {
+  const group = await SimletGroup.getSandboxGroup(simletId, currentUserId!, username!);
+  await group.deleteParticipant(currentUserId!, false);
+  await group.delete();
+}

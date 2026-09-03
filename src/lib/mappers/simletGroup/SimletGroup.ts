@@ -53,12 +53,15 @@ export class SimletGroup {
 
     updatedAt?: Date;
 
+    deletedAt?: Date;
+
     allocation: Allocation[] = [];
 
     group_owner_id : number;
     group_owner_username: string;
     is_admin: boolean = false;
     current_user_id?: number;
+    
     /**
      * Gets the allocator type identifier
      *  
@@ -121,6 +124,7 @@ export class SimletGroup {
         this.group_owner_username = data.group_owner_username || "";
         this.createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
         this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : undefined;
+        this.deletedAt = data.deletedAt ? new Date(data.deletedAt) : undefined;
         this.group_use_new_generation = Boolean(data.group_use_new_generation);
         this.group_allocator_type = data.group_allocator_type;
         if(current_user_id !== undefined && current_user_id !== null && current_user_id !== 0) {
@@ -197,6 +201,31 @@ export class SimletGroup {
                 throw e;
             }
         }));
+    }
+
+    static async getSandboxGroup(simlet_id: number, current_user_id: number, username: string, createIfNotExist : boolean = false): Promise<SimletGroup> {
+        const groupName = `tester_${simlet_id}_${current_user_id}_${username}`;
+        let groupData = await db.Tables.Group.findOne({
+            where: { simlet_id : simlet_id, group_name : groupName, group_sandbox: true },
+            paranoid : false
+        });
+        if(groupData) {
+            if(groupData.deletedAt != null) {
+                groupData.restore();
+            }
+        } else {
+            if(createIfNotExist) {
+                groupData = SimletGroup.createInDb(simlet_id,
+                    {group_name : groupName, group_sandbox: true, group_use_new_generation: false },
+                    current_user_id
+                );
+            } else {
+                throw new NotFoundError('Tester group not found');
+            }
+        }
+        const simletGroup = new SimletGroup(groupData, current_user_id);
+        await simletGroup.init();
+        return simletGroup;
     }
 
     static async getCurrentUserAllFromDbData(current_user_id: number, version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {

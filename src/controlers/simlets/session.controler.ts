@@ -522,3 +522,56 @@ export async function getTestLRSStatementsForSession(
     next(err);
   }
 }
+
+export async function setTesterForSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    let tester = await sessionService.setTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
+    res.json(tester);
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function resetTesterForSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+      try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    let tester = await sessionService.resetTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
+    res.json(tester);
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function deleteTesterForSession(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const simletId = parseInt(req.params.simlet_id as string);
+    const sessionId = parseInt(req.params.session_id as string);
+    let currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    let tester = await sessionService.deleteTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
+    res.json(tester);
+  } catch (err) {
+    next(err);
+  }
+}
