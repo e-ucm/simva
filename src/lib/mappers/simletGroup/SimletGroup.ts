@@ -301,7 +301,7 @@ export class SimletGroup {
         
         await SimletParticipant.addToGroup(this.group_id, participantId);
         const targetSessionId = await this.resolveTargetSessionId(participantId);
-        await db.Tables.ExperimentalParticipants.upsert({
+        await db.Tables.ExperimentalParticipants.create({
             simlet_id: this.simlet_id,
             group_id: this.group_id,
             participant_id: participantId,
@@ -503,7 +503,7 @@ export class SimletGroup {
         if(targetSessionId === -1) {
             return participant;
         }
-        await db.Tables.ExperimentalParticipants.upsert({
+        await db.Tables.ExperimentalParticipants.create({
             simlet_id: this.simlet_id,
             group_id: this.group_id,
             participant_id: participant.user_id,
@@ -568,26 +568,15 @@ export class SimletGroup {
         if(!participantGroupFound) {
             throw new NotFoundError(`Participant with id ${participant_id} not found`);
         }
-        let participantToUpdate = await db.Tables.ExperimentalParticipants.findOne({ where: { simlet_id: this.simlet_id, group_id : this.group_id, participant_id : participant_id } })
-        logger.debug({ participantExists: !!participantToUpdate, group_id: this.group_id }, 'Allocator.allocate participant lookup');
-        if(!participantToUpdate) {
-            logger.debug({ group_id: this.group_id, participant_id, sessionId }, 'Allocator.allocate creating new participant');
-            await db.Tables.ExperimentalParticipants.create({ simlet_id: this.simlet_id, group_id : this.group_id, participant_id : participant_id, session_id: sessionId });
-            logger.debug({ sessionId, participant_id }, 'Allocator.allocate created participant');
-        } else {
-            if(participantToUpdate.session_id === sessionId) {
-                logger.debug({ sessionId }, 'Allocator.allocate already allocated to session, skipping');
-                return;
-            }
-            const oldSessionId = participantToUpdate.session_id;
-            logger.debug({ sessionId, participant_id, oldSessionId }, 'Allocator.allocate updating participant session');
-            await participantToUpdate.update({ session_id: sessionId });
-            await this.syncParticipantActivityCompletions(participant_id, oldSessionId, sessionId);
-            logger.debug({ sessionId, participant_id, oldSessionId }, 'Allocator.allocate updated participant');
-        }
-        if(!participantToUpdate) {
-            await this.syncParticipantActivityCompletions(participant_id, undefined, sessionId);
-        }
+        let participant = await db.Tables.ExperimentalParticipants.findOne({ where: { simlet_id: this.simlet_id, group_id : this.group_id, participant_id : participant_id } })
+        logger.debug({ participantExists: !!participant, group_id: this.group_id }, 'Allocator.allocate participant lookup');
+        if(participant) {
+            await participant.destroy();
+        } 
+        logger.debug({ group_id: this.group_id, participant_id, sessionId }, 'Allocator.allocate creating new participant');
+        await db.Tables.ExperimentalParticipants.create({ simlet_id: this.simlet_id, group_id : this.group_id, participant_id : participant_id, session_id: sessionId });
+        logger.debug({ sessionId, participant_id }, 'Allocator.allocate created participant');
+        await this.syncParticipantActivityCompletions(participant_id, undefined, sessionId);
     }
 
     async allocateToDefault(defaultSession: number) {
@@ -601,24 +590,18 @@ export class SimletGroup {
         }, 'Allocator.allocateToDefault starting');
 
         // If group allocator type is 'group', use Experimental_Groups table
+        await db.Tables.ExperimentalGroups.destroy({
+            where: {
+                simlet_id: this.simlet_id,
+                group_id: this.group_id
+            }
+        });
         if (!(this.group_allocator_type === 'group')) {
             // If not group mode, ensure no group assignment exists
-            await db.Tables.ExperimentalGroups.destroy({
-                where: {
-                    simlet_id: this.simlet_id,
-                    group_id: this.group_id
-                }
-            });
             logger.debug({ simlet_id: this.simlet_id, group_id: this.group_id }, 'Allocator.allocateToDefault: not group mode, cleared Experimental_Groups');
         } else {
             logger.debug({ defaultSession, group_id: this.group_id }, 'GroupAllocator.allocateToDefault started');
             // Always create group-level assignment for group allocator
-            await db.Tables.ExperimentalGroups.destroy({
-                where: {
-                    simlet_id: this.simlet_id,
-                    group_id: this.group_id
-                }
-            });
             await db.Tables.ExperimentalGroups.create({
                 simlet_id: this.simlet_id,
                 group_id: this.group_id,

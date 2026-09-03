@@ -86,11 +86,7 @@ export function ExperimentalParticipantsFactory(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-    },
-    deletedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
+    }
   }, {
     sequelize,
     modelName: "ExperimentalParticipants",
