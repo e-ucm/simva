@@ -5,13 +5,9 @@ import { config } from '../config';
 export async function up({ context }: { context: QueryInterface }) {
     const t: Transaction = await context.sequelize.transaction();
     try {
-      await context.addColumn('GamePlay_Activities', 'game_tracker_technology', {
+      await context.addColumn('GamePlay_Activities', 'oauth_login_mode', {
         type: DataTypes.STRING,
-        allowNull: true
-      }, { transaction : t });
-    await context.addColumn('GamePlay_Activities', 'game_technology', {
-        type: DataTypes.STRING,
-        allowNull: true,
+        defaultValue: 'device_oauth2',
       }, { transaction : t });
       await t.commit();
     } catch (error) {
@@ -23,13 +19,8 @@ export async function up({ context }: { context: QueryInterface }) {
 export async function down({ context }: { context: QueryInterface }) {
   const t: Transaction = await context.sequelize.transaction();
   try {
-    await context.removeColumn('GamePlay_Activities', 'game_tracker_technology', {
-        type: DataTypes.STRING,
-        allowNull: true,
-    }, { transaction : t });
-    await context.removeColumn('GamePlay_Activities', 'game_technology', {
-        type: DataTypes.STRING,
-        allowNull: true,
+    await context.removeColumn('GamePlay_Activities', 'oauth_login_mode', {
+        type: DataTypes.STRING
     }, { transaction : t });
     await t.commit();
   } catch (error) {

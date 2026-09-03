@@ -44,6 +44,8 @@ export class GamePlayActivity extends Activity {
 	game_tracker_technology: string;
 
 	game_technology: string;
+
+	oauth_login_mode: string;
 	
 	/**
 	 * Creates a new GamePlayActivity instance
@@ -61,6 +63,7 @@ export class GamePlayActivity extends Activity {
 		this.game_url = data.game_url;
 		this.game_tracker_technology=data.game_tracker_technology;
 		this.game_technology=data.game_technology;
+		this.oauth_login_mode=data.oauth_login_mode;
 	}
 	
 	/**
@@ -93,7 +96,8 @@ export class GamePlayActivity extends Activity {
 				game_type: activityData.game_type || "WEB",
 				game_url: activityData.game_url,
 				game_tracker_technology: activityData.game_tracker_technology,
-				game_technology: activityData.game_technology
+				game_technology: activityData.game_technology,
+				oauth_login_mode: activityData.oauth_login_mode
 			});
 		}
 		instance.game_backup = gameplayData.game_backup ?? false;
@@ -102,7 +106,7 @@ export class GamePlayActivity extends Activity {
 		instance.game_url = gameplayData.game_url;
 		instance.game_tracker_technology = gameplayData.game_tracker_technology;
 		instance.game_technology = gameplayData.game_technology;
-		
+		instance.oauth_login_mode = gameplayData.oauth_login_mode;
 		return instance;
 	}
 	
@@ -338,7 +342,8 @@ export class GamePlayActivity extends Activity {
 			game_type: this.game_type,
 			game_url: this.game_url,
 			game_tracker_technology: this.game_tracker_technology,
-			game_technology: this.game_technology
+			game_technology: this.game_technology,
+			oauth_login_mode: this.oauth_login_mode
 		};
 	}
 	
@@ -354,43 +359,58 @@ export class GamePlayActivity extends Activity {
 	getTrackerConfig() : object {
 		logger.info(this.game_tracker_technology);
 		switch(this.game_tracker_technology){
+			case "uAdventure":
 			case "Xasu+Simva_Plugin":
 				let simvaConfig : any = {
 					"simlet": `${this.simlet_id}`,
 					"api_url": `${config.api.url}`,
-					"homepage": `${config.externalUrl}`,
-					"auth_protocol": "device",
-					"auth_parameters": {
-						"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
-						"token_endpoint": `${config.sso.tokenUrl}`,
-						"client_id": `${config.sso.uadventureClientId}`,
-						"poll_interval": 5,
-						"max_poll_attempts": 60
-					}
-				};
+					"homepage": `${config.externalUrl}`
+				}
+				switch(this.oauth_login_mode) {
+					case "device_oauth2": 
+						simvaConfig.auth_protocol = "device";
+						simvaConfig.auth_parameters = {
+							"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
+							"token_endpoint": `${config.sso.tokenUrl}`,
+							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
+							"poll_interval": 5,
+							"max_poll_attempts": 60
+						};
+						break;
+					case "token_oauth2":
+					default:
+						break;
+				}	
 				return { "file_name" : "simva.conf", "file_content": simvaConfig };
 			case "Xasu":
 			default:
-				let deviceConfig : any = {
+				let xasuConfig : any = {
 					"online": true,
 					"homepage": `${config.externalUrl}`,
 					"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
-					"auth_protocol": "device",
-					"auth_parameters": {
-						"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
-						"token_endpoint": `${config.sso.tokenUrl}`,
-						"client_id": `${config.sso.pluginClientId}`,
-						"poll_interval": 5,
-						"max_poll_attempts": 60
-					}
 				};
 				if(this.game_backup) {
-					deviceConfig.backup = true;
-					deviceConfig.backup_trace_format = "XAPI";
-					deviceConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/result`;
-					deviceConfig.backup_auth_protocol="same";
+					xasuConfig.backup = true;
+					xasuConfig.backup_trace_format = "XAPI";
+					xasuConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/result`;
+					xasuConfig.backup_auth_protocol="same";
 				}
-				return { "file_name" : "tracker_config.json", "file_content": deviceConfig};
+				switch(this.oauth_login_mode) {
+					case "device_oauth2":
+						xasuConfig.auth_protocol= "device";
+						xasuConfig.auth_parameters= {
+							"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
+							"token_endpoint": `${config.sso.tokenUrl}`,
+							"client_id": `${config.sso.pluginClientId}`,
+							"poll_interval": 5,
+							"max_poll_attempts": 60
+						};
+						break;
+					case "token_oauth2":
+					default:
+						break;
+				}
+				return { "file_name" : "tracker_config.json", "file_content": xasuConfig};
 		}
     }
 }
