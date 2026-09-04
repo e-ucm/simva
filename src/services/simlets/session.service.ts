@@ -19,7 +19,7 @@ import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { SessionTag } from "@/lib/mappers/session/SessionTagsElement";
 import { config } from "@/lib/config";
 import { db } from "@/lib/db";
-import { Group } from "@/lib/models/groups/group.model";
+import { logger } from "@/lib/logger";
 
 /**
  * Retrieves all sessions within a simlet.
@@ -398,12 +398,14 @@ export async function getTestLRSStatements(simletId: number, sessionId: number, 
 
 export async function setTesterForSession(simletId: number, sessionId: number, currentUserId: number | undefined, username: string | undefined, allocated: boolean, is_admin: boolean) {
   
-  const group = await SimletGroup.getSandboxGroup(simletId, currentUserId!, username!, true)
-  let participant = await group.participants.some(p => p === currentUserId);
+  const group = await SimletGroup.getSandboxGroup(simletId, currentUserId!, username!, true);
+  logger.info(group, "Group to set tester to:");
+  let participant = group.participants.some(p => p === currentUserId);
+  logger.info(participant, "participant present in group :");
   if(!participant) {
-    await group.addParticipant(currentUserId!);
+    await group.addParticipant(currentUserId!, true);
   }
-  await group.allocateToDefault(sessionId);
+  await group.allocateToSession(sessionId, currentUserId!);
   return group;
 }
 

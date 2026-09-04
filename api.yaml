@@ -1616,6 +1616,85 @@ paths:
       parameters:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/sessionId'
+  /simlets/{simletid}/sessions/{sessionid}/tester:
+    post:
+      tags:
+        - administrators
+        - teachers
+      summary: adds the current user as tester in a session
+      operationId: addTesterForSession
+      description: |
+        Adds the current user as tester in a session.
+      responses:
+        '200':
+          description: current group as tester in a session 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+    patch:
+      tags:
+        - administrators
+        - teachers
+      summary: reset the current user as tester in a session
+      operationId: resetTesterForSession
+      description: |
+        Reset the current user as tester in a session.
+      responses:
+        '200':
+          description: current group as tester in a session 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/groupMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
+    delete:
+      tags:
+        - administrators
+        - teachers
+      summary: deletes the current user as tester in a session
+      operationId: deleteTesterForSession
+      description: |
+        Delete the current user as tester in a session.
+      responses:
+        '200':
+          description: Tester deleted
+          content:
+            application/json:
+              schema:
+                type: object                
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/sessionId'
   /simlets/{simletid}/sessions/{sessionid}/tags/{tagid}:
     post:
       tags:

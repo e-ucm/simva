@@ -533,8 +533,8 @@ export async function setTesterForSession(
     const sessionId = parseInt(req.params.session_id as string);
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    let tester = await sessionService.setTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
-    res.json(tester);
+    let testerGroup = await sessionService.setTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
+    res.json(testerGroup.toJSON());
   } catch (err) {
     next(err);
   }
@@ -551,8 +551,8 @@ export async function resetTesterForSession(
     const sessionId = parseInt(req.params.session_id as string);
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    let tester = await sessionService.resetTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
-    res.json(tester);
+    let testerGroup = await sessionService.resetTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
+    res.json(testerGroup.toJSON());
   } catch (err) {
     next(err);
   }
@@ -569,8 +569,8 @@ export async function deleteTesterForSession(
     const sessionId = parseInt(req.params.session_id as string);
     let currentUser = req.user?.sql;
     const access = getAccess(currentUser);
-    let tester = await sessionService.deleteTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
-    res.json(tester);
+    await sessionService.deleteTesterForSession(simletId, sessionId, currentUser?.user_id, currentUser?.username, access.allocated, access.is_admin);
+    res.json({message:"Tester deleted successfully"});
   } catch (err) {
     next(err);
   }

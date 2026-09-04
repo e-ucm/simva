@@ -168,12 +168,20 @@ export class SimletParticipant {
         return participantCreated;
     }
 
-    static async addToGroup(group_id: number, user_id: number): Promise<void> {
-        let participantIndex = await db.Tables.GroupParticipants.findOne({ where: { group_id: group_id, participant_id: user_id } });
+    static async addToGroup(group_id: number, user_id: number, allowRestore: boolean = false): Promise<void> {
+        let participantIndex = await db.Tables.GroupParticipants.findOne({ where: { group_id: group_id, participant_id: user_id }});
         if(participantIndex) {
             throw new ConflictError(`Participant with ID ${user_id} is already in the group`);
         }
-        await db.Tables.GroupParticipants.create({ participant_id: user_id, group_id: group_id });
+        if(!participantIndex) {
+            participantIndex = await db.Tables.GroupParticipants.findOne({ where: { group_id: group_id, participant_id: user_id }, paranoid : false});
+            if(allowRestore && participantIndex && participantIndex.deletedAt) {
+                await participantIndex.restore();
+            }
+        }
+        if(!participantIndex) {
+            await db.Tables.GroupParticipants.create({ participant_id: user_id, group_id: group_id });
+        }
     }
 
     /**

@@ -211,11 +211,11 @@ export class SimletGroup {
         });
         if(groupData) {
             if(groupData.deletedAt != null) {
-                groupData.restore();
+                await groupData.restore();
             }
         } else {
             if(createIfNotExist) {
-                groupData = SimletGroup.createInDb(simlet_id,
+                groupData = await SimletGroup.createInDb(simlet_id,
                     {group_name : groupName, group_sandbox: true, group_use_new_generation: false },
                     current_user_id
                 );
@@ -226,6 +226,10 @@ export class SimletGroup {
         const simletGroup = new SimletGroup(groupData, current_user_id);
         await simletGroup.init();
         return simletGroup;
+    }
+
+    async resetAllocatedParticipant(currentUserId: number | undefined) {
+      throw new Error("Method not implemented.");
     }
 
     static async getCurrentUserAllFromDbData(current_user_id: number, version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {
@@ -307,7 +311,7 @@ export class SimletGroup {
         return simletGroup;
     }
     
-    async addParticipant(participantId: number) : Promise<SimletGroup> {
+    async addParticipant(participantId: number, allowRestore : boolean = false) : Promise<SimletGroup> {
         if(!this.group_sandbox) {
             let owners = await UserPermission.getFromDbData('simlet', this.simlet_id, this.current_user_id);
             if(this.current_user_id === participantId) {
@@ -328,7 +332,7 @@ export class SimletGroup {
             throw new ConflictError(`Participant with ID ${participantId} is already assigned to a group within this simlet`);
         }
         
-        await SimletParticipant.addToGroup(this.group_id, participantId);
+        await SimletParticipant.addToGroup(this.group_id, participantId, allowRestore);
         const targetSessionId = await this.resolveTargetSessionId(participantId);
         await db.Tables.ExperimentalParticipants.create({
             simlet_id: this.simlet_id,
