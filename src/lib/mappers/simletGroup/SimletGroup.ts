@@ -228,10 +228,6 @@ export class SimletGroup {
         return simletGroup;
     }
 
-    async resetAllocatedParticipant(currentUserId: number | undefined) {
-      throw new Error("Method not implemented.");
-    }
-
     static async getCurrentUserAllFromDbData(current_user_id: number, version?: boolean, limit?: number, offset?: number, searchString?: string): Promise<SimletGroup[]> {
         const { SimletGroupAllocatorToClass } = await import("./GroupAllocatorToClass");
         let groups;

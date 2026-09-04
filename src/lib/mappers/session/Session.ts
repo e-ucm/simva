@@ -684,6 +684,13 @@ export class Session {
         return this;
     }
 
+    async resetParticipant(currentUserId: number | undefined) {
+        const activities = await this.getActivities();
+        activities.forEach(async (activity: Activity) => {
+            await activity.resetParticipant(currentUserId!);
+        });
+    }
+
     /**
      * Terminates this session to end participant access and prevent further activity.
      * Requires edit permissions and session must be configured for manual activation.

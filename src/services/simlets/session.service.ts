@@ -406,12 +406,15 @@ export async function setTesterForSession(simletId: number, sessionId: number, c
     await group.addParticipant(currentUserId!, true);
   }
   await group.allocateToSession(sessionId, currentUserId!);
+  const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
+  await session.resetParticipant(currentUserId);
   return group;
 }
 
 export async function resetTesterForSession(simletId: number, sessionId: number, currentUserId: number | undefined, username: string | undefined, allocated: boolean, is_admin: boolean) {
   const group = await SimletGroup.getSandboxGroup(simletId, currentUserId!, username!);
-  await group.resetAllocatedParticipant(currentUserId);
+  const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
+  await session.resetParticipant(currentUserId);
   return group;
 }
 

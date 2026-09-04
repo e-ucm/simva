@@ -419,6 +419,11 @@ export class Activity {
 		return await ActivityCompletion.createAll(this.activity_id, participants_id);
 	}
 
+	async resetParticipant(participantId: number) {
+        let activityCompletion = await ActivityCompletion.getFromDbData(this.activity_id, participantId, "all");
+		await activityCompletion.reset()
+    }
+
 	async removeParticipants(participants_id: number[]): Promise<void> {
 		//logger.debug(`Removing participants with IDs ${participants_id} from activity with ID ${this.activity_id}`);
 		//for (const participant_id of participants_id) {
