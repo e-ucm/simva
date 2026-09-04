@@ -29,7 +29,7 @@ export class SessionTagList {
             return [];
         }
 
-        return await SessionTag.getTags(tagsId, current_user_id);
+        return await SessionTag.getTags(tagsId);
     }
 
     static async getSessionTags(session_id: number, current_user_id?: number): Promise<SessionTag[]> {
@@ -43,7 +43,7 @@ export class SessionTagList {
             return [];
         }
 
-        return await SessionTag.getTags(tagsId, current_user_id);
+        return await SessionTag.getTags(tagsId);
     }
 
     static async getSessionTagFromList(session_id: number, tag_id: number, current_user_id: number): Promise<SessionTag> {
