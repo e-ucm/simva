@@ -592,7 +592,7 @@ export class SimletGroup {
             logger.debug({ participant_id, type: typeof participant_id }, 'Allocator.allocate invalid participant_id type');
             throw new ValidationError("Not valid");
         }
-        const participantGroupFound = this.participants.find(p => p === participant_id);
+        const participantGroupFound = await db.Tables.GroupParticipants.findOne({ where : { group_id : this.group_id, participant_id : participant_id }});
         logger.debug({ participant_id, participantGroupFound }, 'Allocator.allocate participant membership check');
         if(!participantGroupFound) {
             throw new NotFoundError(`Participant with id ${participant_id} not found`);
