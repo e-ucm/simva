@@ -16,10 +16,7 @@ import { Simlet } from "@/lib/mappers/simlet/Simlet";
  * ```
  */
 export async function getSimletTagsForUser(current_user_id: number): Promise<SessionTag[]> {
-    let simlets = await Simlet.getAllFromDbData(current_user_id, false);
-    let sessionsIds = simlets.map(simlet => simlet.sessions).flat();
-    const tags = await SessionTagList.getSessionsTags(sessionsIds, current_user_id);
-    tags.push(...await SessionTag.getTagsForUser(current_user_id));
+    const tags = await SessionTag.getTagsForUser(current_user_id);
     return tags;
 }
 
