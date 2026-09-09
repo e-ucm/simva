@@ -68,6 +68,133 @@ paths:
           $ref: '#/components/responses/BadRequestError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /auth2/{activity_id}/device:
+    post:
+      summary: Initiate the OAuth2 Device Authorization Grant flow
+      operationId: initiateDeviceFlow
+      description: |
+        Initiates the OAuth2 Device Authorization Grant (RFC 8628) flow against
+        Keycloak on behalf of a gameplay activity. Returns the device_code,
+        user_code and verification URIs that the game should show to the user.
+        The Keycloak client used is selected based on the activity's tracker
+        technology. This endpoint is public (no authentication required).
+      responses:
+        '200':
+          description: Device authorization details
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - device_code
+                  - user_code
+                  - verification_uri
+                  - expires_in
+                  - interval
+                properties:
+                  device_code:
+                    type: string
+                    description: Code the game uses to poll for tokens
+                  user_code:
+                    type: string
+                    description: Human-friendly code the user enters to authorize
+                  verification_uri:
+                    type: string
+                    description: URL the user visits to authorize
+                  verification_uri_complete:
+                    type: string
+                    description: verification_uri with the user_code pre-filled
+                  expires_in:
+                    type: integer
+                    description: Seconds until the device_code and user_code expire
+                  interval:
+                    type: integer
+                    description: Minimum seconds between token polling attempts
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
+  /auth2/{activity_id}/token:
+    post:
+      summary: Poll for an access token in the device flow
+      operationId: pollDeviceToken
+      description: |
+        Polls the token endpoint to exchange the device_code for an access token.
+        If the user has not yet authorized, the error response contains
+        error=authorization_pending and the caller should keep polling after the
+        interval returned by the device endpoint. This endpoint is public (no
+        authentication required).
+      responses:
+        '200':
+          description: Token response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  not-before-policy:
+                    type: integer
+                  refresh_expires_in:
+                    type: integer
+                  refresh_token:
+                    type: string
+                  scope:
+                    type: string
+                  session_state:
+                    type: string
+                  token_type:
+                    type: string
+        '202':
+          description: Authorization pending - the user has not authorized yet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - authorization_pending
+                      - slow_down
+                      - access_denied
+                      - expired_token
+                  error_description:
+                    type: string
+        '400':
+          description: Invalid request or expired token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  error_description:
+                    type: string
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - device_code
+              properties:
+                device_code:
+                  type: string
+                  description: The device_code returned by the device endpoint
   /events:
     get:
       summary: send Server Side Events to Client

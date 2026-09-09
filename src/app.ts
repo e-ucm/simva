@@ -28,6 +28,7 @@ import limesurveyRoutes from '@/routes/limesurvey/limesurvey.routes';
 import activitiesTypesRoutes from '@/routes/activitiesTypes/activitiesTypes.routes';
 import allocatorsTypesRoutes from '@/routes/allocatorsTypes/allocatorsTypes.routes';
 import tagsRoutes from '@/routes/tags/tags.router';
+import auth2Routes from '@/routes/auth2/auth2.routes';
 import { errorMiddleware } from '@/middlewares/error.middleware';
 import { auth, roleAllowed } from "@/middlewares/auth.middleware";
 import { logger } from '@/lib/logger';
@@ -68,6 +69,10 @@ app.use((req: Request, _: Response, next : NextFunction) => {
   logger.debug(`${req.method} at ${req.originalUrl} with body ${req.body}`);
   next();
 })
+
+// Device OAuth2 endpoints - these are public (no auth required) so they are
+// mounted before the global auth middleware. They proxy the device flow to Keycloak.
+app.use('/auth2', auth2Routes);
 
 app.use(auth);
 app.use(roleAllowed);

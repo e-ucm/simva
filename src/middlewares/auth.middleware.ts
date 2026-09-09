@@ -211,7 +211,8 @@ export class Authenticator {
     const publicEndpoints = [
       '/health',
       '/version',
-      '/limesurvey-completion-webhooks'
+      '/limesurvey-completion-webhooks',
+      '/auth2'
     ];
     
     return publicEndpoints.some(endpoint => path === endpoint || path.startsWith(endpoint));

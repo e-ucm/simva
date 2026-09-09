@@ -156,6 +156,15 @@ export class GamePlayActivity extends Activity {
 					"homepage": `${config.externalUrl}`
 				}
 				switch(config.sso.authMethod) {
+					case "simva_device_oauth2":
+						simvaConfig.auth_protocol = "device";
+						simvaConfig.auth_parameters = {
+							"device_authorization_endpoint": `${config.api.url}/auth2/${this.activity_id}/device`,
+							"token_endpoint": `${config.api.url}/auth2/${this.activity_id}/token`,
+							"poll_interval": 5,
+							"max_poll_attempts": 60
+						};
+						break;
 					case "device_oauth2": 
 						simvaConfig.auth_protocol = "device";
 						simvaConfig.auth_parameters = {
@@ -192,6 +201,15 @@ export class GamePlayActivity extends Activity {
 					xasuConfig.backup_auth_protocol="same";
 				}
 				switch(config.sso.authMethod) {
+					case "simva_device_oauth2":
+						xasuConfig.auth_protocol= "device";
+						xasuConfig.auth_parameters= {
+							"device_authorization_endpoint": `${config.api.url}/auth2/${this.activity_id}/device`,
+							"token_endpoint": `${config.api.url}/auth2/${this.activity_id}/token`,
+							"poll_interval": 5,
+							"max_poll_attempts": 60
+						};
+						break;
 					case "device_oauth2":
 						xasuConfig.auth_protocol= "device";
 						xasuConfig.auth_parameters= {
@@ -228,17 +246,25 @@ export class GamePlayActivity extends Activity {
 			let customUri;
 			switch(this.game_type) {
 				case "WEB":
-					logger.info(this.game_url);
-					switch(config.sso.authMethod) {
-						case "device_oauth2":
-							customUri = `${this.game_url.split("?")[0]}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
+					customUri = `${this.game_url.split("?")[0]}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
 								+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
 								+ `&backup_type=XAPI`
 								+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
 								+ `&batch_length=200`
 								+ `&batch_timeout=5min`
-								+ `&max_retry_delay=30min`
-								+ `&sso_device_authorization_endpoint=${encodeURIComponent(`${config.sso.deviceAuthUrl}`)}`
+								+ `&max_retry_delay=30min`;
+					logger.info(this.game_url);
+					switch(config.sso.authMethod) {
+						case "simva_device_oauth2":
+							customUri += `&sso_device_authorization_endpoint=${encodeURIComponent(`${config.api.url}/auth2/${this.activity_id}/device`)}`
+								+ `&sso_token_endpoint=${encodeURIComponent(`${config.api.url}/auth2/${this.activity_id}/token`)}`
+								+ `&sso_client_id=simva-plugin`
+								+ `&sso_grant_type=urn:ietf:params:oauth:grant-type:device_code`
+								+ '&sso_poll_interval=5'
+								+ '&sso_max_poll_attempts=60';
+							break;
+						case "device_oauth2":
+							customUri += `&sso_device_authorization_endpoint=${encodeURIComponent(`${config.sso.deviceAuthUrl}`)}`
 								+ `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
 								+ `&sso_client_id=simva-plugin`
 								+ `&sso_grant_type=urn:ietf:params:oauth:grant-type:device_code`
