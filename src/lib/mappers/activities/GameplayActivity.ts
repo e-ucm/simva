@@ -44,8 +44,6 @@ export class GamePlayActivity extends Activity {
 	game_tracker_technology: string;
 
 	game_technology: string;
-
-	oauth_login_mode: string;
 	
 	/**
 	 * Creates a new GamePlayActivity instance
@@ -63,7 +61,6 @@ export class GamePlayActivity extends Activity {
 		this.game_url = data.game_url;
 		this.game_tracker_technology=data.game_tracker_technology;
 		this.game_technology=data.game_technology;
-		this.oauth_login_mode=data.oauth_login_mode;
 	}
 	
 	/**
@@ -96,8 +93,7 @@ export class GamePlayActivity extends Activity {
 				game_type: activityData.game_type || "WEB",
 				game_url: activityData.game_url,
 				game_tracker_technology: activityData.game_tracker_technology,
-				game_technology: activityData.game_technology,
-				oauth_login_mode: activityData.oauth_login_mode
+				game_technology: activityData.game_technology
 			});
 		}
 		instance.game_backup = gameplayData.game_backup ?? false;
@@ -106,7 +102,6 @@ export class GamePlayActivity extends Activity {
 		instance.game_url = gameplayData.game_url;
 		instance.game_tracker_technology = gameplayData.game_tracker_technology;
 		instance.game_technology = gameplayData.game_technology;
-		instance.oauth_login_mode = gameplayData.oauth_login_mode;
 		return instance;
 	}
 	
@@ -150,6 +145,81 @@ export class GamePlayActivity extends Activity {
 		return super.getAllCurrentParticipantsUsername(participants_id);
 	}
 
+	getTrackerConfig() : object {
+		logger.info(this.game_tracker_technology);
+		switch(this.game_tracker_technology){
+			case "uAdventure":
+			case "Xasu+Simva_Plugin":
+				let simvaConfig : any = {
+					"simlet": `${this.simlet_id}`,
+					"api_url": `${config.api.url}`,
+					"homepage": `${config.externalUrl}`
+				}
+				switch(config.sso.authMethod) {
+					case "device_oauth2": 
+						simvaConfig.auth_protocol = "device";
+						simvaConfig.auth_parameters = {
+							"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
+							"token_endpoint": `${config.sso.tokenUrl}`,
+							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
+							"poll_interval": 5,
+							"max_poll_attempts": 60
+						};
+						break;
+					case "token_oauth2":
+					default:
+						simvaConfig.study = `${this.simlet_id}`;
+						simvaConfig.host = `${config.api.host}`;
+						simvaConfig.protocol = `${config.api.protocol}`;
+						simvaConfig.port = `${config.api.protocol == "https" ? 443 : config.api.port}`;
+						simvaConfig.url = `${config.externalUrl}`;
+						simvaConfig.sso =`${config.sso.openIdUrl}`;
+						simvaConfig.client_id = this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`;
+						break;
+				}	
+				return { "file_name" : "simva.conf", "file_content": simvaConfig };
+			case "Xasu":
+			default:
+				let xasuConfig : any = {
+					"online": true,
+					"homepage": `${config.externalUrl}`,
+					"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
+				};
+				if(this.game_backup) {
+					xasuConfig.backup = true;
+					xasuConfig.backup_trace_format = "XAPI";
+					xasuConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/result`;
+					xasuConfig.backup_auth_protocol="same";
+				}
+				switch(config.sso.authMethod) {
+					case "device_oauth2":
+						xasuConfig.auth_protocol= "device";
+						xasuConfig.auth_parameters= {
+							"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
+							"token_endpoint": `${config.sso.tokenUrl}`,
+							"client_id": `${config.sso.pluginClientId}`,
+							"poll_interval": 5,
+							"max_poll_attempts": 60
+						};
+						break;
+					case "token_oauth2":
+					default:
+						xasuConfig.auth_protocol= "oauth2";
+						xasuConfig.auth_parameters= {
+							"grant_type": "code",
+							"auth_endpoint": `${config.sso.authUrl}`,
+							"token_endpoint": `${config.sso.tokenUrl}`,
+							"client_id": `${config.sso.pluginClientId}`,
+							"code_challenge_method": "S256",
+							"simva_user_token": true,
+							"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
+						};
+						break;
+				}
+				return { "file_name" : "tracker_config.json", "file_content": xasuConfig};
+		}
+    }
+
 	async target(participants_id?: number[]): Promise<ActivityMappingResult<string>> {
 		participants_id = await this.getAllCurrentParticipantsId(participants_id);
 		let targetMap = new Map<number, string>();
@@ -159,20 +229,21 @@ export class GamePlayActivity extends Activity {
 			switch(this.game_type) {
 				case "WEB":
 					logger.info(this.game_url);
-					switch(this.oauth_login_mode) {
+					switch(config.sso.authMethod) {
 						case "device_oauth2":
-							customUri = `${this.game_url.split("?")[0]}${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
+							customUri = `${this.game_url.split("?")[0]}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
 								+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
 								+ `&backup_type=XAPI`
 								+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
-								+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
 								+ `&batch_length=200`
 								+ `&batch_timeout=5min`
-								+ `&max_retry_delay=30min`;
+								+ `&max_retry_delay=30min`
 								+ `&sso_device_authorization_endpoint=${encodeURIComponent(`${config.sso.deviceAuthUrl}`)}`
 								+ `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
 								+ `&sso_client_id=simva-plugin`
-								+ `&sso_grant_type=urn:ietf:params:oauth:grant-type:device_code`;
+								+ `&sso_grant_type=urn:ietf:params:oauth:grant-type:device_code`
+								+ '&sso_poll_interval=5'
+								+ '&sso_max_poll_attempts=60';
 							break;
 						case "token_oauth2":
 						default:
@@ -199,11 +270,10 @@ export class GamePlayActivity extends Activity {
 									customUri = customUri.replace('{auth_token}', encodeURIComponent(`Bearer ${authToken}`));
 								}
 							} else {
-								customUri = `${this.game_url}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
+								customUri = `${this.game_url.split("?")[0]}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
 									+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
 									+ `&backup_type=XAPI`
 									+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
-									+ `&actor_homepage=${encodeURIComponent(`${config.externalUrl}`)}`
 									+ `&batch_length=200`
 									+ `&batch_timeout=5min`
 									+ `&max_retry_delay=30min`;
@@ -374,8 +444,7 @@ export class GamePlayActivity extends Activity {
 			game_type: this.game_type,
 			game_url: this.game_url,
 			game_tracker_technology: this.game_tracker_technology,
-			game_technology: this.game_technology,
-			oauth_login_mode: this.oauth_login_mode
+			game_technology: this.game_technology
 		};
 	}
 	
@@ -387,79 +456,4 @@ export class GamePlayActivity extends Activity {
 		}
 		return exportData;
 	}
-
-	getTrackerConfig() : object {
-		logger.info(this.game_tracker_technology);
-		switch(this.game_tracker_technology){
-			case "uAdventure":
-			case "Xasu+Simva_Plugin":
-				let simvaConfig : any = {
-					"simlet": `${this.simlet_id}`,
-					"api_url": `${config.api.url}`,
-					"homepage": `${config.externalUrl}`
-				}
-				switch(this.oauth_login_mode) {
-					case "device_oauth2": 
-						simvaConfig.auth_protocol = "device";
-						simvaConfig.auth_parameters = {
-							"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
-							"token_endpoint": `${config.sso.tokenUrl}`,
-							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
-							"poll_interval": 5,
-							"max_poll_attempts": 60
-						};
-						break;
-					case "token_oauth2":
-					default:
-						simvaConfig.study = `${this.simlet_id}`;
-						simvaConfig.host = `${config.api.host}`;
-						simvaConfig.protocol = `${config.api.protocol}`;
-						simvaConfig.port = `${config.api.protocol == "https" ? 443 : config.api.port}`;
-						simvaConfig.url = `${config.externalUrl}`;
-						simvaConfig.sso =`${config.sso.openIdUrl}`;
-						simvaConfig.client_id = this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`;
-						break;
-				}	
-				return { "file_name" : "simva.conf", "file_content": simvaConfig };
-			case "Xasu":
-			default:
-				let xasuConfig : any = {
-					"online": true,
-					"homepage": `${config.externalUrl}`,
-					"lrs_endpoint": `${config.api.url}/activities/${this.activity_id}/lrs`,
-				};
-				if(this.game_backup) {
-					xasuConfig.backup = true;
-					xasuConfig.backup_trace_format = "XAPI";
-					xasuConfig.backup_endpoint= `${config.api.url}/activities/${this.activity_id}/result`;
-					xasuConfig.backup_auth_protocol="same";
-				}
-				switch(this.oauth_login_mode) {
-					case "device_oauth2":
-						xasuConfig.auth_protocol= "device";
-						xasuConfig.auth_parameters= {
-							"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
-							"token_endpoint": `${config.sso.tokenUrl}`,
-							"client_id": `${config.sso.pluginClientId}`,
-							"poll_interval": 5,
-							"max_poll_attempts": 60
-						};
-						break;
-					case "token_oauth2":
-					default:
-						xasuConfig.auth_protocol= "oauth2";
-						xasuConfig.auth_parameters= {
-							"grant_type": "code",
-							"auth_endpoint": `${config.sso.authUrl}`,
-							"token_endpoint": `${config.sso.tokenUrl}`,
-							"client_id": `${config.sso.pluginClientId}`,
-							"code_challenge_method": "S256",
-							"simva_user_token": true,
-							"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
-						};
-						break;
-				}
-				return { "file_name" : "tracker_config.json", "file_content": xasuConfig};
-		}
-    }
 }

@@ -51,11 +51,6 @@ export function GameplayActivityFactory(
       allowNull: true,
       validate: { isIn: [["Xasu", "Xasu+Simva_Plugin", "other"]] },
     },
-    oauth_login_mode: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      validate: { isIn: [["device_oauth2", "token_oauth2"]] },
-    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
