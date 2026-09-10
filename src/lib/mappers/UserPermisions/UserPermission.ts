@@ -152,18 +152,22 @@ export class UserPermission {
      */
     async addUserPermission(user_id: number, permission: string) : Promise<SingleUserPermission[]> {
         // Implementation for adding user permission to this object
+        let perm;
         switch (this.object_type) {
             case 'simlet':
-                await db.Tables.SimletPermissions.create({ simlet_id: this.object_id, user_id, permission });
+                perm = await db.Tables.SimletPermissions.upsert({ simlet_id: this.object_id, user_id, permission });
                 break;
             case 'session':
-                await db.Tables.SessionPermissions.create({ session_id: this.object_id, user_id, permission });
+                perm = await db.Tables.SessionPermissions.upsert({ session_id: this.object_id, user_id, permission });
                 break;
             case 'group':
-                await db.Tables.GroupPermissions.create({ group_id: this.object_id, user_id, permission });
+                perm = await db.Tables.GroupPermissions.upsert({ group_id: this.object_id, user_id, permission });
                 break;
             default:
                 throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
+        }
+        if(perm.deletedAt) {
+            await perm.restore();
         }
         this.permissions.push(new SingleUserPermission(this.object_type, this.object_id, { user_id, permission }, this.current_user_id, this.is_admin));
         return this.permissions;
@@ -208,21 +212,32 @@ export class UserPermission {
         return this.permissions;
     }
 
-    async createPermissions(body: any) : Promise<UserPermission> {
+    async createPermissions(body: any) : Promise<SingleUserPermission> {
+        let perm;
         switch (this.object_type) {
             case 'simlet':
-                await db.Tables.SimletPermissions.create({ simlet_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                await db.Tables.SimletPermissions.upsert({ simlet_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                perm = await db.Tables.SimletPermissions.findOne({where : { simlet_id: this.object_id, user_id: body.user_id}, paranoid : false});
                 break;
             case 'session':
-                await db.Tables.SessionPermissions.create({ session_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                await db.Tables.SessionPermissions.upsert({ session_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                perm = await db.Tables.SessionPermissions.findOne({where : { simlet_id: this.object_id, user_id: body.user_id}, paranoid : false});
                 break;
             case 'group':
-                await db.Tables.GroupPermissions.create({ group_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                await db.Tables.GroupPermissions.upsert({ group_id: this.object_id, user_id: body.user_id, permission: body.permission });
+                perm = await db.Tables.GroupPermissions.findOne({where : { simlet_id: this.object_id, user_id: body.user_id}, paranoid : false});
                 break;
             default:
                 throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
         }
-        return this;
+        logger.info(perm, "creating permission");
+        if(perm.deletedAt) {
+            await perm.restore();
+        } else {
+            this.permissions.push(new SingleUserPermission(this.object_type, this.object_id, body, this.current_user_id, this.is_admin));
+        }
+        logger.info(perm, "creating permission after restore");
+        return SingleUserPermission.getFromDbData(this.object_type, this.object_id, body.user_id, this.current_user_id, this.is_admin);
     }
 
     /**

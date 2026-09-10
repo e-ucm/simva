@@ -13,7 +13,8 @@ SELECT
     s.user_id as user_id,
     s.simlet_id,
 	s.permission AS permission
-FROM SIMLETs_permissions s;
+FROM SIMLETs_permissions s
+WHERE s.deletedAt IS NULL;
 
 DROP VIEW IF EXISTS v_simlet_direct_permissions_users;
 CREATE VIEW v_simlet_direct_permissions_users AS

@@ -78,7 +78,6 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_session_direct_permissions_users
       WHERE session_id = :session_id  AND (:user_id IS NULL OR user_id = :user_id)
-        AND deletedAt IS NULL
     `,
     params: {
       session_id: {
