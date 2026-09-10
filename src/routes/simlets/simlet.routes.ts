@@ -70,12 +70,14 @@ router.post("/", SimletControler.createSimlet);
 router.get("/count", SimletControler.getSimletCount);
 router.get("/scheduler", SimletControler.getAllSchedulerSimlets);
 router.get("/scheduler/count", SimletControler.getSchedulerSimletCount);
+router.get("/tags", SimletControler.getTagsForSimlets);
 
 // Individual resource endpoints
 router.get("/:simlet_id", SimletControler.getSimletById);
 router.patch("/:simlet_id", SimletControler.patchSimlet);
 router.delete("/:simlet_id", SimletControler.deleteSimlet);
 router.get('/:simlet_id/export', SimletControler.exportSimlet);
+router.get("/:simlet_id/tags", SimletControler.getTagsForSimlet);
 
 // Additional simlet-related endpoints
 router.get("/:simlet_id/participants", SimletControler.getSimletParticipants);

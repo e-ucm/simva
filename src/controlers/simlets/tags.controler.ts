@@ -2,6 +2,7 @@ import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import * as tagService from "@/services/simlets/tags.services";
 import { logger } from "@/lib/logger";
+import { getAccess } from "../users/user.helper";
 
 /**
  * Retrieves all simlet tags for the current user.
@@ -22,8 +23,8 @@ import { logger } from "@/lib/logger";
  */
 export async function getSimletTagsForUser(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    let currentUser = req.user?.sql.user_id as number;
-    const tags = await tagService.getSimletTagsForUser(currentUser);
+    let currentUser = req.user?.sql;
+    const tags = await tagService.getSimletTagsForUser(currentUser?.user_id!);
     res.json(tags.map(tag => tag.toJSON()));
   } catch (error) {
     logger.error(`Error getting simlet tags for user: ${error}`);

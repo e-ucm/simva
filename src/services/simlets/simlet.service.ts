@@ -14,6 +14,8 @@
 import { Simlet } from "@/lib/mappers/simlet/Simlet";
 import { SimletParticipant } from "@/lib/mappers/simlet/SimletParticipant";
 import { SessionScheduler } from "@/lib/mappers/session/SessionScheduler";
+import { SessionTagList } from "@/lib/mappers/session/SessionTagsList";
+import { logger } from "@/lib/logger";
 
 /**
  * Service for Simlet entity operations.
@@ -277,4 +279,19 @@ export async function exportSimlet(simletId: number, is_admin: boolean, withData
   let simlet = await Simlet.getFromDbData(simletId, is_admin, currentUserId);
   let exported = await simlet.export(withData);
   return JSON.stringify(exported);
+}
+
+export async function getTagsForSimlets(currentUser: number, allocated_user : boolean) {
+  const simlets = await Simlet.getAllFromDbData(currentUser, allocated_user);
+  const sessions = simlets.flatMap((s => s.sessions));
+  logger.info(sessions);
+  const tags = await SessionTagList.getSessionsTags(sessions, currentUser);
+  logger.info(tags);
+  return tags;
+}
+
+export async function getTagsForSimlet(simletId: number, is_admin : boolean, currentUserId: number | undefined) {
+  const simlet = await Simlet.getFromDbData(simletId, is_admin, currentUserId);
+  const tags = await SessionTagList.getSessionsTags(simlet.sessions, currentUserId);
+  return tags;
 }

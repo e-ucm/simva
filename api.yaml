@@ -693,6 +693,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/upload_file'
+  /simlets/tags:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets the list of tags available for the current simlet
+      operationId: getSimletTagsForUser
+      description: |
+        Obtains the list of tags available for the current simlet.
+      responses:
+        '200':
+          description: the list of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/tagsMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /simlets/{simletid}:
     get:
       tags:
@@ -790,6 +816,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/simletMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+  /simlets/{simletid}/tags:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets the list of tags available for the current simlet
+      operationId: getSimletTagsForUser
+      description: |
+        Obtains the list of tags available for the current simlet.
+      responses:
+        '200':
+          description: the list of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/tagsMapper'
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -4784,6 +4838,15 @@ components:
       required: false
       schema:
         type: boolean
+    tags_read_only:
+      in: query
+      name: tags_read_only
+      description: |
+        If true, the tags return are the write and read ones
+      required: false
+      schema:
+        type: boolean
+
     lti_login_hint:
       in: query
       name: lti_login_hint

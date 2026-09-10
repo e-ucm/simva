@@ -481,3 +481,34 @@ export async function exportSimlet(
     next(err);
   }
 }
+
+export async function getTagsForSimlets(req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+    try {
+      const currentUser = req.user?.sql;
+      const access = getAccess(currentUser);
+      logger.debug({userId: currentUser?.user_id} , "Get Tags for simlets");
+      const tags=await simletService.getTagsForSimlets(currentUser?.user_id!, access.allocated);
+      res.json(tags.map(tag=>tag.toJSON()));
+    } catch (err) {
+      next(err);
+    }
+}
+
+export async function getTagsForSimlet(req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+    try {
+      const simletId = parseInt(req.params.simlet_id as string);
+      const currentUser = req.user?.sql;
+      const access = getAccess(currentUser);
+      logger.debug({simletId, userId: currentUser?.user_id} , "Get tags for simlet for simlet ID and user ID");
+      const tags=await simletService.getTagsForSimlet(simletId, access.is_admin, currentUser?.user_id);
+      res.json(tags.map(tag=>tag.toJSON()));
+    } catch (err) {
+      next(err);
+    }
+}
