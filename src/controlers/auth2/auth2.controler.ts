@@ -63,25 +63,33 @@ export async function pollToken(req: Request, res: Response, next: NextFunction)
       throw new BadRequestError("activity_id must be a valid integer.");
     }
 
-    let deviceCode = req.body?.device_code;
-    if (!deviceCode) {
-      deviceCode = req.query?.device_code;
-    }
-    if (typeof deviceCode !== 'string' || !deviceCode.trim()) {
-      throw new BadRequestError("device_code is required.");
-    }
-
     let result: object;
-    try {
-      result = await auth2Service.pollForToken(activityId, deviceCode.trim());
-    } catch (e: any) {
-      // Keycloak returns 400 with an error payload (authorization_pending, etc.)
-      // Relay that error payload back to the caller with the same status.
-      const status = e?.response?.status || 400;
-      const data = e?.response?.data || { error: 'invalid_request', error_description: e?.message || 'Failed to poll token' };
-      return res.status(status).send(data);
+    switch(req.body?.grant_type!) {
+      case "refresh_token":
+        result = await auth2Service.refreshAuthToken(activityId, req.body);
+        res.status(200).send(result);
+        break;
+      case "device":
+      default:
+        let deviceCode = req.body?.device_code;
+        if (!deviceCode) {
+          deviceCode = req.query?.device_code;
+        }
+        if (typeof deviceCode !== 'string' || !deviceCode.trim()) {
+          throw new BadRequestError("device_code is required.");
+        }
+
+        try {
+          result = await auth2Service.pollForToken(activityId, deviceCode.trim());
+        } catch (e: any) {
+          // Keycloak returns 400 with an error payload (authorization_pending, etc.)
+          // Relay that error payload back to the caller with the same status.
+          const status = e?.response?.status || 400;
+          const data = e?.response?.data || { error: 'invalid_request', error_description: e?.message || 'Failed to poll token' };
+          return res.status(status).send(data);
+        }
+        res.status(200).send(result);
     }
-    res.status(200).send(result);
   } catch (e) {
     logger.error({ error: e }, '[AUTH2] Failed to poll token');
     next(e);

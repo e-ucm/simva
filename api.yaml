@@ -188,13 +188,30 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - device_code
-              properties:
-                device_code:
-                  type: string
-                  description: The device_code returned by the device endpoint
+              oneOf:
+                - type: object
+                  required:
+                    - device_code
+                  properties:
+                    device_code:
+                      type: string
+                      description: The device_code returned by the device endpoint
+                - type : object 
+                  required:
+                    - client_id
+                    - grant_type
+                    - refresh_token
+                  properties:
+                    client_id:
+                      type: string
+                      description: The client id defined 
+                    client_secret:
+                      type: string
+                      description: The client secret defined 
+                    grant_type:
+                      type: string
+                    refresh_token:
+                      type: string
   /events:
     get:
       summary: send Server Side Events to Client

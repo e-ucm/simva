@@ -21,7 +21,7 @@ import { BadRequestError, NotFoundError } from '@/lib/errors/appErrors';
  * Resolves the gameplay activity and its simlet for a given identifier.
  * The provided identifier can be either:
  * - an activity_id (the game calls /auth2/:activity_id/device directly)
- * - a simlet_id (the scheduler calls /auth2/:simlet_id/device)
+ * - a simlet_id (the scheduler calls /auth2/:activity_id/device)
  *
  * @async
  * @function resolveGameplayContext
@@ -163,6 +163,23 @@ export async function pollForToken(activityId: number, deviceCode: string): Prom
 
   logger.info(`[AUTH2] Polling token for activity ${activityId} (client_id: ${clientId})`);
 
+  const response = await axios.post(
+    config.sso.tokenUrl,
+    new URLSearchParams(params),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+  );
+
+  return response.data;
+}
+
+export async function refreshAuthToken(activityId: number, body: any): Promise<object> {
+  const clientId = await getClientIdForGameplay(activityId);
+  const params: Record<string, string> = {
+    client_id: body?.client_id ? body?.client_id : clientId,
+    client_secret: body.client_secret ? body?.client_secret : undefined,
+    grant_type: "refresh_token",
+    refresh_token: body.refresh_token,
+  };
   const response = await axios.post(
     config.sso.tokenUrl,
     new URLSearchParams(params),
