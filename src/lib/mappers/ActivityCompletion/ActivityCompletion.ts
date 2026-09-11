@@ -163,15 +163,15 @@ export class ActivityCompletion {
         await db.Tables.ActivityCompletion.update(
             { 
                 activity_initialized : false, 
-                activity_progress : null, 
+                activity_progress : undefined, 
                 activity_suspended : false,
                 activity_completed: false,
-                activity_initialization_date : null, 
-                activity_suspension_date: null, 
-                activity_completion_date : null, 
-                activity_result_presigned_url : null, 
-                activity_result_presigned_url_generated_at : null, 
-                activity_result_presigned_url_expire_at : null
+                activity_initialization_date : undefined, 
+                activity_suspension_date: undefined, 
+                activity_completion_date : undefined, 
+                activity_result_presigned_url : undefined, 
+                activity_result_presigned_url_generated_at : undefined, 
+                activity_result_presigned_url_expire_at : undefined
             },
             { where: { activity_id: this.activity_id, participant_id: this.participant_id } }
         );

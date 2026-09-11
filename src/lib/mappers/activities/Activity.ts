@@ -519,7 +519,11 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set initialized status for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when initialized status is set
 	 */
-	async setInitialized(initialized: boolean, initialized_date: Date, participant_id: number): Promise<ActivityCompletion>{
+	async setInitialized(initialized: boolean, initialized_date_iso_string: string, participant_id: number): Promise<ActivityCompletion>{
+		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_initialized");
+		logger.debug({data}, `Current initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		await data.update({ activity_initialized: initialized, activity_initialization_date: new Date(initialized_date_iso_string), activity_registration_id: uuidv4() });
+		logger.debug({data}, `Updated initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		let message = {
 			type: "activity_initialized",
 			activity_type: this.activity_type,
@@ -527,15 +531,11 @@ export class Activity {
 			session_id: this.session_id,
 			simlet_id: this.simlet_id,
 			participant_id: participant_id,
-			username: this.allocated_username ?? this.current_user_username,
-			timestamp: new Date().toISOString(),
+			username: this.allocated_user ? this.allocated_username : this.current_user_username,
+			timestamp: initialized_date_iso_string,
 			status: initialized
 		}
 		await kafkaEventClient.sendMessage(JSON.stringify(message));
-		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_initialized");
-		logger.debug({data}, `Current initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
-		await data.update({ activity_initialized: initialized, activity_initialization_date: initialized_date, 	activity_registration_id: uuidv4() });
-		logger.debug({data}, `Updated initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		return data;
 	}
 
@@ -572,7 +572,11 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set progress for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when progress is set
 	 */
-	async setProgress(progress: number, progress_date: Date, participant_id: number): Promise<ActivityCompletion>{
+	async setProgress(progress: number, progress_date_iso_string: string, participant_id: number): Promise<ActivityCompletion>{
+		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_progress");
+		logger.debug({data}, `Current progress data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		await data.update({ activity_progress: progress });
+		logger.debug({data}, `Updated progress data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		let message = {
 			type: "activity_progressed",
 			activity_type: this.activity_type,
@@ -580,15 +584,11 @@ export class Activity {
 			session_id: this.session_id,
 			simlet_id: this.simlet_id,
 			participant_id: participant_id,
-			username: this.allocated_username ?? this.current_user_username,
-			timestamp: progress_date.toISOString(),
+			username: this.allocated_user ? this.allocated_username : this.current_user_username,
+			timestamp: progress_date_iso_string,
 			value: progress
 		}
-		await kafkaEventClient.sendMessage(JSON.stringify(message));					
-		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_progress");
-		logger.debug({data}, `Current progress data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
-		await data.update({ activity_progress: progress });
-		logger.debug({data}, `Updated progress data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		await kafkaEventClient.sendMessage(JSON.stringify(message));
 		return data;
 	}
 
@@ -627,7 +627,14 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set completion for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when completion is set
 	 */
-	async setCompletion(completed: boolean, completed_date: Date, participant_id: number): Promise<ActivityCompletion>{
+	async setCompletion(completed: boolean, completed_date_iso_string: Date, participant_id: number): Promise<ActivityCompletion>{
+		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "all");
+		logger.debug({data}, `Current completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
+		const completionUpdate: Partial<ActivityCompletion> = {
+			activity_completed: completed,
+			activity_completion_date: completed ? new Date(completed_date_iso_string) : undefined,
+		};
+		await data.update(completionUpdate);
 		let message = {
 			type: "activity_completed",
 			activity_type: this.activity_type,
@@ -635,18 +642,11 @@ export class Activity {
 			session_id: this.session_id,
 			simlet_id: this.simlet_id,
 			participant_id: participant_id,
-			username: this.allocated_username ?? this.current_user_username,
+			username: this.allocated_user ? this.allocated_username : this.current_user_username,
 			status: completed,
-			timestamp: completed_date.toISOString()
+			timestamp: completed_date_iso_string
 		}
 		await kafkaEventClient.sendMessage(JSON.stringify(message));
-		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "all");
-		logger.debug({data}, `Current completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
-		const completionUpdate: Partial<ActivityCompletion> = {
-			activity_completed: completed,
-			activity_completion_date: completed ? completed_date : undefined,
-		};
-		await data.update(completionUpdate);
 		return data;
 	} 
 	
@@ -692,7 +692,7 @@ export class Activity {
 			if(activity_suspended) {
 				update["activity_suspension_date"] = new Date();
 			} else {
-				await this.setInitialized(true, new Date(), participant_id);
+				await this.setInitialized(true, new Date().toISOString(), participant_id);
 			}
 			logger.debug({completionData, update, reason}, `Updating completion data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 			await completionData.update(update);
@@ -816,7 +816,6 @@ export class Activity {
 				lrsclient.jsScormTracker.stop();
 			}
 		}
-		
 	}
 
 	async canSendStatementsLRS(): Promise<boolean> {
@@ -891,7 +890,7 @@ export class Activity {
 					switch(trace.verb.id) {
 						case initializedVerb:
 							logger.info(`INITIALIZED ACTIVITY ${this.activity_type}`);
-							await this.setInitialized(true, new Date(trace.timestamp), current_user_id);
+							await this.setInitialized(true, trace.timestamp, current_user_id);
 							break;
 						case progressedVerb:
 							let value = 0;
@@ -912,12 +911,12 @@ export class Activity {
 							}
 							let roundedValue = Number(value.toFixed(6));
 							logger.info(`Progress value from trace: ${value}`);
-							await this.setProgress(roundedValue, new Date(trace.timestamp), current_user_id);
+							await this.setProgress(roundedValue, trace.timestamp, current_user_id);
 							break;
 						case completedVerb:
 							logger.info(`COMPLETED ACTIVITY ${this.activity_type}`);
 							if(trace.result && trace.result.completion && Boolean(trace.result.completion)) {
-								await this.setCompletion(true, new Date(trace.timestamp), current_user_id);
+								await this.setCompletion(true, trace.timestamp, current_user_id);
 							}
 							break;
 						default:
