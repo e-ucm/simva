@@ -6130,24 +6130,45 @@ components:
         file_content:
           type: object
           oneOf:
-            - type: object
-              required:
-                - simlet
-                - api_url
-                - homepage
-                - auth_protocol
-                - auth_parameters
-              properties:
-                simlet:
-                  type: string
-                api_url:
-                  type: string
-                homepage:
-                  type: string
-                auth_protocol: 
-                  type: string
-                auth_parameters:
-                  type: object
+          - type: object
+            required:
+              - simlet
+              - api_url
+              - homepage
+              - auth_protocol
+              - auth_parameters
+            properties:
+              simlet:
+                type: string
+              api_url:
+                type: string
+              homepage:
+                type: string
+              backup: 
+                type: boolean
+                nullable: true
+              backup_trace_format:
+                type: string
+                nullable: true
+              backup_endpoint:
+                type: string
+                nullable: true
+              backup_auth_protocol:
+                type: string
+                nullable: true
+              auth_protocol:
+                type: string
+              auth_parameters:
+                oneOf:
+                - type: object
+                  required:
+                    - grant_type
+                    - auth_endpoint
+                    - token_endpoint
+                    - client_id
+                    - code_challenge_method
+                    - simva_user_token
+                    - login_hint
                   properties:
                     grant_type:
                       type: string
@@ -6161,53 +6182,56 @@ components:
                       type: string
                     simva_user_token: 
                       type: boolean
-                    login_hint: 
+                    login_hint:
                       type: string
-            - type: object
-              required:
-                - online
-                - homepage
-                - lrs_endpoint
-                - auth_protocol
-                - auth_parameters
-              properties:
-                online: 
-                  type: boolean
-                homepage: 
-                  type: string
-                lrs_endpoint: 
-                  type: string
-                auth_protocol: 
-                  type: string
-                backup: 
-                  type: boolean
-                  nullable: true
-                backup_trace_format: 
-                  type: string
-                  nullable: true
-                backup_endpoint: 
-                  type: string
-                  nullable: true
-                backup_auth_protocol:
-                  type: string
-                  nullable: true
-                auth_parameters:
-                  type: object
+                - type: object
+                  required:
+                    - device_authorization_endpoint
+                    - token_endpoint
+                    - client_id
+                    - poll_interval
+                    - max_poll_attempts
+                    - login_hint
                   properties:
-                    grant_type:
-                      type: string
-                    auth_endpoint:
+                    device_authorization_endpoint:
                       type: string
                     token_endpoint:
                       type: string
                     client_id:
                       type: string
-                    code_challenge_method: 
+                    poll_interval:
+                      type: integer
+                    max_poll_attempts:
+                      type: integer
+                    login_hint:
                       type: string
-                    simva_user_token: 
-                      type: boolean
-                    login_hint: 
-                      type: string
+          - type: object
+            required:
+              - study
+              - host
+              - protocol
+              - url
+              - port
+              - sso
+              - client_id
+              - login_hint
+            properties:
+              study:
+                type: string
+              host:
+                type: string
+              protocol:
+                type: string
+              port:
+                type: integer
+              url:
+                type: string
+              sso:  
+                type: string
+              client_id:
+                type: string
+              login_hint:
+                type: string
     activity_type:
       type: object
       required:

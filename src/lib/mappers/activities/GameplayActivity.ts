@@ -161,8 +161,10 @@ export class GamePlayActivity extends Activity {
 						simvaConfig.auth_parameters = {
 							"device_authorization_endpoint": `${config.api.url}/auth2/${this.activity_id}/device`,
 							"token_endpoint": `${config.api.url}/auth2/${this.activity_id}/token`,
+							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
 							"poll_interval": 5,
-							"max_poll_attempts": 60
+							"max_poll_attempts": 60,
+							"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
 						};
 						break;
 					case "device_oauth2": 
@@ -172,7 +174,8 @@ export class GamePlayActivity extends Activity {
 							"token_endpoint": `${config.sso.tokenUrl}`,
 							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
 							"poll_interval": 5,
-							"max_poll_attempts": 60
+							"max_poll_attempts": 60,
+							"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
 						};
 						break;
 					case "token_oauth2":
@@ -180,10 +183,11 @@ export class GamePlayActivity extends Activity {
 						simvaConfig.study = `${this.simlet_id}`;
 						simvaConfig.host = `${config.api.host}`;
 						simvaConfig.protocol = `${config.api.protocol}`;
-						simvaConfig.port = `${config.api.protocol == "https" ? 443 : config.api.port}`;
+						simvaConfig.port = config.api.protocol == "https" ? 443 : config.api.port;
 						simvaConfig.url = `${config.externalUrl}`;
 						simvaConfig.sso =`${config.sso.openIdUrl}`;
 						simvaConfig.client_id = this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`;
+						simvaConfig.login_hint = `${this.simlet_id}:${this.session_id}:${this.activity_id}`;
 						break;
 				}	
 				return { "file_name" : "simva.conf", "file_content": simvaConfig };
@@ -206,8 +210,10 @@ export class GamePlayActivity extends Activity {
 						xasuConfig.auth_parameters= {
 							"device_authorization_endpoint": `${config.api.url}/auth2/${this.activity_id}/device`,
 							"token_endpoint": `${config.api.url}/auth2/${this.activity_id}/token`,
+							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
 							"poll_interval": 5,
-							"max_poll_attempts": 60
+							"max_poll_attempts": 60,
+							"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
 						};
 						break;
 					case "device_oauth2":
@@ -215,9 +221,10 @@ export class GamePlayActivity extends Activity {
 						xasuConfig.auth_parameters= {
 							"device_authorization_endpoint": `${config.sso.deviceAuthUrl}`,
 							"token_endpoint": `${config.sso.tokenUrl}`,
-							"client_id": `${config.sso.pluginClientId}`,
+							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
 							"poll_interval": 5,
-							"max_poll_attempts": 60
+							"max_poll_attempts": 60,
+							"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
 						};
 						break;
 					case "token_oauth2":
@@ -227,7 +234,7 @@ export class GamePlayActivity extends Activity {
 							"grant_type": "code",
 							"auth_endpoint": `${config.sso.authUrl}`,
 							"token_endpoint": `${config.sso.tokenUrl}`,
-							"client_id": `${config.sso.pluginClientId}`,
+							"client_id": this.game_tracker_technology == "uAdventure" ? `${config.sso.uadventureClientId}` : `${config.sso.pluginClientId}`,
 							"code_challenge_method": "S256",
 							"simva_user_token": true,
 							"login_hint": `${this.simlet_id}:${this.session_id}:${this.activity_id}`
