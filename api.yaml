@@ -6119,46 +6119,7 @@ components:
               type: string
               nullable: true
               example: "abc123"
-    trackerConfigMapper:
-      type: object
-      required:
-        - file_name
-        - file_content
-      properties:
-        file_name: 
-          type: string
-        file_content:
-          type: object
-          oneOf:
-          - type: object
-            required:
-              - simlet
-              - api_url
-              - homepage
-              - auth_protocol
-              - auth_parameters
-            properties:
-              simlet:
-                type: string
-              api_url:
-                type: string
-              homepage:
-                type: string
-              backup: 
-                type: boolean
-                nullable: true
-              backup_trace_format:
-                type: string
-                nullable: true
-              backup_endpoint:
-                type: string
-                nullable: true
-              backup_auth_protocol:
-                type: string
-                nullable: true
-              auth_protocol:
-                type: string
-              auth_parameters:
+    authParameters:
                 oneOf:
                 - type: object
                   required:
@@ -6205,6 +6166,77 @@ components:
                       type: integer
                     login_hint:
                       type: string
+    trackerConfigMapper:
+      type: object
+      required:
+        - file_name
+        - file_content
+      properties:
+        file_name: 
+          type: string
+        file_content:
+          type: object
+          oneOf:
+          - type: object
+            required:
+              - simlet
+              - api_url
+              - homepage
+              - auth_protocol
+              - auth_parameters
+            properties:
+              simlet:
+                type: string
+              api_url:
+                type: string
+              homepage:
+                type: string
+              backup: 
+                type: boolean
+                nullable: true
+              backup_trace_format:
+                type: string
+                nullable: true
+              backup_endpoint:
+                type: string
+                nullable: true
+              backup_auth_protocol:
+                type: string
+                nullable: true
+              auth_protocol:
+                type: string
+              auth_parameters:
+                $ref: '#/components/schemas/authParameters'
+          - type: object
+            required:
+              - online
+              - homepage
+              - lrs_endpoint
+              - auth_protocol
+              - auth_parameters
+            properties:
+              online:
+                type: boolean
+              lrs_endpoint:
+                type: string
+              homepage:
+                type: string
+              backup: 
+                type: boolean
+                nullable: true
+              backup_trace_format:
+                type: string
+                nullable: true
+              backup_endpoint:
+                type: string
+                nullable: true
+              backup_auth_protocol:
+                type: string
+                nullable: true
+              auth_protocol:
+                type: string
+              auth_parameters:
+                $ref: '#/components/schemas/authParameters'
           - type: object
             required:
               - study
