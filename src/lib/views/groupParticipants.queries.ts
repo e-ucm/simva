@@ -7,7 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT participant_id
         FROM ParticipantGroups_participants
         WHERE group_id = :group_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             group_id: {
@@ -16,6 +16,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Group Identifier",
                 example: 1,
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
     byGroupId: {
@@ -24,7 +29,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_group_participants 
         WHERE group_id = :group_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             group_id: {
@@ -33,6 +38,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Group Identifier",
                 example: 1
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
 
@@ -42,7 +52,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_group_participants 
         WHERE group_id = :group_id AND user_id = :user_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             group_id: {
@@ -57,6 +67,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Participant Identifier",
                 example: 3
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
 
@@ -66,7 +81,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_group_participants 
         WHERE allocator_id = :allocator_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             allocator_id: {
@@ -75,6 +90,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Allocator Identifier",
                 example: 1
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
 };

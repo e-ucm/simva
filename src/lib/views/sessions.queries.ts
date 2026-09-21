@@ -7,7 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT session_id
         FROM Sessions
         WHERE simlet_id = :simlet_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         ORDER BY {{orderBy}} {{order}}
         `,
         params: {
@@ -17,6 +17,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Simlet Identifier",
                 example: 1,
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
     IdsBySimletIdAndUserId: {
@@ -24,7 +29,8 @@ const queries: Record<string, QueryTemplate> = {
         sql: `
         SELECT session_id
         FROM v_simlet_sessions_users_permissions
-        WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
+        WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id 
+        AND (deletedAt is NULL OR :is_admin is true)
         ORDER BY {{orderBy}} {{order}}
         `,
         params: {
@@ -40,6 +46,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "User Identifier",
                 example: 123,
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
   tagsBySessionId: {
@@ -55,7 +66,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_simlet_tags
       WHERE session_id = :session_id
       AND tag_visible_user_id = :current_user_id
-        AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       session_id: {
@@ -70,6 +81,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Current User Identifier",
         example: 123,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   directPermissionsBySessionId: {
@@ -102,7 +118,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
       AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
       AND (:session_status IS NULL OR session_status = :session_status)
-        AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY {{orderBy}} {{order}}
       `,
       params: {
@@ -129,7 +145,12 @@ const queries: Record<string, QueryTemplate> = {
             required: false,
             description: "Search string to filter sessions by name or description",
             example: "session",
-          }
+          },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
       },
   },
   bySimletIdAndUserIdWithPagination: {
@@ -140,7 +161,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id AND current_user_id = :current_user_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
         AND (:session_status IS NULL OR session_status = :session_status)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset
         `,
@@ -181,6 +202,11 @@ const queries: Record<string, QueryTemplate> = {
               description: "Number of sessions to skip for pagination",
               example: 20,
           },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
   },
   bySimletIdAndUserIdAndTagIds: {
@@ -192,7 +218,7 @@ const queries: Record<string, QueryTemplate> = {
       AND tag_id IN (:tag_ids)
       AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
       AND (:session_status IS NULL OR session_status = :session_status)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       GROUP BY session_id
       ORDER BY {{orderBy}} {{order}}
       `,
@@ -227,7 +253,12 @@ const queries: Record<string, QueryTemplate> = {
             required: true,
             description: "List of tag IDs to filter sessions",
             example: [1, 2, 3],
-          }
+          },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
       },
   },
   bySimletIdAndUserIdAndTagIdsWithPagination: {
@@ -239,7 +270,7 @@ const queries: Record<string, QueryTemplate> = {
         AND tag_id IN (:tag_ids)
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%' OR session_description LIKE '%' || :search || '%')
         AND (:session_status IS NULL OR session_status = :session_status)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         GROUP BY session_id
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset 
@@ -287,8 +318,13 @@ const queries: Record<string, QueryTemplate> = {
               required: true,
               description: "List of tag IDs to filter sessions",
               example: [1, 2, 3],
+            },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
             }
-        },
+        }
   },
   bySimletIdSessionIdAndUserId: {
     description: "Get current Session with users permissions of a SIMLET by its ID with user permissions",
@@ -296,7 +332,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_sessions_users_permissions 
       WHERE simlet_id = :simlet_id AND session_id = :session_id AND current_user_id = :current_user_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       simlet_id: {
@@ -317,6 +353,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Session Identifier",
         example: 456,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   byAllocatedUserIdAndSimletId: {
@@ -325,7 +366,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants 
       WHERE allocated_user_id = :current_user_id AND simlet_id = :simlet_id
-      AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       current_user_id: {
@@ -340,6 +381,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Simlet Identifier",
         example: 1,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   countBySimletIdAndUserId: {
@@ -350,7 +396,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%')
         AND (:session_status IS NULL OR session_status = :session_status)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             current_user_id: {
@@ -377,6 +423,11 @@ const queries: Record<string, QueryTemplate> = {
               description: "Filter sessions by status (active, paused or archived)",
               example: "active",
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
     countBySimletIdAndUserIdAndTagIds: {
@@ -388,7 +439,7 @@ const queries: Record<string, QueryTemplate> = {
         AND tag_id IN (:tag_ids)
         AND (:session_status IS NULL OR session_status = :session_status)
         AND (:search IS NULL OR session_name LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             current_user_id: {
@@ -422,6 +473,11 @@ const queries: Record<string, QueryTemplate> = {
               description: "Filter sessions by status (active, paused or archived)",
               example: "active",
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
 };

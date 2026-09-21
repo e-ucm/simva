@@ -157,6 +157,9 @@ SELECT
     up.permission as current_user_permission,
     up.permission_type as current_user_permission_type,
     ses.simlet_id,
+    ses.createdAt,
+    ses.updatedAt,
+    ses.deletedAt,
     ses.session_id,
     ses.session_order
 FROM Sessions ses

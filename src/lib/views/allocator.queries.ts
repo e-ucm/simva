@@ -7,7 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_allocation_participants 
         WHERE simlet_id = :simlet_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             simlet_id: {
@@ -16,6 +16,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Simlet Identifier",
                 example: 1
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
     bySessionId: {
@@ -24,7 +29,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM v_complete_allocation_participants 
         WHERE session_id = :session_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             session_id: {
@@ -33,6 +38,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Session Identifier",
                 example: 1
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
     byAllocatorId: {
@@ -44,7 +54,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:group_id IS NULL or group_id = :group_id)
         AND (:groups_id IS NULL or group_id IN (:groups_id))
         AND (:user_id IS NULL or user_id = :user_id)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             allocator_id: {
@@ -72,6 +82,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "User Identifier",
                 example: 5
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     }
 };

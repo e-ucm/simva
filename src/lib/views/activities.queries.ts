@@ -7,7 +7,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT activity_id
         FROM Activities
         WHERE session_id = :session_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         ORDER BY activity_order
         `,
         params: {
@@ -17,6 +17,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Session Identifier",
                 example: 1,
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
   bySessionIdUserId: {
@@ -25,7 +30,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activities_users_permissions
       WHERE current_user_id = :current_user_id AND (:session_id IS NULL OR session_id = :session_id)
-      AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY activity_order
     `,
     params: {
@@ -41,6 +46,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Session Identifier to filter activities by session",
         example: 456,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   
@@ -50,7 +60,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activities_users_permissions 
       WHERE activity_id = :activity_id AND current_user_id = :current_user_id
-      AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY activity_order
     `,
     params: {
@@ -66,6 +76,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "User Identifier",
         example: 123,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
 
@@ -75,7 +90,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants  
       WHERE activity_id = :activity_id AND allocated_user_id = :allocated_user_id
-      AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY activity_order
     `,
     params: {
@@ -91,6 +106,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "User Identifier",
         example: 123,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
 
@@ -100,7 +120,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_activity_allocation_participants  
       WHERE allocated_session_id = :session_id AND activity_order < :activity_order AND allocated_user_id = :allocated_user_id
-      AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY activity_order
     `,
     params: {
@@ -122,6 +142,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "User Identifier",
         example: 123,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
 

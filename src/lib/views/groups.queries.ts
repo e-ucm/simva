@@ -10,7 +10,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             current_user_id: {
@@ -42,6 +42,11 @@ const queries: Record<string, QueryTemplate> = {
                 required: false,
                 description: "Sandbox boolean to filter groups by sandbox",
                 example: "true",
+            },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
             }
         },
     },
@@ -54,7 +59,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             current_user_id: {
@@ -86,6 +91,11 @@ const queries: Record<string, QueryTemplate> = {
                 required: false,
                 description: "Sandbox boolean to filter groups by sandbox",
                 example: "true",
+            },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
             }
         },
     },
@@ -98,7 +108,7 @@ const queries: Record<string, QueryTemplate> = {
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         LIMIT :limit OFFSET :offset
         `,
         params: {
@@ -143,6 +153,11 @@ const queries: Record<string, QueryTemplate> = {
                 required: false,
                 description: "Sandbox boolean to filter groups by sandbox",
                 example: "true",
+            },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
             }
         },
     },
@@ -154,7 +169,7 @@ const queries: Record<string, QueryTemplate> = {
         FROM v_complete_groups_user_permissions
         WHERE current_user_id = :current_user_id AND group_id = :group_id
         AND (:simlet_id IS NULL OR simlet_id = :simlet_id)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             simlet_id: {
@@ -169,6 +184,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "Group Identifier",
                 example: 1
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
     bySimletId : {
@@ -179,7 +199,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         ORDER BY {{orderBy}} {{order}}
         `,
         params: {
@@ -200,6 +220,11 @@ const queries: Record<string, QueryTemplate> = {
                 required: false,
                 description: "Sandbox boolean to filter groups by sandbox",
                 example: "true",
+            },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
             }
         },
     },
@@ -211,7 +236,7 @@ const queries: Record<string, QueryTemplate> = {
         WHERE simlet_id = :simlet_id
         AND (:search IS NULL OR group_name LIKE '%' || :search || '%')
         AND (:sandbox IS NULL OR group_sandbox = :sandbox)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         ORDER BY {{orderBy}} {{order}}
         LIMIT :limit OFFSET :offset
         `,
@@ -245,6 +270,11 @@ const queries: Record<string, QueryTemplate> = {
                 required: false,
                 description: "Sandbox boolean to filter groups by sandbox",
                 example: "true",
+            },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
             }
         },
     },
@@ -254,7 +284,7 @@ const queries: Record<string, QueryTemplate> = {
         SELECT *
         FROM vv_group_total_permissions
         WHERE group_id = :group_id AND (:user_id IS NULL OR user_id = :user_id)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
         `,
         params: {
             group_id: {
@@ -269,6 +299,11 @@ const queries: Record<string, QueryTemplate> = {
                 description: "User Identifier",
                 example: 123,
             },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
         },
     },
 };

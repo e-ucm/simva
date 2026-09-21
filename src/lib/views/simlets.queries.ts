@@ -14,7 +14,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_simlet_tags
       WHERE simlet_id = :simlet_id
       AND tag_visible_user_id = :current_user_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       simlet_id: {
@@ -29,6 +29,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "User Identifier",
         example: 123,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   filteredTagsByUserId: {
@@ -43,7 +48,7 @@ const queries: Record<string, QueryTemplate> = {
         tag_visible_permission
       FROM v_simlet_tags
       AND tag_visible_user_id = :current_user_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       current_user_id: {
@@ -52,6 +57,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "User Identifier",
         example: 123,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   groupIdsBySimletId: {
@@ -60,7 +70,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT group_id
       FROM ParticipantGroups
       WHERE simlet_id = :simlet_id
-        AND deletedAt IS NULL
+      AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       simlet_id: {
@@ -69,6 +79,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Simlet Identifier",
         example: 1,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   directPermissionsBySimletId: {
@@ -101,7 +116,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY {{orderBy}} {{order}}
     `,
     params: {
@@ -123,6 +138,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Filter simlets by archived status",
         example: false,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   byUserIdWithPagination: {
@@ -133,7 +153,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE current_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
     `,
@@ -168,6 +188,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Number of simlets to skip for pagination",
         example: 20,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   byUserIdAndTagIds: {
@@ -179,7 +204,7 @@ const queries: Record<string, QueryTemplate> = {
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       AND tag_id IN (:tag_ids)
       AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       GROUP BY simlet_id
       ORDER BY {{orderBy}} {{order}}
     `,
@@ -208,7 +233,12 @@ const queries: Record<string, QueryTemplate> = {
         required: false,
         description: "Filter simlets by archived status",
         example: false,
-      }
+      },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   byUserIdAndTagIdsWithPagination: {
@@ -220,7 +250,7 @@ const queries: Record<string, QueryTemplate> = {
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
       AND tag_id IN (:tag_ids)
       AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       GROUP BY simlet_id
       ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
@@ -263,6 +293,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "List of tag IDs to filter simlets",
         example: [1, 2, 3],
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   ByAllocatedUserId: {
@@ -272,7 +307,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlet_allocation_participants
       WHERE allocated_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY {{orderBy}} {{order}}
     `,
     params: {
@@ -288,6 +323,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Search string to filter simlets by name or description",
         example: "math",
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   byAllocatedUserIdWithPagination: {
@@ -297,7 +337,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlet_allocation_participants
       WHERE allocated_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
     `,
@@ -326,6 +366,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Number of simlets to skip for pagination",
         example: 20,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   ByAllocatedUserIdAndTagIds: {
@@ -336,7 +381,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE allocated_user_id = :current_user_id
       AND tag_id IN (:tag_ids)
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       GROUP BY simlet_id
       ORDER BY {{orderBy}} {{order}}
     `,
@@ -360,6 +405,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "List of tag IDs to filter simlets",
         example: [1, 2, 3],
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   byAllocatedUserIdAndTagIdsWithPagination: {
@@ -370,7 +420,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE allocated_user_id = :current_user_id
       AND tag_id IN (:tag_ids)
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
       GROUP BY simlet_id
       ORDER BY {{orderBy}} {{order}}
       LIMIT :limit OFFSET :offset 
@@ -407,6 +457,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "List of tag IDs to filter simlets",
         example: [1, 2, 3],
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   byUserIdAndSimletId: {
@@ -415,7 +470,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT *
       FROM v_complete_simlets_users_permissions
       WHERE current_user_id = :current_user_id AND simlet_id = :simlet_id
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       current_user_id: {
@@ -430,6 +485,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Simlet Identifier",
         example: 1,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   countByUserId: {
@@ -440,7 +500,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE current_user_id = :current_user_id
       AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       current_user_id: {
@@ -461,6 +521,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Filter simlets by archived status",
         example: false,
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   countByUserIdAndTagIds: {
@@ -472,7 +537,7 @@ const queries: Record<string, QueryTemplate> = {
       AND tag_id IN (:tag_ids)
       AND (:simlet_archived IS NULL OR simlet_archived = :simlet_archived)
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       current_user_id: {
@@ -500,6 +565,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "List of tag IDs to filter simlets",
         example: [1, 2, 3],
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   allocationCount: {
@@ -508,7 +578,7 @@ const queries: Record<string, QueryTemplate> = {
       SELECT COUNT(DISTINCT simlet_id) as count
       FROM SIMLETs
       WHERE  (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       search: {
@@ -517,6 +587,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Search string to filter simlets by name or description",
         example: "math",
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   countByAllocatedUserId: {
@@ -526,7 +601,7 @@ const queries: Record<string, QueryTemplate> = {
       FROM v_complete_simlet_allocation_participants
       WHERE allocated_user_id = :current_user_id
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       current_user_id: {
@@ -541,6 +616,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "Search string to filter simlets by name or description",
         example: "math",
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
   countByAllocatedUserIdAndTagIds: {
@@ -551,7 +631,7 @@ const queries: Record<string, QueryTemplate> = {
       WHERE allocated_user_id = :current_user_id
       AND tag_id IN (:tag_ids)
       AND (:search IS NULL OR simlet_name LIKE '%' || :search || '%' OR simlet_description LIKE '%' || :search || '%')
-        AND deletedAt IS NULL
+        AND (deletedAt is NULL OR :is_admin is true)
     `,
     params: {
       current_user_id: {
@@ -573,6 +653,11 @@ const queries: Record<string, QueryTemplate> = {
         description: "List of tag IDs to filter simlets",
         example: [1, 2, 3],
       },
+            is_admin: {
+              type: "boolean",
+              required: false,
+              default: "false"
+            }
     },
   },
 };
