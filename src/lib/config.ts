@@ -115,12 +115,26 @@ config.upload.maxFileSize = Number(process.env.MAX_UPLOAD_FILE_SIZE || 33554432)
 
 // MinIO configuration
 config.minio = {};
-config.minio.url = process.env.MINIO_URL || 'https://minio.external.test/';
-config.minio.apiUrl = process.env.MINIO_API_URL || 'minio-api.external.test';
-config.minio.ssl = process.env.MINIO_SSL !== 'false';
-config.minio.port = parseInt(process.env.MINIO_PORT as string) || 443;
-config.minio.accessKey = process.env.MINIO_ACCESS_KEY || 'minio';
-config.minio.secretKey = process.env.MINIO_SECRET_KEY || 'secret';
+config.minio.rustfs_enabled = process.env.RUSTFS_ENABLED !== 'false';
+config.minio.rustfs_url = process.env.RUSTFS_URL || 'https://rustfs.external.test';
+config.minio.rustfs_api_url = process.env.RUSTFS_API_URL || 'https://rustfs-api.external.test';
+config.minio.rustfs_ssl = process.env.RUSTFS_SSL !== 'false';
+config.minio.rustfs_port = parseInt(process.env.RUSTFS_PORT as string) || 443;
+config.minio.rustfs_access_key = process.env.RUSTFS_ACCESS_KEY || 'rustfs';
+config.minio.rustfs_secret_key = process.env.RUSTFS_SECRET_KEY || 'secret';
+config.minio.minio_url = process.env.MINIO_URL || 'https://minio.external.test/';
+config.minio.minio_apiUrl = process.env.MINIO_API_URL || 'minio-api.external.test';
+config.minio.minio_ssl = process.env.MINIO_SSL !== 'false';
+config.minio.minio_port = parseInt(process.env.MINIO_PORT as string) || 443;
+config.minio.minio_accessKey = process.env.MINIO_ACCESS_KEY || 'minio';
+config.minio.minio_secretKey = process.env.MINIO_SECRET_KEY || 'secret';
+config.minio.url = config.minio.rustfs_enabled ? config.minio.rustfs_url : config.minio.minio_url;
+config.minio.apiUrl = config.minio.rustfs_enabled ? config.minio.rustfs_api_url : config.minio.minio_apiUrl;
+config.minio.ssl = config.minio.rustfs_enabled ? config.minio.rustfs_ssl : config.minio.minio_ssl;
+config.minio.port = config.minio.rustfs_enabled ? config.minio.rustfs_port : config.minio.minio_port;
+config.minio.accessKey = config.minio.rustfs_enabled ? config.minio.rustfs_access_key : config.minio.minio_accessKey;
+config.minio.secretKey = config.minio.rustfs_enabled ? config.minio.rustfs_secret_key : config.minio.minio_secretKey;
+
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces';
 config.minio.topicsDir = process.env.MINIO_TOPICS_DIR || 'kafka-topics';
 config.minio.backupDir = process.env.MINIO_BACKUP_DIR || 'backup';
