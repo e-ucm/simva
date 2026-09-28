@@ -281,43 +281,18 @@ export class GamePlayActivity extends Activity {
 						case "token_oauth2":
 						default:
 							const user = await User.getFromDbData(participant_id);
-							if(this.game_url && this.game_url.indexOf('?') !== -1){
-								customUri = this.game_url;
-								customUri = customUri.replace('{simvaResultBackupUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)); //OK
-								customUri = customUri.replace('{simvaResultUri}', encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)); //OK
-								customUri = customUri.replace('{simvaHomePage}', encodeURIComponent(`${config.external_url}`)); //OK
-								customUri = customUri.replace('{activityId}', this.activity_id.toString()); //OK
-								customUri = customUri.replace('{studyId}', this.simlet_id.toString()); //OK
-								if(user.isToken) {
-									customUri = customUri.replace('{tokenEndpoint}', encodeURIComponent(`${config.sso.tokenUrl}`)); //OK
-									customUri = customUri.replace('{userToken}', user.token!); //OK
-									customUri = customUri.replace('{username}', user.token!); //OK
-								} else {
-									customUri = customUri.replace('{userToken}', user.username); //OK
-									customUri = customUri.replace('{username}', user.username); //OK
-								}
-								if(this.game_url.indexOf('{authToken}') !== -1 || this.game_url.indexOf('{auth_token}') !== -1){
-									let authToken = await user.generateJWT();
-									// Replace both {authToken} and {auth_token} if present
-									customUri = customUri.replace('{authToken}', encodeURIComponent(`Bearer ${authToken}`));
-									customUri = customUri.replace('{auth_token}', encodeURIComponent(`Bearer ${authToken}`));
-								}
+							if(user.isToken) {
+								customUri += `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
+									+ `&sso_client_id=simva-plugin`
+									+ `&sso_login_hint=${this.simlet_id}`
+									+ `&sso_username=${user.token}`
+									+ `&actor_user=${user.token}`
+									+ `&sso_grant_type=password`
+									+ `&sso_scope=offline_access`
 							} else {
-								customUri = `${this.game_url.split("?")[0]}?result_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/lrs`)}`
-									+ `&backup_uri=${encodeURIComponent(`${config.api.url}/activities/${this.activity_id}/result`)}`
-									+ `&backup_type=XAPI`
-									+ `&platform=${encodeURIComponent(`${config.externalUrl}`)}`
-									+ `&batch_length=200`
-									+ `&batch_timeout=5min`
-									+ `&max_retry_delay=30min`;
-								if(user.isToken) {
-									customUri += `&sso_token_endpoint=${encodeURIComponent(`${config.sso.tokenUrl}`)}`
-											+ `&sso_scope=offline_access`;
-								} else {
-									let authToken = await user.generateJWT();
-									customUri += `&auth_token=${encodeURIComponent(`Bearer ${authToken}`)}`
-											+ `&actor_user=${user.username}`;
-								}
+								let authToken = await user.generateJWT();
+								customUri += `&auth_token=${encodeURIComponent(`Bearer ${authToken}`)}`
+										+ `&actor_user=${user.username}`;
 							}
 							break;
 					}
