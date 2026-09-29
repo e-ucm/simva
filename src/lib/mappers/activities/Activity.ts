@@ -10,6 +10,7 @@ import { lrsclient } from "@/lib/utils/LRSclient";
 import { User } from "../Users/User";
 import KafkaClient, { KafkaOpts } from "@/lib/utils/kafkaclient";
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 
 const kafkaEventConfig: KafkaOpts = {
 	clientId: config.kafkaEvent.clientId,
@@ -198,6 +199,114 @@ export class Activity {
 		const { ActivityToClass } = await import("@/lib/mappers/activities/ActivityToClass");
 		return await Promise.all(activities.map(async (activity: any) => await ActivityToClass(activity.activity_id, allocated, is_admin, activity, user_id)));
     }
+
+	/**
+	 * Retrieves activities across every session, optionally restricted to a set of simlets.
+	 * Used by the global activity list, so the simlet each activity belongs to is resolved
+	 * from its session.
+	 *
+	 * @static
+	 * @async
+	 * @method getAllActivities
+	 * @param {number[]} [simletIds] - Restricts the result to the activities of these simlets
+	 * @param {string[]} [types] - Restricts the result to these activity types
+	 * @param {string} [name] - Restricts the result to activities whose name contains this string
+	 * @param {number} [limit] - Maximum number of activities to return
+	 * @param {number} [offset] - Number of activities to skip
+	 * @param {string} [orderBy] - Field used to sort the activities
+	 * @param {string} [order] - Sort direction, ASC or DESC
+	 * @param {number} [user_id] - ID of the user requesting the activities
+	 * @returns {Promise<Activity[]>} Promise resolving to array of activity instances
+	 *
+	 * @example
+	 * ```typescript
+	 * const activities = await Activity.getAllActivities(undefined, ["gameplay"], undefined, 100, 0, "id", "ASC", 456);
+	 * ```
+	 */
+	static async getAllActivities(simletIds?: number[], types?: string[], name?: string, limit?: number, offset?: number, orderBy?: string, order?: string, user_id?: number): Promise<Activity[]> {
+		const where: any = {};
+		if(types !== undefined && types.length > 0) {
+			where.activity_type = { [Op.in]: types };
+		}
+		if(name !== undefined) {
+			where.activity_name = { [Op.like]: `%${name}%` };
+		}
+		if(simletIds !== undefined) {
+			if(simletIds.length === 0) {
+				return [];
+			}
+			const sessions = await db.Tables.Sessions.findAll({ where: { simlet_id: { [Op.in]: simletIds } } });
+			where.session_id = { [Op.in]: sessions.map((session: any) => session.session_id) };
+		}
+		const results = await db.Tables.Activities.findAll({
+			where: where,
+			limit: limit !== undefined ? limit : undefined,
+			offset: offset !== undefined ? offset : undefined,
+			order: [[Activity.getOrderNameColumn(orderBy), Activity.getOrder(order)]]
+		});
+		const sessions = await db.Tables.Sessions.findAll({ where: { session_id: { [Op.in]: results.map((activity: any) => activity.session_id) } } });
+		const simletIdBySessionId = new Map<number, number>(sessions.map((session: any) => [session.session_id, session.simlet_id]));
+		return results.map((activity: any) => new Activity(false, {
+			...activity,
+			simlet_id: simletIdBySessionId.get(activity.session_id),
+			current_user_id: user_id,
+			current_user_permission: "FULL"
+		}));
+	}
+
+	/**
+	 * Translates the orderBy query parameter into an activities table column.
+	 *
+	 * @static
+	 * @method getOrderNameColumn
+	 * @param {string} [orderBy] - Field used to sort the activities
+	 * @returns {string} The database column used to sort the activities
+	 *
+	 * @example
+	 * ```typescript
+	 * const column = Activity.getOrderNameColumn("name");
+	 * ```
+	 */
+	static getOrderNameColumn(orderBy?: string): string {
+		if(!orderBy) {
+			return "activity_id";
+		}
+		const orderColumns = {
+			id: "activity_id",
+			name: "activity_name",
+			order: "activity_order",
+			createdAt: "createdAt",
+			updatedAt: "updatedAt",
+		} as Record<string, string>;
+		if(orderBy in orderColumns) {
+			return orderColumns[orderBy];
+		}
+		return "activity_id";
+	}
+
+	/**
+	 * Normalizes the order query parameter into a valid SQL sort direction.
+	 *
+	 * @static
+	 * @method getOrder
+	 * @param {string} [order] - Sort direction, ASC or DESC
+	 * @returns {"ASC" | "DESC"} The normalized sort direction
+	 *
+	 * @example
+	 * ```typescript
+	 * const direction = Activity.getOrder("desc");
+	 * ```
+	 */
+	static getOrder(order?: string): "ASC" | "DESC" {
+		if(!order) {
+			return "ASC";
+		}
+		const orderOptions = ["ASC", "DESC"];
+		if(orderOptions.includes(order.toUpperCase())) {
+			return order.toUpperCase() as "ASC" | "DESC";
+		}
+		return "ASC";
+	}
 
     /**
      * Retrieves a single activity by ID with user access control.

@@ -47,7 +47,7 @@ import activitiesLRSroutes from "@/routes/activities/activities.lrs.routes";
  * ``` 
  */
 const router: Router = Router();
-//router.get("/", activitiesControlers.getActivities);
+router.get("/", activitiesControlers.getActivities);
 router.get("/:activity_id/export", activitiesControlers.exportActivity);
 //router.get("/:activity_id/surveylanguages", activitiesControlers.getSurveyLanguagesForActivity);
 //router.get("/:activity_id/usersurveylist", activitiesControlers.getUserSurveyListForActivity);

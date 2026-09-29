@@ -86,6 +86,57 @@ function parseBooleanStatus(value: unknown): boolean {
 }
 
 /**
+ * Retrieves the list of activities across every session.
+ * Administrators and read only service accounts, such as the garbage collector,
+ * see every activity, while the rest of the roles only see the activities of
+ * their own simlets.
+ * 
+ * @async
+ * @function getActivities
+ * @param {AuthenticatedRequest} req - Express request object with query parameters
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Next middleware function for error handling
+ * @returns {Promise<void>}
+ * @throws {AuthentificationError} If the user role cannot list activities
+ * @throws {ValidationError} If the query parameters are invalid
+ * 
+ * @example
+ * // GET /activities?searchString={"type":["gameplay"]}
+ * // Returns every gameplay activity
+ * 
+ * @see {@link https://github.com/e-ucm/simva#simva-api-documentation|SIMVA API Documentation}
+ */
+export async function getActivities(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const searchString = req.query.searchString ? String(req.query.searchString) : undefined;
+    const filter = activitiesService.parseActivitiesSearchString(searchString);
+    const limit = req.query.limit ? (Number.isNaN(Number(req.query.limit)) ? undefined : parseInt(req.query.limit as string)) : undefined;
+    let offset;
+    if(limit !== undefined && req.query.skip === undefined) {
+      offset = 0;
+    } else {
+      offset = req.query.skip !== undefined && !Number.isNaN(Number(req.query.skip)) ? parseInt(req.query.skip as string) : undefined;
+    }
+    const orderBy = req.query.orderBy ? String(req.query.orderBy) : undefined;
+    const order = req.query.order ? String(req.query.order) : undefined;
+    const currentUser = req.user?.sql;
+    const access = getAccess(currentUser);
+    if(access.allocated) {
+      throw new AuthentificationError("Invalid user role");
+    }
+    logger.debug({filter, limit, offset, orderBy, order, userId: currentUser?.user_id}, "Getting all activities with query parameters");
+    const activities = await activitiesService.getAllActivities(access.is_admin, access.currentUserId, filter, limit, offset, orderBy, order);
+    res.json(activities.map((activity) => activity.toJSON()));
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * Retrieves a single activity by its ID.
  * Validates user access permissions before returning activity data.
  * 

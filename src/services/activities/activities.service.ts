@@ -18,6 +18,7 @@ import { Activity } from "@/lib/mappers/activities/Activity";
 import { GamePlayActivity } from "@/lib/mappers/activities/GameplayActivity";
 import { ActivityCompletion } from "@/lib/mappers/ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "@/lib/mappers/ActivityCompletion/ActivityMappingResult";
+import { Simlet } from "@/lib/mappers/simlet/Simlet";
 
 /**
  * Retrieves a single activity by ID for a specific user.
@@ -45,6 +46,114 @@ export async function getActivity(activityId: number, allocated: boolean, is_adm
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, current_user_id);
     //await activity.sendXAPITraceForActivity("test", "initialized", (new Date()).toUTCString(), -1, "");
     return activity;
+}
+
+/**
+ * Filter criteria accepted by the global activity list.
+ * 
+ * @typedef {Object} ActivitiesFilter
+ * @property {string[]} [type] - Activity types to include
+ * @property {string} [name] - Substring the activity name must contain
+ * @property {number[]} [simletIds] - Restricts the list to these simlets
+ */
+export interface ActivitiesFilter {
+	type?: string[];
+	name?: string;
+	simletIds?: number[];
+}
+
+/**
+ * Parses the searchString query param of the global activity list.
+ * Accepts a JSON object, such as {"type":["gameplay"]}, or a plain activity name.
+ * 
+ * @function parseActivitiesSearchString
+ * @param {string} [searchString] - The raw searchString query param
+ * @returns {ActivitiesFilter} The parsed filter
+ * @throws {ValidationError} If the searchString is not a valid filter
+ * 
+ * @example
+ * ```typescript
+ * const filter = parseActivitiesSearchString('{"type":["gameplay"]}');
+ * // filter = { type: ["gameplay"] }
+ * ```
+ */
+export function parseActivitiesSearchString(searchString?: string): ActivitiesFilter {
+  if(searchString === undefined || searchString.trim() === "") {
+    return {};
+  }
+  const trimmedSearchString = searchString.trim();
+  if(!trimmedSearchString.startsWith("{") && !trimmedSearchString.startsWith("[")) {
+    return { name: trimmedSearchString };
+  }
+  let parsedSearchString;
+  try {
+    parsedSearchString = JSON.parse(trimmedSearchString);
+  } catch (err) {
+    throw new BadRequestError("searchString is not a valid JSON object");
+  }
+  if(typeof parsedSearchString !== "object" || parsedSearchString === null || Array.isArray(parsedSearchString)) {
+    throw new BadRequestError("searchString must be a JSON object");
+  }
+  const filter: ActivitiesFilter = {};
+  if(parsedSearchString.type !== undefined) {
+    const types = Array.isArray(parsedSearchString.type) ? parsedSearchString.type : [parsedSearchString.type];
+    if(types.some((type: unknown) => typeof type !== "string" || type.length === 0)) {
+      throw new BadRequestError("searchString type must be a string or an array of strings");
+    }
+    filter.type = types;
+  }
+  if(parsedSearchString.name !== undefined) {
+    if(typeof parsedSearchString.name !== "string") {
+      throw new BadRequestError("searchString name must be a string");
+    }
+    filter.name = parsedSearchString.name;
+  }
+  if(parsedSearchString.simlet_id !== undefined) {
+    const simletIds = Array.isArray(parsedSearchString.simlet_id) ? parsedSearchString.simlet_id : [parsedSearchString.simlet_id];
+    if(simletIds.some((simletId: unknown) => !Number.isInteger(simletId))) {
+      throw new BadRequestError("searchString simlet_id must be a number or an array of numbers");
+    }
+    filter.simletIds = simletIds as number[];
+  }
+  return filter;
+}
+
+/**
+ * Retrieves activities across every session, filtered by type, name and simlet.
+ * Administrators and read only service accounts, such as the garbage collector,
+ * see every activity, while the rest of the roles only see the activities of
+ * their own simlets.
+ * 
+ * @async
+ * @function getAllActivities
+ * @param {boolean} is_admin - Whether the user can see the activities of every simlet
+ * @param {number} [current_user_id] - The ID of the user requesting the activities
+ * @param {ActivitiesFilter} [filter] - Filter criteria for the activities
+ * @param {number} [limit] - Maximum number of activities to return
+ * @param {number} [offset] - Number of activities to skip
+ * @param {string} [orderBy] - Field used to sort the activities
+ * @param {string} [order] - Sort direction, ASC or DESC
+ * @returns {Promise<Activity[]>} Array of activities
+ * 
+ * @example
+ * ```typescript
+ * const activities = await getAllActivities(true, 456, { type: ["gameplay"] }, 100, 0, "id", "ASC");
+ * ```
+ */
+export async function getAllActivities(is_admin: boolean, current_user_id?: number, filter?: ActivitiesFilter, limit?: number, offset?: number, orderBy?: string, order?: string): Promise<Activity[]> {
+  if(!is_admin) {
+    if(current_user_id === undefined) {
+      throw new NotFoundError("Activities not found for the current user.");
+    }
+    const simlets = await Simlet.getAllFromDbData(current_user_id, false);
+    const ownSimletIds = simlets.map((simlet) => simlet.simlet_id);
+    if(filter?.simletIds !== undefined) {
+      filter = { ...filter, simletIds: filter.simletIds.filter((simletId) => ownSimletIds.includes(simletId)) };
+    } else {
+      filter = { ...filter, simletIds: ownSimletIds };
+    }
+  }
+  return await Activity.getAllActivities(filter?.simletIds, filter?.type, filter?.name, limit, offset, orderBy, order, current_user_id);
 }
 
 /**

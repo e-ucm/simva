@@ -226,6 +226,9 @@ function getRoleFromKeycloakJWT(userdata: Partial<KeycloakJWTPayload>): string {
       logger.info({roles}, "Keycloak roles:");
       if(roles.includes('administrator')) {
         role = "administrator"
+      } else if (roles.includes("garbagecollector")) {
+        // Read only service role (trace allocator / garbage collector)
+        role = 'garbagecollector';
       } else if (roles.includes("lrsmanager")) {
         role = 'lrsmanager';
       } else if (['teacher', 'researcher'].some(teacherRole => roles.includes(teacherRole))) {
