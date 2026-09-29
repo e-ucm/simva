@@ -134,6 +134,14 @@ config.minio.ssl = config.minio.rustfs_enabled ? config.minio.rustfs_ssl : confi
 config.minio.port = config.minio.rustfs_enabled ? config.minio.rustfs_port : config.minio.minio_port;
 config.minio.accessKey = config.minio.rustfs_enabled ? config.minio.rustfs_access_key : config.minio.minio_accessKey;
 config.minio.secretKey = config.minio.rustfs_enabled ? config.minio.rustfs_secret_key : config.minio.minio_secretKey;
+// Internal (in network) endpoint used by the server to talk to the object storage service.
+// Inside the container network the external hostnames resolve to the load balancer loopback address,
+// so the object storage service is reached through its internal service name.
+// It falls back to the external API url, so running outside the container network keeps working.
+config.minio.internalUrl = config.minio.rustfs_enabled ? process.env.RUSTFS_INTERNAL_URL : process.env.MINIO_INTERNAL_URL;
+if (!config.minio.internalUrl) {
+    config.minio.internalUrl = config.minio.apiUrl;
+}
 
 config.minio.bucket = process.env.MINIO_BUCKET || 'traces';
 config.minio.topicsDir = process.env.MINIO_TOPICS_DIR || 'kafka-topics';

@@ -1,56 +1,109 @@
-import { Client as Minio, BucketItem } from 'minio';
-import { Readable } from 'stream';
+/**
+ * @fileoverview S3 client for MinIO / RustFS object storage.
+ *
+ * Wraps the AWS SDK v3 S3 client exposing a small object storage API
+ * (get/put/remove/exists/list/presign) over an S3 compatible service.
+ *
+ * @module utils/minioclient
+ * @requires @aws-sdk/client-s3
+ * @requires @aws-sdk/s3-request-presigner
+ */
+
+import {
+    S3Client,
+    CreateBucketCommand,
+    DeleteObjectCommand,
+    GetObjectCommand,
+    HeadBucketCommand,
+    HeadObjectCommand,
+    ListObjectsV2Command,
+    PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { logger } from '@/lib/logger';
 import { config } from '@/lib/config';
+import { NotFoundError } from "../errors/appErrors";
+
+/**
+ * Object metadata returned by the listing operations
+ */
+export interface BucketItem {
+    name: string;
+    size: number;
+    lastModified?: Date;
+    etag?: string;
+}
 
 /**
  * Configuration options for MinioClient
  */
-interface MinioOpts {
-    apiUrl: string;
-    ssl?: boolean;
-    port?: number;
+export interface MinioOpts {
+    region: string;
+    /**
+     * Endpoint used by the server to reach the object storage service.
+     * Inside the container network the external hostnames do not resolve, so this points
+     * to the internal service endpoint (i.e. http://rustfs.internal.test:9000)
+     */
+    endpoint: string;
+    /**
+     * Public endpoint used only to sign the urls handed to the clients.
+     * Falls back to {@link endpoint} when not provided
+     */
+    publicEndpoint?: string;
     accessKey: string;
     secretKey: string;
+    // RustFS uses path-style URLs by default; virtual-host style requires RUSTFS_SERVER_DOMAINS
+    forcePathStyle: boolean;
     bucket: string;
-    topicsDir: string;
-    tracesTopic: string;
-    outputsDir: string;
-    tracesFile: string;
     presignedUrlFileExpirationTime: number;
 }
 
 /**
- * MinioClient - Optimized client for Minio object storage operations
- * 
+ * MinioClient - S3 client for MinIO / RustFS object storage operations
+ *
  * Features:
- * - Unified stream reading for consistency
+ * - Command based calls through the AWS SDK v3
+ * - Internal endpoint for the server side calls, public endpoint to sign the presigned urls
+ * - Missing buckets are created on demand
  * - Proper error handling with initialization checks
  * - Type-safe operations with BucketItem types
  * - Efficient parallel object fetching
  */
 class MinioClient {
     readonly #opts: MinioOpts;
-    readonly #minio: Minio | null;
+    readonly #s3Client: S3Client | null;
+    readonly #presignClient: S3Client | null;
     readonly #initialized: boolean;
 
     constructor(opts: MinioOpts) {
         try {
             this.#opts = opts;
-            logger.info(opts, "MINIO OPTS");
-            this.#minio = new Minio({
-                endPoint: opts.apiUrl,
-                port: opts.port,
-                useSSL: opts.ssl,
-                accessKey: opts.accessKey,
-                secretKey: opts.secretKey
+            logger.info({ endpoint: opts.endpoint, publicEndpoint: opts.publicEndpoint, bucket: opts.bucket }, 'S3 OPTS');
+            const credentials = {
+                accessKeyId: opts.accessKey,
+                secretAccessKey: opts.secretKey,
+            };
+            this.#s3Client = new S3Client({
+                region: opts.region,
+                endpoint: opts.endpoint,
+                credentials,
+                // RustFS uses path-style URLs by default; virtual-host style requires RUSTFS_SERVER_DOMAINS
+                forcePathStyle: opts.forcePathStyle,
+            });
+            // Only used to sign the presigned urls, no request is ever sent through it
+            this.#presignClient = new S3Client({
+                region: opts.region,
+                endpoint: opts.publicEndpoint ?? opts.endpoint,
+                credentials,
+                forcePathStyle: opts.forcePathStyle,
             });
             this.#initialized = true;
             logger.info('MinioClient initialized successfully');
         } catch (err) {
             logger.error({ err }, 'Failed to initialize MinioClient');
             this.#opts = opts;
-            this.#minio = null;
+            this.#s3Client = null;
+            this.#presignClient = null;
             this.#initialized = false;
         }
     }
@@ -70,52 +123,119 @@ class MinioClient {
     }
 
     /**
-     * Ensure client is initialized before operations
+     * Ensure client is initialized and return it
      * @throws Error if client is not initialized
      */
-    private ensureInitialized(): asserts this is { '#minio': Minio } {
-        if (!this.#initialized || !this.#minio) {
+    private client(): S3Client {
+        if (!this.#initialized || !this.#s3Client) {
             throw new Error('MinioClient is not initialized');
         }
+        return this.#s3Client;
     }
 
     /**
-     * Convert a readable stream to string (unified stream reading)
-     * @param stream - The readable stream to convert
-     * @returns Promise resolving to the string content
+     * Ensure client is initialized and return the client used to sign the presigned urls
+     * @throws Error if client is not initialized
      */
-    private async streamToString(stream: Readable): Promise<string> {
-        const chunks: Buffer[] = [];
-        for await (const chunk of stream) {
-            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    private presigner(): S3Client {
+        if (!this.#initialized || !this.#presignClient) {
+            throw new Error('MinioClient is not initialized');
         }
-        return Buffer.concat(chunks).toString('utf8');
+        return this.#presignClient;
     }
 
     /**
-     * Convert a readable stream to an array of items
-     * @param stream - The readable stream
-     * @returns Promise resolving to array of items
+     * Check if an error means that the object does not exist
+     * @param err - The error thrown by the S3 client
      */
-    private async streamToArray<T>(stream: Readable): Promise<T[]> {
-        const items: T[] = [];
-        for await (const item of stream) {
-            items.push(item as T);
+    private isNotFound(err: any): boolean {
+        return err?.name === 'NoSuchKey' || err?.name === 'NotFound' || err?.$metadata?.httpStatusCode === 404;
+    }
+
+    /**
+     * Check if an error means that the bucket does not exist
+     * @param err - The error thrown by the S3 client
+     */
+    private isNoSuchBucket(err: any): boolean {
+        return err?.name === 'NoSuchBucket' || err?.$metadata?.httpStatusCode === 404 && err?.name !== 'NoSuchKey';
+    }
+
+    /**
+     * Check if a bucket exists
+     * @param bucket - Bucket name, defaults to the configured one
+     * @returns Promise resolving to true if the bucket exists
+     */
+    async bucketExists(bucket?: string): Promise<boolean> {
+        const client = this.client();
+        const name = bucket ?? this.#opts.bucket;
+        try {
+            await client.send(new HeadBucketCommand({ Bucket: name }));
+            return true;
+        } catch (err) {
+            logger.debug({ bucket: name, err }, 'S3: bucket not found');
+            return false;
         }
-        return items;
+    }
+
+    /**
+     * Create a bucket if it does not exist yet
+     * @param bucket - Bucket name, defaults to the configured one
+     */
+    async ensureBucket(bucket?: string): Promise<void> {
+        const client = this.client();
+        const name = bucket ?? this.#opts.bucket;
+        if (await this.bucketExists(name)) {
+            return;
+        }
+        logger.info({ bucket: name }, 'S3: creating bucket');
+        await client.send(new CreateBucketCommand({ Bucket: name }));
+    }
+
+    /**
+     * Run an operation, creating the target bucket and retrying once if it is missing
+     * @param bucket - Bucket used by the operation
+     * @param operation - Operation to run
+     */
+    private async withBucket<T>(bucket: string, operation: () => Promise<T>): Promise<T> {
+        try {
+            return await operation();
+        } catch (err) {
+            if (this.isNoSuchBucket(err)) {
+                logger.warn({ bucket }, 'S3: bucket missing, creating it and retrying');
+                await this.ensureBucket(bucket);
+                return await operation();
+            }
+            throw err;
+        }
     }
 
     /**
      * Get file content from the default bucket
      * @param file - Path to the file
      * @returns Promise resolving to file content as string
+     * @throws {NotFoundError} if the file does not exist
      */
     async getFile(file: string): Promise<string> {
-        this.ensureInitialized();
-        logger.debug({ file }, 'Minio: getFile');
-        
-        const stream = await this.#minio!.getObject(this.#opts.bucket, file);
-        return this.streamToString(stream);
+        const client = this.client();
+        logger.debug({ file }, 'S3: getFile');
+        try {
+            return await this.withBucket(this.#opts.bucket, async () => {
+                const response = await client.send(new GetObjectCommand({
+                    Bucket: this.#opts.bucket,
+                    Key: file,
+                }));
+                if (!response?.Body) {
+                    throw new NotFoundError(`file ${file} is empty`);
+                }
+                return await response.Body.transformToString('utf-8');
+            });
+        } catch (err) {
+            if (err instanceof NotFoundError || this.isNotFound(err)) {
+                throw new NotFoundError(`file ${file} not found`);
+            }
+            logger.error({ err, file }, 'S3: getFile failed');
+            throw err;
+        }
     }
 
     /**
@@ -124,39 +244,44 @@ class MinioClient {
      * @returns Promise resolving to true if file exists
      */
     async fileExists(path: string): Promise<boolean> {
-        this.ensureInitialized();
-        logger.debug({ path }, 'Minio: fileExists');
-        const stream = this.#minio!.listObjectsV2(this.#opts.bucket, path);
-        const iterator = stream[Symbol.asyncIterator]();
-        const { done } = await iterator.next();
-        const exists = !done;
-        if (!exists) {
-            logger.warn({ path }, 'Minio: file not found');
-        } else {
-            logger.debug({ path }, 'Minio: file exists');
+        const client = this.client();
+        logger.debug({ path }, 'S3: fileExists');
+        try {
+            await client.send(new HeadObjectCommand({
+                Bucket: this.#opts.bucket,
+                Key: path,
+            }));
+            logger.debug({ path }, 'S3: file exists');
+            return true;
+        } catch (err) {
+            if (this.isNotFound(err) || this.isNoSuchBucket(err)) {
+                logger.debug({ path }, 'S3: file not found');
+                return false;
+            }
+            logger.error({ err, path }, 'S3: fileExists failed');
+            return false;
         }
-        return exists;
     }
 
     /**
-     * Generate a presigned URL for an object
+     * Generate a presigned URL for an object in the default bucket
      * @param path - Object path
      * @param expirySeconds - Optional custom expiry time in seconds
      * @returns Promise resolving to presigned URL
      */
     async getPresignedUrl(path: string, expirySeconds?: number): Promise<string> {
-        this.ensureInitialized();
-        
-        const expiry = expirySeconds ?? this.#opts.presignedUrlFileExpirationTime;
-        logger.debug({ path, expiry }, 'Minio: getPresignedUrl');
-        
-        const url = await this.#minio!.presignedGetObject(
-            this.#opts.bucket, 
-            path, 
-            expiry,
-            { expires: "3600", responseContentType: "application/json" }
-         );
-        logger.info({ path, url }, 'Minio: presigned URL generated');
+        const expiresIn = expirySeconds ?? this.#opts.presignedUrlFileExpirationTime;
+        logger.debug({ path, expiresIn }, 'S3: getPresignedUrl');
+        // Signed with the public endpoint, the url is consumed outside the internal network
+        const url = await getSignedUrl(
+            this.presigner(),
+            new GetObjectCommand({
+                Bucket: this.#opts.bucket,
+                Key: path,
+            }),
+            { expiresIn }
+        );
+        logger.info({ path }, 'S3: presigned URL generated');
         return url;
     }
 
@@ -167,11 +292,16 @@ class MinioClient {
      * @returns Promise resolving to object content as string
      */
     async getObject(bucket: string, name: string): Promise<string> {
-        this.ensureInitialized();
-        logger.debug({ bucket, name }, 'Minio: getObject');
-        
-        const stream = await this.#minio!.getObject(bucket, name);
-        return this.streamToString(stream);
+        const client = this.client();
+        logger.debug({ bucket, name }, 'S3: getObject');
+        const response = await this.withBucket(bucket, () => client.send(new GetObjectCommand({
+            Bucket: bucket,
+            Key: name,
+        })));
+        if (!response?.Body) {
+            throw new NotFoundError(`object ${name} is empty`);
+        }
+        return await response.Body.transformToString('utf-8');
     }
 
     /**
@@ -181,11 +311,27 @@ class MinioClient {
      * @returns Promise resolving to array of bucket items
      */
     async listMinioObjects(bucket: string, prefix: string): Promise<BucketItem[]> {
-        this.ensureInitialized();
-        logger.debug({ bucket, prefix }, 'Minio: listMinioObjects');
-        
-        const stream = this.#minio!.listObjects(bucket, prefix);
-        return this.streamToArray<BucketItem>(stream);
+        const client = this.client();
+        logger.debug({ bucket, prefix }, 'S3: listMinioObjects');
+        const items: BucketItem[] = [];
+        let continuationToken: string | undefined = undefined;
+        do {
+            const response: any = await this.withBucket(bucket, () => client.send(new ListObjectsV2Command({
+                Bucket: bucket,
+                Prefix: prefix,
+                ContinuationToken: continuationToken,
+            })));
+            for (const object of response?.Contents ?? []) {
+                items.push({
+                    name: object.Key,
+                    size: object.Size ?? 0,
+                    lastModified: object.LastModified,
+                    etag: object.ETag,
+                });
+            }
+            continuationToken = response?.IsTruncated ? response?.NextContinuationToken : undefined;
+        } while (continuationToken);
+        return items;
     }
 
     /**
@@ -195,18 +341,14 @@ class MinioClient {
      * @returns Promise resolving to JSON array string of all object contents
      */
     async getMinioObjects(bucket: string, prefix: string): Promise<string> {
-        this.ensureInitialized();
-        logger.debug({ bucket, prefix }, 'Minio: getMinioObjects');
-        
+        logger.debug({ bucket, prefix }, 'S3: getMinioObjects');
         const objectsList = await this.listMinioObjects(bucket, prefix);
-        
-        // Filter objects with names and fetch in parallel
+        // Fetch contents in parallel
         const contents = await Promise.all(
             objectsList
                 .filter((obj): obj is BucketItem & { name: string } => !!obj.name)
                 .map(obj => this.getObject(bucket, obj.name))
         );
-        
         return `[${contents.join(',')}]`;
     }
 
@@ -216,9 +358,8 @@ class MinioClient {
      * @returns Promise resolving to array of file contents
      */
     async getFiles(paths: string[]): Promise<string[]> {
-        this.ensureInitialized();
-        logger.debug({ count: paths.length }, 'Minio: getFiles');
-        
+        this.client();
+        logger.debug({ count: paths.length }, 'S3: getFiles');
         return Promise.all(paths.map(path => this.getFile(path)));
     }
 
@@ -228,30 +369,51 @@ class MinioClient {
      * @returns Promise resolving to map of path -> exists
      */
     async filesExist(paths: string[]): Promise<Map<string, boolean>> {
-        this.ensureInitialized();
-        logger.debug({ count: paths.length }, 'Minio: filesExist');
-        
+        this.client();
+        logger.debug({ count: paths.length }, 'S3: filesExist');
         const results = await Promise.all(
             paths.map(async path => ({ path, exists: await this.fileExists(path) }))
         );
-        
         return new Map(results.map(r => [r.path, r.exists]));
     }
-    async removeFile(oldFilesTxt: string) {
-        this.ensureInitialized();
-        logger.debug({ oldFilesTxt }, 'Minio: removeFile');
-        await this.#minio!.removeObject(this.#opts.bucket, oldFilesTxt, {forceDelete: true});
-    }
-    async putFile(newFilesTxt: string, content: string) {
-        this.ensureInitialized();
-        logger.debug({ newFilesTxt }, 'Minio: putFile');
-        await this.#minio!.putObject(this.#opts.bucket, newFilesTxt, content);
+
+    /**
+     * Remove a file from the default bucket
+     * @param file - Path to the file
+     */
+    async removeFile(file: string): Promise<void> {
+        const client = this.client();
+        logger.debug({ file }, 'S3: removeFile');
+        await this.withBucket(this.#opts.bucket, () => client.send(new DeleteObjectCommand({
+            Bucket: this.#opts.bucket,
+            Key: file,
+        })));
     }
 
-    async renameFile(oldPath: string, newPath: string) {
-        this.ensureInitialized();
-        if(await this.fileExists(oldPath)) {
-            logger.debug({ oldPath, newPath }, 'Minio: renameFile');
+    /**
+     * Store a file in the default bucket
+     * @param file - Path to the file
+     * @param content - Content to store
+     */
+    async putFile(file: string, content: string): Promise<void> {
+        const client = this.client();
+        logger.debug({ file }, 'S3: putFile');
+        await this.withBucket(this.#opts.bucket, () => client.send(new PutObjectCommand({
+            Bucket: this.#opts.bucket,
+            Key: file,
+            Body: content,
+        })));
+    }
+
+    /**
+     * Copy a file of the default bucket to another path, removing the original one
+     * @param oldPath - Current path of the file
+     * @param newPath - New path of the file
+     */
+    async renameFile(oldPath: string, newPath: string): Promise<void> {
+        this.client();
+        if (await this.fileExists(oldPath)) {
+            logger.debug({ oldPath, newPath }, 'S3: renameFile');
             const content = await this.getFile(oldPath);
             await this.putFile(newPath, content);
             await this.removeFile(oldPath);
@@ -259,9 +421,35 @@ class MinioClient {
     }
 }
 
-// Singleton instance with default config
-const minioClient = new MinioClient(config.minio);
+/**
+ * Build the S3 endpoint from the configured url and port
+ * @param url - Url of the object storage service, with or without protocol
+ * @param port - Port of the object storage service
+ * @param ssl - Whether to use https when the url has no protocol
+ * @returns The endpoint to be used by the S3 client
+ */
+function buildEndpoint(url: string, port?: number, ssl = true): string {
+    const endpoint = new URL(url.match(/^https?:\/\//) ? url : `${ssl ? 'https' : 'http'}://${url}`);
+    if (port && !endpoint.port && [80, 443].indexOf(port) === -1) {
+        endpoint.port = `${port}`;
+    }
+    // Keep any path prefix (deployments served under a subpath), drop the root one
+    logger.info({url, port}, "S3 Object")
+    return endpoint.pathname === '/' ? endpoint.origin : endpoint.href.replace(/\/+$/, '');
+}
 
-export { minioClient };
-export type { MinioOpts };
+// Singleton instance with default config
+const minioClient = new MinioClient({
+    region: process.env.RUSTFS_REGION || process.env.AWS_REGION || 'us-east-1',
+    // Server side calls use the internal endpoint, presigned urls are signed with the public one
+    endpoint: buildEndpoint(config.minio.internalUrl),
+    publicEndpoint: buildEndpoint(config.minio.apiUrl, config.minio.port, config.minio.ssl),
+    accessKey: config.minio.accessKey,
+    secretKey: config.minio.secretKey,
+    forcePathStyle: true,
+    bucket: config.minio.bucket,
+    presignedUrlFileExpirationTime: config.minio.presignedUrlFileExpirationTime,
+});
+
+export { minioClient, MinioClient };
 export default MinioClient;
