@@ -12,6 +12,11 @@ export function getAccess(currentUser: KeycloakJWTPayload["sql"] | undefined): U
   switch (currentUser?.role) {
     case "administrator":
       return { allocated: false, is_admin: true, currentUserId: currentUser.user_id as number, canImpersonate: true };
+    case "garbagecollector":
+      // Read only service account (trace allocator / garbage collector).
+      // is_admin is used to bypass "only own data" filters on read endpoints; it is not an
+      // authorization flag, since every mutating route rejects this role in the OpenAPI RBAC matrix.
+      return { allocated: false, is_admin: true, currentUserId: currentUser.user_id as number, canImpersonate: false };
     case "lrsmanager":
         return { allocated: true, is_admin: false, currentUserId: currentUser.user_id as number, canImpersonate: true };
     case "teacher":
