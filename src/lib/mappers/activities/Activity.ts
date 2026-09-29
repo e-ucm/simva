@@ -246,12 +246,102 @@ export class Activity {
 		});
 		const sessions = await db.Tables.Sessions.findAll({ where: { session_id: { [Op.in]: results.map((activity: any) => activity.session_id) } } });
 		const simletIdBySessionId = new Map<number, number>(sessions.map((session: any) => [session.session_id, session.simlet_id]));
-		return results.map((activity: any) => new Activity(false, {
-			...activity,
-			simlet_id: simletIdBySessionId.get(activity.session_id),
-			current_user_id: user_id,
-			current_user_permission: "FULL"
-		}));
+		return await Activity.buildListFromRows(results, simletIdBySessionId, user_id);
+	}
+
+	/**
+	 * Builds the list of activities returned by the global activity list from a batch of
+	 * `Activities` rows.
+	 *
+	 * The typed data of every activity (gameplay, limesurvey or manual) lives in its own
+	 * table, so it is loaded with a single query per table instead of delegating to each
+	 * `getFromDbData` implementation, which would query (and sometimes create) one row per
+	 * activity and, for limesurvey activities, call the LimeSurvey API once per activity.
+	 * Missing typed rows fall back to the same defaults used when the row is created, but
+	 * nothing is written: listing activities must stay side effect free.
+	 *
+	 * @static
+	 * @async
+	 * @method buildListFromRows
+	 * @param {any[]} rows - `Activities` rows, as returned by `db.Tables.Activities.findAll`
+	 * @param {Map<number, number>} simletIdBySessionId - Simlet each session belongs to
+	 * @param {number} [user_id] - ID of the user requesting the activities
+	 * @returns {Promise<Activity[]>} Promise resolving to the typed activity instances
+	 *
+	 * @example
+	 * ```typescript
+	 * const activities = await Activity.buildListFromRows(rows, new Map([[1, 7]]), 456);
+	 * ```
+	 */
+	static async buildListFromRows(rows: any[], simletIdBySessionId: Map<number, number>, user_id?: number): Promise<Activity[]> {
+		if(rows.length === 0) {
+			return [];
+		}
+		const activityIds = rows.map((row: any) => row.activity_id);
+		// The typed mappers import this class, so they are resolved dynamically to avoid a circular import
+		const [{ GamePlayActivity }, { LimesurveyActivity }, { ManualActivity }] = await Promise.all([
+			import("@/lib/mappers/activities/GameplayActivity"),
+			import("@/lib/mappers/activities/LimesurveyActivity"),
+			import("@/lib/mappers/activities/ManualActivity")
+		]);
+		const [gameplayRows, limesurveyRows, manualRows] = await Promise.all([
+			db.Tables.GamePlayActivities.findAll({ where: { activity_id: { [Op.in]: activityIds } } }),
+			db.Tables.LimesurveyActivities.findAll({ where: { activity_id: { [Op.in]: activityIds } } }),
+			db.Tables.ManualActivities.findAll({ where: { activity_id: { [Op.in]: activityIds } } })
+		]);
+		const gameplayByActivityId = new Map<number, any>(gameplayRows.map((row: any) => [row.activity_id, row]));
+		const limesurveyByActivityId = new Map<number, any>(limesurveyRows.map((row: any) => [row.activity_id, row]));
+		const manualByActivityId = new Map<number, any>(manualRows.map((row: any) => [row.activity_id, row]));
+		// The typed mappers narrow setInitialized/setProgress to Date while the base class
+		// declares them as string, so TypeScript cannot prove they are Activity subclasses
+		const asActivity = (instance: object): Activity => instance as unknown as Activity;
+		const activities: Activity[] = [];
+		for(const row of rows) {
+			const data = {
+				...row.toJSON(),
+				simlet_id: simletIdBySessionId.get(row.session_id),
+				current_user_id: user_id,
+				current_user_permission: "FULL"
+			};
+			const gameplayData = gameplayByActivityId.get(row.activity_id);
+			const limesurveyData = limesurveyByActivityId.get(row.activity_id);
+			const manualData = manualByActivityId.get(row.activity_id);
+			let activity: Activity;
+			switch(row.activity_type) {
+				case "gameplay": {
+					const instance = new GamePlayActivity(false, data);
+					instance.game_backup = gameplayData?.game_backup ?? false;
+					instance.game_scorm_xapi = gameplayData?.game_scorm_xapi ?? false;
+					instance.game_type = gameplayData?.game_type ?? "WEB";
+					instance.game_url = gameplayData?.game_url ?? "";
+					instance.game_tracker_technology = gameplayData?.game_tracker_technology;
+					instance.game_technology = gameplayData?.game_technology;
+					activity = asActivity(instance);
+					break;
+				}
+				case "limesurvey": {
+					const instance = new LimesurveyActivity(false, data);
+					instance.survey_id = limesurveyData?.survey_id ?? -1;
+					instance.survey_language = limesurveyData?.survey_language ?? "";
+					instance.survey_lrsset = limesurveyData?.survey_lrsset ?? -1;
+					activity = asActivity(instance);
+					break;
+				}
+				case "manual": {
+					const instance = new ManualActivity(false, data);
+					instance.manual_user_managed = manualData?.manual_user_managed ?? false;
+					instance.manual_ressource_type = manualData?.manual_ressource_type ?? "WEB";
+					instance.manual_ressource_url = manualData?.manual_ressource_url ?? "";
+					activity = asActivity(instance);
+					break;
+				}
+				default:
+					activity = new Activity(false, data);
+					break;
+			}
+			activities.push(activity);
+		}
+		return activities;
 	}
 
 	/**
