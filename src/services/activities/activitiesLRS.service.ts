@@ -19,6 +19,7 @@ import { db } from "@/lib/db";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
+import { lrsclient } from "@/lib/utils/LRSclient";
 
 /**
  * Retrieves test statements for an activity from the LRS for a specific user.
@@ -47,12 +48,13 @@ export async function getTestStatementsLRSForActivity(currentUserId: number, cur
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
     const group = await SimletGroup.getGroupFromCurrentUser(currentUserId);
     if (group.participants.includes(currentUserId)) {
-        query.actor = JSON.stringify({
+        lrsclient.normalizeStatementsQuery(query);
+        query.agent = {
             account: {
               name: currentusername,
               homePage: config.externalUrl,
             }
-        });
+        };
         const groupParticipant = await db.Tables.GroupParticipants.findOne({ where: { group_id: group.group_id, participant_id: currentUserId }});
         if (groupParticipant) {
             query.since = groupParticipant!.createdAt?.toISOString();
@@ -87,6 +89,7 @@ export async function getTestStatementsLRSForActivity(currentUserId: number, cur
  */
 export async function getStatementsLRSForActivity(currentUserId: number, is_admin: boolean, allocated: boolean, activityId: number, query: any) {
     let activity = await Activity.getFromDbData(activityId, allocated, is_admin, currentUserId);
+    lrsclient.normalizeStatementsQuery(query);
     return await activity.getLRSStatements(query);
 }
 

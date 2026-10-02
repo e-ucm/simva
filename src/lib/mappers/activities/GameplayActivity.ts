@@ -286,7 +286,7 @@ export class GamePlayActivity extends Activity {
 									+ `&sso_client_id=simva-plugin`
 									+ `&sso_login_hint=${this.simlet_id}`
 									+ `&sso_username=${user.token}`
-									+ `&actor_user=${user.token}`
+									+ `&actor_user=${user.username}`
 									+ `&sso_grant_type=password`
 									+ `&sso_scope=offline_access`
 							} else {

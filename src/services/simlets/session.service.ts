@@ -20,6 +20,7 @@ import { SessionTag } from "@/lib/mappers/session/SessionTagsElement";
 import { config } from "@/lib/config";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { lrsclient } from "@/lib/utils/LRSclient";
 
 /**
  * Retrieves all sessions within a simlet.
@@ -347,6 +348,7 @@ export async function deleteSimletTagForUser(simletId: number, sessionId: number
  */
 export async function getLRSStatements(simletId: number, sessionId: number, is_admin: boolean, currentUserId: number, query: any): Promise<Object> {
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
+  lrsclient.normalizeStatementsQuery(query);
   return await session.getLRSStatements(query);
 }
 
@@ -377,12 +379,13 @@ export async function getTestLRSStatements(simletId: number, sessionId: number, 
   const session = await Session.getFromDbData(simletId, sessionId, is_admin, currentUserId);
   const group = await SimletGroup.getGroupFromCurrentUser(currentUserId);
   if (group.participants.includes(currentUserId)) {
-    query.actor = JSON.stringify({
+    lrsclient.normalizeStatementsQuery(query);
+    query.agent = {
         account: {
           name: currentusername,
           homePage: config.externalUrl,
         }
-    });
+    };
     const groupParticipant = await db.Tables.GroupParticipants.findOne({ where: { group_id: group.group_id, participant_id: currentUserId } });
     if (groupParticipant) {
       query.since = groupParticipant!.createdAt?.toISOString();

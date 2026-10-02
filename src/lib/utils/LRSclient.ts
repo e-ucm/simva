@@ -192,6 +192,42 @@ export class LRSClient {
 		return `${config.externalUrl}/about#activity`;
 	}
 
+	/**
+	 * Normalizes the agent filter of a statements query before sending it to the LRS.
+	 *
+	 * The LRS client serializes the value of the agent parameter with JSON.stringify, so it has to be
+	 * received as an object (query parameters always arrive as strings, which would be serialized twice
+	 * and rejected by the LRS). The LRS also only understands the agent name of xAPI 2.0, while actor is
+	 * the xAPI 1.0.3 one, so it is renamed here.
+	 *
+	 * @method normalizeStatementsQuery
+	 * @param {any} query - query of the statements to normalize (it is modified in place)
+	 * @returns {any} the same query, with the agent filter as an object
+	 */
+	normalizeStatementsQuery(query: any): any {
+		if(!query || typeof query !== 'object') {
+			return query;
+		}
+		// The filter may come with the xAPI 2.0 name (agent) or with the xAPI 1.0.3 one (actor)
+		const agent = query.agent ?? query.actor;
+		delete query.actor;
+		if(agent === undefined || agent === null || agent === '') {
+			delete query.agent;
+			return query;
+		}
+		if(typeof agent === 'string') {
+			try {
+				query.agent = JSON.parse(agent);
+			} catch(err) {
+				logger.warn({ agent, err }, "Discarding invalid agent filter of the statements query");
+				delete query.agent;
+			}
+		} else {
+			query.agent = agent;
+		}
+		return query;
+	}
+
 	updateMissingTraceElements(trace : any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): any {
 		let updatedStatement = trace;
 		logger.info('Updating missing trace elements');
