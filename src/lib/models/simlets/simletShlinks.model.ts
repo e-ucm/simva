@@ -10,7 +10,6 @@ export class SimletShlinks extends Model {
   declare short_domain: string;
   declare createdAt: Date;
   declare updatedAt: Date;
-  declare deletedAt: Date | null;
 }
 
 export function SimletShlinksFactory(
@@ -57,16 +56,11 @@ export function SimletShlinksFactory(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    deletedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
   }, {
     sequelize,
     modelName: "SimletShlinks",
     tableName: "SIMLETs_shlinks",
     timestamps: true,
-    paranoid: true,
   });
 
   return SimletShlinks;
