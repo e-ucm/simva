@@ -39,6 +39,10 @@ export class LRSClient {
 		this.filter = this.loadFromFile() ?? new ScalableBloomFilter();
 	}
 
+	isEnabled(): boolean {
+		return config.lrs.enabled;
+	}
+
 	checkLRSEnable(): boolean {
 		return (config.lrs.enabled && (!this.lrs || (this.lrs && !this.lrs?.tracker?.online)));
 	}
@@ -228,12 +232,12 @@ export class LRSClient {
 		return query;
 	}
 
-	updateMissingTraceElements(trace : any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): any {
+	updateMissingTraceElements(trace : any, participant?: string, simletId?: number, sessionId?: number, activityId?: number, useTestUrls: boolean = false): any {
 		let updatedStatement = trace;
 		logger.info('Updating missing trace elements');
         const now = new Date();
         const simvaUrl = config.externalUrl;
-        const authorityName = participant || 'lrs-manager';
+        const authorityName = participant != undefined ? participant : 'mylrsmanager';
         const simletType = this.getSimletType();
         const sessionType = this.getSessionType();
         const activityType = this.getActivityType();
@@ -244,34 +248,36 @@ export class LRSClient {
 		updatedStatement=updatedStatement.withPlatform(simvaUrl);
 		updatedStatement=updatedStatement.withAutorityAccount(authorityName, simvaUrl);
 		updatedStatement=updatedStatement.withStored(now);
-		if(activityId) {
+		if(simletId && sessionId) {
+			if(activityId) {
+				updatedStatement=updatedStatement.withContextActivity(
+					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
+					this.getStandaloneActivityUrl(activityId, useTestUrls),
+					activityType
+				)
+				.withContextActivity(
+					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+					this.getActivityUrl(simletId, sessionId, activityId, useTestUrls),
+					activityType
+				);
+			} else {
+				updatedStatement=updatedStatement.withContextActivity(
+					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
+					this.getSimletUrl(simletId, useTestUrls),
+					simletType
+				)	
+			}
 			updatedStatement=updatedStatement.withContextActivity(
-				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
-				this.getStandaloneActivityUrl(activityId, useTestUrls),
-				activityType
-			)
-			.withContextActivity(
-				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-				this.getActivityUrl(simletId, sessionId, activityId, useTestUrls),
-				activityType
-			);
-		} else {
-			updatedStatement=updatedStatement.withContextActivity(
-				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
-				this.getSimletUrl(simletId, useTestUrls),
-				simletType
-			)	
+					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+					this.getSessionUrl(simletId, sessionId, useTestUrls),
+					sessionType
+				)
+				.withContextActivity(
+					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+					this.getSimletUrl(simletId, useTestUrls),
+					simletType
+				);
 		}
-		updatedStatement=updatedStatement.withContextActivity(
-				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-				this.getSessionUrl(simletId, sessionId, useTestUrls),
-				sessionType
-			)
-			.withContextActivity(
-				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-				this.getSimletUrl(simletId, useTestUrls),
-				simletType
-			);
         return updatedStatement;
     }
 	
@@ -319,6 +325,40 @@ export class LRSClient {
 		} else {
 			logger.warn('LRS client not initialized, cannot flush');
 		}
+	}
+
+	async sendStatements(statement: any): Promise<number[]> {
+		if (this.checkLRSEnable()) {
+			await this.initJSScormTracker();
+		}
+		if(!this.lrs) {
+			throw new LRSError('LRS client is not initialized', {});
+		}
+		const traces: any[] = [];
+		if(Array.isArray(statement)){
+			for(const trace of statement) {
+				let traceBuilder: any = this.lrs.fromXAPI(trace);
+				if(trace && trace.id == null) {
+					traceBuilder = this.updateMissingTraceElements(traceBuilder);
+				}
+				traces.push(traceBuilder);
+			}
+		} else if(statement && typeof statement === 'object'){
+			let traceBuilder: any = this.lrs.fromXAPI(statement);
+			if(statement.id == null) {
+				traceBuilder = this.updateMissingTraceElements(traceBuilder);
+			}
+			traces.push(traceBuilder);
+		} else {
+			logger.info('Unknown case');
+			throw { message: 'Unknown case setting the statements' };
+		}
+		if(config.lrs.enabled) {
+			const ids = await this.sendTracesToLRS(traces);
+			await this.flushLRS();
+			return ids;
+		}
+		return [];
 	}
 
 	async setStatement(statement: any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): Promise<number[]> {

@@ -3400,6 +3400,155 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - $ref: '#/components/parameters/activityId'
+  /activities/{activityid}/lrs/statements/more:
+    get:
+      tags:
+        - administrators
+        - teachers
+        - students
+        - lrsmanagers
+        - garbagecollectors
+      summary: gets more statements of the activity
+      operationId: getActivityMoreLrsStatements
+      description: |
+        Get more statement objects of the activity using the more URL
+      responses:
+        '200':
+          description: the result of the statements required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      parameters:
+        - $ref: '#/components/parameters/activityId'
+        - $ref: '#/components/parameters/lrsMore'
+  /admin/lrs/statements:
+    get:
+      tags:
+        - administrators
+        - lrsmanagers
+        - garbagecollectors
+      summary: gets the xAPI statements of all the activities
+      operationId: getAdminLrsStatements
+      description: |
+        Get xAPI statements from the whole Learning Record Store without activity scoping.
+        The statements are produced by the frontend interactions (games, surveys, trackers).
+      responses:
+        '200':
+          description: the statements of all the activities required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      parameters:
+        - $ref: '#/components/parameters/lrsAgent'
+        - $ref: '#/components/parameters/lrsAttachments'
+        - $ref: '#/components/parameters/lrsAscending'
+        - $ref: '#/components/parameters/lrsActivity'
+        - $ref: '#/components/parameters/lrsFormat'
+        - $ref: '#/components/parameters/lrsRelatedAgents'
+        - $ref: '#/components/parameters/lrsRelatedActivities'
+        - $ref: '#/components/parameters/lrsLimit'
+        - $ref: '#/components/parameters/lrsRegistration'
+        - $ref: '#/components/parameters/lrsSince'
+        - $ref: '#/components/parameters/lrsStatementId'
+        - $ref: '#/components/parameters/lrsUntil'
+        - $ref: '#/components/parameters/lrsVerb'
+        - $ref: '#/components/parameters/lrsVoidedStatementId'
+        - $ref: '#/components/parameters/lrsMore'
+    post:
+      tags:
+        - administrators
+        - lrsmanagers
+      summary: posts the xAPI statements to the whole LRS
+      operationId: postAdminLrsStatements
+      description: |
+        Post xAPI statements to the whole Learning Record Store without activity scoping.
+        A single xAPI statement or an array of them can be sent.
+      responses:
+        '200':
+          description: the ids of the statements created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityStatementMapper'
+        '201':
+          description: the ids of the statements created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/activityStatementMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+  /admin/lrs/statements/more:
+    get:
+      tags:
+        - administrators
+        - lrsmanagers
+        - garbagecollectors
+      summary: gets more xAPI statements of all the activities
+      operationId: getAdminMoreLrsStatements
+      description: |
+        Get more xAPI statements using the more URL provided in the statements response
+      responses:
+        '200':
+          description: the statements of all the activities required
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+      parameters:
+        - $ref: '#/components/parameters/lrsMore'
   /activities/{activityid}/lrs/agents:
     get:
       tags:
