@@ -259,7 +259,11 @@ export class LRSClient {
 	 * unvalidated, and an array is silently destructive: adding a relation to it attaches a string
 	 * key to the array, which every serialization drops, so the activities added here would be lost.
 	 * A single object is accepted by xAPI 2.0 where 1.0.3 requires an array, so it is wrapped rather
-	 * than rejected, and values that are not activities are discarded.
+	 * than rejected.
+	 *
+	 * A relation may hold Activity Objects or, for grouping, category and other, plain IRIs, so
+	 * IRIs are kept for those relations while parent, which only accepts Activity Objects, and any
+	 * value that cannot be an activity are discarded.
 	 *
 	 * js-tracker normalizes this too, but simva pins a js-tracker release that may predate that fix,
 	 * so the statement is normalized here as well.
@@ -275,12 +279,33 @@ export class LRSClient {
 		const normalized: Record<string, any[]> = {};
 		for(const [relation, activities] of Object.entries(input as Record<string, any>)) {
 			const list = Array.isArray(activities) ? activities : [activities];
-			const kept = list.filter((activity: any) => !!activity && typeof activity === 'object');
+			const kept = list.filter((activity: any) => {
+				if(!activity) {
+					return false;
+				}
+				if(typeof activity === 'object') {
+					return true;
+				}
+				if(typeof activity !== 'string' || !LRSClient.isIri(activity)) {
+					return false;
+				}
+				return relation !== 'parent';
+			});
 			if(kept.length > 0) {
 				normalized[relation] = kept;
 			}
 		}
 		return normalized;
+	}
+
+	/**
+	 * Checks whether a value is an absolute IRI
+	 * @method isIri
+	 * @param {string} value - value to check
+	 * @returns {boolean} whether the value is an absolute IRI
+	 */
+	static isIri(value: string): boolean {
+		return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\/[^\s/$.?#].[^\s]*$/.test(value);
 	}
 
 	/**
@@ -453,19 +478,16 @@ export class LRSClient {
 			throw new LRSError('LRS client is not initialized', {});
 		}
 		const traces: any[] = [];
+		// updateMissingTraceElements completes whatever the statement lacks, so it must run even when
+		// the statement already has an id. Skipping it whenever the client sent one left the statement
+		// without its context activities, which is what describes its place in the platform.
 		if(Array.isArray(statement)){
 			for(const trace of statement) {
-				let traceBuilder: any = this.lrs.fromXAPI(trace);
-				if(trace && trace.id == null) {
-					traceBuilder = this.updateMissingTraceElements(traceBuilder);
-				}
+				const traceBuilder: any = this.updateMissingTraceElements(this.lrs.fromXAPI(trace));
 				traces.push(traceBuilder);
 			}
 		} else if(statement && typeof statement === 'object'){
-			let traceBuilder: any = this.lrs.fromXAPI(statement);
-			if(statement.id == null) {
-				traceBuilder = this.updateMissingTraceElements(traceBuilder);
-			}
+			const traceBuilder: any = this.updateMissingTraceElements(this.lrs.fromXAPI(statement));
 			traces.push(traceBuilder);
 		} else {
 			logger.info('Unknown case');

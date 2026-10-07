@@ -1,4 +1,5 @@
 import { LRSClient } from '@/lib/utils/LRSclient';
+import { config } from '@/lib/config';
 
 // Mock the config so the urls the client builds are predictable. kafka is needed because
 // importing LRSclient imports kafkaclient, which builds a client from config.kafka on import.
@@ -110,13 +111,41 @@ function builderWith(contextActivities?: any, extra: any = {}) {
   return new FakeStatementBuilder(statement);
 }
 
+/**
+ * Raw xAPI statement as a client posts it to the admin LRS endpoint: it already carries an id
+ */
+function clientStatementWithId() {
+  return {
+    id: 'client-supplied-id',
+    actor: { name: 'bob' },
+    verb: { id: 'http://activitystrea.ms/complete' },
+    object: { id: `${EXTERNAL_URL}/activities/1` },
+    context: {
+      registration: '18c01bd5-a384-42ad-a96a-9572d4674b87',
+      platform: EXTERNAL_URL,
+      language: 'en'
+    }
+  };
+}
+
+/**
+ * Gives the client a stubbed js-tracker exposing only what these tests need
+ */
+function attachMockLrs(client: LRSClient) {
+  (client as any).lrs = {
+    STATEMENT_BUILDER_IDS: { CONTEXT: { ACTIVITIES: { PARENT, GROUPING, CATEGORY: 'category' } } },
+    tracker: { online: true },
+    fromXAPI: (statement: any) => new FakeStatementBuilder(JSON.parse(JSON.stringify(statement)))
+  };
+}
+
 describe('LRSClient.updateMissingTraceElements', () => {
   let client: LRSClient;
 
   beforeEach(() => {
     jest.clearAllMocks();
     client = new LRSClient();
-    (client as any).lrs = { STATEMENT_BUILDER_IDS: { CONTEXT: { ACTIVITIES: { PARENT, GROUPING, CATEGORY: 'category' } } } };
+    attachMockLrs(client);
   });
 
   describe('context activities', () => {
@@ -228,11 +257,130 @@ describe('LRSClient.updateMissingTraceElements', () => {
   });
 });
 
+describe('LRSClient.sendStatements', () => {
+  let client: LRSClient;
+  let sent: any[];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    sent = [];
+    client = new LRSClient();
+    attachMockLrs(client);
+    // online so that checkLRSEnable is false and initJSScormTracker, which logs in, never runs
+    config.lrs.enabled = true;
+    jest.spyOn(client, 'sendTracesToLRS').mockImplementation(async (traces: any[]) => {
+      traces.forEach(t => sent.push(t));
+      return [];
+    });
+    jest.spyOn(client, 'flushLRS').mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    config.lrs.enabled = false;
+  });
+
+  it('completes a statement that already has an id', async () => {
+    await client.sendStatements(clientStatementWithId());
+
+    expect(sent).toHaveLength(1);
+    const contextActivities = sent[0].statement.context.contextActivities;
+    expect(contextActivities).toHaveProperty(PARENT);
+    expect(contextActivities).toHaveProperty(GROUPING);
+    expect(contextActivities[PARENT].map((a: any) => a.id)).toEqual([`${EXTERNAL_URL}/admin`]);
+    expect(contextActivities[GROUPING].map((a: any) => a.id)).toEqual([`${EXTERNAL_URL}/admin`]);
+  });
+
+  it('keeps the id of a statement that already has one', async () => {
+    await client.sendStatements(clientStatementWithId());
+
+    expect(sent[0].statement.id).toEqual('client-supplied-id');
+  });
+
+  it('completes every statement of an array', async () => {
+    await client.sendStatements([clientStatementWithId(), { ...clientStatementWithId(), id: 'second-id' }]);
+
+    expect(sent).toHaveLength(2);
+    sent.forEach((trace: any) => {
+      expect(trace.statement.context.contextActivities).toHaveProperty(PARENT);
+    });
+  });
+
+  it('completes a statement whose id is missing', async () => {
+    const statement = clientStatementWithId();
+    delete (statement as any).id;
+
+    await client.sendStatements(statement);
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0].statement.id).toBeTruthy();
+    expect(sent[0].statement.context.contextActivities).toHaveProperty(PARENT);
+  });
+
+  it('completes a statement sent with malformed context activities', async () => {
+    const statement = clientStatementWithId();
+    (statement as any).context.contextActivities = [];
+
+    await client.sendStatements(statement);
+
+    expect(sent).toHaveLength(1);
+    const contextActivities = sent[0].statement.context.contextActivities;
+    expect(Array.isArray(contextActivities)).toBe(false);
+    expect(contextActivities).toHaveProperty(PARENT);
+  });
+
+  it('keeps the category of a statement that carries one', async () => {
+    const statement = clientStatementWithId();
+    (statement as any).context.contextActivities = { category: ['https://w3id.org/xapi/seriousgames'] };
+
+    await client.sendStatements(statement);
+
+    expect(sent).toHaveLength(1);
+    const contextActivities = sent[0].statement.context.contextActivities;
+    expect(contextActivities.category).toEqual(['https://w3id.org/xapi/seriousgames']);
+    expect(contextActivities).toHaveProperty(PARENT);
+  });
+
+  it('keeps a category sent as an Activity Object', async () => {
+    const statement = clientStatementWithId();
+    (statement as any).context.contextActivities = {
+      category: [{
+        objectType: 'Activity',
+        id: 'https://w3id.org/xapi/seriousgames',
+        definition: { type: 'http://adlnet.gov/expapi/activities/profile' }
+      }]
+    };
+
+    await client.sendStatements(statement);
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0].statement.context.contextActivities.category[0].id)
+      .toEqual('https://w3id.org/xapi/seriousgames');
+  });
+});
+
 describe('LRSClient.normalizeContextActivities', () => {
   let client: LRSClient;
 
   beforeEach(() => {
     client = new LRSClient();
+  });
+
+  it('keeps the category a relation holds as plain IRIs', () => {
+    // grouping, category and other may hold IRIs instead of Activity Objects
+    expect(client.normalizeContextActivities({ category: ['https://w3id.org/xapi/seriousgames'] }))
+      .toEqual({ category: ['https://w3id.org/xapi/seriousgames'] });
+    expect(client.normalizeContextActivities({ category: 'https://w3id.org/xapi/seriousgames' }))
+      .toEqual({ category: ['https://w3id.org/xapi/seriousgames'] });
+  });
+
+  it('does not accept an IRI as the parent', () => {
+    expect(client.normalizeContextActivities({ parent: 'https://w3id.org/xapi/seriousgames' })).toEqual({});
+  });
+
+  it('discards values that cannot be an activity', () => {
+    expect(client.normalizeContextActivities({
+      category: [7, true, null, '', 'nonsense', 'https://w3id.org/xapi/seriousgames']
+    })).toEqual({ category: ['https://w3id.org/xapi/seriousgames'] });
   });
 
   it('turns malformed values into an object keyed by relation', () => {
