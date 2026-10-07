@@ -139,12 +139,23 @@ export class LRSClient {
 		this.filter = ScalableBloomFilter.fromJSON(data);
 	}
 
+	/**
+	 * Generates the id of a statement, keeping the one it already has when it is not a duplicate.
+	 *
+	 * The id may live on the statement itself or on the builder that wraps it, depending on whether
+	 * the caller received a plain statement or a builder, so both are read.
+	 *
+	 * @method generateStatementId
+	 * @param {any} trace - statement or statement builder
+	 * @returns {string} an id that has not been sent yet
+	 */
 	generateStatementId(trace: any): string {
+		const currentId = trace?.statement?.id ?? trace?.id;
 		var traceid;
-		if(trace.id == null) {
+		if(currentId == null) {
 			traceid = uuidv4();
 		} else {
-			traceid = trace.id;
+			traceid = currentId;
 		}
 		while(this.filter.has(traceid)) {
 			traceid = uuidv4();
@@ -240,6 +251,75 @@ export class LRSClient {
 		return query;
 	}
 
+	/**
+	 * Normalizes the context activities of a statement.
+	 *
+	 * The xAPI specification defines contextActivities as an object whose keys are the relations
+	 * (parent, grouping, category) and whose values are arrays of activities. Clients send it
+	 * unvalidated, and an array is silently destructive: adding a relation to it attaches a string
+	 * key to the array, which every serialization drops, so the activities added here would be lost.
+	 * A single object is accepted by xAPI 2.0 where 1.0.3 requires an array, so it is wrapped rather
+	 * than rejected, and values that are not activities are discarded.
+	 *
+	 * js-tracker normalizes this too, but simva pins a js-tracker release that may predate that fix,
+	 * so the statement is normalized here as well.
+	 *
+	 * @method normalizeContextActivities
+	 * @param {any} input - contextActivities of the incoming statement
+	 * @returns {Object} an object whose keys are relations and whose values are arrays of activities
+	 */
+	normalizeContextActivities(input: any): Record<string, any[]> {
+		if(!input || typeof input !== 'object' || Array.isArray(input)) {
+			return {};
+		}
+		const normalized: Record<string, any[]> = {};
+		for(const [relation, activities] of Object.entries(input as Record<string, any>)) {
+			const list = Array.isArray(activities) ? activities : [activities];
+			const kept = list.filter((activity: any) => !!activity && typeof activity === 'object');
+			if(kept.length > 0) {
+				normalized[relation] = kept;
+			}
+		}
+		return normalized;
+	}
+
+	/**
+	 * Adds a context activity to a statement, unless that relation already holds that activity.
+	 *
+	 * The activity is identified by its id. A client may send a relative id, which never matches the
+	 * absolute id added here, so such a relation ends up holding both; that is preferred over
+	 * dropping an activity the client did send.
+	 *
+	 * @method addMissingContextActivity
+	 * @param {any} statement - statement builder to add the activity to
+	 * @param {string} relation - relation of the activity (parent, grouping, category)
+	 * @param {string} id - absolute id of the activity
+	 * @param {string} activityType - type of the activity
+	 * @returns {any} the same statement builder
+	 */
+	addMissingContextActivity(statement: any, relation: string, id: string, activityType: string): any {
+		const contextActivities = statement?.statement?.context?.contextActivities;
+		const current = Array.isArray(contextActivities?.[relation]) ? contextActivities[relation] : [];
+		const alreadyPresent = current.some((activity: any) => !!activity && (activity.id ?? activity) === id);
+		if(!alreadyPresent) {
+			statement.withContextActivity(relation, id, activityType);
+		}
+		return statement;
+	}
+
+	/**
+	 * Fills in the trace elements a statement does not carry: id, version, platform, authority,
+	 * stored date and the context activities that describe its place in the platform.
+	 *
+	 * @method updateMissingTraceElements
+	 * @param {any} trace - statement builder to complete
+	 * @param {string} [participant] - username that performed the action
+	 * @param {number} [simletId] - id of the SIMLET
+	 * @param {number} [sessionId] - id of the session
+	 * @param {number} [activityId] - id of the activity
+	 * @param {boolean} [useTestUrls] - whether to build the urls for the test environment
+	 * @returns {any} the completed statement builder
+	 */
 	updateMissingTraceElements(trace : any, participant?: string, simletId?: number, sessionId?: number, activityId?: number, useTestUrls: boolean = false): any {
 		let updatedStatement = trace;
 		logger.info('Updating missing trace elements');
@@ -249,8 +329,26 @@ export class LRSClient {
         const simletType = this.getSimletType();
         const sessionType = this.getSessionType();
         const activityType = this.getActivityType();
-        updatedStatement=updatedStatement.withId(this.generateStatementId(trace));
-        if(!trace.version) {
+
+		// the id and the version live on the statement, not on the builder, so reading them from the
+		// builder always reported them as missing and replaced the ones the client already sent
+		const statement = updatedStatement?.statement;
+		if(!statement) {
+			logger.warn({ trace }, 'Cannot complete a trace without a statement');
+			return updatedStatement;
+		}
+		if(statement.context) {
+			// js-tracker always builds a context, but it may carry no contextActivities at all, in
+			// which case they have to be created before any relation can be added to them
+			const incoming = statement.context.contextActivities;
+			statement.context.contextActivities = this.normalizeContextActivities(incoming);
+			if(Array.isArray(incoming)) {
+				logger.warn({ id: statement.id }, 'Discarding malformed contextActivities of the statement');
+			}
+		}
+
+        updatedStatement=updatedStatement.withId(this.generateStatementId(statement));
+        if(!statement.version) {
             updatedStatement=updatedStatement.withVersion("1.0.3");
         }
 		updatedStatement=updatedStatement.withPlatform(simvaUrl);
@@ -258,45 +356,45 @@ export class LRSClient {
 		updatedStatement=updatedStatement.withStored(now);
 		if(simletId && sessionId) {
 			if(activityId) {
-				updatedStatement=updatedStatement.withContextActivity(
+				updatedStatement=this.addMissingContextActivity(updatedStatement,
 					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
 					this.getStandaloneActivityUrl(activityId, useTestUrls),
 					activityType
-				)
-				.withContextActivity(
+				);
+				updatedStatement=this.addMissingContextActivity(updatedStatement,
 					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
 					this.getActivityUrl(simletId, sessionId, activityId, useTestUrls),
 					activityType
 				);
 			} else {
-				updatedStatement=updatedStatement.withContextActivity(
+				updatedStatement=this.addMissingContextActivity(updatedStatement,
 					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
 					this.getSimletUrl(simletId, useTestUrls),
 					simletType
-				)	
-			}
-			updatedStatement=updatedStatement.withContextActivity(
-					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-					this.getSessionUrl(simletId, sessionId, useTestUrls),
-					sessionType
-				)
-				.withContextActivity(
-					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-					this.getSimletUrl(simletId, useTestUrls),
-					simletType
 				);
+			}
+			updatedStatement=this.addMissingContextActivity(updatedStatement,
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+				this.getSessionUrl(simletId, sessionId, useTestUrls),
+				sessionType
+			);
+			updatedStatement=this.addMissingContextActivity(updatedStatement,
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+				this.getSimletUrl(simletId, useTestUrls),
+				simletType
+			);
 		} else {
 			const adminType = this.getAdminType();
-			updatedStatement=updatedStatement.withContextActivity(
-					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
-					this.getAdminUrl(),
-					adminType
-				)
-				.withContextActivity(
-					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
-					this.getAdminUrl(),
-					adminType
-				);
+			updatedStatement=this.addMissingContextActivity(updatedStatement,
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
+				this.getAdminUrl(),
+				adminType
+			);
+			updatedStatement=this.addMissingContextActivity(updatedStatement,
+				this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+				this.getAdminUrl(),
+				adminType
+			);
 		}
         return updatedStatement;
     }
