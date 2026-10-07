@@ -184,6 +184,10 @@ export class LRSClient {
 		return `${config.externalUrl}${prefix}/activities/${activityId}`;
 	}
 
+	getAdminUrl() {
+		return `${config.externalUrl}/admin`;
+	}
+
 	getSimletType() {
 		return `${config.externalUrl}/about#simlet`;
 	}
@@ -194,6 +198,10 @@ export class LRSClient {
 
 	getActivityType() {
 		return `${config.externalUrl}/about#activity`;
+	}
+	
+	getAdminType() {
+		return `${config.externalUrl}/about`;
 	}
 
 	/**
@@ -276,6 +284,18 @@ export class LRSClient {
 					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
 					this.getSimletUrl(simletId, useTestUrls),
 					simletType
+				);
+		} else {
+			const adminType = this.getAdminType();
+			updatedStatement=updatedStatement.withContextActivity(
+					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.PARENT,
+					this.getAdminUrl(),
+					adminType
+				)
+				.withContextActivity(
+					this.lrs.STATEMENT_BUILDER_IDS.CONTEXT.ACTIVITIES.GROUPING,
+					this.getAdminUrl(),
+					adminType
 				);
 		}
         return updatedStatement;
