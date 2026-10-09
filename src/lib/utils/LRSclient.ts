@@ -5,7 +5,7 @@ import * as path from 'path';
 import { config } from "@/lib/config";
 import { logger } from '../logger';
 import { kafkaClient } from './kafkaclient';
-import { JSScormTracker, LRSTracker } from 'js-tracker';
+import { XasuScormTracker, LRSTracker } from 'xasu-js';
 import { LRSError } from '../errors/appErrors';
 
 const { ScalableBloomFilter } = BloomFilters;
@@ -25,7 +25,7 @@ export class LRSClient {
 	filter: InstanceType<typeof ScalableBloomFilter>;
 	readonly #backupPath: string;
 	lrs!: LRSTracker;
-	jsScormTracker!: JSScormTracker;
+	jsScormTracker!: XasuScormTracker;
 
 	/**
 	 * Creates a new LRSClient instance
@@ -47,9 +47,9 @@ export class LRSClient {
 		return (config.lrs.enabled && (!this.lrs || (this.lrs && !this.lrs?.tracker?.online)));
 	}
 
-	async initJSScormTracker() {
+	async initXasuScormTracker() {
 		if(!this.jsScormTracker) {
-			const jsScormTracker = new JSScormTracker();
+			const jsScormTracker = new XasuScormTracker();
 			jsScormTracker.trackerSettings.debug = true;
 			jsScormTracker.trackerSettings.platform = config.externalUrl;
 			this.jsScormTracker = jsScormTracker;
@@ -426,7 +426,7 @@ export class LRSClient {
 	
 	async getLRSClient(): Promise<LRSTracker> {
 		if (this.checkLRSEnable()) {
-			await this.initJSScormTracker();
+			await this.initXasuScormTracker();
 		}
 		return this.lrs;
 	}
@@ -472,7 +472,7 @@ export class LRSClient {
 
 	async sendStatements(statement: any): Promise<number[]> {
 		if (this.checkLRSEnable()) {
-			await this.initJSScormTracker();
+			await this.initXasuScormTracker();
 		}
 		if(!this.lrs) {
 			throw new LRSError('LRS client is not initialized', {});
@@ -503,7 +503,7 @@ export class LRSClient {
 
 	async setStatement(statement: any, participant: string, simletId: number, sessionId: number, activityId?: number, useTestUrls: boolean = false): Promise<number[]> {
 		if (this.checkLRSEnable()) {
-			await this.initJSScormTracker();
+			await this.initXasuScormTracker();
 		}
 		let toret: number[] = [];
         if(Array.isArray(statement)){
