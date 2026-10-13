@@ -1,14 +1,31 @@
+import { jest, beforeAll } from '@jest/globals';
 import { Request, Response, NextFunction } from 'express';
-import { getStatements, getMoreStatements, postStatements } from '@/controlers/admin/adminLRS.controler';
-import * as adminLRSService from '@/services/admin/adminLRS.service';
 import { AuthentificationError, BadRequestError } from '@/lib/errors/appErrors';
 
-jest.mock('@/services/admin/adminLRS.service', () => ({
+jest.unstable_mockModule('@/services/admin/adminLRS.service', () => ({
   getStatements: jest.fn(),
   getMoreStatements: jest.fn(),
   sendStatements: jest.fn(),
 }));
-const mockedAdminLRSService = adminLRSService as jest.Mocked<typeof adminLRSService>;
+
+type MockAdminLRSService = {
+  getStatements: jest.Mock;
+  getMoreStatements: jest.Mock;
+  sendStatements: jest.Mock;
+};
+
+let mockedAdminLRSService: MockAdminLRSService;
+let getStatements: typeof import('@/controlers/admin/adminLRS.controler')['getStatements'];
+let getMoreStatements: typeof import('@/controlers/admin/adminLRS.controler')['getMoreStatements'];
+let postStatements: typeof import('@/controlers/admin/adminLRS.controler')['postStatements'];
+
+beforeAll(async () => {
+  mockedAdminLRSService = (await import('@/services/admin/adminLRS.service')) as unknown as MockAdminLRSService;
+  const controller = await import('@/controlers/admin/adminLRS.controler');
+  getStatements = controller.getStatements;
+  getMoreStatements = controller.getMoreStatements;
+  postStatements = controller.postStatements;
+});
 
 type MockAuthReq = Partial<Request> & {
   user?: {

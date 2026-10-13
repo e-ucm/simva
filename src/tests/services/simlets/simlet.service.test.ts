@@ -1,36 +1,42 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import {
-  getSimletsByUserId,
-  getSimletBySimletIdAndUserId,
-  createSimlet,
-  patch,
-  deleteSimlet,
-  getAllocatorFromSimlet,
-  getSimletParticipants,
-  getSimletGroups,
-  getSimletSessions,
-  getSimletSession,
-  getSessionActivities
-} from '@/services/simlets/simlet.service';
-import { Simlet } from '@/lib/mappers/simlet/Simlet';
-import { Session } from '@/lib/mappers/session/Session';
+import { beforeEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 
-jest.mock('@/lib/mappers/simlet/Simlet', () => ({
+jest.unstable_mockModule('@/lib/mappers/simlet/Simlet', () => ({
   Simlet: {
     getAllFromDbData: jest.fn(),
     getFromDbData: jest.fn(),
-    createSimlet: jest.fn()
+    createSimlet: jest.fn(),
+    getAdminSimlets: jest.fn(),
+    getSimletCountByUserId: jest.fn(),
+    getOrderNameColumn: jest.fn(),
+    getOrder: jest.fn()
   }
 }));
 
-jest.mock('@/lib/mappers/session/Session', () => ({
-  Session: {
-    getFromDbData: jest.fn()
-  }
-}));
+let mockedSimlet: jest.Mocked<typeof import('@/lib/mappers/simlet/Simlet')['Simlet']>;
+let getSimletsByUserId: typeof import('@/services/simlets/simlet.service')['getSimletsByUserId'];
+let getSimletsForStudent: typeof import('@/services/simlets/simlet.service')['getSimletsForStudent'];
+let getAllSimlets: typeof import('@/services/simlets/simlet.service')['getAllSimlets'];
+let getSimletBySimletIdAndUserId: typeof import('@/services/simlets/simlet.service')['getSimletBySimletIdAndUserId'];
+let createSimlet: typeof import('@/services/simlets/simlet.service')['createSimlet'];
+let patch: typeof import('@/services/simlets/simlet.service')['patch'];
+let deleteSimlet: typeof import('@/services/simlets/simlet.service')['deleteSimlet'];
+let getSimletParticipants: typeof import('@/services/simlets/simlet.service')['getSimletParticipants'];
+let getSimletCountByUserId: typeof import('@/services/simlets/simlet.service')['getSimletCountByUserId'];
 
-const mockedSimlet = Simlet as jest.Mocked<typeof Simlet>;
-const mockedSession = Session as jest.Mocked<typeof Session>;
+beforeAll(async () => {
+  const simletModule = await import('@/lib/mappers/simlet/Simlet');
+  mockedSimlet = simletModule.Simlet as jest.Mocked<typeof simletModule.Simlet>;
+  const service = await import('@/services/simlets/simlet.service');
+  getSimletsByUserId = service.getSimletsByUserId;
+  getSimletsForStudent = service.getSimletsForStudent;
+  getAllSimlets = service.getAllSimlets;
+  getSimletBySimletIdAndUserId = service.getSimletBySimletIdAndUserId;
+  createSimlet = service.createSimlet;
+  patch = service.patch;
+  deleteSimlet = service.deleteSimlet;
+  getSimletParticipants = service.getSimletParticipants;
+  getSimletCountByUserId = service.getSimletCountByUserId;
+});
 
 describe('Simlet Service', () => {
   beforeEach(() => {
@@ -41,9 +47,29 @@ describe('Simlet Service', () => {
     const list = [{ simlet_id: 1 }];
     mockedSimlet.getAllFromDbData.mockResolvedValue(list as any);
 
-    const result = await getSimletsByUserId(10, 'abc', 5, 2);
+    const result = await getSimletsByUserId(10, true, 'abc', [1], 5, 2, 'name', 'ASC');
 
-    expect(mockedSimlet.getAllFromDbData).toHaveBeenCalledWith(10, 'abc', 5, 2);
+    expect(mockedSimlet.getAllFromDbData).toHaveBeenCalledWith(10, false, true, 'abc', 5, 2, [1], 'name', 'ASC');
+    expect(result).toEqual(list);
+  });
+
+  it('getSimletsForStudent delegates to Simlet.getAllFromDbData as allocated user', async () => {
+    const list = [{ simlet_id: 2 }];
+    mockedSimlet.getAllFromDbData.mockResolvedValue(list as any);
+
+    const result = await getSimletsForStudent(10, 'abc', [1], 5, 2, 'name', 'ASC');
+
+    expect(mockedSimlet.getAllFromDbData).toHaveBeenCalledWith(10, true, undefined, 'abc', 5, 2, [1], 'name', 'ASC');
+    expect(result).toEqual(list);
+  });
+
+  it('getAllSimlets delegates to Simlet.getAdminSimlets', async () => {
+    const list = [{ simlet_id: 3 }];
+    mockedSimlet.getAdminSimlets.mockResolvedValue(list as any);
+
+    const result = await getAllSimlets(true, 'abc', [1], 5, 2, 'name', 'ASC');
+
+    expect(mockedSimlet.getAdminSimlets).toHaveBeenCalledWith(true, 'abc', [1], 5, 2, 'name', 'ASC');
     expect(result).toEqual(list);
   });
 
@@ -51,9 +77,9 @@ describe('Simlet Service', () => {
     const item = { simlet_id: 2, printInfo: jest.fn() };
     mockedSimlet.getFromDbData.mockResolvedValue(item as any);
 
-    const result = await getSimletBySimletIdAndUserId(2, 10);
+    const result = await getSimletBySimletIdAndUserId(2, false, 10);
 
-    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(2, 10);
+    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(2, false, 10);
     expect(item.printInfo).toHaveBeenCalled();
     expect(result).toEqual(item);
   });
@@ -63,9 +89,9 @@ describe('Simlet Service', () => {
     const created = { simlet_id: 3 };
     mockedSimlet.createSimlet.mockResolvedValue(created as any);
 
-    const result = await createSimlet(payload);
+    const result = await createSimlet(payload, false, 123);
 
-    expect(mockedSimlet.createSimlet).toHaveBeenCalledWith(payload);
+    expect(mockedSimlet.createSimlet).toHaveBeenCalledWith(payload, false, 123);
     expect(result).toEqual(created);
   });
 
@@ -74,53 +100,40 @@ describe('Simlet Service', () => {
     const simletInstance = { patch: jest.fn().mockResolvedValue(updated) };
     mockedSimlet.getFromDbData.mockResolvedValue(simletInstance as any);
 
-    const result = await patch(4, 10, { simlet_name: 'Updated' });
+    const result = await patch(4, { simlet_name: 'Updated' }, false, 10);
 
-    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(4, 10);
+    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(4, false, 10);
     expect(simletInstance.patch).toHaveBeenCalledWith({ simlet_name: 'Updated' });
     expect(result).toEqual(updated);
   });
 
-  it('deleteSimlet resolves through simlet instance remove', async () => {
-    const simletInstance = { remove: jest.fn().mockResolvedValue(undefined) };
+  it('deleteSimlet resolves through simlet instance delete', async () => {
+    const simletInstance = { delete: jest.fn().mockResolvedValue(undefined) };
     mockedSimlet.getFromDbData.mockResolvedValue(simletInstance as any);
 
-    await deleteSimlet(5, 10);
+    await deleteSimlet(5, false, 10);
 
-    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(5, 10);
-    expect(simletInstance.remove).toHaveBeenCalled();
+    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(5, false, 10);
+    expect(simletInstance.delete).toHaveBeenCalled();
   });
 
-  it('delegates related-resource getters through simlet/session instances', async () => {
-    const allocator = { allocator_id: 1 };
+  it('getSimletParticipants resolves through simlet instance getAllocatedParticipants', async () => {
     const participants = [{ user_id: 1 }];
-    const groups = [{ group_id: 1 }];
-    const sessions = [{ session_id: 1 }];
-    const session = { session_id: 2 };
-    const activities = [{ activity_id: 1 }];
-
-    const simletInstance = {
-      getAllocator: jest.fn().mockResolvedValue(allocator),
-      getAllocatedParticipants: jest.fn().mockResolvedValue(participants),
-      getGroups: jest.fn().mockResolvedValue(groups),
-      getSessions: jest.fn().mockResolvedValue(sessions),
-      getSession: jest.fn().mockResolvedValue(session)
-    };
-
-    const sessionInstance = { getActivities: jest.fn().mockResolvedValue(activities) };
-
+    const simletInstance = { getAllocatedParticipants: jest.fn().mockResolvedValue(participants) };
     mockedSimlet.getFromDbData.mockResolvedValue(simletInstance as any);
-    mockedSession.getFromDbData.mockResolvedValue(sessionInstance as any);
 
-    await expect(getAllocatorFromSimlet(1, 10)).resolves.toEqual(allocator);
-    await expect(getSimletParticipants(1, 10)).resolves.toEqual(participants);
-    await expect(getSimletGroups(1, 10)).resolves.toEqual(groups);
-    await expect(getSimletSessions(1, 10, 'x', 2, 0)).resolves.toEqual(sessions);
-    await expect(getSimletSession(1, 2, 10)).resolves.toEqual(session);
-    await expect(getSessionActivities(1, 2, 10)).resolves.toEqual(activities);
+    const result = await getSimletParticipants(1, false, 10);
 
-    expect(simletInstance.getSessions).toHaveBeenCalledWith('x', 2, 0);
-    expect(mockedSession.getFromDbData).toHaveBeenCalledWith(1, 2, 10);
-    expect(sessionInstance.getActivities).toHaveBeenCalled();
+    expect(mockedSimlet.getFromDbData).toHaveBeenCalledWith(1, false, 10);
+    expect(result).toEqual(participants);
+  });
+
+  it('getSimletCountByUserId delegates to Simlet.getSimletCountByUserId', async () => {
+    mockedSimlet.getSimletCountByUserId.mockResolvedValue(5);
+
+    const result = await getSimletCountByUserId(true, false, 'abc', [1], 10);
+
+    expect(mockedSimlet.getSimletCountByUserId).toHaveBeenCalledWith(true, false, 'abc', [1], 10);
+    expect(result).toBe(5);
   });
 });

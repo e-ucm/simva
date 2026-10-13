@@ -1,9 +1,14 @@
-import axios from 'axios';
-import { LimeSurveyClient } from '@/lib/utils/limesurveyclient';
+import { jest, beforeAll, describe, expect, it } from '@jest/globals';
 
-jest.mock('axios', () => jest.fn());
+jest.unstable_mockModule('axios', () => ({ default: jest.fn() }));
 
-const mockedAxios = axios as unknown as jest.Mock;
+let LimeSurveyClient: typeof import('@/lib/utils/limesurveyclient')['LimeSurveyClient'];
+let mockedAxios: jest.Mock;
+
+beforeAll(async () => {
+  mockedAxios = (await import('axios')).default as unknown as jest.Mock;
+  LimeSurveyClient = (await import('@/lib/utils/limesurveyclient')).LimeSurveyClient;
+});
 
 describe('LimeSurveyClient survey date normalization', () => {
   beforeEach(() => {

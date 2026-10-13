@@ -1,7 +1,6 @@
+import { jest, beforeAll } from '@jest/globals';
 import { Request, Response, NextFunction } from 'express';
-import { getMe } from '@/controlers/users/user.controler';
 import { AuthentificationError } from '@/lib/errors/appErrors';
-import * as userService from '@/services/users/user.service';
 
 // Extend Request type to include user property
 interface AuthenticatedRequest extends Request {
@@ -19,8 +18,21 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Mock user service
-jest.mock('@/services/users/user.service');
-const mockedUserService = userService as jest.Mocked<typeof userService>;
+jest.unstable_mockModule('@/services/users/user.service', () => ({
+  getUserByUsername: jest.fn(),
+  getAllUsers: jest.fn(),
+  updateUser: jest.fn(),
+  getUserById: jest.fn(),
+}));
+
+let mockedUserService: jest.Mocked<typeof import('@/services/users/user.service')>;
+let getMe: typeof import('@/controlers/users/user.controler')['getMe'];
+
+beforeAll(async () => {
+  mockedUserService = (await import('@/services/users/user.service')) as jest.Mocked<typeof import('@/services/users/user.service')>;
+  const controller = await import('@/controlers/users/user.controler');
+  getMe = controller.getMe;
+});
 
 describe('User Controller Unit Tests', () => {
   beforeEach(() => {

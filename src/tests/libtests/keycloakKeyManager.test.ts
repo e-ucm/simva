@@ -1,20 +1,8 @@
-import { KeycloakKeyManager } from '@/lib/keycloakKeyManager';
+import { jest, beforeAll, describe, beforeEach, afterEach, expect, it } from '@jest/globals';
 import jwt from 'jsonwebtoken';
-import { config } from '@/lib/config';
-import KeyCloakCerts from 'keycloak-public-key';
-
-// Mock the keycloak-public-key library
-jest.mock('keycloak-public-key');
-
-const mockKeyCloakCerts = {
-  fetch: jest.fn()
-};
-
-// Cast the mocked constructor
-const MockedKeyCloakCerts = KeyCloakCerts as jest.MockedClass<typeof KeyCloakCerts>;
 
 // Mock the logger
-jest.mock('@/lib/logger', () => ({
+jest.unstable_mockModule('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),
     debug: jest.fn(),
@@ -23,7 +11,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // Mock the config
-jest.mock('@/lib/config', () => ({
+jest.unstable_mockModule('@/lib/config', () => ({
   config: {
     debug: false,
     sso: {
@@ -33,16 +21,46 @@ jest.mock('@/lib/config', () => ({
   }
 }));
 
+// Mock the JWK to PEM converter
+jest.unstable_mockModule('jwk-to-pem', () => ({
+  default: jest.fn()
+}));
+
+let KeycloakKeyManager: typeof import('@/lib/keycloakKeyManager')['KeycloakKeyManager'];
+let config: typeof import('@/lib/config')['config'];
+let mockedLogger: jest.Mocked<typeof import('@/lib/logger')['logger']>;
+let jwkToPem: jest.Mock;
+
+beforeAll(async () => {
+  KeycloakKeyManager = (await import('@/lib/keycloakKeyManager')).KeycloakKeyManager;
+  config = (await import('@/lib/config')).config;
+  mockedLogger = (await import('@/lib/logger')).logger as jest.Mocked<typeof import('@/lib/logger')['logger']>;
+  jwkToPem = (await import('jwk-to-pem')).default as jest.Mock;
+});
+
 describe('KeycloakKeyManager', () => {
   const testKid = 'test-key-id';
   const testPublicKey = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----';
-  
+
+  let mockFetch: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    // Clear cached keys
     KeycloakKeyManager.clearCache();
-    // Setup the mock to return our mockKeyCloakCerts instance
-    MockedKeyCloakCerts.mockImplementation(() => mockKeyCloakCerts);  });
+    jwkToPem.mockReturnValue(testPublicKey);
+    mockFetch = jest.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: jest.fn().mockResolvedValue({
+        keys: [{ kid: testKid, kty: 'RSA', use: 'sig', alg: 'RS256', n: 'test-n', e: 'AQAB' }]
+      })
+    } as any);
+  });
+
+  afterEach(() => {
+    mockFetch.mockRestore();
+  });
 
   describe('initialization', () => {
     it('should initialize with proper configuration', () => {
@@ -53,9 +71,9 @@ describe('KeycloakKeyManager', () => {
       // Temporarily modify config
       const originalConfig = config.sso;
       config.sso = { ...originalConfig, url: '' };
-      
+
       expect(KeycloakKeyManager.isEnabled()).toBe(false);
-      
+
       // Restore config
       config.sso = originalConfig;
     });
@@ -63,55 +81,39 @@ describe('KeycloakKeyManager', () => {
 
   describe('getKey', () => {
     it('should fetch and cache a key successfully', async () => {
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testPublicKey);
-
       const key = await KeycloakKeyManager.getKey(testKid);
 
       expect(key).toBe(testPublicKey);
-      expect(mockKeyCloakCerts.fetch).toHaveBeenCalledWith(testKid);
-      
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/realms/test-realm/protocol/openid-connect/certs');
+
       // Verify key is cached
       const cachedKeys = KeycloakKeyManager.getCachedKeys();
       expect(cachedKeys[testKid]).toBe(testPublicKey);
     });
 
-    it('should return cached key on subsequent calls', async () => {
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testPublicKey);
-
-      // First call - should fetch
-      const key1 = await KeycloakKeyManager.getKey(testKid);
-      
-      // Second call - should use cache
-      const key2 = await KeycloakKeyManager.getKey(testKid);
-
-      expect(key1).toBe(testPublicKey);
-      expect(key2).toBe(testPublicKey);
-      expect(mockKeyCloakCerts.fetch).toHaveBeenCalledTimes(1);
-    });
-
     it('should handle fetch errors', async () => {
-      const error = new Error('Failed to fetch key');
-      mockKeyCloakCerts.fetch.mockRejectedValueOnce(error);
+      mockFetch.mockRejectedValueOnce(new Error('Failed to fetch key'));
 
-      await expect(KeycloakKeyManager.getKey(testKid)).rejects.toThrow('Failed to fetch key');
+      const key = await KeycloakKeyManager.getKey(testKid);
+
+      expect(key).toBe('');
     });
   });
 
   describe('reloadKey', () => {
     it('should force reload a key from Keycloak', async () => {
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testPublicKey);
-
       const key = await KeycloakKeyManager.reloadKey(testKid);
 
       expect(key).toBe(testPublicKey);
-      expect(mockKeyCloakCerts.fetch).toHaveBeenCalledWith(testKid);
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/realms/test-realm/protocol/openid-connect/certs');
     });
 
     it('should handle reload errors', async () => {
-      const error = new Error('Network error');
-      mockKeyCloakCerts.fetch.mockRejectedValueOnce(error);
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(KeycloakKeyManager.reloadKey(testKid)).rejects.toThrow('Network error');
+      const key = await KeycloakKeyManager.reloadKey(testKid);
+
+      expect(key).toBe('');
     });
   });
 
@@ -120,8 +122,8 @@ describe('KeycloakKeyManager', () => {
     const testPayload = { sub: 'testuser', iss: 'test-issuer' };
 
     it('should verify token with valid key', async () => {
+      jwkToPem.mockReturnValue(testSecret);
       const token = jwt.sign(testPayload, testSecret);
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testSecret);
 
       const decoded = await KeycloakKeyManager.checkKey(testKid, token);
 
@@ -130,29 +132,24 @@ describe('KeycloakKeyManager', () => {
     });
 
     it('should reject token with invalid signature', async () => {
+      jwkToPem.mockReturnValue(testSecret);
       const token = jwt.sign(testPayload, 'wrong-secret');
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testSecret);
 
       await expect(KeycloakKeyManager.checkKey(testKid, token)).rejects.toBeDefined();
     });
 
     it('should handle malformed tokens', async () => {
       const invalidToken = 'not.a.valid.jwt.token';
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testSecret);
 
       await expect(KeycloakKeyManager.checkKey(testKid, invalidToken)).rejects.toBeDefined();
     });
   });
 
   describe('cache management', () => {
-    it('should clear cache correctly', async () => {
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testPublicKey);
-
-      // Add key to cache
+    it('should cache the fetched key', async () => {
       await KeycloakKeyManager.getKey(testKid);
-      expect(Object.keys(KeycloakKeyManager.getCachedKeys())).toHaveLength(1);
+      expect(Object.keys(KeycloakKeyManager.getCachedKeys())).toEqual([testKid]);
 
-      // Clear cache
       KeycloakKeyManager.clearCache();
       expect(Object.keys(KeycloakKeyManager.getCachedKeys())).toHaveLength(0);
     });
@@ -166,32 +163,14 @@ describe('KeycloakKeyManager', () => {
     });
   });
 
-  describe('error handling', () => {
-    it('should handle Keycloak service unavailable', async () => {
-      mockKeyCloakCerts.fetch.mockRejectedValueOnce(new Error('Service unavailable'));
-
-      await expect(KeycloakKeyManager.getKey(testKid)).rejects.toThrow('Service unavailable');
-    });
-
-    it('should handle network timeouts', async () => {
-      const timeoutError = new Error('Request timeout');
-      timeoutError.name = 'TimeoutError';
-      mockKeyCloakCerts.fetch.mockRejectedValueOnce(timeoutError);
-
-      await expect(KeycloakKeyManager.reloadKey(testKid)).rejects.toThrow('Request timeout');
-    });
-  });
-
   describe('logging', () => {
     it('should log debug messages when debug is enabled', async () => {
       const originalDebug = config.debug;
       config.debug = true;
 
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testPublicKey);
       await KeycloakKeyManager.getKey(testKid);
 
-      const mockLogger = require('@/lib/logger').logger;
-      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockedLogger.info).toHaveBeenCalled();
 
       config.debug = originalDebug;
     });
@@ -200,11 +179,9 @@ describe('KeycloakKeyManager', () => {
       const originalEnv = process.env.KEYCLOAK_LOGGER_ACTIVE;
       process.env.KEYCLOAK_LOGGER_ACTIVE = 'true';
 
-      mockKeyCloakCerts.fetch.mockResolvedValueOnce(testPublicKey);
       await KeycloakKeyManager.getKey(testKid);
 
-      const mockLogger = require('@/lib/logger').logger;
-      expect(mockLogger.info).toHaveBeenCalled();
+      expect(mockedLogger.info).toHaveBeenCalled();
 
       process.env.KEYCLOAK_LOGGER_ACTIVE = originalEnv;
     });

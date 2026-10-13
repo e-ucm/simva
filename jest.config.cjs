@@ -17,9 +17,9 @@ module.exports = {
 
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "keycloak-public-key": "<rootDir>/src/tests/__mocks__/keycloak-public-key.js",
-    "^@keycloak/keycloak-admin-client$": "<rootDir>/src/tests/__mocks__/keycloak-admin-client.js",
-    "^@keycloak/keycloak-admin-client/lib/utils/auth$": "<rootDir>/src/tests/__mocks__/keycloak-admin-auth.js"
+    "keycloak-public-key": "<rootDir>/src/tests/__mocks__/keycloak-public-key.cjs",
+    "^@keycloak/keycloak-admin-client$": "<rootDir>/src/tests/__mocks__/keycloak-admin-client.cjs",
+    "^@keycloak/keycloak-admin-client/lib/utils/auth$": "<rootDir>/src/tests/__mocks__/keycloak-admin-auth.cjs"
   },
 
   testMatch: ["**/tests/**/*.test.ts"], // optional, matches your test files

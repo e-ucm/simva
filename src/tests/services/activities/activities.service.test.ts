@@ -1,15 +1,13 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { getAllActivities, parseActivitiesSearchString } from '@/services/activities/activities.service';
+import { beforeEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Activity } from '@/lib/mappers/activities/Activity';
-import { Simlet } from '@/lib/mappers/simlet/Simlet';
 
 // The activity mapper chain reaches the LRS client, which loads two ESM only
 // dependencies that Jest cannot parse, so they are stubbed here
-jest.mock('uuid', () => ({
+jest.unstable_mockModule('uuid', () => ({
   v4: () => '00000000-0000-4000-8000-000000000000'
 }));
 
-jest.mock('bloom-filters', () => {
+jest.unstable_mockModule('bloom-filters', () => {
   class ScalableBloomFilter {
     static fromJSON() {
       return new ScalableBloomFilter();
@@ -22,16 +20,27 @@ jest.mock('bloom-filters', () => {
       return '';
     }
   }
-  return { ScalableBloomFilter };
+  return { ScalableBloomFilter, default: { ScalableBloomFilter } };
 });
 
-jest.mock('@/lib/mappers/simlet/Simlet', () => ({
+jest.unstable_mockModule('@/lib/mappers/simlet/Simlet', () => ({
   Simlet: {
     getAllFromDbData: jest.fn()
   }
 }));
 
-const mockedSimlet = Simlet as jest.Mocked<typeof Simlet>;
+let mockedSimlet: jest.Mocked<typeof import('@/lib/mappers/simlet/Simlet')['Simlet']>;
+let getAllActivities: typeof import('@/services/activities/activities.service')['getAllActivities'];
+let parseActivitiesSearchString: typeof import('@/services/activities/activities.service')['parseActivitiesSearchString'];
+
+beforeAll(async () => {
+  const simletModule = await import('@/lib/mappers/simlet/Simlet');
+  mockedSimlet = simletModule.Simlet as jest.Mocked<typeof simletModule.Simlet>;
+  const service = await import('@/services/activities/activities.service');
+  getAllActivities = service.getAllActivities;
+  parseActivitiesSearchString = service.parseActivitiesSearchString;
+});
+
 const mockedGetAllActivities = jest.spyOn(Activity, 'getAllActivities');
 const mockedActivity = { getAllActivities: mockedGetAllActivities } as unknown as jest.Mocked<typeof Activity>;
 

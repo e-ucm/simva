@@ -4833,7 +4833,7 @@ components:
     usernameQuery:
       name: username
       in: query
-      required: true
+      required: false
       schema:
         type: string
         example: "peter"

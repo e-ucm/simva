@@ -1,6 +1,8 @@
+import { jest } from '@jest/globals';
 process.env.NODE_ENV = "development";
 import { db } from "@/lib/db";
 import { config } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 /**
  * Tests for database initialization and logging.
@@ -16,7 +18,7 @@ describe("Database", () => {
 
   it("should execute queries with logging", async () => {
     // Mock logger.debug to verify SQL logging is called
-    const loggerDebugSpy = jest.spyOn(require('@/lib/logger').logger, 'debug');
+    const loggerDebugSpy = jest.spyOn(logger, 'debug');
     
     // This will trigger the logging function in the Sequelize config
     await db.sequelize.query("SELECT 1 as test");
@@ -35,7 +37,7 @@ describe("Database", () => {
   });
 
   it("should log SQL queries through sequelize logging function", async () => {
-    const loggerDebugSpy = jest.spyOn(require('@/lib/logger').logger, 'debug');
+    const loggerDebugSpy = jest.spyOn(logger, 'debug');
     
     // Execute multiple different SQL operations to trigger logging
     await db.sequelize.query("SELECT COUNT(*) as count FROM sqlite_master");
@@ -72,11 +74,10 @@ describe("Database", () => {
     // Session models
     expect(db.Tables.Sessions).toBeDefined();
     expect(db.Tables.SessionPermissions).toBeDefined();
-    expect(db.Tables.SessionTags).toBeDefined();
+    expect(db.Tables.SessionTagsElement).toBeDefined();
     
     // Simlet models
     expect(db.Tables.Simlets).toBeDefined();
-    expect(db.Tables.SimletGroups).toBeDefined();
     expect(db.Tables.SimletPermissions).toBeDefined();
     expect(db.Tables.SimletShlinks).toBeDefined();
     

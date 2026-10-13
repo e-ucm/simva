@@ -1,9 +1,8 @@
-import { LRSClient } from '@/lib/utils/LRSclient';
-import { config } from '@/lib/config';
+import { jest, beforeAll, afterEach } from '@jest/globals';
 
 // Mock the config so the urls the client builds are predictable. kafka is needed because
 // importing LRSclient imports kafkaclient, which builds a client from config.kafka on import.
-jest.mock('@/lib/config', () => ({
+jest.unstable_mockModule('@/lib/config', () => ({
   config: {
     debug: false,
     externalUrl: 'https://simva.example',
@@ -22,7 +21,7 @@ jest.mock('@/lib/config', () => ({
 }));
 
 // kafkaclient opens no connection on import, but it is stubbed so the test never depends on kafka
-jest.mock('@/lib/utils/kafkaclient', () => ({
+jest.unstable_mockModule('@/lib/utils/kafkaclient', () => ({
   kafkaClient: {
     sendMessages: jest.fn()
   },
@@ -30,7 +29,7 @@ jest.mock('@/lib/utils/kafkaclient', () => ({
 }));
 
 // Mock the logger
-jest.mock('@/lib/logger', () => ({
+jest.unstable_mockModule('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),
     debug: jest.fn(),
@@ -40,7 +39,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // The js-tracker classes are only used as types and instantiated on login, so a stub is enough
-jest.mock('js-tracker', () => ({
+jest.unstable_mockModule('xasu-js', () => ({
   LRSTracker: class {
     STATEMENT_BUILDER_IDS = {
       CONTEXT: {
@@ -55,8 +54,18 @@ jest.mock('js-tracker', () => ({
     start() { /* not used by these tests */ }
     async flush() { /* not used by these tests */ }
   },
-  JSScormTracker: class { /* not used by these tests */ }
+  XasuScormTracker: class { /* not used by these tests */ }
 }));
+
+let LRSClient: typeof import('@/lib/utils/LRSclient')['LRSClient'];
+let config: typeof import('@/lib/config')['config'];
+
+beforeAll(async () => {
+  const lrsModule = await import('@/lib/utils/LRSclient');
+  LRSClient = lrsModule.LRSClient;
+  const configModule = await import('@/lib/config');
+  config = configModule.config;
+});
 
 const EXTERNAL_URL = 'https://simva.example';
 const PARENT = 'parent';
@@ -131,7 +140,7 @@ function clientStatementWithId() {
 /**
  * Gives the client a stubbed js-tracker exposing only what these tests need
  */
-function attachMockLrs(client: LRSClient) {
+function attachMockLrs(client: InstanceType<typeof LRSClient>) {
   (client as any).lrs = {
     STATEMENT_BUILDER_IDS: { CONTEXT: { ACTIVITIES: { PARENT, GROUPING, CATEGORY: 'category' } } },
     tracker: { online: true },
@@ -140,7 +149,7 @@ function attachMockLrs(client: LRSClient) {
 }
 
 describe('LRSClient.updateMissingTraceElements', () => {
-  let client: LRSClient;
+  let client: InstanceType<typeof LRSClient>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -258,7 +267,7 @@ describe('LRSClient.updateMissingTraceElements', () => {
 });
 
 describe('LRSClient.sendStatements', () => {
-  let client: LRSClient;
+  let client: InstanceType<typeof LRSClient>;
   let sent: any[];
 
   beforeEach(() => {
@@ -359,7 +368,7 @@ describe('LRSClient.sendStatements', () => {
 });
 
 describe('LRSClient.normalizeContextActivities', () => {
-  let client: LRSClient;
+  let client: InstanceType<typeof LRSClient>;
 
   beforeEach(() => {
     client = new LRSClient();

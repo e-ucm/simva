@@ -11,9 +11,9 @@
     "updateQueryDocs": "npx tsx updateQueryDocs.ts",
     "rebuild-sqlite": "npm rebuild sqlite3",
     "validate-openapi": "npx --yes @redocly/cli lint api.yaml",
-    "test": "npm run rebuild-sqlite && NODE_ENV=test jest --verbose",
-    "test:watch": "npm run rebuild-sqlite && NODE_ENV=test jest --watchAll --verbose",
-    "test:coverage": "npm run rebuild-sqlite && NODE_ENV=test jest --coverage --verbose",
+    "test": "npm run rebuild-sqlite && NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --verbose",
+    "test:watch": "npm run rebuild-sqlite && NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watchAll --verbose",
+    "test:coverage": "npm run rebuild-sqlite && NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage --verbose",
     "class-docs": "npx typedoc --entryPoints src/lib --out docs --entryPointStrategy expand"
   },
   "dependencies": {

@@ -1,10 +1,8 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { getStatements, getMoreStatements, sendStatements } from '@/services/admin/adminLRS.service';
-import { lrsclient } from '@/lib/utils/LRSclient';
+import { beforeEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { NotImplementedError } from '@/lib/errors/appErrors';
 
 // Mock the LRS client to avoid pulling in the tracker dependencies
-jest.mock('@/lib/utils/LRSclient', () => {
+jest.unstable_mockModule('@/lib/utils/LRSclient', () => {
   const client = {
     getStatementByQuery: jest.fn(),
     getMoreStatements: jest.fn(),
@@ -39,9 +37,27 @@ jest.mock('@/lib/utils/LRSclient', () => {
   };
 });
 
-const mockIsEnabled = lrsclient.isEnabled as jest.Mock;
-const mockGetLRSClient = lrsclient.getLRSClient as jest.Mock;
-const mockSendStatements = lrsclient.sendStatements as jest.Mock;
+let lrsclient: typeof import('@/lib/utils/LRSclient')['lrsclient'];
+let getStatements: typeof import('@/services/admin/adminLRS.service')['getStatements'];
+let getMoreStatements: typeof import('@/services/admin/adminLRS.service')['getMoreStatements'];
+let sendStatements: typeof import('@/services/admin/adminLRS.service')['sendStatements'];
+
+let mockIsEnabled: jest.Mock;
+let mockGetLRSClient: jest.Mock;
+let mockSendStatements: jest.Mock;
+
+beforeAll(async () => {
+  const lrsModule = await import('@/lib/utils/LRSclient');
+  lrsclient = lrsModule.lrsclient as unknown as typeof lrsclient;
+  mockIsEnabled = lrsclient.isEnabled as jest.Mock;
+  mockGetLRSClient = lrsclient.getLRSClient as jest.Mock;
+  mockSendStatements = lrsclient.sendStatements as jest.Mock;
+
+  const service = await import('@/services/admin/adminLRS.service');
+  getStatements = service.getStatements;
+  getMoreStatements = service.getMoreStatements;
+  sendStatements = service.sendStatements;
+});
 
 async function getMockClient(): Promise<{ getStatementByQuery: jest.Mock; getMoreStatements: jest.Mock }> {
   return (await lrsclient.getLRSClient()) as unknown as { getStatementByQuery: jest.Mock; getMoreStatements: jest.Mock };

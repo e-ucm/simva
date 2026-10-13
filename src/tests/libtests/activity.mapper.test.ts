@@ -1,14 +1,12 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { Activity } from '@/lib/mappers/activities/Activity';
-import { db } from '@/lib/db';
+import { beforeEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 
 // The activity mapper chain reaches the LRS client, which loads two ESM only
 // dependencies that Jest cannot parse, so they are stubbed here
-jest.mock('uuid', () => ({
+jest.unstable_mockModule('uuid', () => ({
   v4: () => '00000000-0000-4000-8000-000000000000'
 }));
 
-jest.mock('bloom-filters', () => {
+jest.unstable_mockModule('bloom-filters', () => {
   class ScalableBloomFilter {
     static fromJSON() {
       return new ScalableBloomFilter();
@@ -21,10 +19,10 @@ jest.mock('bloom-filters', () => {
       return '';
     }
   }
-  return { ScalableBloomFilter };
+  return { ScalableBloomFilter, default: { ScalableBloomFilter } };
 });
 
-jest.mock('@/lib/db', () => ({
+jest.unstable_mockModule('@/lib/db', () => ({
   db: {
     Tables: {
       GamePlayActivities: { findAll: jest.fn() },
@@ -35,7 +33,7 @@ jest.mock('@/lib/db', () => ({
   }
 }));
 
-const mockedDb = db as unknown as {
+type MockedDb = {
   Tables: {
     GamePlayActivities: { findAll: jest.Mock };
     LimesurveyActivities: { findAll: jest.Mock };
@@ -43,6 +41,15 @@ const mockedDb = db as unknown as {
     Activities: { findAll: jest.Mock; create: jest.Mock };
   };
 };
+
+let Activity: typeof import('@/lib/mappers/activities/Activity')['Activity'];
+let mockedDb: MockedDb;
+
+beforeAll(async () => {
+  const activityModule = await import('@/lib/mappers/activities/Activity');
+  Activity = activityModule.Activity;
+  mockedDb = (await import('@/lib/db')).db as unknown as MockedDb;
+});
 
 /**
  * Builds a fake `Activities` row exposing the attributes as own properties plus

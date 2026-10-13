@@ -1,15 +1,25 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { getAllUsers, getUserById, getUserByUsername } from '@/services/users/user.service';
-import { User } from '@/lib/mappers/Users/User';
+import { beforeEach, beforeAll, describe, expect, it, jest } from '@jest/globals';
 
-jest.mock('@/lib/mappers/Users/User', () => ({
+jest.unstable_mockModule('@/lib/mappers/Users/User', () => ({
   User: {
     getFromDbData: jest.fn(),
     getAllFromDbData: jest.fn()
   }
 }));
 
-const mockedUser = User as jest.Mocked<typeof User>;
+let mockedUser: jest.Mocked<typeof import('@/lib/mappers/Users/User')['User']>;
+let getAllUsers: typeof import('@/services/users/user.service')['getAllUsers'];
+let getUserById: typeof import('@/services/users/user.service')['getUserById'];
+let getUserByUsername: typeof import('@/services/users/user.service')['getUserByUsername'];
+
+beforeAll(async () => {
+  const userModule = await import('@/lib/mappers/Users/User');
+  mockedUser = userModule.User as jest.Mocked<typeof userModule.User>;
+  const service = await import('@/services/users/user.service');
+  getAllUsers = service.getAllUsers;
+  getUserById = service.getUserById;
+  getUserByUsername = service.getUserByUsername;
+});
 
 describe('User Service', () => {
   beforeEach(() => {

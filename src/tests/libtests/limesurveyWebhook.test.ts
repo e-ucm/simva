@@ -1,9 +1,6 @@
-import { limesurveyWebhookHandler } from '@/lib/utils/limesurveyWebhook';
-import { db } from '@/lib/db';
-import KafkaClient from '@/lib/utils/kafkaclient';
-import { User } from '@/lib/mappers/Users/User';
+import { jest, beforeAll, describe, expect, it } from '@jest/globals';
 
-jest.mock('@/lib/db', () => ({
+jest.unstable_mockModule('@/lib/db', () => ({
   db: {
     Functions: {
       runViewQuery: jest.fn(),
@@ -24,24 +21,35 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
-jest.mock('@/lib/mappers/activities/LimesurveyActivity', () => ({
+jest.unstable_mockModule('@/lib/mappers/activities/LimesurveyActivity', () => ({
   LimesurveyActivity: {
     getType: jest.fn(() => 'limesurvey'),
   },
 }));
 
-jest.mock('@/lib/utils/kafkaclient', () => {
-  return jest.fn().mockImplementation(() => ({
+jest.unstable_mockModule('@/lib/utils/kafkaclient', () => {
+  const MockKafkaClient = jest.fn().mockImplementation(() => ({
     connectToProducer: jest.fn(),
     sendMessages: jest.fn(),
   }));
+  return { default: MockKafkaClient };
 });
 
-jest.mock('@/lib/mappers/Users/User', () => ({
+jest.unstable_mockModule('@/lib/mappers/Users/User', () => ({
   User: {
     getFromDbData: jest.fn(),
   },
 }));
+
+let limesurveyWebhookHandler: typeof import('@/lib/utils/limesurveyWebhook')['limesurveyWebhookHandler'];
+let db: any;
+let User: jest.Mocked<typeof import('@/lib/mappers/Users/User')['User']>;
+
+beforeAll(async () => {
+  db = (await import('@/lib/db')).db;
+  User = (await import('@/lib/mappers/Users/User')).User as jest.Mocked<typeof import('@/lib/mappers/Users/User')['User']>;
+  limesurveyWebhookHandler = (await import('@/lib/utils/limesurveyWebhook')).limesurveyWebhookHandler;
+});
 
 describe('limesurveyWebhookHandler', () => {
   beforeEach(() => {
