@@ -28,7 +28,6 @@ FROM deps AS build
 
 COPY --chown=node:node ./config ./config
 COPY --chown=node:node ./src ./src
-COPY --chown=node:node ./public ./public
 COPY --chown=node:node ./tsconfig.json ./
 COPY --chown=node:node ./api.yaml ./
 # Build TypeScript to dist
@@ -40,7 +39,6 @@ WORKDIR /app
 
 COPY --chown=node:node --from=build /app/dist ./dist
 COPY --chown=node:node --from=deps /app/node_modules ./node_modules
-COPY --chown=node:node --from=build /app/public ./public
 COPY --chown=node:node --from=build /app/api.yaml ./
 
 USER node
