@@ -86,7 +86,8 @@ export async function pollToken(req: Request, res: Response, next: NextFunction)
           // Relay that error payload back to the caller with the same status.
           const status = e?.response?.status || 400;
           const data = e?.response?.data || { error: 'invalid_request', error_description: e?.message || 'Failed to poll token' };
-          return res.status(status).send(data);
+          res.status(status).send(data);
+          return;
         }
         res.status(200).send(result);
     }

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The lint script is `tsc --noEmit`: the API ships as compiled JavaScript,
+      # so a type error is a broken release.
+      - name: Lint (type-check)
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+  docker:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build the production stage so a broken Dockerfile fails the pipeline,
+      # without pushing anywhere. Publishing happens on tags (see docker-publish.yml).
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: prod
+          push: false
+          tags: simva-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

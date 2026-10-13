@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { AuthentificationError, BadRequestError, NotFoundError, NotImplementedError } from "@/lib/errors/appErrors";
 import { logger } from "@/lib/logger";
 import { minioClient } from "@/lib/utils/minioclient";
-import { JSScormTracker } from "js-tracker";
 import { ActivityCompletion } from "../ActivityCompletion/ActivityCompletion";
 import { ActivityMappingResult } from "../ActivityCompletion/ActivityMappingResult";
 import { lrsclient } from "@/lib/utils/LRSclient";
@@ -718,7 +717,8 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set initialized status for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when initialized status is set
 	 */
-	async setInitialized(initialized: boolean, initialized_date_iso_string: string, participant_id: number): Promise<ActivityCompletion>{
+	async setInitialized(initialized: boolean, initialized_date: Date | string, participant_id: number): Promise<ActivityCompletion>{
+		const initialized_date_iso_string = initialized_date instanceof Date ? initialized_date.toISOString() : initialized_date;
 		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_initialized");
 		logger.debug({data}, `Current initialized data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		await data.update({ activity_initialized: initialized, activity_initialization_date: new Date(initialized_date_iso_string), activity_registration_id: uuidv4() });
@@ -771,7 +771,8 @@ export class Activity {
 	 * @param {number} participant_id - Participant ID to set progress for
 	 * @returns {Promise<ActivityCompletion>} Promise that resolves when progress is set
 	 */
-	async setProgress(progress: number, progress_date_iso_string: string, participant_id: number): Promise<ActivityCompletion>{
+	async setProgress(progress: number, progress_date: Date | string, participant_id: number): Promise<ActivityCompletion>{
+		const progress_date_iso_string = progress_date instanceof Date ? progress_date.toISOString() : progress_date;
 		let data = await this.getCurrentCompletionDataForParticipant(participant_id, "activity_progress");
 		logger.debug({data}, `Current progress data for participant ID ${participant_id} in activity ID ${this.activity_id}`);
 		await data.update({ activity_progress: progress });
@@ -931,7 +932,7 @@ export class Activity {
 			logger.info({isTestUrl}, `Determined isTestUrl for activity ID ${this.activity_id} as ${isTestUrl}`);
 			const user_name = this.allocated_username ?? this.current_user_username ?? "unknown";
 			const user_id = this.allocated_user_id ?? this.current_user_id ?? -1;
-			await lrsclient.initJSScormTracker();
+			await lrsclient.initXasuScormTracker();
 			lrsclient.jsScormTracker.trackerSettings.actor_name = user_name;
 			lrsclient.jsScormTracker.trackerSettings.platform = config.externalUrl;
 			if(user_id !== -1) {

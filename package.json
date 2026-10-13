@@ -7,7 +7,7 @@
     "dev": "npm run rebuild-sqlite && tsx watch src/server.ts",
     "build": "tsc",
     "start": "npm run rebuild-sqlite && node dist/server.js",
-    "lint": "eslint",
+    "lint": "tsc --noEmit",
     "updateQueryDocs": "npx tsx updateQueryDocs.ts",
     "rebuild-sqlite": "npm rebuild sqlite3",
     "validate-openapi": "npx --yes @redocly/cli lint api.yaml",

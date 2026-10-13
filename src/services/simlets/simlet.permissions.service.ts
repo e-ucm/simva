@@ -60,7 +60,7 @@ export async function getSimletPermissions(simletId: number, is_admin: boolean, 
  * }, 456);
  * ```
  */
-export async function createSimletPermissions(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<UserPermission> {
+export async function createSimletPermissions(simletId: number, is_admin: boolean, body: any, current_user_id?: number): Promise<SingleUserPermission> {
   let simlet = await Simlet.getFromDbData(simletId, is_admin, current_user_id);
   return await simlet.createPermissions(body);
 }

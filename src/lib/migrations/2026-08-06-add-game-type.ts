@@ -23,14 +23,8 @@ export async function up({ context }: { context: QueryInterface }) {
 export async function down({ context }: { context: QueryInterface }) {
   const t: Transaction = await context.sequelize.transaction();
   try {
-    await context.removeColumn('GamePlay_Activities', 'game_tracker_technology', {
-        type: DataTypes.STRING,
-        allowNull: true,
-    }, { transaction : t });
-    await context.removeColumn('GamePlay_Activities', 'game_technology', {
-        type: DataTypes.STRING,
-        allowNull: true,
-    }, { transaction : t });
+    await context.removeColumn('GamePlay_Activities', 'game_tracker_technology', { transaction : t });
+    await context.removeColumn('GamePlay_Activities', 'game_technology', { transaction : t });
     await t.commit();
   } catch (error) {
     await t.rollback();

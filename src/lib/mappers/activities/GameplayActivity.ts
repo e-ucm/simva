@@ -41,9 +41,9 @@ export class GamePlayActivity extends Activity {
 	 */
 	game_url: string;
 
-	game_tracker_technology: string;
+	game_tracker_technology: string | null;
 
-	game_technology: string;
+	game_technology: string | null;
 	
 	/**
 	 * Creates a new GamePlayActivity instance

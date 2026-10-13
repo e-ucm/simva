@@ -77,10 +77,7 @@ export async function down({ context }: { context: QueryInterface }) {
   const t: Transaction = await context.sequelize.transaction();
   try {
     for (const table of tables) {
-      await context.removeColumn(table, 'deletedAt', {
-        type: DataTypes.DATE,
-        allowNull: true,
-      }, { transaction : t });
+      await context.removeColumn(table, 'deletedAt', { transaction : t });
     }
     await t.commit();
   } catch (error) {

@@ -215,7 +215,7 @@ export class SimletGroup {
             }
         } else {
             if(createIfNotExist) {
-                groupData = await SimletGroup.createInDb(simlet_id,
+                return await SimletGroup.createInDb(simlet_id,
                     {group_name : groupName, group_sandbox: true, group_use_new_generation: false },
                     current_user_id
                 );
