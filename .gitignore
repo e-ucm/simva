@@ -10,7 +10,8 @@ node_modules
 !.yarn/releases
 !.yarn/versions
 
-/docs
+# TypeDoc output (npm run class-docs); the hand written docs/ tree is tracked
+/docs/typedoc
 
 # testing
 /coverage

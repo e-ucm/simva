@@ -132,9 +132,15 @@ simva/
 ├── tsconfig.json                 # TypeScript configuration
 ├── tsconfig.jest.json            # Jest-specific TypeScript configuration
 ├── jest.config.cjs               # Jest testing configuration
-├── updateOpenAPI.ts              # OpenAPI specification generator
+├── updateOpenAPI.ts              # OpenAPI specification generator (api.yaml -> openapi.json)
 ├── updateQueryDocs.ts            # Query documentation generator
+├── updateDocs.ts                 # Diataxis reference generator (api.yaml + src/routes -> docs/reference/api)
 ├── QUERY_DOCS.md                 # Auto-generated query documentation
+├── docs/                         # Diataxis documentation set (see docs/index.md)
+│   ├── tutorials/                # Learning-oriented walkthroughs
+│   ├── how-to/                   # Task-oriented recipes
+│   ├── reference/                # Lookup material; reference/api/ is generated
+│   └── explanation/              # Why the system looks like this, plus decisions/ (ADRs)
 └── README.md                     # Project documentation
 ```
 

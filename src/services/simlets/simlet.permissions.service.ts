@@ -47,11 +47,11 @@ export async function getSimletPermissions(simletId: number, is_admin: boolean, 
  * @param {boolean} is_admin - Whether the user has admin privileges
  * @param {Object} body - Permission data containing user ID and permission level
  * @param {number} [current_user_id] - The ID of the user creating the permissions
- * @returns {Promise<UserPermission>} The newly created permission object
+ * @returns {Promise<SingleUserPermission>} The newly created permission object
  * @throws {NotFoundError} When simlet is not found
  * @throws {PermissionError} When user lacks admin permissions
  * @throws {ValidationError} When permission data is invalid
- * 
+ *
  * @example
  * ```typescript
  * const permission = await createSimletPermissions(123, false, {

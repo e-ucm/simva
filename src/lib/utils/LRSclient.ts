@@ -265,7 +265,7 @@ export class LRSClient {
 	 * IRIs are kept for those relations while parent, which only accepts Activity Objects, and any
 	 * value that cannot be an activity are discarded.
 	 *
-	 * js-tracker normalizes this too, but simva pins a js-tracker release that may predate that fix,
+	 * xasu-js normalizes this too, but simva pins a xasu-js release that may predate that fix,
 	 * so the statement is normalized here as well.
 	 *
 	 * @method normalizeContextActivities
@@ -363,7 +363,7 @@ export class LRSClient {
 			return updatedStatement;
 		}
 		if(statement.context) {
-			// js-tracker always builds a context, but it may carry no contextActivities at all, in
+			// xasu-js always builds a context, but it may carry no contextActivities at all, in
 			// which case they have to be created before any relation can be added to them
 			const incoming = statement.context.contextActivities;
 			statement.context.contextActivities = this.normalizeContextActivities(incoming);
