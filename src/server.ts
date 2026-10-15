@@ -87,7 +87,9 @@ import { KeycloakKeyManager } from '@/lib/keycloakKeyManager';
 async function start() {
   KeycloakKeyManager.clearCache(); // Clear cache to handle potential key rotation issuesKeycloakKeyManager.clearCache(); // Clear cache to handle potential key rotation issues
   await db.sequelize.authenticate();
-  await runMigrations();
+  // Create the base tables before running the migrations: the migrations alter
+  // existing tables (and some read from them), so on a fresh database they must
+  // run against a schema that already exists.
   try {
     await db.Functions.runSqlFile(config.db.table_file_path);
     logger.debug('Database tables initialized successfully');
@@ -95,6 +97,9 @@ async function start() {
     logger.error({err}, 'Error initializing database tables:', (err as Error).message);
     throw err;
   }
+  // Apply migrations (may add columns/data) before (re)creating the views, so
+  // the views can reference the final schema.
+  await runMigrations();
   try {
     await db.Functions.runSqlFile(config.db.view_complete_path);
     logger.debug('Database views initialized successfully');
