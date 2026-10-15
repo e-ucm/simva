@@ -15,6 +15,7 @@ env:
 jobs:
   services:
     name: Build and health-check simva-api
+    needs: verify
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,7 +30,6 @@ jobs:
 
   verify:
     name: Verify tag and tests
-    needs: services
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -63,7 +63,7 @@ jobs:
 
   publish:
     name: Build and push image
-    needs: verify
+    needs: services
     runs-on: ubuntu-latest
     permissions:
       contents: read

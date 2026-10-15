@@ -12,6 +12,7 @@ permissions:
 jobs:
   services:
     name: Build and health-check simva-api
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +25,6 @@ jobs:
 
   verify:
     name: Lint and test
-    needs: services
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
