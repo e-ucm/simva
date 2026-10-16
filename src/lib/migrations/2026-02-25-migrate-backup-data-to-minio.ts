@@ -5,8 +5,17 @@ import { logger } from '@/lib/logger';
 import fs from 'fs';
 import path from 'path';
 import { config } from '@/lib/config';
+import { hasColumn } from '../migrationHelpers';
 
 export async function up({ context }: { context: QueryInterface }) {
+    // The mongo_id columns may have already been dropped by a later migration
+    // (2026-02-26-remove-mongoid-colons). In that case there is nothing left to
+    // migrate, so skip instead of failing on an unknown column.
+    if (!(await hasColumn(context.sequelize, 'Activities', 'mongo_id'))) {
+      logger.warn('Column Activities.mongo_id does not exist, skipping backup migration');
+      return;
+    }
+
     // Get current values
     const [activityResults] = await context.sequelize.query(
       `SELECT activity_id, mongo_id FROM Activities WHERE mongo_id IS NOT NULL;`
@@ -15,9 +24,13 @@ export async function up({ context }: { context: QueryInterface }) {
 
     const mongoToActivityId = new Map(activityResults.map((row: any) => [row.mongo_id, row.activity_id]));
 
-    const [userResults] = await context.sequelize.query(
-      `SELECT user_id, username FROM Users WHERE mongo_id IS NOT NULL;`
-    );
+    let userResults: any[] = [];
+    if (await hasColumn(context.sequelize, 'Users', 'mongo_id')) {
+      const [rows] = await context.sequelize.query(
+        `SELECT user_id, username FROM Users WHERE mongo_id IS NOT NULL;`
+      );
+      userResults = rows as any[];
+    }
     logger.info({ results: userResults, count: userResults.length }, 'Found users with mongo_id');
 
     const usernameToUserId = new Map(userResults.map((row: any) => [row.username, row.user_id]));

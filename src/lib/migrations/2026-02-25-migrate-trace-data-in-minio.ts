@@ -3,8 +3,17 @@ import { QueryInterface, DataTypes } from 'sequelize';
 import { minioClient } from '@/lib/utils/minioclient';
 import { logger } from '@/lib/logger';
 import { config } from '@/lib/config';
+import { hasColumn } from '../migrationHelpers';
 
 export async function up({ context }: { context: QueryInterface }) {
+    // The mongo_id columns may have already been dropped by a later migration
+    // (2026-02-26-remove-mongoid-colons). In that case there is nothing left to
+    // migrate, so skip instead of failing on an unknown column.
+    if (!(await hasColumn(context.sequelize, 'Activities', 'mongo_id'))) {
+      logger.warn('Column Activities.mongo_id does not exist, skipping trace data migration');
+      return;
+    }
+
     // Get current values
     const [results] = await context.sequelize.query(
       `SELECT activity_id, mongo_id FROM Activities WHERE mongo_id IS NOT NULL;`

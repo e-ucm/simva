@@ -1,16 +1,21 @@
 import { QueryInterface, QueryTypes } from 'sequelize';
 import { logger } from '../logger';
+import { tableExists } from '../migrationHelpers';
 
 type ForeignKeyInfo = {
   table?: string;
 };
 
-type TableExistsRow = {
-  name: string;
-};
-
 export async function up({ context }: { context: QueryInterface }) {
   const sequelize = context.sequelize;
+
+  // Recover from a previously interrupted run: if the table rebuild was
+  // interrupted after renaming Sessions_tags but before recreating it, restore
+  // the original table so the migration can be retried safely.
+  if (!(await tableExists(sequelize, 'Sessions_tags')) && (await tableExists(sequelize, 'Sessions_tags_old'))) {
+    logger.warn('Found leftover Sessions_tags_old without Sessions_tags; restoring previous table');
+    await sequelize.query('ALTER TABLE Sessions_tags_old RENAME TO Sessions_tags;');
+  }
 
   const fkRowsRaw = await sequelize.query("PRAGMA foreign_key_list('Sessions_tags');", {
     type: QueryTypes.SELECT,
@@ -20,18 +25,15 @@ export async function up({ context }: { context: QueryInterface }) {
 
   if (!hasLegacyTagsListFk) {
     logger.info('Sessions_tags foreign key is already correct. Skipping migration.');
+    // Clean up any leftover temporary table from a partial run.
+    if (await tableExists(sequelize, 'Sessions_tags_old')) {
+      await sequelize.query('DROP TABLE Sessions_tags_old;');
+      logger.warn('Dropped leftover Sessions_tags_old table');
+    }
     return;
   }
 
-  const sessionTagsListTableRaw = await sequelize.query(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='Sessions_tags_list';",
-    { type: QueryTypes.SELECT }
-  );
-  const sessionTagsListTable = Array.isArray(sessionTagsListTableRaw)
-    ? (sessionTagsListTableRaw as TableExistsRow[])
-    : [];
-
-  if (sessionTagsListTable.length === 0) {
+  if (!(await tableExists(sequelize, 'Sessions_tags_list'))) {
     throw new Error('Cannot repair Sessions_tags foreign key: table Sessions_tags_list does not exist');
   }
 
@@ -39,6 +41,7 @@ export async function up({ context }: { context: QueryInterface }) {
 
   await sequelize.query('PRAGMA foreign_keys = OFF;');
   try {
+    await sequelize.query('DROP TABLE IF EXISTS Sessions_tags_old;');
     await sequelize.query('ALTER TABLE Sessions_tags RENAME TO Sessions_tags_old;');
 
     await sequelize.query(`

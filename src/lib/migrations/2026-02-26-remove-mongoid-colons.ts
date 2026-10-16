@@ -1,18 +1,6 @@
 
-import { QueryInterface, DataTypes, QueryTypes, Transaction } from 'sequelize';
-
-async function hasColumn(
-    sequelize: QueryInterface['sequelize'],
-    table: string,
-    column: string,
-    transaction?: Transaction
-): Promise<boolean> {
-    const rows = await sequelize.query(`PRAGMA table_info(\`${table}\`);`, {
-        type: QueryTypes.SELECT,
-        transaction
-    });
-    return (rows as Array<{ name: string }>).some((row) => row.name === column);
-}
+import { QueryInterface, DataTypes, Transaction } from 'sequelize';
+import { hasColumn } from '../migrationHelpers';
 
 export async function up({ context }: { context: QueryInterface }) {
     const sequelize = context.sequelize;
