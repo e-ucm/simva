@@ -64,11 +64,11 @@ export class LimesurveyActivity extends Activity {
 	 * @description Factory method that creates instance and loads additional data from database.
 	 * Handles database errors gracefully and ensures proper initialization.
 	 */
-	static async getFromDbData(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number): Promise<LimesurveyActivity> {
+static async getFromDbData(activity_id: number, allocated: boolean, is_admin: boolean, activityData: any, user_id?: number): Promise<LimesurveyActivity> {
 		const instance = new LimesurveyActivity(allocated, activityData);
 		
 		let limesurveyData = await db.Tables.LimesurveyActivities.findOne({ 
-			where: { activity_id: activity_id } 
+			where: { activity_id: activity_id }
 		});
 		let found = !!limesurveyData;
 		logger.debug(`LimesurveyActivity.getFromDbData: Found LimeSurvey data for activity_id ${activity_id}: ${found}`);
@@ -78,9 +78,9 @@ export class LimesurveyActivity extends Activity {
 			} else if(activityData.copysurvey) {
 				activityData.survey_id = await limeSurveyClient.cloneSurvey(activityData.copysurvey, activityData.activity_name || `Copy of survey ${activityData.copysurvey}`);
 			} else {
-				throw new NotFoundError("No survey data provided for new LimesurveyActivity");
+				activityData.survey_id = -1;
+				activityData.survey_language = '';
 			}
-			//TODO handle copy of survey and update survey_id in activityData before creating LimesurveyActivity entry in database
 			instance.survey_languages = await limeSurveyClient.getSurveyLanguages(activityData.survey_id);
 			limesurveyData = await db.Tables.LimesurveyActivities.create({
 				activity_id: activity_id,

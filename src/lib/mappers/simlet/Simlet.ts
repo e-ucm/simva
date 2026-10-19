@@ -661,7 +661,14 @@ export class Simlet {
     }
     
     async getPermissionsForUser(userId: number) {
-        return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
+        try {
+            return await SingleUserPermission.getFromDbData('simlet', this.simlet_id, userId, this.current_user_id, this.is_admin);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return new SingleUserPermission('simlet', this.simlet_id, { user_id: userId, username: '', permission: '' }, this.current_user_id, this.is_admin);
+            }
+            throw error;
+        }
     }
     
     async patchPermissionsForUser(userId: number, body: any) {
