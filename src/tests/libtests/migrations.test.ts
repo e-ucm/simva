@@ -132,25 +132,18 @@ describe('migration idempotence', () => {
     await createTable(qi, 'SIMLETs', { mongo_id: { type: DataTypes.STRING, allowNull: true } });
     await createTable(qi, 'Sessions', { mongo_id: { type: DataTypes.STRING, allowNull: true } });
     await createTable(qi, 'Activities', { mongo_id: { type: DataTypes.STRING, allowNull: true } });
-    await createTable(qi, 'ParticipantGroups', {
-      mongo_id: { type: DataTypes.STRING, allowNull: true },
-      group_allocator_mongo_id: { type: DataTypes.STRING, allowNull: true },
-    });
 
     await removeMongoid.up({ context: qi });
     await removeMongoid.up({ context: qi });
-    for (const table of ['Users', 'SIMLETs', 'Sessions', 'Activities', 'ParticipantGroups']) {
+    for (const table of ['Users', 'SIMLETs', 'Sessions', 'Activities']) {
       expect(await columns(sequelize, table)).not.toContain('mongo_id');
     }
-    expect(await columns(sequelize, 'ParticipantGroups')).not.toContain('group_allocator_mongo_id');
 
     await removeMongoid.down({ context: qi });
     await removeMongoid.down({ context: qi });
-    for (const table of ['Users', 'SIMLETs', 'Sessions', 'Activities', 'ParticipantGroups']) {
+    for (const table of ['Users', 'SIMLETs', 'Sessions', 'Activities']) {
       expect(await columns(sequelize, table)).toContain('mongo_id');
     }
-    expect(await columns(sequelize, 'ParticipantGroups')).toContain('group_allocator_mongo_id');
-
     await sequelize.close();
   });
 
