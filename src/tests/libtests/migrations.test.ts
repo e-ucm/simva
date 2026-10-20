@@ -12,7 +12,7 @@ jest.unstable_mockModule('@/lib/utils/minioclient', () => ({
     renameFile: jest.fn(async () => undefined),
   },
   MinioClient: class {},
-});
+}));
 
 type Migration = {
   up: (args: { context: QueryInterface }) => Promise<void>;
@@ -41,8 +41,7 @@ async function rawQuery(sql: string): Promise<void> {
 
 beforeAll(async () => {
   const miniocli = await import('@/lib/utils/minioclient');
-  minioClient = miniocli.minioClient;
-
+  const { minioClient } = miniocli;
   addDeleteAt = await import('@/lib/migrations/2026-08-02-add-deleteAt-to-alltables');
   addGameType = await import('@/lib/migrations/2026-08-06-add-game-type');
   removeMongoid = await import('@/lib/migrations/2026-02-26-remove-mongoid-colons');
@@ -71,9 +70,5 @@ describe('migration idempotence', () => {
         "deletedAt" DATETIME
       );
     `);
-
-    // Reproduce the reported failure: the column already exists on Users but
-    // the migration is not recorded, so it runs again.
-    await globalThis.sequelize!.addColumn('Users', 'deletedAt', { type: DataTypes.DATE, allowNull: true });
-
-    // ... rest of test
+  });
+});

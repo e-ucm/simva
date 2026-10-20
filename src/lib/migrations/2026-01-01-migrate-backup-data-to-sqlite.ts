@@ -1,4 +1,4 @@
-import { QueryInterface, DataTypes, Transaction } from 'sequelize';
+import { QueryInterface, DataTypes, Transaction, QueryTypes } from 'sequelize';
 import { logger } from '@/lib/logger';
 import { config } from '@/lib/config';
 import fs from 'fs';
@@ -32,7 +32,7 @@ export async function up({ context }: { context: QueryInterface }) {
   if (usersData && Array.isArray(usersData)) {
     const userCount = await context.sequelize.query(
       'SELECT COUNT(*) as count FROM "Users";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     ) as any;
 
     if (userCount[0][0].count === 0) {
@@ -49,7 +49,7 @@ export async function up({ context }: { context: QueryInterface }) {
 
       logger.info({ count: usersValues.length, usernames: usersValues.map((u: any) => u[1]) }, 'Inserting Users');
 
-      await context.queryInterface.bulkInsert('Users', usersValues, {});
+      await context.bulkInsert('Users', usersValues, {});
       logger.info('Users migration completed');
     } else {
       logger.info('Users table already has data, skipping Users migration');
@@ -65,14 +65,14 @@ export async function up({ context }: { context: QueryInterface }) {
   if (studiesData && Array.isArray(studiesData)) {
     const simletCount = await context.sequelize.query(
       'SELECT COUNT(*) as count FROM "SIMLETs";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     ) as any;
 
     if (simletCount[0][0].count === 0) {
       // Build user mapping from existing Users
       const [usersRows]: any = await context.sequelize.query(
         'SELECT user_id, username FROM "Users";',
-        { type: context.sequelize.getQueryOptions().type }
+        { type: QueryTypes.SELECT }
       );
 
       const usernameToUserId = new Map(usersRows.map((row: any) => [row.username, row.user_id]));
@@ -100,7 +100,7 @@ export async function up({ context }: { context: QueryInterface }) {
 
       logger.info({ count: simletsValues.length }, 'Inserting SIMLETs');
 
-      await context.queryInterface.bulkInsert('SIMLETs', simletsValues, {});
+      await context.bulkInsert('SIMLETs', simletsValues, {});
       logger.info('SIMLETs migration completed');
     } else {
       logger.info('SIMLETs table already has data, skipping SIMLETs migration');
@@ -116,14 +116,14 @@ export async function up({ context }: { context: QueryInterface }) {
   if (groupsData && Array.isArray(groupsData)) {
     const simletCount = await context.sequelize.query(
       'SELECT simlet_id, mongo_id FROM "SIMLETs";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     ) as any;
 
     const mongoSimletToId = new Map(simletCount.map((row: any) => [row.mongo_id, row.simlet_id]));
 
     const [usersRows]: any = await context.sequelize.query(
       'SELECT user_id, username FROM "Users";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     );
 
     const usernameToUserId = new Map(usersRows.map((row: any) => [row.username, row.user_id]));
@@ -158,7 +158,7 @@ export async function up({ context }: { context: QueryInterface }) {
     if (groupValues.length > 0) {
       logger.info({ count: groupValues.length }, 'Inserting ParticipantGroups');
 
-      await context.queryInterface.bulkInsert('ParticipantGroups', groupValues, {});
+      await context.bulkInsert('ParticipantGroups', groupValues, {});
       logger.info('ParticipantGroups migration completed');
 
       // 4. Migrate ParticipantGroups_participants
@@ -174,7 +174,7 @@ export async function up({ context }: { context: QueryInterface }) {
 
         const [groupsRows]: any = await context.sequelize.query(
           `SELECT group_id FROM "ParticipantGroups" WHERE "mongo_id" = '${groupMongoId}' AND "simlet_id" = ${simletId};`,
-          { type: context.sequelize.getQueryOptions().type }
+          { type: QueryTypes.SELECT }
         );
 
         if (groupsRows.length > 0) {
@@ -197,7 +197,7 @@ export async function up({ context }: { context: QueryInterface }) {
       if (participantValues.length > 0) {
         logger.info({ count: participantValues.length }, 'Inserting ParticipantGroups_participants');
 
-        await context.queryInterface.bulkInsert('ParticipantGroups_participants', participantValues, {});
+        await context.bulkInsert('ParticipantGroups_participants', participantValues, {});
         logger.info('ParticipantGroups_participants migration completed');
       } else {
         logger.info('No participants to insert for ParticipantGroups_participants');
@@ -217,20 +217,20 @@ export async function up({ context }: { context: QueryInterface }) {
     // Build mappings from already-migrated data
     const [sessionsRows]: any = await context.sequelize.query(
       'SELECT session_id, simlet_id FROM "Sessions";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     );
 
     const sessionIdToSimletId = new Map(sessionsRows.map((row: any) => [row.session_id, row.simlet_id]));
     const [simletsRows]: any = await context.sequelize.query(
       'SELECT simlet_id, mongo_id FROM "SIMLETs";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     );
 
     const mongoSimletToId = new Map(simletsRows.map((row: any) => [row.mongo_id, row.simlet_id]));
 
     const [sessionRows]: any = await context.sequelize.query(
       'SELECT session_id FROM "Sessions";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     );
 
     const existingSessions = new Set(sessionRows.map((row: any) => row.session_id));
@@ -296,7 +296,7 @@ export async function up({ context }: { context: QueryInterface }) {
     if (activityValues.length > 0) {
       logger.info({ count: activityValues.length }, 'Inserting Activities');
 
-      await context.queryInterface.bulkInsert('Activities', activityValues, {});
+      await context.bulkInsert('Activities', activityValues, {});
       logger.info('Activities migration completed');
     } else {
       logger.info('No activities to insert');
@@ -311,7 +311,7 @@ export async function up({ context }: { context: QueryInterface }) {
     // Build mapping from Activities to activity_ids
     const [activitiesRows]: any = await context.sequelize.query(
       'SELECT activity_id, mongo_id FROM "Activities";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     );
 
     const mongoActivityToId = new Map(activitiesRows.map((row: any) => [row.mongo_id, row.activity_id]));
@@ -319,7 +319,7 @@ export async function up({ context }: { context: QueryInterface }) {
     // Build mapping from Users to user_ids
     const [usersRows]: any = await context.sequelize.query(
       'SELECT user_id, username FROM "Users";',
-      { type: context.sequelize.getQueryOptions().type }
+      { type: QueryTypes.SELECT }
     );
 
     const usernameToUserId = new Map(usersRows.map((row: any) => [row.username, row.user_id]));
@@ -338,11 +338,12 @@ export async function up({ context }: { context: QueryInterface }) {
           const participantUserId = usernameToUserId.get(participantMongoId);
           if (!participantUserId) continue;
 
-          const completed = participantValue.get('completion', 'false') === 'true';
-          const actualProgress = participantValue.get('progress', 0);
+          const pv = participantValue as any;
+          const completed = pv.get('completion', 'false') === 'true';
+          const actualProgress = pv.get('progress', 0);
           const progress = actualProgress === 0 && !completed ? null : actualProgress;
           const initialized = progress !== null;
-          const suspended = participantValue.get('suspended', 'false') === 'true';
+          const suspended = pv.get('suspended', 'false') === 'true';
 
           completionValues.push([activityId, participantUserId, initialized, progress, suspended, completed]);
         }
@@ -352,7 +353,7 @@ export async function up({ context }: { context: QueryInterface }) {
     if (completionValues.length > 0) {
       logger.info({ count: completionValues.length }, 'Inserting Activities_completion');
 
-      await context.queryInterface.bulkInsert('Activities_completion', completionValues, {});
+      await context.bulkInsert('Activities_completion', completionValues, {});
       logger.info('Activities_completion migration completed');
     } else {
       logger.info('No Activities_completion to insert');
