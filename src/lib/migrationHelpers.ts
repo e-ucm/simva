@@ -13,6 +13,9 @@
  * @module migrationHelpers
  */
 
+import fs from 'fs';
+import path from 'path';
+import { RunnableMigration, Umzug } from 'umzug';
 import { QueryInterface, QueryTypes, Transaction } from 'sequelize';
 
 /**
@@ -53,4 +56,102 @@ export async function tableExists(
     { type: QueryTypes.SELECT, replacements: { table } }
   )) as Array<{ name: string }>;
   return rows.length > 0;
+}
+
+/**
+ * Runs SQLite table rebuilds on one connection with foreign-key actions off.
+ * Callers must not create a managed Sequelize transaction inside this callback.
+ */
+export async function withSqliteForeignKeysDisabled<T>(
+  sequelize: QueryInterface['sequelize'],
+  callback: () => Promise<T>
+): Promise<T> {
+  let transactionStarted = false;
+
+  try {
+    await sequelize.query('PRAGMA foreign_keys = OFF');
+    const foreignKeyRows = (await sequelize.query('PRAGMA foreign_keys', {
+      type: QueryTypes.SELECT,
+    })) as Array<{ foreign_keys: number }>;
+
+    if (foreignKeyRows[0]?.foreign_keys !== 0) {
+      throw new Error('Could not disable SQLite foreign-key enforcement before rebuilding tables');
+    }
+
+    await sequelize.query('BEGIN');
+    transactionStarted = true;
+    await sequelize.query('PRAGMA defer_foreign_keys = ON');
+
+    const result = await callback();
+    await sequelize.query('COMMIT');
+    transactionStarted = false;
+    return result;
+  } catch (error) {
+    if (transactionStarted) {
+      await sequelize.query('ROLLBACK');
+    }
+    throw error;
+  } finally {
+    await sequelize.query('PRAGMA foreign_keys = ON');
+  }
+}
+
+/**
+ * Selects one runnable file for each extension-independent migration name.
+ * Sorted names make `.js` win over `.ts` when both files are deployed.
+ */
+export function selectMigrationFiles(files: readonly string[]): Array<{ name: string; file: string }> {
+  const migrations = new Map<string, string>();
+
+  for (const file of [...files].sort()) {
+    if (file.endsWith('.d.ts')) {
+      continue;
+    }
+
+    const extension = path.extname(file);
+    if (extension !== '.js' && extension !== '.ts') {
+      continue;
+    }
+
+    const name = file.slice(0, -extension.length);
+    if (!migrations.has(name)) {
+      migrations.set(name, file);
+    }
+  }
+
+  return [...migrations].map(([name, file]) => ({ name, file }));
+}
+
+/**
+ * Resolves migrations with extension-independent names so compiled files do
+ * not re-run after their TypeScript sources have already run.
+ */
+export async function resolveMigrationsFromFolder<T extends object>(
+  folder: string,
+  context: T
+): Promise<RunnableMigration<T>[]> {
+  return selectMigrationFiles(fs.readdirSync(folder)).map(({ name, file }) =>
+    Umzug.defaultResolver({ name, path: path.join(folder, file), context }) as RunnableMigration<T>
+  );
+}
+
+/**
+ * Collapses legacy Umzug records that used a complete filename, including
+ * duplicate `.ts` and `.js` records for the same logical migration.
+ */
+export async function normalizeSequelizeMeta(sequelize: QueryInterface['sequelize']): Promise<void> {
+  if (!(await tableExists(sequelize, 'SequelizeMeta'))) {
+    return;
+  }
+
+  await sequelize.query(`
+    INSERT OR IGNORE INTO "SequelizeMeta" ("name")
+    SELECT DISTINCT substr("name", 1, length("name") - 3)
+    FROM "SequelizeMeta"
+    WHERE "name" LIKE '%.ts' OR "name" LIKE '%.js';
+  `);
+  await sequelize.query(`
+    DELETE FROM "SequelizeMeta"
+    WHERE "name" LIKE '%.ts' OR "name" LIKE '%.js';
+  `);
 }

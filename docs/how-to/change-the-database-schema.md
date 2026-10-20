@@ -31,7 +31,9 @@ export async function down({ context }: MigrationContext): Promise<void> {
 }
 ```
 
-The filename prefix is the ordering. Keep it `YYYY-MM-DD-description.ts`.
+The filename prefix is the ordering. Keep it `YYYY-MM-DD-description.ts`. Umzug stores the name
+without `.ts` or `.js`, so compiling a migration for production does not make it pending again.
+If both files are present, SIMVA runs the `.js` version.
 
 ## 2. Adding a column
 
@@ -54,7 +56,34 @@ Then update the Sequelize model **in the same commit**. Model and schema driftin
 `mongo_id` stayed declared in five models for five and a half months after the columns were
 dropped.
 
-## 3. Adding `deletedAt`
+## 3. Rebuilding a SQLite table
+
+`QueryInterface.removeColumn`, `changeColumn`, and foreign-key repairs rebuild SQLite tables by
+dropping and recreating them. Do not use a managed `sequelize.transaction()` around such work.
+For file-backed SQLite, Sequelize opens that transaction on another connection, so
+`PRAGMA foreign_keys = OFF` on the default connection has no effect.
+
+Use `withSqliteForeignKeysDisabled()` from `src/lib/migrationHelpers.ts` instead:
+
+```ts
+import { hasColumn, withSqliteForeignKeysDisabled } from '@/lib/migrationHelpers';
+
+export async function up({ context }: MigrationContext): Promise<void> {
+  await withSqliteForeignKeysDisabled(context.sequelize, async () => {
+    if (await hasColumn(context.sequelize, 'Activities', 'obsolete_column')) {
+      await context.removeColumn('Activities', 'obsolete_column');
+    }
+  });
+}
+```
+
+The helper disables foreign-key enforcement, verifies it, performs a manual transaction on that
+same connection, and restores enforcement afterward. This prevents SQLite's implicit delete on
+`DROP TABLE` from running `ON DELETE CASCADE` actions against child rows. Add a regression test
+using a **file-backed** SQLite database with populated child tables; an in-memory database shares
+one connection and does not reproduce the production failure.
+
+## 4. Adding `deletedAt`
 
 Every table gets it, with `paranoid: true` on the model — **except**:
 
@@ -65,7 +94,7 @@ Every table gets it, with `paranoid: true` on the model — **except**:
 See [ADR-0010](../explanation/decisions/0010-soft-delete-and-the-admin-bypass.md) before
 adding it anywhere.
 
-## 4. Changing a view
+## 5. Changing a view
 
 Views are in `02-views.sql` and are also read through query templates in
 `src/lib/views/**/*.queries.ts`. **Both must change.** The templates carry the SQL for
@@ -78,7 +107,7 @@ npm run updateQueryDocs      # QUERY_DOCS.md describes every query template
 npm test
 ```
 
-## 5. Verify
+## 6. Verify
 
 ```bash
 npm run dev                            # schema + views + migrations applied on boot

@@ -1,6 +1,13 @@
 import { jest, describe, it, expect, beforeAll, beforeEach } from '@jest/globals';
 import { Sequelize, DataTypes, QueryInterface, QueryTypes } from 'sequelize';
-import { tableExists } from '@/lib/migrationHelpers';
+import fs from 'fs/promises';
+import os from 'os';
+import path from 'path';
+import {
+  normalizeSequelizeMeta,
+  selectMigrationFiles,
+  tableExists,
+} from '@/lib/migrationHelpers';
 
 // The data migrations reach out to MinIO; stub the client so the tests stay
 // offline. The migration guards under test must bail out before using it.
@@ -26,6 +33,7 @@ let backupData: Migration;
 let traceData: Migration;
 let limeSurvey: Migration;
 let sessionsTags: Migration;
+let repairForeignKeys: typeof import('@/lib/migrations/2026-10-20-repair-foreign-key-actions');
 
 let minioClient: {
   fileExists: jest.Mock;
@@ -43,6 +51,7 @@ beforeAll(async () => {
   traceData = await import('@/lib/migrations/2026-02-25-migrate-trace-data-in-minio');
   limeSurvey = await import('@/lib/migrations/2026-03-16-migrate-limesurvey-endpoints');
   sessionsTags = await import('@/lib/migrations/2026-05-01-fix-sessions-tags-foreign-key');
+  repairForeignKeys = await import('@/lib/migrations/2026-10-20-repair-foreign-key-actions');
 });
 
 beforeEach(() => {
@@ -147,6 +156,166 @@ describe('migration idempotence', () => {
     await sequelize.close();
   });
 
+  it('2026-02-26 remove mongo_id preserves child rows on a file-backed database', async () => {
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'simva-migration-'));
+    const databasePath = path.join(directory, 'migration.sqlite');
+    const sequelize = new Sequelize({ dialect: 'sqlite', storage: databasePath, logging: false });
+    const qi = sequelize.getQueryInterface();
+
+    try {
+      await sequelize.query('CREATE TABLE Users (user_id INTEGER PRIMARY KEY, mongo_id VARCHAR);');
+      await sequelize.query(`
+        CREATE TABLE SIMLETs (
+          simlet_id INTEGER PRIMARY KEY,
+          mongo_id VARCHAR,
+          simlet_supervisor_id INTEGER REFERENCES Users(user_id) ON DELETE SET NULL
+        );
+      `);
+      await sequelize.query(`
+        CREATE TABLE Sessions (
+          session_id INTEGER PRIMARY KEY,
+          mongo_id VARCHAR,
+          simlet_id INTEGER REFERENCES SIMLETs(simlet_id) ON DELETE CASCADE
+        );
+      `);
+      await sequelize.query(`
+        CREATE TABLE Activities (
+          activity_id INTEGER PRIMARY KEY,
+          mongo_id VARCHAR,
+          session_id INTEGER REFERENCES Sessions(session_id) ON DELETE CASCADE
+        );
+      `);
+      await sequelize.query(`
+        CREATE TABLE Activities_completion (
+          activity_id INTEGER REFERENCES Activities(activity_id) ON DELETE CASCADE
+        );
+      `);
+      await sequelize.query(`
+        CREATE TABLE GamePlay_Activities (
+          activity_id INTEGER REFERENCES Activities(activity_id) ON DELETE CASCADE
+        );
+      `);
+      await sequelize.query(`
+        CREATE TABLE Sessions_tags_list (
+          tag_id INTEGER PRIMARY KEY,
+          user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE
+        );
+      `);
+      await sequelize.query(`
+        CREATE TABLE Sessions_tags (
+          session_id INTEGER REFERENCES Sessions(session_id) ON DELETE CASCADE,
+          tag_id INTEGER REFERENCES Sessions_tags_list(tag_id) ON DELETE CASCADE
+        );
+      `);
+
+      await sequelize.query('INSERT INTO Users VALUES (1, \'user-mongo\');');
+      await sequelize.query('INSERT INTO SIMLETs VALUES (1, \'simlet-mongo\', 1);');
+      await sequelize.query('INSERT INTO Sessions VALUES (1, \'session-mongo\', 1);');
+      await sequelize.query('INSERT INTO Activities VALUES (1, \'activity-mongo\', 1);');
+      await sequelize.query('INSERT INTO Activities_completion VALUES (1);');
+      await sequelize.query('INSERT INTO GamePlay_Activities VALUES (1);');
+      await sequelize.query('INSERT INTO Sessions_tags_list VALUES (1, 1);');
+      await sequelize.query('INSERT INTO Sessions_tags VALUES (1, 1);');
+
+      await removeMongoid.up({ context: qi });
+      await removeMongoid.up({ context: qi });
+
+      for (const table of ['Activities_completion', 'GamePlay_Activities', 'Sessions_tags', 'Sessions_tags_list']) {
+        const rows = (await sequelize.query(`SELECT count(*) AS count FROM ${table};`, {
+          type: QueryTypes.SELECT,
+        })) as Array<{ count: number }>;
+        expect(rows[0].count).toBe(1);
+      }
+      for (const table of ['Users', 'SIMLETs', 'Sessions', 'Activities']) {
+        expect(await columns(sequelize, table)).not.toContain('mongo_id');
+      }
+
+      const foreignKeys = (await sequelize.query('PRAGMA foreign_keys', {
+        type: QueryTypes.SELECT,
+      })) as Array<{ foreign_keys: number }>;
+      expect(foreignKeys[0].foreign_keys).toBe(1);
+    } finally {
+      await sequelize.close();
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('2026-10-20 repairs foreign-key actions without losing rows', async () => {
+    const sequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
+    const qi = sequelize.getQueryInterface();
+
+    await sequelize.query('CREATE TABLE Users (user_id INTEGER PRIMARY KEY);');
+    await sequelize.query(`
+      CREATE TABLE SIMLETs (
+        simlet_id INTEGER PRIMARY KEY,
+        simlet_supervisor_id INTEGER REFERENCES Users(user_id)
+      );
+    `);
+    await sequelize.query(`
+      CREATE TABLE Sessions (
+        session_id INTEGER PRIMARY KEY,
+        simlet_id INTEGER REFERENCES SIMLETs(simlet_id),
+        session_coordinator_id INTEGER REFERENCES Users(user_id),
+        session_sandbox_user_id INTEGER REFERENCES Users(user_id)
+      );
+    `);
+    await sequelize.query('CREATE INDEX Sessions_simlet_index ON Sessions(simlet_id);');
+    await sequelize.query(`
+      CREATE TABLE Activities (
+        activity_id INTEGER PRIMARY KEY,
+        session_id INTEGER REFERENCES Sessions(session_id)
+      );
+    `);
+    await sequelize.query('CREATE TABLE Sessions_tags_list (tag_id INTEGER PRIMARY KEY);');
+    await sequelize.query(`
+      CREATE TABLE Sessions_tags (
+        session_id INTEGER REFERENCES Sessions(session_id),
+        tag_id INTEGER REFERENCES Sessions_tags_list(tag_id)
+      );
+    `);
+
+    await sequelize.query('INSERT INTO Users VALUES (1);');
+    await sequelize.query('INSERT INTO SIMLETs VALUES (1, 1);');
+    await sequelize.query('INSERT INTO Sessions VALUES (1, 1, 1, 1);');
+    await sequelize.query('INSERT INTO Activities VALUES (1, 1);');
+    await sequelize.query('INSERT INTO Sessions_tags_list VALUES (1);');
+    await sequelize.query('INSERT INTO Sessions_tags VALUES (1, 1);');
+
+    await repairForeignKeys.up({ context: qi });
+    await repairForeignKeys.up({ context: qi });
+
+    for (const [table, expectedForeignKeys] of Object.entries(repairForeignKeys.EXPECTED_FOREIGN_KEYS)) {
+      const actual = (await sequelize.query(`PRAGMA foreign_key_list(\`${table}\`);`, {
+        type: QueryTypes.SELECT,
+      })) as Array<{ from: string; table: string; to: string; on_update: string; on_delete: string }>;
+      expect(actual).toHaveLength(expectedForeignKeys.length);
+      for (const expectedForeignKey of expectedForeignKeys) {
+        expect(actual).toContainEqual(expect.objectContaining({
+          from: expectedForeignKey.from,
+          table: expectedForeignKey.table,
+          to: expectedForeignKey.to,
+          on_update: expectedForeignKey.onUpdate,
+          on_delete: expectedForeignKey.onDelete,
+        }));
+      }
+    }
+
+    for (const table of ['SIMLETs', 'Sessions', 'Activities', 'Sessions_tags']) {
+      const rows = (await sequelize.query(`SELECT count(*) AS count FROM ${table};`, {
+        type: QueryTypes.SELECT,
+      })) as Array<{ count: number }>;
+      expect(rows[0].count).toBe(1);
+    }
+
+    const indexRows = (await sequelize.query(
+      "SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'Sessions_simlet_index';",
+      { type: QueryTypes.SELECT }
+    )) as Array<{ name: string }>;
+    expect(indexRows).toEqual([{ name: 'Sessions_simlet_index' }]);
+
+    await sequelize.close();
+  });
+
   it('2026-05-01 sessions tags foreign key repair is idempotent', async () => {
     const sequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
     const qi = sequelize.getQueryInterface();
@@ -229,6 +398,40 @@ describe('migration idempotence', () => {
 
     await limeSurvey.up({ context: qi });
     await limeSurvey.up({ context: qi });
+
+    await sequelize.close();
+  });
+
+  it('normalizes extension-based migration identities and prefers JavaScript files', async () => {
+    expect(selectMigrationFiles([
+      '2026-02-25-example.ts',
+      '2026-02-25-example.js',
+      '2026-03-01-ts-only.ts',
+      '2026-04-01-js-only.js',
+      '2026-05-01-ignored.d.ts',
+      'README.md',
+    ])).toEqual([
+      { name: '2026-02-25-example', file: '2026-02-25-example.js' },
+      { name: '2026-03-01-ts-only', file: '2026-03-01-ts-only.ts' },
+      { name: '2026-04-01-js-only', file: '2026-04-01-js-only.js' },
+    ]);
+
+    const sequelize = new Sequelize({ dialect: 'sqlite', storage: ':memory:', logging: false });
+    await sequelize.query('CREATE TABLE SequelizeMeta (name VARCHAR PRIMARY KEY);');
+    await sequelize.query("INSERT INTO SequelizeMeta VALUES ('2026-02-25-example.ts');");
+    await sequelize.query("INSERT INTO SequelizeMeta VALUES ('2026-02-25-example.js');");
+    await sequelize.query("INSERT INTO SequelizeMeta VALUES ('2026-03-01-ts-only.ts');");
+
+    await normalizeSequelizeMeta(sequelize);
+    await normalizeSequelizeMeta(sequelize);
+
+    const names = (await sequelize.query('SELECT name FROM SequelizeMeta ORDER BY name;', {
+      type: QueryTypes.SELECT,
+    })) as Array<{ name: string }>;
+    expect(names).toEqual([
+      { name: '2026-02-25-example' },
+      { name: '2026-03-01-ts-only' },
+    ]);
 
     await sequelize.close();
   });

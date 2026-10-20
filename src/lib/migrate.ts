@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import path from "path";
 import { fileURLToPath } from "url";
 import { logger } from "@/lib/logger";
+import { normalizeSequelizeMeta, resolveMigrationsFromFolder } from "@/lib/migrationHelpers";
 
 // Resolve the migrations relative to this file so the same code works from
 // source (`src/lib/migrate.ts`, run with tsx) and from the compiled output
@@ -13,15 +14,14 @@ const migrationsFolder = path.join(path.dirname(fileURLToPath(import.meta.url)),
 
 export async function runMigrations() {
   const umzug = new Umzug({
-    migrations: {
-      glob: path.join(migrationsFolder, "*.{ts,js}"),
-    },
+    migrations: (context) => resolveMigrationsFromFolder(migrationsFolder, context),
     context: db.sequelize.getQueryInterface(),
     storage: new SequelizeStorage({ sequelize: db.sequelize }),
     logger: logger,
   });
   
   logger.info("Running migrations...");
+  await normalizeSequelizeMeta(db.sequelize);
   await umzug.up();
   logger.info("Migrations executed");
 }

@@ -43,21 +43,45 @@ June 2026, which suggests it did its job.
                     adds umzug, src/lib/migrate.ts, config/config.ts, wired into server.ts
 ```
 
-`runMigrations()` runs `src/lib/migrations/*.ts` with `context: db.sequelize.getQueryInterface()`
-and `SequelizeStorage`, at boot, after `sequelize.authenticate()` and before the SQL files.
+`runMigrations()` runs the files in `src/lib/migrations/` with
+`context: db.sequelize.getQueryInterface()` and `SequelizeStorage`, at boot, after the base
+tables have been created and before views are created.
 
 | File | What |
 | --- | --- |
 | `2026-02-25-migrate-backup-data-to-minio.ts` | local result files to object storage, `mongo_id` → `activity_id` |
 | `2026-02-25-migrate-trace-data-in-minio.ts` | rewrite tracker state keys, guarded by an `updated === true` marker |
-| `2026-02-26-remove-mongoid-colons.ts` | drop `mongo_id` from five tables, in a transaction with `PRAGMA foreign_keys` off |
+| `2026-02-26-remove-mongoid-colons.ts` | drop `mongo_id` from Activities, Sessions, SIMLETs, and Users |
 | `2026-03-16-migrate-limesurvey-endpoints.ts` | push SIMVA's LRS endpoint into every LimeSurvey survey |
 | `2026-05-01-fix-sessions-tags-foreign-key.ts` | correct a foreign key, self-skipping when already correct |
 | `2026-08-02-add-deleteAt-to-alltables.ts` | add `deletedAt` to 24 tables |
 | `2026-08-06-add-game-type.ts` | add `game_tracker_technology` and `game_technology` |
+| `2026-10-20-repair-foreign-key-actions.ts` | restore FK actions lost by prior SQLite table rebuilds |
 
 Note that two of these — the MinIO ones — are migrations off the old datastore too. That is
 unavoidable: the end of the MongoDB era was not one commit, it was a sequence.
+
+### Migration identity and SQLite rebuilds
+
+The migration identity is the extension-independent filename: for example,
+`2026-08-06-add-game-type`, not `2026-08-06-add-game-type.ts` or
+`2026-08-06-add-game-type.js`. This lets the same migration run from TypeScript during
+development and from compiled JavaScript in production without running twice. If both files are
+present, the JavaScript file is selected. At boot, legacy `SequelizeMeta` entries ending in
+`.ts` or `.js` are normalized to this extension-independent identity before Umzug checks pending
+migrations.
+
+SQLite does not support dropping a column directly. Sequelize implements `removeColumn` by
+copying a table, dropping it, recreating it, then copying data back. With foreign-key enforcement
+enabled, `DROP TABLE` performs an implicit delete and immediately runs `ON DELETE CASCADE`
+actions. `PRAGMA defer_foreign_keys = ON` delays constraint errors, but it does not prevent those
+cascade actions.
+
+`withSqliteForeignKeysDisabled()` is the required wrapper for a migration that rebuilds a table.
+It disables FKs, verifies that they are disabled, starts a manual transaction, performs the
+rebuild without a Sequelize managed transaction, then restores FK enforcement. This is necessary
+because Sequelize opens a separate SQLite connection for a managed transaction on file-backed
+databases; disabling FKs on the default connection would otherwise not affect the rebuild.
 
 ## Consequences
 
@@ -65,10 +89,11 @@ unavoidable: the end of the MongoDB era was not one commit, it was a sequence.
 
 - **The backfill is disposable.** It has a known input and output, runs once, and can be
   deleted when the last deployment has migrated. It never has to be correct at boot.
-- **Forward migrations are tracked.** `SequelizeMeta` knows what has run, so `up()` can be
-  written as if it will not run twice.
-- **The filename prefix is the order.** `YYYY-MM-DD-description.ts`, sorted. The file names are
-  the migration history, readable without a database.
+- **Forward migrations are tracked.** `SequelizeMeta` knows what has run using an
+  extension-independent filename, so a TypeScript migration and its compiled JavaScript output
+  share one history entry.
+- **The filename prefix is the order.** `YYYY-MM-DD-description.ts`, sorted. The logical file
+  names are the migration history, readable without a database.
 - **`down()` exists.** `2026-03-16` has an empty one, which is honest rather than pretending.
 
 **Negative**
@@ -79,6 +104,9 @@ unavoidable: the end of the MongoDB era was not one commit, it was a sequence.
 - **Idempotence is per-migration discipline, not a guarantee.** One migration
   (`2026-02-25-migrate-trace-data-in-minio.ts`) guards itself with an explicit state marker;
   the others assume `SequelizeMeta`.
+- **Table rebuilds require extra care.** `removeColumn`, `changeColumn`, and foreign-key repairs
+  can drop and recreate a SQLite table. They must use `withSqliteForeignKeysDisabled()` and tests
+  with a file-backed SQLite database that has child rows.
 - **The schema exists in three places.** `01-schemas.sql`, the umzug migrations, and the
   Sequelize models. They drift: `mongo_id` was dropped from the tables in February 2026
   (`0d8cd47`) and remained in five models until August (`fa9b864`) — five and a half months
@@ -91,9 +119,11 @@ unavoidable: the end of the MongoDB era was not one commit, it was a sequence.
 ## The rule for a new schema change
 
 1. `01-schemas.sql` if it is a new table, so fresh databases get it.
-2. A umzug migration, always, so existing deployments get it.
+2. A Umzug migration, always, so existing deployments get it.
 3. The Sequelize model, in the same commit.
 4. The view and every query template that reads it.
+5. If the change rebuilds a SQLite table, wrap it with
+   `withSqliteForeignKeysDisabled()` and test it against a file-backed database with FK children.
 
 Step 4 is the one that gets missed. See
 [how-to: change the database schema](../../how-to/change-the-database-schema.md).
@@ -106,8 +136,10 @@ Step 4 is the one that gets missed. See
 - `9ec8d74` — clean exit when the Mongo export is absent
 - `eee7d6d` — a self-skipping foreign key repair
 - `2026-09-03-add-login-mode.ts` — created by `c729779`, deleted by `e452e23`: the one migration
-  in the history that was removed, which is fine because umzug tracks by filename and the
-  column was never deployed
+  in the history that was removed, which is fine because Umzug tracks a migration's logical
+  filename and the column was never deployed
+- `2026-10-20-repair-foreign-key-actions.ts` — documents and repairs the SQLite cascade incident
+  caused by a table rebuild on a managed transaction connection
 
 ## Related
 
