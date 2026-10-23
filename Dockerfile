@@ -1,12 +1,12 @@
 # ---------------------------------------
 # Base
 # ---------------------------------------
-FROM timbru31/node-alpine-git:22 AS base
+FROM node:26.12.1-alpine AS base
 
 WORKDIR /app
 
 # Common dependencies
-RUN apk add --no-cache curl ca-certificates bash
+RUN apk add --no-cache curl ca-certificates bash git
 
 FROM base AS deps
 
@@ -34,7 +34,7 @@ COPY --chown=node:node ./api.yaml ./
 # Build TypeScript to dist (compiled JS, aliases rewritten to relative paths)
 RUN npm run build
 
-FROM node:22-alpine AS prod
+FROM base AS prod
 
 WORKDIR /app
 
