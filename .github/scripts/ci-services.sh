@@ -9,21 +9,22 @@
 #
 set -euo pipefail
 
-IMAGE="simva-api:ci"
+TARGET="${TARGET:-prod}"
+IMAGE="simva-api:ci-${TARGET}"
 CONTAINER="ci-simva-api"
 
 cache_args=()
 if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
   cache_args=(
-    --cache-from "type=gha,scope=simva-api"
-    --cache-to "type=gha,mode=max,scope=simva-api"
+    --cache-from "type=gha,scope=simva-api-${TARGET}"
+    --cache-to "type=gha,mode=max,scope=simva-api-${TARGET}"
   )
 fi
 
 echo "::group::Building simva-api"
 docker buildx build \
   --load \
-  --target prod \
+  --target "${TARGET}" \
   --tag "${IMAGE}" \
   "${cache_args[@]}" \
   .
@@ -40,12 +41,22 @@ trap cleanup EXIT
 
 # Start the compiled server directly and keep the SQLite database and logs in
 # /tmp (the default /data path is not writable by the node user).
+# prod runs the compiled/served app directly. dev runs the image's own CMD
+# (`npm run dev`) with the checked-out repo mounted over /app, keeping the
+# image's node_modules through an anonymous volume, as docker-compose does.
+run_args=()
+cmd=(node dist/server.js)
+if [[ "${TARGET}" == "dev" ]]; then
+  run_args=(-v "$(pwd):/app" -v /app/node_modules)
+  cmd=()
+fi
+
 docker rm -f "${CONTAINER}" >/dev/null 2>&1 || true
 docker run -d --name "${CONTAINER}" \
   -e SIMVA_API_PORT=3000 \
   -e SQLLITE_DB_PATH=/tmp \
   -e LOG_FOLDER=/tmp \
-  "${IMAGE}" node dist/server.js >/dev/null
+  "${IMAGE}" >/dev/null
 
 # The probe runs inside the container through Node's built-in fetch so that the
 # check does not depend on host ports or on curl being installed in the image.

@@ -27,6 +27,8 @@ jobs:
 
       - name: Build image and check health
         run: bash .github/scripts/ci-services.sh
+        env:
+          TARGET: prod
 
   verify:
     name: Verify tag and tests
