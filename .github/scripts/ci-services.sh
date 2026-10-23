@@ -39,9 +39,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Start the compiled server directly and keep the SQLite database and logs in
-# /tmp (the default /data path is not writable by the node user).
-# prod runs the compiled/served app directly. dev runs the image's own CMD
+# Keep the SQLite database and logs in /tmp (the default /data path is not
+# writable by the node user). prod runs the compiled/served app directly. dev runs the image's own CMD
 # (`npm run dev`) with the checked-out repo mounted over /app, keeping the
 # image's node_modules through an anonymous volume, as docker-compose does.
 run_args=()
@@ -56,7 +55,7 @@ docker run -d --name "${CONTAINER}" \
   -e SIMVA_API_PORT=3000 \
   -e SQLLITE_DB_PATH=/tmp \
   -e LOG_FOLDER=/tmp \
-  "${IMAGE}" >/dev/null
+  "${run_args[@]}" "${IMAGE}" "${cmd[@]}" >/dev/null
 
 # The probe runs inside the container through Node's built-in fetch so that the
 # check does not depend on host ports or on curl being installed in the image.
