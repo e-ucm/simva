@@ -47,9 +47,9 @@ export class SingleUserPermission {
      * @description Initializes user permission mapping from provided data.
      */
     constructor(object_type: string, object_id: number, data: any, current_user_id?: number, is_admin: boolean = false) {
-        this.user_id = data.user_id;
-        this.username = data.username;
-        this.permission = data.permission;
+        this.user_id = data.user_id || data.current_user_id;
+        this.username = data.username || data.current_user_username;
+        this.permission = data.permission || data.current_user_permission;
         this.object_id = object_id;
         this.object_type = object_type;
         this.current_user_id = current_user_id;
