@@ -25,10 +25,7 @@ export async function getGroupPermissions(
   try {
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
-    const currentUser = req.user?.sql;
-    if (!currentUser) {
-      throw new AuthentificationError("Not authenticated");
-    }
+    let currentUser = req.user?.sql;
     logger.debug({ simletId, groupId, userId: currentUser?.user_id }, "Getting permissions for group ID and simlet ID");
     
     // Check user role and get appropriate permissions
@@ -85,10 +82,7 @@ export async function createGroupPermissions(
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
     let body = req.body;
-    const currentUser = req.user?.sql;
-    if (!currentUser) {
-      throw new AuthentificationError("Not authenticated");
-    }
+    let currentUser = req.user?.sql;
     logger.debug({ simletId, groupId, userId: currentUser?.user_id, body }, "Creating permissions for group ID and simlet ID");
     
     // Check user role
@@ -150,10 +144,7 @@ export async function getGroupPermissionsForUser(
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
     const userId = parseInt(req.params.user_id as string);
-    const currentUser = req.user?.sql;
-    if (!currentUser) {
-      throw new AuthentificationError("Not authenticated");
-    }
+    let currentUser = req.user?.sql;
     logger.debug({ simletId, groupId, userId: currentUser?.user_id, targetUserId: userId }, "Getting permissions for user in group ID and simlet ID");
     
     // Check user role
@@ -214,10 +205,7 @@ export async function patchGroupPermissionsForUser(
     const groupId = parseInt(req.params.group_id as string);
     const userId = parseInt(req.params.user_id as string);
     let body = req.body;
-    const currentUser = req.user?.sql;
-    if (!currentUser) {
-      throw new AuthentificationError("Not authenticated");
-    }
+    let currentUser = req.user?.sql;
     logger.debug({ simletId, groupId, userId: currentUser?.user_id, targetUserId: userId, body }, "Updating permissions for user in group ID and simlet ID");
     
     // Check user role
@@ -280,10 +268,7 @@ export async function deleteGroupPermissionsForUser(
     const simletId = parseInt(req.params.simlet_id as string);
     const groupId = parseInt(req.params.group_id as string);
     const userId = parseInt(req.params.user_id as string);
-    const currentUser = req.user?.sql;
-    if (!currentUser) {
-      throw new AuthentificationError("Not authenticated");
-    }
+    let currentUser = req.user?.sql;
     logger.debug({ simletId, groupId, userId: currentUser?.user_id, targetUserId: userId }, "Deleting permissions for user in group ID and simlet ID");
     
     // Check user role
