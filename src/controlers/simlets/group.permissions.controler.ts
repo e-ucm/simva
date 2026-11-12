@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import * as groupService from "@/services/groups/group.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
+import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 
 /**
@@ -47,16 +48,9 @@ export async function getGroupPermissions(
       throw new AuthentificationError("Group not found");
     }
     
-    // Get permissions for this group
-    const permissions = await SimletGroup.getCurrentUserAllFromDbData(currentUser.user_id as number, undefined, undefined, undefined, undefined);
-    const groupPermissions = permissions.find(p => p.group_id === groupId);
-    
-    if (!groupPermissions) {
-      res.json([]);
-      return;
-    }
-    
-    res.json(groupPermissions.toJSON());
+    const is_admin = req.user?.sql.role === "administrator";
+    const permissions = await UserPermission.getFromDbData("group", groupId, currentUser.user_id as number, is_admin);
+    res.json(permissions.toJSON());
   } catch (err) {
     next(err);
   }
