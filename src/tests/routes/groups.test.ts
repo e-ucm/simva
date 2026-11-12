@@ -19,8 +19,17 @@ jest.unstable_mockModule('@/services/groups/group.service', () => ({
   getAdminGroups: jest.fn()
 }));
 
+jest.unstable_mockModule('@/controlers/groups/groupPermissions.controler', () => ({
+  getGroupPermissions: jest.fn(),
+  createGroupPermissions: jest.fn(),
+  getGroupPermissionsForUser: jest.fn(),
+  patchGroupPermissionsForUser: jest.fn(),
+  deleteGroupPermissionsForUser: jest.fn()
+}));
+
 let app: Express;
 let mockedAdminGroups: jest.Mock;
+let mockedGroupPermissions: jest.Mock;
 
 const groupMapper = (data: any = {}) => ({
   simlet_id: 1,
@@ -44,6 +53,8 @@ beforeAll(async () => {
   app = (await import('@/app')).app;
   const groupService = await import('@/services/groups/group.service');
   mockedAdminGroups = groupService.getAdminGroups as unknown as jest.Mock;
+  const groupPermissionsCtrl = await import('@/controlers/groups/groupPermissions.controler');
+  mockedGroupPermissions = groupPermissionsCtrl.getGroupPermissions as unknown as jest.Mock;
 });
 
 describe('Group Controller Routes', () => {
@@ -79,6 +90,72 @@ describe('Group Controller Routes', () => {
       const response = await request(app).get('/groups').expect(500);
 
       expect(response.body.message).toContain('Database error');
+    });
+  });
+
+  describe('Group Permissions Routes', () => {
+    const simletId = 1;
+    const groupId = 1;
+
+    beforeEach(() => {
+      // Mock the group permissions controller functions
+      jest.spyOn(require('@/controlers/groups/groupPermissions.controler'), 'getGroupPermissions').mockImplementation(async (req: any, res: any) => {
+        res.json([{ user_id: 1, permission: 'READ' }]);
+      });
+      jest.spyOn(require('@/controlers/groups/groupPermissions.controler'), 'createGroupPermissions').mockImplementation(async (req: any, res: any) => {
+        res.json({ message: 'Permissions created', group_id: groupId, simlet_id: simletId });
+      });
+      jest.spyOn(require('@/controlers/groups/groupPermissions.controler'), 'getGroupPermissionsForUser').mockImplementation(async (req: any, res: any) => {
+        res.json({ user_id: parseInt(req.params.user_id), permission: 'READ' });
+      });
+      jest.spyOn(require('@/controlers/groups/groupPermissions.controler'), 'patchGroupPermissionsForUser').mockImplementation(async (req: any, res: any) => {
+        res.json({ message: 'Permissions updated', group_id: groupId, simlet_id: simletId, user_id: parseInt(req.params.user_id), new_permission: req.body.permission });
+      });
+      jest.spyOn(require('@/controlers/groups/groupPermissions.controler'), 'deleteGroupPermissionsForUser').mockImplementation(async (req: any, res: any) => {
+        res.status(204).send();
+      });
+    });
+
+    it('gets permissions for a group', async () => {
+      const response = await request(app)
+        .get(`/simlets/${simletId}/groups/${groupId}/permissions`)
+        .expect(200);
+
+      expect(response.body).toEqual([{ user_id: 1, permission: 'READ' }]);
+    });
+
+    it('creates permissions for a user in a group', async () => {
+      const response = await request(app)
+        .post(`/simlets/${simletId}/groups/${groupId}/permissions`)
+        .send({ user_id: 123, permission: 'WRITE' })
+        .expect(200);
+
+      expect(response.body).toEqual({ message: 'Permissions created', group_id: groupId, simlet_id: simletId });
+    });
+
+    it('gets permissions for a specific user in a group', async () => {
+      const response = await request(app)
+        .get(`/simlets/${simletId}/groups/${groupId}/permissions/123`)
+        .expect(200);
+
+      expect(response.body).toEqual({ user_id: 123, permission: 'READ' });
+    });
+
+    it('updates permissions for a user in a group', async () => {
+      const response = await request(app)
+        .patch(`/simlets/${simletId}/groups/${groupId}/permissions/123`)
+        .send({ permission: 'ADMIN' })
+        .expect(200);
+
+      expect(response.body).toEqual({ message: 'Permissions updated', group_id: groupId, simlet_id: simletId, user_id: 123, new_permission: 'ADMIN' });
+    });
+
+    it('deletes permissions for a user in a group', async () => {
+      const response = await request(app)
+        .delete(`/simlets/${simletId}/groups/${groupId}/permissions/123`)
+        .expect(204);
+
+      expect(response.status).toBe(204);
     });
   });
 });
