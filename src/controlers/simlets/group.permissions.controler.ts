@@ -4,6 +4,7 @@ import * as groupService from "@/services/groups/group.service";
 import { AuthenticatedRequest } from "@/middlewares/auth.middleware";
 import { SimletGroup } from "@/lib/mappers/simletGroup/SimletGroup";
 import { UserPermission } from "@/lib/mappers/UserPermisions/UserPermission";
+import { SingleUserPermission } from "@/lib/mappers/UserPermisions/SingleUserPermission";
 import { AuthentificationError } from "@/lib/errors/appErrors";
 
 /**
@@ -289,7 +290,9 @@ export async function deleteGroupPermissionsForUser(
       throw new AuthentificationError("User does not have access to this group");
     }
     
-    // For now, return success - full implementation would delete the permission record
+    const is_admin = req.user?.sql.role === "administrator";
+    const userPermission = await SingleUserPermission.getFromDbData("group", groupId, userId, currentUser.user_id as number, is_admin);
+    await userPermission.delete();
     res.status(204).send();
   } catch (err) {
     next(err);
