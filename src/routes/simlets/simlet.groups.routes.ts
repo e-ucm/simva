@@ -9,6 +9,7 @@
 
 import { Router } from "express";
 import * as SimletGroupsControler from "@/controlers/simlets/simlet.groups.controler";
+import groupPermissionsRouter from "@/routes/simlets/group.permissions.routes";
 
 /**
  * Express router for simlet groups endpoints.
@@ -43,4 +44,7 @@ router.post("/:group_id/participants/:participant_id", SimletGroupsControler.add
 // Individual participant operations
 router.delete("/:group_id/participants/:participant_id", SimletGroupsControler.deleteGroupParticipant);
 router.post("/:group_id/allocate/:session_id", SimletGroupsControler.allocateToSessionSimlet);
+
+router.use("/:group_id/permissions", groupPermissionsRouter);
+
 export default router;

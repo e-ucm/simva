@@ -1548,6 +1548,159 @@ paths:
         - $ref: '#/components/parameters/simletId'
         - $ref: '#/components/parameters/groupId'
         - $ref: '#/components/parameters/searchString'
+  /simlets/{simletid}/groups/{groupid}/permissions:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets permissions for a group
+      operationId: getGroupPermissions
+      description: |
+        Gets all user permissions for the specified group
+      responses:
+        '200':
+          description: groups permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/userPermissionMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+    post:
+      tags:
+        - administrators
+        - teachers
+      summary: creates permissions for a Group
+      operationId: createGroupPermissions
+      description: |
+        Creates new user permissions for the specified Group
+      responses:
+        '200':
+          description: permissions created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userPermissionMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userPermissionMapper'
+        required: true
+  /simlets/{simletid}/groups/{groupid}/permissions/{userid}:
+    get:
+      tags:
+        - administrators
+        - teachers
+      summary: gets permissions for a user in a group
+      operationId: getGroupPermissionsForUser
+      description: |
+        Gets permissions for a specific user in the specified group
+      responses:
+        '200':
+          description: user permissions for group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userPermissionMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/userId'
+    patch:
+      tags:
+        - administrators
+        - teachers
+      summary: updates permissions for a user in a group
+      operationId: patchgroupPermissionsForUser
+      description: |
+        Updates permissions for a specific user in the specified group
+      responses:
+        '200':
+          description: permissions updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userPermissionMapper'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '406':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userPermissionMapper'
+        required: true
+    delete:
+      tags:
+        - administrators
+        - teachers
+      summary: deletes permissions for a user in a group
+      operationId: deleteGroupPermissionsForUser
+      description: |
+        Deletes permissions for a specific user in the specified group
+      responses:
+        '200':
+          description: permissions deleted
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthentificationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - $ref: '#/components/parameters/simletId'
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/userId'
   /simlets/{simletid}/sessions:
     get:
       tags:

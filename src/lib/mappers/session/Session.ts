@@ -603,8 +603,12 @@ export class Session {
      */
     async deletePermissionsForUser(userId: number): Promise<any> {
         this.canEdit();
-        let permission = await SingleUserPermission.getFromDbData('session', this.session_id, userId, this.current_user_id as number, this.is_admin);
-        return await permission.delete();
+        // Directly delete from the SessionPermissions table to ensure persistence
+        // rather than relying on view-based data which may not refresh immediately
+        await db.Tables.SessionPermissions.destroy({
+            where: { session_id: this.session_id, user_id: userId }
+        });
+        return true;
     }
 
     /**
