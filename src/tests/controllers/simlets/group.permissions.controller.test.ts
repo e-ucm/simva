@@ -19,15 +19,19 @@ jest.unstable_mockModule('@/lib/mappers/UserPermisions/UserPermission', () => ({
 }));
 
 let mockedGroupService: any;
+let mockedSimletGroup: any;
 let mockedUserPermission: any;
 let getGroupPermissions: typeof import('@/controlers/simlets/group.permissions.controler')['getGroupPermissions'];
+let createGroupPermissions: typeof import('@/controlers/simlets/group.permissions.controler')['createGroupPermissions'];
 let AuthentificationError: typeof import('@/lib/errors/appErrors')['AuthentificationError'];
 
 beforeAll(async () => {
   mockedGroupService = await import('@/services/groups/group.service');
+  mockedSimletGroup = (await import('@/lib/mappers/simletGroup/SimletGroup')).SimletGroup;
   mockedUserPermission = (await import('@/lib/mappers/UserPermisions/UserPermission')).UserPermission;
   const controller = await import('@/controlers/simlets/group.permissions.controler');
   getGroupPermissions = controller.getGroupPermissions;
+  createGroupPermissions = controller.createGroupPermissions;
   AuthentificationError = (await import('@/lib/errors/appErrors')).AuthentificationError;
 });
 
@@ -108,6 +112,49 @@ describe('getGroupPermissions controller', () => {
     await getGroupPermissions(mockReq as any, mockRes as Response, mockNext);
 
     expect(mockNext).toHaveBeenCalledWith(error);
+    expect(mockRes.json).not.toHaveBeenCalled();
+  });
+});
+
+describe('createGroupPermissions controller', () => {
+  let mockReq: MockAuthReq & { body: Record<string, unknown> };
+  let mockRes: Partial<Response>;
+  let mockNext: NextFunction;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockReq = {
+      params: { simlet_id: '1', group_id: '5' },
+      body: { user_id: 456, permission: 'WRITE' },
+      user: { sql: { user_id: 123, role: 'teacher' } },
+    };
+    mockRes = { json: jest.fn() } as Partial<Response>;
+    mockNext = jest.fn() as unknown as NextFunction;
+  });
+
+  it('creates the permission and responds with a user permission object', async () => {
+    const created = { user_id: 456, username: 'student1', permission: 'WRITE', isCurrentUser: false };
+    const createPermissions = jest.fn(async () => ({ toJSON: () => created }));
+    mockedGroupService.getGroups.mockResolvedValue([group(5)] as any);
+    mockedSimletGroup.getCurrentUserAllFromDbData.mockResolvedValue([group(5)] as any);
+    mockedUserPermission.getFromDbData.mockResolvedValue({ createPermissions } as any);
+
+    await createGroupPermissions(mockReq as any, mockRes as Response, mockNext);
+
+    expect(mockedUserPermission.getFromDbData).toHaveBeenCalledWith('group', 5, 123, false);
+    expect(createPermissions).toHaveBeenCalledWith({ user_id: 456, permission: 'WRITE' });
+    expect(mockRes.json).toHaveBeenCalledWith(created);
+    expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it('rejects a teacher without access to the group', async () => {
+    mockedGroupService.getGroups.mockResolvedValue([group(5)] as any);
+    mockedSimletGroup.getCurrentUserAllFromDbData.mockResolvedValue([] as any);
+
+    await createGroupPermissions(mockReq as any, mockRes as Response, mockNext);
+
+    expect(mockNext).toHaveBeenCalledWith(expect.any(AuthentificationError));
+    expect(mockedUserPermission.getFromDbData).not.toHaveBeenCalled();
     expect(mockRes.json).not.toHaveBeenCalled();
   });
 });

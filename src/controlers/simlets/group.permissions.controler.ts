@@ -106,13 +106,10 @@ export async function createGroupPermissions(
       throw new AuthentificationError("User does not have access to this group");
     }
     
-    // For now, return the group permissions structure
-    // In a full implementation, this would create actual permission records
-    res.json({ 
-      message: "Permissions creation endpoint - implementation needed",
-      group_id: groupId,
-      simlet_id: simletId 
-    });
+    const is_admin = req.user?.sql.role === "administrator";
+    const userPermission = await UserPermission.getFromDbData("group", groupId, currentUser.user_id as number, is_admin);
+    const created = await userPermission.createPermissions(body);
+    res.json(created.toJSON());
   } catch (err) {
     next(err);
   }
