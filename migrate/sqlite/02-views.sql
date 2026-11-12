@@ -72,6 +72,20 @@ SELECT
     username
 FROM v_session_direct_permissions_users;
 
+DROP VIEW IF EXISTS vv_group_total_permissions;
+CREATE VIEW vv_group_total_permissions AS
+SELECT
+    gp.group_id,
+    gp.user_id,
+    u.username,
+    gp.permission,
+    'DIRECT' AS permission_type,
+    gp.createdAt,
+    gp.updatedAt,
+    gp.deletedAt
+FROM ParticipantGroups_permissions gp
+JOIN Users u ON u.user_id = gp.user_id;
+
 DROP VIEW IF EXISTS vv_user_permissions;
 CREATE VIEW vv_user_permissions AS
 SELECT * FROM vv_direct_permissions_users

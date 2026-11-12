@@ -116,6 +116,22 @@ CREATE TABLE IF NOT EXISTS "ParticipantGroups_participants" (
 CREATE INDEX IF NOT EXISTS "ParticipantGroups_participants_index_0"
 ON "ParticipantGroups_participants" ("group_id", "participant_id");
 
+CREATE TABLE IF NOT EXISTS "ParticipantGroups_permissions" (
+	"group_id" INTEGER NOT NULL,
+	"user_id" INTEGER NOT NULL,
+	"permission" VARCHAR NOT NULL CHECK(permission IN ("READ","WRITE")),
+	"createdAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"updatedAt" DATETIME NOT NULL DEFAULT (datetime('now')),
+	"deletedAt" DATETIME,
+	PRIMARY KEY("group_id", "user_id"),
+	FOREIGN KEY ("user_id") REFERENCES "Users"("user_id")
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY ("group_id") REFERENCES "ParticipantGroups"("group_id")
+	ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "ParticipantGroups_permissions_index_0"
+ON "ParticipantGroups_permissions" ("group_id", "user_id");
+
 -- Table: Sessions
 CREATE TABLE IF NOT EXISTS "Sessions" (
 	"simlet_id" INTEGER NOT NULL,
