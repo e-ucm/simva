@@ -21,7 +21,6 @@ import cors from 'cors';
 import { dynamicCorsOrigin } from '@/lib/utils/corsOrigins';
 import * as OpenApiValidator from 'express-openapi-validator';
 import userRoutes from '@/routes/users/user.routes';
-import groupRoutes from '@/routes/groups/group.routes';
 import simletRoutes from '@/routes/simlets/simlet.routes';
 import activitiesRoutes from '@/routes/activities/activities.routes';
 import limesurveyRoutes from '@/routes/limesurvey/limesurvey.routes';
@@ -98,7 +97,6 @@ app.get('/version', async (_req: Request, res: Response) => {
 });
 
 app.use('/users', userRoutes);
-app.use('/groups', groupRoutes);
 app.use('/simlets', simletRoutes);
 app.use('/activities', activitiesRoutes);
 app.use('/limesurvey', limesurveyRoutes);

@@ -19,6 +19,24 @@ jest.unstable_mockModule('@/services/groups/group.service', () => ({
   getAdminGroups: jest.fn()
 }));
 
+jest.unstable_mockModule('@/controlers/simlets/group.permissions.controler', () => ({
+  getGroupPermissions: jest.fn(async (req: any, res: any) => {
+    res.json([{ user_id: 1, permission: 'READ' }]);
+  }),
+  createGroupPermissions: jest.fn(async (req: any, res: any) => {
+    res.json({ message: 'Permissions created', group_id: Number(req.params.group_id), simlet_id: Number(req.params.simlet_id) });
+  }),
+  getGroupPermissionsForUser: jest.fn(async (req: any, res: any) => {
+    res.json({ user_id: parseInt(req.params.user_id), permission: 'READ' });
+  }),
+  patchGroupPermissionsForUser: jest.fn(async (req: any, res: any) => {
+    res.json({ message: 'Permissions updated', group_id: Number(req.params.group_id), simlet_id: Number(req.params.simlet_id), user_id: parseInt(req.params.user_id), new_permission: req.body.permission });
+  }),
+  deleteGroupPermissionsForUser: jest.fn(async (_req: any, res: any) => {
+    res.status(204).send();
+  })
+}));
+
 let app: Express;
 let mockedAdminGroups: jest.Mock;
 
@@ -51,34 +69,50 @@ describe('Group Controller Routes', () => {
     jest.clearAllMocks();
   });
 
-  describe('GET /groups', () => {
-    it('returns all groups for an administrator', async () => {
-      const groups = [groupMapper(), groupMapper({ group_id: 2, group_name: 'Group B', group_use_new_generation: false })];
-      mockedAdminGroups.mockResolvedValue([groupWith(), groupWith({ group_id: 2, group_name: 'Group B', group_use_new_generation: false })]);
+  describe('Group Permissions Routes', () => {
+    const simletId = 1;
+    const groupId = 1;
 
-      const response = await request(app).get('/groups').expect(200);
-
-      expect(response.body).toEqual(groups);
-      expect(mockedAdminGroups).toHaveBeenCalledWith(undefined, undefined, undefined, NaN);
-    });
-
-    it('forwards pagination and filter query parameters to the service', async () => {
-      mockedAdminGroups.mockResolvedValue([groupWith()] as any);
-
+    it('gets permissions for a group', async () => {
       const response = await request(app)
-        .get('/groups?limit=10&skip=1&searchString=foo&use_new_generation=true')
+        .get(`/simlets/${simletId}/groups/${groupId}/permissions`)
         .expect(200);
 
-      expect(response.body).toEqual([groupMapper()]);
-      expect(mockedAdminGroups).toHaveBeenCalledWith(true, 'foo', 10, 1);
+      expect(response.body).toEqual([{ user_id: 1, permission: 'READ' }]);
     });
 
-    it('propagates service errors through the error middleware', async () => {
-      mockedAdminGroups.mockRejectedValue(new Error('Database error'));
+    it('creates permissions for a user in a group', async () => {
+      const response = await request(app)
+        .post(`/simlets/${simletId}/groups/${groupId}/permissions`)
+        .send({ user_id: 123, permission: 'WRITE' })
+        .expect(200);
 
-      const response = await request(app).get('/groups').expect(500);
+      expect(response.body).toEqual({ message: 'Permissions created', group_id: groupId, simlet_id: simletId });
+    });
 
-      expect(response.body.message).toContain('Database error');
+    it('gets permissions for a specific user in a group', async () => {
+      const response = await request(app)
+        .get(`/simlets/${simletId}/groups/${groupId}/permissions/123`)
+        .expect(200);
+
+      expect(response.body).toEqual({ user_id: 123, permission: 'READ' });
+    });
+
+    it('updates permissions for a user in a group', async () => {
+      const response = await request(app)
+        .patch(`/simlets/${simletId}/groups/${groupId}/permissions/123`)
+        .send({ permission: 'ADMIN' })
+        .expect(200);
+
+      expect(response.body).toEqual({ message: 'Permissions updated', group_id: groupId, simlet_id: simletId, user_id: 123, new_permission: 'ADMIN' });
+    });
+
+    it('deletes permissions for a user in a group', async () => {
+      const response = await request(app)
+        .delete(`/simlets/${simletId}/groups/${groupId}/permissions/123`)
+        .expect(204);
+
+      expect(response.status).toBe(204);
     });
   });
 });

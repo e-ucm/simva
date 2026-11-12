@@ -169,7 +169,15 @@ export class LRSClient {
 	 */
 	registerShutdownHandler(): void {
 		process.on('beforeExit', async () => {
-			await this.lrs.flush();
+			if (this.lrs) {
+				try {
+					await this.lrs.flush();
+				} catch (err: any) {
+					logger.error({ err }, 'LRS flush failed during shutdown');
+				}
+			} else {
+				logger.warn('LRS client not initialized, cannot flush during shutdown');
+			}
 			this.saveToFile();
 			logger.debug('LRS client state saved');
 		});

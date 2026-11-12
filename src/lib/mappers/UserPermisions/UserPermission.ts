@@ -221,11 +221,11 @@ export class UserPermission {
                 break;
             case 'session':
                 await db.Tables.SessionPermissions.upsert({ session_id: this.object_id, user_id: body.user_id, permission: body.permission });
-                perm = await db.Tables.SessionPermissions.findOne({where : { simlet_id: this.object_id, user_id: body.user_id}, paranoid : false});
+                perm = await db.Tables.SessionPermissions.findOne({where : { session_id: this.object_id, user_id: body.user_id}, paranoid : false});
                 break;
             case 'group':
                 await db.Tables.GroupPermissions.upsert({ group_id: this.object_id, user_id: body.user_id, permission: body.permission });
-                perm = await db.Tables.GroupPermissions.findOne({where : { simlet_id: this.object_id, user_id: body.user_id}, paranoid : false});
+                perm = await db.Tables.GroupPermissions.findOne({where : { group_id: this.object_id, user_id: body.user_id}, paranoid : false});
                 break;
             default:
                 throw new BadRequestError(`Unsupported object type: ${this.object_type}`);
